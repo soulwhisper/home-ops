@@ -12,12 +12,12 @@ directories:
     path: ceph-pools
   path: _sources/ceph
 - contents:
-  - configDigest: a85841c14e511203c862caf4eb30fc9934d91bdc5d62a9119a32eb50510b7fd9
+  - configDigest: ea98442f77086a89c43aeefcf066f6e4c872b5243027ffb0937761c6dac27880
     git:
-      commitTitle: 'chore: comment job to use generated token instead of PAT (pull_request_target)...'
-      sha: 303b50aaf9ae28c423c9b6c608b8e07fcd662311
+      commitTitle: Prepare for release v1.19.1...
+      sha: d0d0c8792c3420b3a6739fa21e3a182827a0bbc6
       tags:
-      - v1.19.0-pre.4-66-g303b50aaf9
+      - v1.19.1
     path: .
   path: _sources/cilium
 - contents:
@@ -82,12 +82,12 @@ directories:
     path: k8s-volumes
   path: _sources/kubernetes
 - contents:
-  - configDigest: cf82fe1aaa1493c4c4ad9c67eddd3c29996bdb24173e341f81675d9751cf345c
+  - configDigest: 1207ad256a506f471a36a9ffea2200fdd84d4df885d0b53206f2f910fcc7c0da
     git:
-      commitTitle: 'lib/storage: reduce number of shards in metricIDCache (#10388)...'
-      sha: a8a99105b1873fa21f5c6dfdc020f9cc1de8cfc5
+      commitTitle: 'docs/changelog: cut v1.136.0'
+      sha: 7386a3594265f6ab411681d8048b22e502f25066
       tags:
-      - v1.135.0
+      - v1.136.0
     path: metrics
   - configDigest: b7560a176ec0ce46fee83732f9a353d93f1fdf062aa2671adc120c58808aa7ac
     git:
