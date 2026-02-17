@@ -36,7 +36,7 @@ directories:
         lazy: true
         git:
           url: https://github.com/cilium/cilium
-          ref: v1.19
+          ref: v1.19.1
         includePaths:
           - install/kubernetes/cilium/files/cilium-agent/dashboards/*.json
           - install/kubernetes/cilium/files/cilium-operator/dashboards/*.json
