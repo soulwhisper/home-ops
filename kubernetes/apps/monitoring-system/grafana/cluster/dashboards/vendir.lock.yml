@@ -12,12 +12,12 @@ directories:
     path: ceph-pools
   path: _sources/ceph
 - contents:
-  - configDigest: a85841c14e511203c862caf4eb30fc9934d91bdc5d62a9119a32eb50510b7fd9
+  - configDigest: ea98442f77086a89c43aeefcf066f6e4c872b5243027ffb0937761c6dac27880
     git:
-      commitTitle: 'chore: comment job to use generated token instead of PAT (pull_request_target)...'
-      sha: 303b50aaf9ae28c423c9b6c608b8e07fcd662311
+      commitTitle: Prepare for release v1.19.1...
+      sha: d0d0c8792c3420b3a6739fa21e3a182827a0bbc6
       tags:
-      - v1.19.0-pre.4-66-g303b50aaf9
+      - v1.19.1
     path: .
   path: _sources/cilium
 - contents:
