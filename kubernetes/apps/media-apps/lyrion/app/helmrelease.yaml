@@ -21,7 +21,7 @@ spec:
           app:
             image:
               repository: ghcr.io/lms-community/lyrionmusicserver
-              tag: 9.1.0
+              tag: 9.2.0
             env:
               PUID: "2000"
               PGID: "101" # synology:admin
