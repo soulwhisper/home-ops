@@ -16,7 +16,7 @@ spec:
     initContainers:
       # Generate kubeconfig file, ref:https://github.com/kubernetes-sigs/headlamp/issues/1826
       - name: create-kubeconfig
-        image: rancher/shell:v0.6.1
+        image: rancher/shell:v0.6.2
         command:
           - /bin/sh
           - "-c"
