@@ -22,7 +22,7 @@ spec:
           app:
             image:
               repository: docker.stirlingpdf.com/stirlingtools/stirling-pdf
-              tag: 2.5.2-fat
+              tag: 2.5.3-fat
             envFrom:
               - configMapRef:
                   name: *name
