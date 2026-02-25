@@ -2,21 +2,21 @@
 # Optimized for synology
 
 services:
-  snmp-exporter:
-    image: "quay.io/prometheus/snmp-exporter:latest"
-    container_name: "snmp-exporter"
-    restart: "unless-stopped"
-    command:
-      - "--config.file=/etc/snmp_exporter/snmp.yml"
-    ports:
-      - "9116:9116/tcp"
-    volumes:
-      # https://grafana.com/grafana/dashboards/14284-synology-nas-details/
-      # https://github.com/tumak66/grafana-prometheus-synology/blob/main/snmp-exporter/snmp.yml
-      - "/volume3/docker/snmp-exporter/snmp.yml:/etc/snmp_exporter/snmp.yml:ro"
+  # snmp-exporter:
+  #   image: "quay.io/prometheus/snmp-exporter:latest"
+  #   container_name: "snmp-exporter"
+  #   restart: "unless-stopped"
+  #   command:
+  #     - "--config.file=/etc/snmp_exporter/snmp.yml"
+  #   ports:
+  #     - "9116:9116/tcp"
+  #   volumes:
+  #     # https://grafana.com/grafana/dashboards/14284-synology-nas-details/
+  #     # https://github.com/tumak66/grafana-prometheus-synology/blob/main/snmp-exporter/snmp.yml
+  #     - "${DOCKER_ROOT}/snmp-exporter/snmp.yml:/etc/snmp_exporter/snmp.yml:ro"
 
   node-exporter:
-    image: "quay.io/prometheus/node-exporter:latest"
+    image: "quay.io/prometheus/node-exporter:v1.10.2"
     container_name: "node-exporter"
     restart: "unless-stopped"
     command:
@@ -31,7 +31,7 @@ services:
       - "/:/host:ro"
 
   smartctl-exporter:
-    image: "quay.io/prometheuscommunity/smartctl-exporter:latest"
+    image: "quay.io/prometheuscommunity/smartctl-exporter:v0.14.0"
     container_name: "smartctl-exporter"
     restart: "unless-stopped"
     command:

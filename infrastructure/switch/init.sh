@@ -1,52 +1,23 @@
-#!/bin/bash
+#!/bin/sh
 # This script configures H3C S6520-24S-SI as core switch for the environment
 # If pasted into the switch console, make sure to paste by phases to avoid errors
 
 # reset
-display default-configuration
-restore factory-default
-reboot
+# display default-configuration
+# restore factory-default
+# reboot
 
 # defaults
-system-view
 sysname core-switch
 
 ntp-service enable
 clock timezone Beijing add 08:00:00
 clock protocol ntp
-ntp-service unicast-server 10.10.0.254
+ntp-service unicast-server 10.255.255.2
 
-interface loopback 0
- ip address 10.255.255.1 255.255.255.255
- bfd min-transmit-interval 400
- bfd min-receive-interval 400
- bfd detect-multiplier 5
-router id 10.255.255.1
-
-# security
-interface m-gigabitethernet 0/0/0
- ip address 10.0.0.2 24
-
-local-user admin class manage
-password simple password
-authorization-attribute user-role network-admin
-service-type ssh
-
-public-key local create rsa
-ssh server enable
-
-acl advanced 3000
- rule 0 permit ip source 10.0.0.0 0.0.0.255 destination 10.0.0.2 0
- rule 100 deny ip
-
-line vty 0 63
- authentication-mode scheme
- acl 3000 inbound
- user-role network-admin
-
-# snooping
+# dhcp
+dhcp enable
 dhcp snooping enable
-# ipv6 nd detection port-match-ignore
 
 # stp
 stp mode rstp
@@ -54,29 +25,38 @@ stp instance 0 root primary
 stp bpdu-protection
 
 # vlan
+vlan 1
+ dhcp snooping binding record
+
+vlan 10
+ dhcp snooping binding record
+
 vlan 100
-dhcp snooping binding record
+ dhcp snooping binding record
+
+vlan 200
+ dhcp snooping binding record
+
+vlan 210
+ dhcp snooping binding record
+
+vlan 1000
 
 # eBGP with BFD & OSPF
 bfd session init-mode active
 bgp 65000
- router-id 10.255.255.1
+ router-id 10.10.0.1
  timer keepalive 10 hold 30
  group k8s external
   peer k8s bfd
   peer k8s as-number 65100
-  peer k8s connect-interface loopback 0
+  peer k8s connect-interface vlan-interface 100
  peer 10.10.0.101 group k8s
  peer 10.10.0.102 group k8s
  peer 10.10.0.103 group k8s
  address-family ipv4
   peer k8s enable
-
-ospf 1 router-id 10.255.255.1
- silent-interface interface vlan-interface 100
- area 0
-  network 10.255.255.1 0.0.0.0
-  network 10.10.0.0 0.0.0.255
+  import-route direct
 
 # LACP to K8S
 interface bridge-aggregation 10
@@ -87,6 +67,9 @@ interface bridge-aggregation 10
  jumboframe enable
  stp edged-port
  ipv6 nd raguard role host
+ broadcast-suppression 5
+ multicast-suppression 5
+ unicast-suppression 5
 
 interface bridge-aggregation 20
  description k8s-node-02
@@ -96,6 +79,9 @@ interface bridge-aggregation 20
  jumboframe enable
  stp edged-port
  ipv6 nd raguard role host
+ broadcast-suppression 5
+ multicast-suppression 5
+ unicast-suppression 5
 
 interface bridge-aggregation 30
  description k8s-node-03
@@ -105,6 +91,9 @@ interface bridge-aggregation 30
  jumboframe enable
  stp edged-port
  ipv6 nd raguard role host
+ broadcast-suppression 5
+ multicast-suppression 5
+ unicast-suppression 5
 
 interface ten-gigabitethernet 1/0/1
  port link-aggregation group 10
@@ -133,6 +122,9 @@ interface bridge-aggregation 70
  jumboframe enable
  stp edged-port
  ipv6 nd raguard role host
+ broadcast-suppression 5
+ multicast-suppression 5
+ unicast-suppression 5
 
 interface ten-gigabitethernet 1/0/13
  port link-aggregation group 70
@@ -140,8 +132,8 @@ interface ten-gigabitethernet 1/0/13
 interface ten-gigabitethernet 1/0/14
  port link-aggregation group 70
 
-# to Workstation-Fiber, LACP 90
-interface bridge-aggregation 90
+# to workstation-fiber, LACP 80
+interface bridge-aggregation 80
  description workstation-fiber
  link-aggregation mode dynamic
  port link-type access
@@ -149,27 +141,76 @@ interface bridge-aggregation 90
  jumboframe enable
  stp edged-port
  ipv6 nd raguard role host
+ broadcast-suppression 5
+ multicast-suppression 5
+ unicast-suppression 5
 
-interface ten-gigabitethernet 1/0/17
- port link-aggregation group 90
+interface ten-gigabitethernet 1/0/15
+ port link-aggregation group 80
 
-interface ten-gigabitethernet 1/0/18
- port link-aggregation group 90
+interface ten-gigabitethernet 1/0/16
+ port link-aggregation group 80
 
-# to Router
-interface ten-gigabitethernet 1/0/24
- description router-trunk
+# to access fiber, or LACP 110
+interface ten-gigabitethernet 1/0/21
+ description access-fiber
  port link-type trunk
- port trunk permit vlan 1 10 100 200 210
+ port trunk permit vlan 1 10 200 210
+ stp root-protection
+ stp point-to-point force-true
+ ipv6 nd raguard role host
+ broadcast-suppression 1
+ multicast-suppression 1
+ unicast-suppression 1
+
+# to router fiber, LACP 120
+interface bridge-aggregation 120
+ description router-transit
+ port link-type access
+ port access vlan 1000
+ jumboframe enable
  stp point-to-point force-true
  dhcp snooping trust
  ipv6 nd raguard role router
+ broadcast-suppression 5
+ multicast-suppression 5
+ unicast-suppression 5
+
+interface ten-gigabitethernet 1/0/23
+ port link-aggregation group 120
+
+interface ten-gigabitethernet 1/0/24
+ port link-aggregation group 120
 
 # VIF
-interface vlan-interface 100
- description lab
- ip address 10.10.0.1 24
- ipv6 address auto
+# DHCP Server at x.x.x.254
+interface vlan-interface 1
+ ip address 10.0.0.1 24
+ dhcp select relay
+ dhcp relay server-address 10.255.255.2
 
-# Routing
-# ip route-static 0.0.0.0 0 10.10.0.254
+interface vlan-interface 10
+ ip address 10.0.10.1 24
+ dhcp select relay
+ dhcp relay server-address 10.255.255.2
+
+interface vlan-interface 100
+ ip address 10.10.0.1 24
+ dhcp select relay
+ dhcp relay server-address 10.255.255.2
+
+interface vlan-interface 200
+ ip address 10.20.0.1 24
+ dhcp select relay
+ dhcp relay server-address 10.255.255.2
+
+interface vlan-interface 210
+ ip address 10.20.10.1 24
+ dhcp select relay
+ dhcp relay server-address 10.255.255.2
+
+interface vlan-interface 1000
+ ip address 10.255.255.1 30
+
+# Route
+ip route-static 0.0.0.0 0 10.255.255.2

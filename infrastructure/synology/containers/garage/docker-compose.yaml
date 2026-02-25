@@ -28,7 +28,7 @@ configs:
 
 services:
   garage:
-    image: "dxflrs/garage:v2.1.0"
+    image: "dxflrs/garage:v2.2.0"
     container_name: "garage"
     restart: "unless-stopped"
     ports:
@@ -37,8 +37,8 @@ services:
       - source: "garage.toml"
         target: "/etc/garage.toml"
     volumes:
-      - "/volume3/docker/garage/data:/tmp/data"
-      - "/volume3/docker/garage/meta:/tmp/meta"
+      - "${DOCKER_ROOT}/garage/data:/tmp/data"
+      - "${DOCKER_ROOT}/garage/meta:/tmp/meta"
 
   # garage-webui:
   #   image: "khairul169/garage-webui:latest"

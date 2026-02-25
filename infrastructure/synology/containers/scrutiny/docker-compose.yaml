@@ -13,7 +13,7 @@ configs:
 
 services:
   scrutiny:
-    image: "ghcr.io/starosdev/scrutiny:latest-omnibus"
+    image: "ghcr.io/starosdev/scrutiny:1.31.2-omnibus"
     container_name: "scrutiny"
     restart: "unless-stopped"
     cap_add:
@@ -32,5 +32,5 @@ services:
       - "/dev/sata2"
     volumes:
       - "/run/udev:/run/udev:ro"
-      - "/volume3/docker/scrutiny/config:/opt/scrutiny/config"
-      - "/volume3/docker/scrutiny/influxdb:/opt/scrutiny/influxdb"
+      - "${DOCKER_ROOT}/scrutiny/config:/opt/scrutiny/config"
+      - "${DOCKER_ROOT}/scrutiny/influxdb:/opt/scrutiny/influxdb"

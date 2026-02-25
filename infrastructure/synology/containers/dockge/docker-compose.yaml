@@ -1,7 +1,7 @@
 ---
 services:
   dockge:
-    image: "louislam/dockge:latest"
+    image: "louislam/dockge:1.5.0"
     container_name: "dockge"
     restart: "unless-stopped"
     ports:
@@ -13,5 +13,5 @@ services:
       - "DOCKGE_STACKS_DIR=/opt/stacks"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "/volume3/docker/dockge/data:/app/data"
-      - "/volume3/docker/dockge/stacks:/opt/stacks"
+      - "${DOCKER_ROOT}/dockge/data:/app/data"
+      - "${DOCKER_ROOT}/dockge/stacks:/opt/stacks"

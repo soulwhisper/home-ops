@@ -1,0 +1,11 @@
+---
+working_dir: ./infrastructure/synology/containers
+auto_discover: true
+auto_discover_opts:
+  depth: 1
+  delete: true
+env_files:
+  - base.env
+external_secrets:
+  OBSIDIAN_COUCHDB_USER: op://DevOps/obsidian/couchdb_user
+  OBSIDIAN_COUCHDB_PASSWORD: op://DevOps/obsidian/couchdb_password

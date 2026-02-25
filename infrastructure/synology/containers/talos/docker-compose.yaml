@@ -8,14 +8,14 @@ configs:
 
 services:
   talos-api:
-    image: "ghcr.io/siderolabs/discovery-service:latest"
+    image: "ghcr.io/siderolabs/discovery-service:v1.0.14"
     container_name: "talos-api"
     restart: "unless-stopped"
     ports:
       - "9300:3000/tcp"
 
   meshcentral:
-    image: "ghcr.io/ylianst/meshcentral:latest"
+    image: "ghcr.io/ylianst/meshcentral:1.1.56"
     container_name: "meshcentral"
     restart: "unless-stopped"
     network_mode: "host"
@@ -23,4 +23,4 @@ services:
       - source: "config.json"
         target: "/opt/meshcentral/meshcentral-data/config.json"
     volumes:
-      - "/volume1/docker/meshcentral/data:/opt/meshcentral/meshcentral-data"
+      - "${DOCKER_ROOT}/meshcentral/data:/opt/meshcentral/meshcentral-data"
