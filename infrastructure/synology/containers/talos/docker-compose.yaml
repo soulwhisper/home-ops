@@ -15,7 +15,7 @@ services:
       - "9300:3000/tcp"
 
   meshcentral:
-    image: "ghcr.io/ylianst/meshcentral:1.1.56"
+    image: "ghcr.io/ylianst/meshcentral:1.1.57"
     container_name: "meshcentral"
     restart: "unless-stopped"
     network_mode: "host"
