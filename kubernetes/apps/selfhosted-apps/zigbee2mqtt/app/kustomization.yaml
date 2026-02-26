@@ -7,4 +7,3 @@ resources:
   - ./helmrelease.yaml
   # utils
   - ./externalsecret.yaml
-  - ./scaledobject.yaml

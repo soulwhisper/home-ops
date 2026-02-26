@@ -13,7 +13,6 @@ resources:
   - ./gateway-api-crds/ks.yaml
   - ./intel-device-plugins/ks.yaml
   - ./k8tz/ks.yaml
-  - ./keda/ks.yaml
   - ./metrics-server/ks.yaml
   - ./reloader/ks.yaml
   - ./spegel/ks.yaml

@@ -5,7 +5,6 @@
 ### Components
 
 - `cnpg:cronjob`
-- `keda:nfs-scaler`
 - `volsync:nfs`
 
 ### MutatingAdmissionPolicy
