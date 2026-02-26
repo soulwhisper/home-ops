@@ -121,7 +121,6 @@ spec:
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
-
         rules:
           - backendRefs:
               - identifier: app
@@ -137,7 +136,6 @@ spec:
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
-
         rules:
           - backendRefs:
               - identifier: code-server

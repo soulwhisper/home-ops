@@ -71,18 +71,22 @@ spec:
             ports:
               - name: http
                 containerPort: &port 2283
-            livenessProbe:
-              exec:
-                command:
-                  - /bin/sh
-                  - -c
-                  - >
-                    ls /data > /dev/null
-              initialDelaySeconds: 30
-              periodSeconds: 30
-              timeoutSeconds: 15
-              failureThreshold: 2
-              successThreshold: 1
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - >
+                        ls /data > /dev/null
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 15
+                  failureThreshold: 2
+                  successThreshold: 1
             resources:
               requests: &requests
                 cpu: 100m

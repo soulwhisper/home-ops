@@ -13,6 +13,7 @@ resources:
   - ./calibre-web/ks.yaml
   - ./crafty-controller/ks.yaml
   - ./foundryvtt/ks.yaml
+  - ./frigate/ks.yaml
   - ./jellyfin/ks.yaml
   - ./immich/ks.yaml
   - ./kavita/ks.yaml
@@ -22,3 +23,4 @@ resources:
   - ./orcaslicer/ks.yaml
   - ./qbittorrent/ks.yaml
   - ./qbittorrent-ui/ks.yaml
+  - ./scrypted/ks.yaml

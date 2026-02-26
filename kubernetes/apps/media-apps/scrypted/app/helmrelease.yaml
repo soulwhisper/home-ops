@@ -3,7 +3,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &name frigate
+  name: &name scrypted
 spec:
   interval: 30m
   chartRef:
@@ -26,11 +26,27 @@ spec:
         containers:
           app:
             image:
-              repository: ghcr.io/blakeblackshear/frigate
-              tag: 0.16.4
+              repository: ghcr.io/koush/scrypted
+              tag: v0.143.0-noble-full
             envFrom:
               - secretRef:
                   name: *name
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - >
+                        ls /recs > /dev/null
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 15
+                  failureThreshold: 2
+                  successThreshold: 1
             resources:
               requests:
                 cpu: 10m
@@ -45,69 +61,44 @@ spec:
 
     service:
       app:
-        type: LoadBalancer
-        annotations:
-          lbipam.cilium.io/ips: "10.10.0.142"
         ports:
           http:
-            appProtocol: kubernetes.io/ws
+            port: 11080
             primary: true
-            port: 5000
-          go2rtc:
-            port: 1984
-          rtsp:
-            port: 8554
-          webrtc-tcp:
-            port: 8555
-            protocol: TCP
-          webrtc-udp:
-            port: 8555
-            protocol: UDP
+          rebroadcast1:
+            port: 34135
+          rebroadcast2:
+            port: 34136
     route:
       app:
-        hostnames: ["frigate.noirprime.com"]
+        hostnames: ["scrypted.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: frigate.svg
-          gethomepage.dev/name: FrigateNVR
+          gethomepage.dev/icon: scrypted.svg
+          gethomepage.dev/name: ScryptedNVR
           gethomepage.dev/group: Service
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
-
         rules:
           - backendRefs:
               - identifier: app
                 port: http
-      go2rtc:
-        hostnames: ["frigate-go2rtc.noirprime.com"]
-        parentRefs:
-          - name: kgateway-internal
-            namespace: networking-system
-
-        rules:
-          - backendRefs:
-              - identifier: app
-                port: go2rtc
 
     persistence:
       app:
         existingClaim: *name
         globalMounts:
-          - path: /config
+          - path: /server/volume
       shared:
         existingClaim: surveillance
         globalMounts:
-          - path: /media/frigate
-            subPath: frigate
+          - path: /recs
+            subPath: scrypted
       tmpfs:
         type: emptyDir
         globalMounts:
-          - path: /tmp
-      cache:
-        enabled: true
-        type: emptyDir
-        medium: Memory
-        sizeLimit: 2Gi
-        globalMounts:
-          - path: /dev/shm
+          - path: /.cache
+            subPath: cache
+          - path: /.npm
+            subPath: npm-cache

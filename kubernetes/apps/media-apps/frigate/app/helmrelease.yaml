@@ -3,7 +3,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &name kavita
+  name: &name frigate
 spec:
   interval: 30m
   chartRef:
@@ -26,8 +26,11 @@ spec:
         containers:
           app:
             image:
-              repository: ghcr.io/kareadita/kavita
-              tag: 0.8.9
+              repository: ghcr.io/blakeblackshear/frigate
+              tag: 0.16.4
+            envFrom:
+              - secretRef:
+                  name: *name
             probes:
               liveness:
                 enabled: true
@@ -38,7 +41,7 @@ spec:
                       - /bin/sh
                       - -c
                       - >
-                        ls /data > /dev/null
+                        ls /media/frigate > /dev/null
                   initialDelaySeconds: 30
                   periodSeconds: 30
                   timeoutSeconds: 15
@@ -46,9 +49,11 @@ spec:
                   successThreshold: 1
             resources:
               requests:
-                cpu: 40m
+                cpu: 10m
+                gpu.intel.com/i915: 1
               limits:
-                memory: 1Gi
+                memory: 8Gi
+                gpu.intel.com/i915: 1
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
@@ -56,27 +61,67 @@ spec:
 
     service:
       app:
+        type: LoadBalancer
+        annotations:
+          lbipam.cilium.io/ips: "10.10.0.142"
         ports:
           http:
+            appProtocol: kubernetes.io/ws
+            primary: true
             port: 5000
+          go2rtc:
+            port: 1984
+          rtsp:
+            port: 8554
+          webrtc-tcp:
+            port: 8555
+            protocol: TCP
+          webrtc-udp:
+            port: 8555
+            protocol: UDP
     route:
       app:
-        hostnames: ["book.noirprime.com"]
+        hostnames: ["frigate.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: kavita.svg
-          gethomepage.dev/name: Kavita
-          gethomepage.dev/group: Media
+          gethomepage.dev/icon: frigate.svg
+          gethomepage.dev/name: FrigateNVR
+          gethomepage.dev/group: Service
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
+        rules:
+          - backendRefs:
+              - identifier: app
+                port: http
+      go2rtc:
+        hostnames: ["frigate-go2rtc.noirprime.com"]
+        parentRefs:
+          - name: kgateway-internal
+            namespace: networking-system
+        rules:
+          - backendRefs:
+              - identifier: app
+                port: go2rtc
 
     persistence:
       app:
         existingClaim: *name
         globalMounts:
-          - path: /kavita/config
+          - path: /config
       shared:
-        existingClaim: nfs-shared-document
+        existingClaim: surveillance
         globalMounts:
-          - path: /data
+          - path: /media/frigate
+            subPath: frigate
+      tmpfs:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+      cache:
+        enabled: true
+        type: emptyDir
+        medium: Memory
+        sizeLimit: 2Gi
+        globalMounts:
+          - path: /dev/shm
