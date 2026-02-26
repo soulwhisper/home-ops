@@ -41,6 +41,7 @@ vlan 210
  dhcp snooping binding record
 
 vlan 1000
+ dhcp snooping binding record
 
 # eBGP with BFD & OSPF
 bfd session init-mode active
@@ -166,6 +167,7 @@ interface ten-gigabitethernet 1/0/21
 # to router fiber, LACP 120
 interface bridge-aggregation 120
  description router-transit
+ link-aggregation mode dynamic
  port link-type access
  port access vlan 1000
  jumboframe enable
