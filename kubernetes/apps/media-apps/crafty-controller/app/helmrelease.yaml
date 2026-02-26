@@ -31,6 +31,18 @@ spec:
             image:
               repository: registry.gitlab.com/crafty-controller/crafty-4
               tag: 4.9.0
+            livenessProbe:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - >
+                    ls /crafty/backups > /dev/null
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 15
+              failureThreshold: 2
+              successThreshold: 1
             resources:
               requests:
                 cpu: 40m

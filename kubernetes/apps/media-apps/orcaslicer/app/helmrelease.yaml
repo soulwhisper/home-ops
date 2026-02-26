@@ -32,6 +32,18 @@ spec:
               limits:
                 memory: 2Gi
                 gpu.intel.com/i915: 1
+            livenessProbe:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - >
+                    ls /config/models > /dev/null
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 15
+              failureThreshold: 2
+              successThreshold: 1
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }

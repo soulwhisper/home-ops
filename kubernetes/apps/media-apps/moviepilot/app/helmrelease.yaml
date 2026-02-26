@@ -69,6 +69,18 @@ spec:
                   name: *name
               - secretRef:
                   name: *name
+            livenessProbe:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - >
+                    ls /media > /dev/null
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 15
+              failureThreshold: 2
+              successThreshold: 1
             resources:
               requests:
                 cpu: 20m

@@ -32,6 +32,18 @@ spec:
               QUI__HOST: 0.0.0.0
               QUI__PORT: &port 7476
               QUI__LOG_LEVEL: INFO
+            livenessProbe:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - >
+                    ls /downloads > /dev/null
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 15
+              failureThreshold: 2
+              successThreshold: 1
             resources:
               requests:
                 cpu: 10m

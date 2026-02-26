@@ -38,6 +38,18 @@ spec:
             envFrom:
               - secretRef:
                   name: *name
+            livenessProbe:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - >
+                    ls /data > /dev/null
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 15
+              failureThreshold: 2
+              successThreshold: 1
             resources:
               requests:
                 cpu: 10m

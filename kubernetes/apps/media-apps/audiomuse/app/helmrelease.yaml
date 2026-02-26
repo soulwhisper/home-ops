@@ -44,6 +44,18 @@ spec:
             ports:
               - name: http
                 containerPort: &port 8000
+            livenessProbe:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - >
+                    ls /music > /dev/null
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 15
+              failureThreshold: 2
+              successThreshold: 1
             resources: &resources
               requests:
                 cpu: 40m

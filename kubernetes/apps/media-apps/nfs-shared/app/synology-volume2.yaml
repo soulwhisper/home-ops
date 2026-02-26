@@ -15,9 +15,15 @@ volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
 mountOptions:
   - nfsvers=4.1
-  - hard
+  - softerr
   - noatime
-  - nconnect=16
+  - nconnect=4
+  - timeo=30
+  - retrans=3
+  - noresvport
+  - rsize=131072
+  - wsize=131072
+  - actimeo=60
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
