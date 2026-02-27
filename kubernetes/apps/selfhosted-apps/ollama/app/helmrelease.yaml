@@ -34,7 +34,7 @@ spec:
           model-puller:
             image:
               repository: ollama/ollama
-              tag: 0.17.1
+              tag: 0.17.2
             command:
               - "/bin/sh"
               - "-c"
@@ -69,7 +69,7 @@ spec:
           app:
             image:
               repository: ollama/ollama
-              tag: 0.17.1
+              tag: 0.17.2
             env:
               OLLAMA_CONTEXT_LENGTH: "8192"
               OLLAMA_FLASH_ATTENTION: "0"
