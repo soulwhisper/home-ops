@@ -13,7 +13,7 @@ configs:
 
 services:
   scrutiny:
-    image: "ghcr.io/starosdev/scrutiny:1.34.0-omnibus"
+    image: "ghcr.io/starosdev/scrutiny:1.35.1-omnibus"
     container_name: "scrutiny"
     restart: "unless-stopped"
     cap_add:
