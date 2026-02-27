@@ -34,10 +34,24 @@ spec:
     limits:
       memory: 6Gi
 
+  managed:
+    roles:
+      - name: immich
+        ensure: present
+        login: true
+        superuser: false
+
   bootstrap:
     initdb:
       postInitSQL:
         - CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
+        - CREATE DATABASE immich;
+        - |
+          \c immich
+          CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
+          CREATE EXTENSION IF NOT EXISTS earthdistance CASCADE;
+          ALTER SCHEMA vchord OWNER TO immich;
+          ALTER DATABASE immich OWNER TO immich;
 
   # :: Notice: backup.barmanObjectStore is deprecated
   # :: recover cluster, uncomment below
@@ -51,11 +65,3 @@ spec:
   #       parameters:
   #         barmanObjectName: barman-cloud
   #         serverName: postgres-v1
-
-  # :: This part is exclusive to latest immich, not safe for general use
-  managed:
-    roles:
-      - name: immich
-        ensure: present
-        login: true
-        superuser: true
