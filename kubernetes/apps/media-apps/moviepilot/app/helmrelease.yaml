@@ -29,7 +29,7 @@ spec:
           app:
             image:
               repository: ghcr.io/jxxghp/moviepilot
-              tag: 2.9.12
+              tag: 2.9.13
             env:
               NGINX_PORT: &port 3000
               PORT: &apiPort 3001
