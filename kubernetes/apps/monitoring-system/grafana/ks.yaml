@@ -4,19 +4,14 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name grafana-operator
+  annotations:
+    config.home-ops.io/managed: "true"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: monitoring-system
   path: "./kubernetes/apps/monitoring-system/grafana/app"
-  sourceRef:
-    kind: GitRepository
-    name: gitops-system
-    namespace: gitops-system
-  interval: 1h
-  timeout: 5m
-  prune: true
   wait: true
   dependsOn:
     - name: onepassword-connect
@@ -27,27 +22,21 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name grafana-cluster
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: monitoring-system
   path: "./kubernetes/apps/monitoring-system/grafana/cluster"
-  sourceRef:
-    kind: GitRepository
-    name: gitops-system
-    namespace: gitops-system
-  interval: 1h
-  timeout: 5m
-  prune: true
-  wait: false
   dependsOn:
     - name: grafana-operator
       namespace: monitoring-system
     - name: cnpg-cluster
       namespace: database-system
-    - name: onepassword-connect
-      namespace: security-system
   components:
     - ../../../../components/cnpg
   postBuild:

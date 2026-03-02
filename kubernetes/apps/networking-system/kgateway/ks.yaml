@@ -4,19 +4,14 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name kgateway-crds
+  annotations:
+    config.home-ops.io/managed: "true"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: networking-system
   path: "./kubernetes/apps/networking-system/kgateway/crds"
-  sourceRef:
-    kind: GitRepository
-    name: gitops-system
-    namespace: gitops-system
-  interval: 1h
-  timeout: 5m
-  prune: true
   wait: true
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
@@ -24,19 +19,14 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name kgateway
+  annotations:
+    config.home-ops.io/managed: "true"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: networking-system
   path: "./kubernetes/apps/networking-system/kgateway/app"
-  sourceRef:
-    kind: GitRepository
-    name: gitops-system
-    namespace: gitops-system
-  interval: 1h
-  timeout: 5m
-  prune: true
   wait: true
   dependsOn:
     - name: kgateway-crds
@@ -47,19 +37,14 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name kgateway-config
+  annotations:
+    config.home-ops.io/managed: "true"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: kgateway
   targetNamespace: networking-system
   path: "./kubernetes/apps/networking-system/kgateway/config"
-  sourceRef:
-    kind: GitRepository
-    name: gitops-system
-    namespace: gitops-system
-  interval: 1h
-  timeout: 5m
-  prune: true
   wait: true
   dependsOn:
     - name: kgateway

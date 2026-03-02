@@ -162,7 +162,11 @@ spec:
           - LoadBalancerIP
       selector:
         matchExpressions:
-          - { key: config.home.ops/bgp, operator: NotIn, values: ["disabled"] }
+          - {
+              key: config.home-ops.io/bgp,
+              operator: NotIn,
+              values: ["disabled"],
+            }
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/cilium.io/ciliumbgpclusterconfig_v2.json
 apiVersion: cilium.io/v2

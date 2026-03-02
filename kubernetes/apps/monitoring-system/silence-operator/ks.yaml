@@ -4,19 +4,14 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name silence-operator
+  annotations:
+    config.home-ops.io/managed: "true"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: monitoring-system
   path: "./kubernetes/apps/monitoring-system/silence-operator/app"
-  sourceRef:
-    kind: GitRepository
-    name: gitops-system
-    namespace: gitops-system
-  interval: 1h
-  timeout: 5m
-  prune: true
   wait: true
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
@@ -24,20 +19,14 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name silence-operator-silences
+  annotations:
+    config.home-ops.io/managed: "true"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: monitoring-system
   path: "./kubernetes/apps/monitoring-system/silence-operator/silences"
-  sourceRef:
-    kind: GitRepository
-    name: gitops-system
-    namespace: gitops-system
-  interval: 1h
-  timeout: 5m
-  prune: true
-  wait: false
   dependsOn:
     - name: silence-operator
       namespace: monitoring-system

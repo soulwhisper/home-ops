@@ -31,6 +31,43 @@ spec:
   dependsOn:
     - name: flux-repositories
   patches:
+    - # Add Kustomization defaults to all app ks.yaml
+      patch: |-
+        apiVersion: kustomize.toolkit.fluxcd.io/v1
+        kind: Kustomization
+        metadata:
+          name: _
+        spec:
+          interval: 1h
+          timeout: 5m
+          sourceRef:
+            kind: GitRepository
+            name: gitops-system
+            namespace: gitops-system
+          prune: true
+          wait: false
+      target:
+        group: kustomize.toolkit.fluxcd.io
+        kind: Kustomization
+        annotationSelector: "config.home-ops.io/managed=true"
+    - # Add baseline dependsOn for all app ks.yaml
+      patch: |-
+        apiVersion: kustomize.toolkit.fluxcd.io/v1
+        kind: Kustomization
+        metadata:
+          name: _
+        spec:
+          dependsOn:
+            - name: onepassword-connect
+              namespace: security-system
+            - name: rook-ceph-cluster
+              namespace: storage-system
+            - name: volsync
+              namespace: storage-system
+      target:
+        group: kustomize.toolkit.fluxcd.io
+        kind: Kustomization
+        labelSelector: "config.home-ops.io/deps=infra"
     - # Add HelmRelease defaults to all child Kustomizations
       patch: |-
         apiVersion: kustomize.toolkit.fluxcd.io/v1

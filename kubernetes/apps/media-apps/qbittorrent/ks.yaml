@@ -4,27 +4,19 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name qbittorrent
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: media-apps
   path: "./kubernetes/apps/media-apps/qbittorrent/app"
-  sourceRef:
-    kind: GitRepository
-    name: gitops-system
-    namespace: gitops-system
-  interval: 1h
-  timeout: 5m
-  prune: true
-  wait: false
   dependsOn:
     - name: nfs-shared
       namespace: media-apps
-    - name: rook-ceph-cluster
-      namespace: storage-system
-    - name: volsync
-      namespace: storage-system
   components:
     - ../../../../components/volsync
   postBuild:

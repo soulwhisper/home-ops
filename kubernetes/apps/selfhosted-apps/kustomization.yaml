@@ -16,7 +16,6 @@ resources:
   - ./n8n/ks.yaml
   - ./netbox/ks.yaml
   - ./sillytavern/ks.yaml
-  - ./spoolman/ks.yaml
   - ./stirling-pdf/ks.yaml
   - ./zigbee2mqtt/ks.yaml
   # AI workflows, prefer gpu

@@ -4,20 +4,16 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name audiomuse
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: media-apps
   path: "./kubernetes/apps/media-apps/audiomuse/app"
-  sourceRef:
-    kind: GitRepository
-    name: gitops-system
-    namespace: gitops-system
-  interval: 1h
-  timeout: 5m
-  prune: true
-  wait: false
   dependsOn:
     - name: cnpg-cluster
       namespace: database-system
@@ -27,8 +23,6 @@ spec:
       namespace: media-apps
     - name: ollama
       namespace: selfhosted-apps
-    - name: onepassword-connect
-      namespace: security-system
   components:
     - ../../../../components/cnpg
     - ../../../../components/dragonfly

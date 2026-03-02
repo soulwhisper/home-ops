@@ -4,17 +4,12 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name csi-driver-nfs
+  annotations:
+    config.home-ops.io/managed: "true"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: storage-system
   path: "./kubernetes/apps/storage-system/csi-driver-nfs/app"
-  sourceRef:
-    kind: GitRepository
-    name: gitops-system
-    namespace: gitops-system
-  interval: 1h
-  timeout: 5m
-  prune: true
   wait: true

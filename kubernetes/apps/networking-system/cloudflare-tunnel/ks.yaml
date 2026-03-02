@@ -4,24 +4,16 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name cloudflare-tunnel
-  labels:
-    config.home.ops/substitution: "false"
+  annotations:
+    config.home-ops.io/managed: "true"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: networking-system
   path: "./kubernetes/apps/networking-system/cloudflare-tunnel/app"
-  sourceRef:
-    kind: GitRepository
-    name: gitops-system
-    namespace: gitops-system
-  interval: 1h
-  timeout: 5m
-  prune: true
-  wait: false
   dependsOn:
-    - name: externaldns-cloudflare # needed for secret substitution
+    - name: externaldns-cloudflare # needed for secret substitute
       namespace: networking-system
     - name: onepassword-connect
       namespace: security-system
