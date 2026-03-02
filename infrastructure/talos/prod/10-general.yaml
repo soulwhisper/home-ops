@@ -88,23 +88,29 @@ machine:
     topology.kubernetes.io/zone: home
     intel.feature.node.kubernetes.io/gpu: "true"
   sysctls:
-    fs.inotify.max_user_watches: 1048576 # moviepilot
-    fs.inotify.max_user_instances: 1048576 # moviepilot
-    net.ipv4.neigh.default.gc_thresh1: 32768 # ARP cache, tunning
-    net.ipv4.neigh.default.gc_thresh2: 65536 # ARP cache, tunning
-    net.ipv4.neigh.default.gc_thresh3: 131072 # ARP cache, tunning
-    net.core.netdev_max_backlog: 30000 # 10G NIC, tunning
-    net.core.somaxconn: 32768 # 10G NIC, tunning
-    net.ipv4.tcp_max_syn_backlog: 8192 # 10G NIC, tunning
-    net.core.rmem_max: 134217728 # 10G NIC, tunning
-    net.core.wmem_max: 134217728 # 10G NIC, tunning
-    net.ipv4.tcp_rmem: 4096 87380 134217728 # 10G NIC, tunning
-    net.ipv4.tcp_wmem: 4096 65536 134217728 # 10G NIC, tunning
-    sunrpc.tcp_slot_table_entries: 128 # 10G NIC, tunning
-    sunrpc.tcp_max_slot_table_entries: 1024 # 10G NIC, tunning
-    user.max_user_namespaces: 11255 # UserNamespaces
-    vm.dirty_background_ratio: 5 # 96GB RAM tunning
-    vm.dirty_ratio: 10 # 96GB RAM tunning
+    # moviepilot requires high inotify limits for media library watching (~500k files)
+    fs.inotify.max_user_watches: 1048576 # default 8192; 1M supports large media libraries
+    fs.inotify.max_user_instances: 1048576 # default 128; matches watches for consistency
+    # ARP table size for BGP+Cilium: large cluster peering table requires expanded neighbor cache
+    net.ipv4.neigh.default.gc_thresh1: 32768 # GC start threshold (default 128)
+    net.ipv4.neigh.default.gc_thresh2: 65536 # GC soft threshold (default 512)
+    net.ipv4.neigh.default.gc_thresh3: 131072 # GC hard threshold (default 1024)
+    # 10G NIC throughput tuning (Intel X710, ice driver)
+    # Reference: https://www.kernel.org/doc/Documentation/networking/scaling.txt
+    net.core.netdev_max_backlog: 30000 # packet queue depth per NIC (default 1000)
+    net.core.somaxconn: 32768 # listen() backlog (default 4096)
+    net.ipv4.tcp_max_syn_backlog: 8192 # SYN queue per socket (default 256)
+    net.core.rmem_max: 134217728 # 128MB socket recv buffer max
+    net.core.wmem_max: 134217728 # 128MB socket send buffer max
+    net.ipv4.tcp_rmem: 4096 87380 134217728 # min/default/max recv buffer
+    net.ipv4.tcp_wmem: 4096 65536 134217728 # min/default/max send buffer
+    # NFS over 10G: increase RPC slot table to avoid NFS client stalls
+    sunrpc.tcp_slot_table_entries: 128 # concurrent RPC calls (default 16)
+    sunrpc.tcp_max_slot_table_entries: 1024 # max concurrent RPC calls
+    user.max_user_namespaces: 11255 # required for rootless containers (UserNamespaces feature)
+    # Writeback tuning for 96GB RAM: reduce kernel dirty page ratio to avoid write storms
+    vm.dirty_background_ratio: 5 # start background writeback at 5% dirty (default 10%)
+    vm.dirty_ratio: 10 # block writes at 10% dirty (default 20%)
 ---
 apiVersion: v1alpha1
 kind: TimeSyncConfig
