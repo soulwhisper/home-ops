@@ -2,6 +2,8 @@
 # schematic for production environment
 customization:
   bootloader: sd-boot
+  extraKernelArgs:
+    - cpufreq.default_governor=performance
   systemExtensions:
     officialExtensions:
       - siderolabs/i915

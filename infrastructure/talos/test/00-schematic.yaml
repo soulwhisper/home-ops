@@ -3,6 +3,9 @@
 customization:
   bootloader: sd-boot
   extraKernelArgs:
+    - cpufreq.default_governor=performance
+    - -lockdown # secureboot
+    - lockdown=integrity # secureboot
     - console=ttyS0 # hci only
   systemExtensions:
     officialExtensions:

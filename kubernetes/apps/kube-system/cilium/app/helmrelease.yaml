@@ -11,13 +11,12 @@ spec:
     name: cilium
 
   values:
-    # :: enabled tunning
+    # :: tuned for 1.9.x
     # BIGTCP, xdp, for Intel-x710(ice);
     # Recommendation:netkit, host-routing, bbr, ebpf-backend-memory, ebpf-clock-probe, preallocate-maps, maglev-hashing;
     # :: features
     # hubble:enabled, hostLegacyRouting:disabled, ipam:kubernetes;
     # envoy:disabled, gatewayAPI:disabled, bgpControlPlane:disabled, l2announcements:disabled;
-    # ::
     autoDirectNodeRoutes: true
     bandwidthManager:
       enabled: true
@@ -48,6 +47,7 @@ spec:
       enabled: false
     hubble:
       enabled: true
+      eventQueueSize: 65536
       metrics:
         enabled:
           - dns:query
@@ -78,7 +78,7 @@ spec:
     l2announcements:
       enabled: false
     loadBalancer:
-      acceleration: best-effort
+      acceleration: native
       algorithm: maglev
       mode: hybrid
       serviceTopology: true
@@ -89,6 +89,8 @@ spec:
           enabled: true
       replicas: 3 # critical for HA
       rollOutPods: true
+    pmtuDiscovery:
+      packetizationLayerPMTUDMode: "disabled"
     prometheus:
       enabled: true
       serviceMonitor:
