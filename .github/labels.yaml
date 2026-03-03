@@ -36,8 +36,6 @@
   color: "ff9800"
 - name: type/major
   color: "f6412d"
-# Uncategorized
-- name: community
-  color: "370fb2"
-- name: hold
+# Review Types
+- name: review/required
   color: "ee0701"
