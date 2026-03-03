@@ -111,6 +111,35 @@ machine:
     # Writeback tuning for 96GB RAM: reduce kernel dirty page ratio to avoid write storms
     vm.dirty_background_ratio: 5 # start background writeback at 5% dirty (default 10%)
     vm.dirty_ratio: 10 # block writes at 10% dirty (default 20%)
+  pods:
+    - apiVersion: v1
+      kind: Pod
+      metadata:
+        name: intel-irq-balancer
+        namespace: kube-system
+      spec:
+        hostNetwork: true
+        hostPID: true
+        containers:
+          - name: intel-irq-binder
+            image: alpine
+            securityContext:
+              privileged: true
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                # for intel 13900H with X710 10G NICs, bind all 'ice' IRQs to P-cores for best performance
+                for irq in $(grep 'ice' /proc/interrupts | awk '{print $1}' | tr -d ':'); do
+                  echo "0-11" > /proc/irq/$irq/smp_affinity_list
+                done
+                echo "IRQ Binding complete."
+            volumeMounts:
+              - name: proc
+                mountPath: /proc
+        volumes:
+          - name: proc
+            hostPath:
+              path: /proc
 ---
 apiVersion: v1alpha1
 kind: TimeSyncConfig
