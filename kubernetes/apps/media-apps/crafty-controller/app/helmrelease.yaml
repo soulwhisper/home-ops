@@ -30,7 +30,7 @@ spec:
           app:
             image:
               repository: registry.gitlab.com/crafty-controller/crafty-4
-              tag: 4.9.0
+              tag: 4.10.0
             probes:
               liveness:
                 enabled: true
