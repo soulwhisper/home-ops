@@ -45,6 +45,11 @@ spec:
 
     # : vmagent
     # : http://vmagent-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428
+    vmagent:
+      spec:
+        extraArgs:
+          promscrape:
+            dropOriginalLabels: "true"
 
     # : vmauth
     # : http://vmauth-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8427
@@ -52,10 +57,13 @@ spec:
     vmauth:
       enabled: true
       spec:
+        extraArgs:
+          requestBufferSize: "65536"
         unauthorizedUserAccessSpec:
           url_map:
             - src_paths:
                 - "/api/v1/query.*"
+                - "/api/v1/label/.*"
               url_prefix: "http://vmagent-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428"
             - src_paths:
                 - "/select/logsql/.*"
