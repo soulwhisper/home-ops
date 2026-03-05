@@ -5,10 +5,15 @@ area/bootstrap:
 area/docs:
   - changed-files:
       - any-glob-to-any-file:
+          - "docs/**/*"
           - "README.md"
+          - "mkdocs.yml"
+          - "pyproject.toml"
+          - "uv.lock"
 area/github:
   - changed-files:
-      - any-glob-to-any-file: ".github/**/*"
+      - any-glob-to-any-file:
+          - ".github/**/*"
 area/kubernetes:
   - changed-files:
       - any-glob-to-any-file:
@@ -20,11 +25,14 @@ area/renovate:
       - any-glob-to-any-file:
           - ".renovate/**/*"
           - "renovate.json5"
-area/talos:
+area/infrastructure:
   - changed-files:
-      - any-glob-to-any-file: "infrastructure/talos/**/*"
+      - any-glob-to-any-file:
+          - "infrastructure/**/*"
 area/taskfile:
   - changed-files:
       - any-glob-to-any-file:
           - ".taskfiles/**/*"
           - "Taskfile.yaml"
+          - ".justfiles/**/*"
+          - "justfile"
