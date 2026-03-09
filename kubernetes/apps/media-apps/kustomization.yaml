@@ -20,7 +20,6 @@ resources:
   - ./lyrion/ks.yaml
   - ./metube/ks.yaml
   - ./moviepilot/ks.yaml
-  - ./orcaslicer/ks.yaml
   - ./qbittorrent/ks.yaml
   - ./qbittorrent-ui/ks.yaml
   - ./scrypted/ks.yaml
