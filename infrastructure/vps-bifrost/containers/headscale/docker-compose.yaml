@@ -7,8 +7,8 @@ services:
     restart: unless-stopped
     command: serve
     volumes:
-      - /opt/headscale/config:/etc/headscale
-      - /opt/headscale/data:/var/lib/headscale
+      - /opt/docker/headscale/config:/etc/headscale
+      - /opt/docker/headscale/data:/var/lib/headscale
     configs:
       - source: headscale_config
         target: /etc/headscale/config.yaml

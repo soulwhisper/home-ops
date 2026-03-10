@@ -12,7 +12,7 @@ services:
         reservations:
           memory: 128m
     volumes:
-      - /opt/pangolin/config:/app/config
+      - /opt/docker/pangolin/config:/app/config
     configs:
       - source: pangolin_config
         target: /app/config/config.yml
@@ -38,7 +38,7 @@ services:
       - --generateAndSaveKeyTo=/var/config/key
       - --remoteConfig=http://pangolin:3001/api/v1/
     volumes:
-      - /opt/pangolin/config/:/var/config
+      - /opt/docker/pangolin/config/:/var/config
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
@@ -61,8 +61,8 @@ services:
     command:
       - --configFile=/etc/traefik/traefik_config.yml
     volumes:
-      - /opt/pangolin/config/letsencrypt:/letsencrypt
-      - /opt/pangolin/config/traefik/logs:/var/log/traefik
+      - /opt/docker/pangolin/config/letsencrypt:/letsencrypt
+      - /opt/docker/pangolin/config/traefik/logs:/var/log/traefik
       - ./configs/dynamic:/etc/traefik/dynamic:ro
       - ./configs/traefik.yml:/etc/traefik/traefik.yml:ro
 

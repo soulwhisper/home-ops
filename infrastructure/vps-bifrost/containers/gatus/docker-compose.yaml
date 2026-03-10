@@ -10,7 +10,7 @@ services:
       - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
       - PUSHOVER_USER_KEY=${PUSHOVER_USER_KEY}
     volumes:
-      - /opt/gatus/config:/config
+      - /opt/docker/gatus/config:/config
     configs:
       - source: gatus_config
         target: /config/config.yml
