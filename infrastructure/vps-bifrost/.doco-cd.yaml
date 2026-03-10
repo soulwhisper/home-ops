@@ -1,0 +1,11 @@
+---
+working_dir: ./infrastructure/vps-bifrost/containers
+auto_discover: true
+auto_discover_opts:
+  depth: 1
+  delete: true
+external_secrets:
+  CLOUDFLARE_DNS_API_TOKEN: op://DevOps/cloudflare/dns_api_token
+  PANGOLIN_SERVER_SECRET: op://DevOps/pangolin/server_secret
+  PUSHOVER_TOKEN: op://DevOps/pushover/pushover_token
+  PUSHOVER_USER_KEY: op://DevOps/pushover/pushover_key

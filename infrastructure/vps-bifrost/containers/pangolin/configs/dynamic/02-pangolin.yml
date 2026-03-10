@@ -1,0 +1,55 @@
+---
+http:
+  routers:
+    pangolin-redirect:
+      rule: "Host(`pangolin.example.com`)"
+      service: pangolin-next
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+
+    pangolin-next:
+      rule: "Host(`pangolin.example.com`) && !PathPrefix(`/api/v1`)"
+      service: pangolin-next
+      entryPoints:
+        - websecure
+      middlewares:
+        - security-headers
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: "example.com"
+            sans:
+              - "*.example.com"
+
+    pangolin-api:
+      rule: "Host(`pangolin.example.com`) && PathPrefix(`/api/v1`)"
+      service: pangolin-api
+      entryPoints:
+        - websecure
+      middlewares:
+        - security-headers
+      tls:
+        certResolver: letsencrypt
+
+    pangolin-ws:
+      rule: "Host(`pangolin.example.com`)"
+      service: pangolin-api
+      entryPoints:
+        - websecure
+      middlewares:
+        - security-headers
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    pangolin-next:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3002"
+
+    pangolin-api:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3000"

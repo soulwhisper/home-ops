@@ -1,0 +1,59 @@
+---
+name: gatus
+
+services:
+  gatus:
+    image: twinproduction/gatus:latest
+    container_name: gatus
+    restart: unless-stopped
+    environment:
+      - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
+      - PUSHOVER_USER_KEY=${PUSHOVER_USER_KEY}
+    volumes:
+      - /opt/gatus/config:/config
+    configs:
+      - source: gatus_config
+        target: /config/config.yml
+    # ports:
+    #   - "8080:8080"
+    networks:
+      - pangolin
+
+networks:
+  pangolin:
+    external: true
+    name: pangolin
+
+configs:
+  gatus_config:
+    content: |-
+web:
+  port: 8080
+
+storage:
+  type: memory
+
+alerting:
+  pushover:
+    token: "${PUSHOVER_TOKEN}"
+    user-key: "${PUSHOVER_USER_KEY}"
+    title: "Router Offline"
+    priority: 1
+    default-alert:
+      failure-threshold: 3
+      success-threshold: 2
+      send-on-resolved: true
+
+endpoints:
+  - name: "OpenWrt"
+    url: "https://opn.noirprime.com"
+    interval: 1m
+    client:
+      timeout: 15s
+      insecure: false
+    conditions:
+      - "[STATUS] < 500"
+    alerts:
+      - type: pushover
+        failure-threshold: 3
+        description: "Check device status."
