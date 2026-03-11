@@ -86,10 +86,6 @@ configs:
   headscale_policy:
     content: |-
       {
-        "tagOwners": {
-          "tag:server": [],
-          "tag:client": []
-        },
         "groups": {
           "group:trusted": ["trusted@"],
           "group:guest":   ["guest@"]
