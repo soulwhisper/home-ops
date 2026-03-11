@@ -1,0 +1,27 @@
+---
+http:
+  routers:
+    headscale-redirect:
+      rule: "Host(`hs.noirprime.com`)"
+      service: headscale
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+
+    headscale:
+      rule: "Host(`hs.noirprime.com`)"
+      service: headscale
+      entryPoints:
+        - websecure
+      middlewares:
+        - security-headers
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    headscale:
+      loadBalancer:
+        servers:
+          - url: "http://headscale:8080"
+        passHostHeader: true

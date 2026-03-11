@@ -1,0 +1,113 @@
+---
+name: headscale
+services:
+  headscale:
+    image: ghcr.io/juanfont/headscale:v0.28.0
+    container_name: headscale
+    restart: unless-stopped
+    command: serve
+    volumes:
+      - /opt/docker/headscale/config:/etc/headscale
+      - /opt/docker/headscale/data:/var/lib/headscale
+    configs:
+      - source: headscale_config
+        target: /etc/headscale/config.yaml
+      - source: headscale_policy
+        target: /etc/headscale/policy.json
+    ports:
+      - "3478:3478/udp"
+    networks:
+      - pangolin
+
+networks:
+  pangolin:
+    external: true
+    name: pangolin
+
+configs:
+  headscale_config:
+    content: |-
+      server_url: https://hs.noirprime.com
+      listen_addr: 0.0.0.0:8080
+      metrics_listen_addr: 127.0.0.1:9090
+      grpc_listen_addr: 127.0.0.1:50443
+      grpc_allow_insecure: true
+
+      database:
+        type: sqlite
+        sqlite:
+          path: /var/lib/headscale/db.sqlite
+
+      tls_cert_path: ""
+      tls_key_path: ""
+
+      log:
+        level: info
+        format: text
+
+      private_key_path: /etc/headscale/private.key
+      noise:
+        private_key_path: /etc/headscale/noise_private.key
+
+      derp:
+        server:
+          enabled: true
+          region_id: 999
+          region_code: "home"
+          region_name: "Homelab"
+          stun_listen_addr: "0.0.0.0:3478"
+          private_key_path: /etc/headscale/derp_server_private.key
+          verify_clients: true
+        urls: []
+        paths: []
+        auto_update_enabled: false
+
+      dns:
+        magic_dns: true
+        base_domain: ts.noirprime.com
+        nameservers:
+          global:
+            - 1.1.1.1
+            - 8.8.8.8
+
+      prefixes:
+        v4: 100.64.0.0/10
+        v6: fd7a:115c:a1e0::/48
+        allocation: sequential
+
+      node_update_check_interval: 10s
+      ephemeral_node_inactivity_timeout: 30m
+
+      policy:
+        mode: file
+        path: /etc/headscale/policy.json
+
+  # https://headscale.net/stable/ref/acls/#complex-example
+  headscale_policy:
+    content: |-
+      {
+        "tagOwners": {
+          "tag:server": [],
+          "tag:client": [],
+        },
+        "groups": {
+          "group:trusted": ["trusted"],
+          "group:guest":   ["guest"]
+        },
+        "hosts": {
+          "homelab-all":   "100.64.0.0/10",
+          "guest-allowed": "100.64.0.100/32"
+        },
+        "acls": [
+          {
+            "action": "accept",
+            "src": ["group:trusted"],
+            "dst": ["*:*"],
+          },
+          {
+            "action": "accept",
+            "src": ["group:guest"],
+            "dst": ["guest-allowed:*"],
+          },
+        ],
+      }
