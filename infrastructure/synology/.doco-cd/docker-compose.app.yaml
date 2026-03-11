@@ -1,0 +1,36 @@
+---
+# This file is not managed by doco-cd because it can't manage itself
+
+secrets:
+  1pw_token:
+    file: /opt/1pw_token
+services:
+  app:
+    container_name: doco-cd
+    environment:
+      LOG_LEVEL: info
+      POLL_CONFIG: |-
+        - url: https://github.com/soulwhisper/home-ops.git
+          reference: refs/heads/main
+          interval: 60
+      DEPLOY_CONFIG_BASE_DIR: ./infrastructure/synology
+      SECRET_PROVIDER: 1password
+      SECRET_PROVIDER_ACCESS_TOKEN_FILE: /run/secrets/1pw_token
+    healthcheck:
+      test:
+        - CMD
+        - /doco-cd
+        - healthcheck
+      start_period: 15s
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    image: ghcr.io/kimdre/doco-cd:0.72.3
+    restart: unless-stopped
+    secrets:
+      - 1pw_token
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - data:/data
+volumes:
+  data: {}

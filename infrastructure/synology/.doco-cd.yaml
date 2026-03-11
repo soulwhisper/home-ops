@@ -1,5 +1,5 @@
 ---
-working_dir: ./infrastructure/synology/containers
+working_dir: ./infrastructure/synology
 auto_discover: true
 auto_discover_opts:
   depth: 1
