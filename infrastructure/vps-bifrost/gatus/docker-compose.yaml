@@ -6,9 +6,12 @@ services:
     image: twinproduction/gatus:v5.35.0
     container_name: gatus
     restart: unless-stopped
-    environment:
-      - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
-      - PUSHOVER_USER_KEY=${PUSHOVER_USER_KEY}
+    # https://github.com/kimdre/doco-cd/issues/1105
+    # environment:
+    #   - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
+    #   - PUSHOVER_USER_KEY=${PUSHOVER_USER_KEY}
+    env_file:
+      - /opt/docker/gatus/config/.env
     volumes:
       - /opt/docker/gatus/config:/config
     configs:
