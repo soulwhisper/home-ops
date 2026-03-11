@@ -45,8 +45,7 @@ services:
     ports:
       - 51820:51820/udp
       - 21820:21820/udp
-      - 443:443
-      - 80:80
+      - 45454:45454 # avoid ICP Filing
 
   traefik:
     image: docker.io/traefik:v3.6
@@ -79,7 +78,7 @@ configs:
           start_port: 51820
           base_endpoint: "pangolin.noirprime.com"
       app:
-          dashboard_url: "https://pangolin.noirprime.com"
+          dashboard_url: "https://pangolin.noirprime.com:45454"
           log_level: "info"
           telemetry:
               anonymous_usage: false
@@ -90,7 +89,7 @@ configs:
       server:
           secret: "${PANGOLIN_SERVER_SECRET}"
           cors:
-              origins: ["https://pangolin.noirprime.com"]
+              origins: ["https://pangolin.noirprime.com:45454"]
               methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
               allowed_headers: ["X-CSRF-Token", "Content-Type"]
               credentials: false

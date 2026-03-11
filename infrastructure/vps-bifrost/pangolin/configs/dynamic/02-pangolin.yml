@@ -1,13 +1,13 @@
 ---
 http:
   routers:
-    pangolin-redirect:
-      rule: "Host(`pangolin.noirprime.com`)"
-      service: pangolin-next
-      entryPoints:
-        - web
-      middlewares:
-        - redirect-to-https
+    # pangolin-redirect:
+    #   rule: "Host(`pangolin.noirprime.com`)"
+    #   service: pangolin-next
+    #   entryPoints:
+    #     - web
+    #   middlewares:
+    #     - redirect-to-https
 
     pangolin-next:
       rule: "Host(`pangolin.noirprime.com`) && !PathPrefix(`/api/v1`)"

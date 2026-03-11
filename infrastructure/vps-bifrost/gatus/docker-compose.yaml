@@ -1,0 +1,44 @@
+---
+name: gatus
+services:
+  gatus:
+    image: twinproduction/gatus:v5.35.0
+    container_name: gatus
+    restart: unless-stopped
+    environment:
+      - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
+      - PUSHOVER_USER_KEY=${PUSHOVER_USER_KEY}
+    volumes:
+      - /opt/docker/gatus:/config
+    configs:
+      - source: gatus_config
+        target: /config/config.yml
+
+configs:
+  gatus_config:
+    content: |-
+      web:
+        port: 8080
+      storage:
+        type: memory
+      alerting:
+        pushover:
+          application-token: "${PUSHOVER_TOKEN}"
+          user-key: "${PUSHOVER_USER_KEY}"
+          title: "Router Offline"
+          priority: 1
+          default-alert:
+            failure-threshold: 3
+            success-threshold: 2
+            send-on-resolved: true
+      endpoints:
+        - name: "OpenWrt Easytier"
+          url: "http://opn.noirprime.com"
+          interval: 1m
+          conditions:
+            - "[STATUS] == 200"
+            - "[BODY] == "ok:f7k2-xQ9m-Tz3p"
+          alerts:
+            - type: pushover
+              failure-threshold: 10
+              description: "OpenWrt unreachable."
