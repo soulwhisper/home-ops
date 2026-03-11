@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/externaldns.k8s.io/dnsendpoint_v1alpha1.json
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: pangolin-newt
+spec:
+  endpoints:
+    - dnsName: gateway-ext.noirprime.com
+      recordType: A
+      targets: ["140.143.210.150"] # VPS
+    - dnsName: pangolin.noirprime.com
+      recordType: A
+      targets: ["140.143.210.150"] # VPS
