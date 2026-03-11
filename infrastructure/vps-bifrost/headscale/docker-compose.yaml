@@ -91,23 +91,41 @@ configs:
           "tag:client": [],
         },
         "groups": {
-          "group:trusted": ["trusted"],
-          "group:guest":   ["guest"]
+          "group:trusted": ["trusted@"],
+          "group:guest":   ["guest@"]
+        },
+        "tagOwners": {
+          "tag:trusted":   ["group:trusted"],
+          "tag:k8s-node":  ["group:trusted"]
         },
         "hosts": {
-          "homelab-all":   "100.64.0.0/10",
-          "guest-allowed": "100.64.0.100/32"
+          "k8s-lb":       "10.10.0.128/27",
+          "crafy-server": "10.10.0.143/32",
+          "fvtt-server":  "10.10.0.144/32",
         },
         "acls": [
           {
             "action": "accept",
-            "src": ["group:trusted"],
+            "src": ["tag:trusted"],
             "dst": ["*:*"],
           },
           {
             "action": "accept",
-            "src": ["group:guest"],
-            "dst": ["guest-allowed:*"],
+            "src":    ["tag:k8s-node"],
+            "dst":    ["tag:k8s-node:*"]
           },
+          {
+            "action": "accept",
+            "src": ["group:guest"],
+            "dst": [
+              "crafy-server:25565"
+              "fvtt-server:30000"
+            ],
+          },
+          {
+            "action": "accept",
+            "src":    ["autogroup:member"],
+            "dst":    ["autogroup:self:*"]
+          }
         ],
       }
