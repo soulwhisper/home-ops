@@ -96,7 +96,7 @@ spec:
           app:
             image:
               repository: alpine/git
-              tag: 2.47.2
+              tag: v2.52.0
             env:
               GIT_REPO: github.com/soulwhisper/CRD-catalog.git
             command:
