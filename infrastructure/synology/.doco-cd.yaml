@@ -7,5 +7,5 @@ auto_discover_opts:
 env_files:
   - base.env
 external_secrets:
-  OBSIDIAN_COUCHDB_USER: op://DevOps/obsidian/couchdb_user
-  OBSIDIAN_COUCHDB_PASSWORD: op://DevOps/obsidian/couchdb_password
+  OBSIDIAN_COUCHDB_USER: op://nk7oeaocxia6oa3rznpi4n22p4/xq5hy6n5mu37jpircsiaj7uiou/j2o7uf3monmr677wueitzwavaa
+  OBSIDIAN_COUCHDB_PASSWORD: op://nk7oeaocxia6oa3rznpi4n22p4/xq5hy6n5mu37jpircsiaj7uiou/zmge2n5gv6auoqryweqnz2nk2u

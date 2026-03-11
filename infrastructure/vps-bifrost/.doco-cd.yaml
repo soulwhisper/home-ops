@@ -5,7 +5,7 @@ auto_discover_opts:
   depth: 1
   delete: true
 external_secrets:
-  CLOUDFLARE_DNS_API_TOKEN: op://DevOps/cloudflare/dns_api_token
-  PANGOLIN_SERVER_SECRET: op://DevOps/pangolin/server_secret
-  PUSHOVER_TOKEN: op://DevOps/pushover/pushover_token
-  PUSHOVER_USER_KEY: op://DevOps/pushover/pushover_key
+  CLOUDFLARE_DNS_API_TOKEN: op://nk7oeaocxia6oa3rznpi4n22p4/mrmeqlcb6eareperd5vs47je6m/r47clnkbetvy2tdvu44evl4bzy
+  PANGOLIN_SERVER_SECRET: op://nk7oeaocxia6oa3rznpi4n22p4/qzfd2rjlllfbqhtrbeiqdakjfa/xutrssvm25czut7lmldfymdagy
+  PUSHOVER_TOKEN: op://nk7oeaocxia6oa3rznpi4n22p4/qi3cudfcgdbhywqspp4xqxpgme/3ovnge7bkladt3iev2had4falm
+  PUSHOVER_USER_KEY: op://nk7oeaocxia6oa3rznpi4n22p4/qi3cudfcgdbhywqspp4xqxpgme/syncfcuvznsws5rw7oiikej34m
