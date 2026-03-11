@@ -88,7 +88,7 @@ configs:
       {
         "tagOwners": {
           "tag:server": [],
-          "tag:client": [],
+          "tag:client": []
         },
         "groups": {
           "group:trusted": ["trusted@"],
@@ -101,13 +101,13 @@ configs:
         "hosts": {
           "k8s-lb":       "10.10.0.128/27",
           "crafy-server": "10.10.0.143/32",
-          "fvtt-server":  "10.10.0.144/32",
+          "fvtt-server":  "10.10.0.144/32"
         },
         "acls": [
           {
             "action": "accept",
             "src": ["tag:trusted"],
-            "dst": ["*:*"],
+            "dst": ["*:*"]
           },
           {
             "action": "accept",
@@ -118,9 +118,9 @@ configs:
             "action": "accept",
             "src": ["group:guest"],
             "dst": [
-              "crafy-server:25565"
+              "crafy-server:25565",
               "fvtt-server:30000"
-            ],
+            ]
           },
           {
             "action": "accept",
