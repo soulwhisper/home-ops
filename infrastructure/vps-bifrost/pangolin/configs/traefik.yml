@@ -57,10 +57,10 @@ certificatesResolvers:
       caServer: "https://acme-v02.api.letsencrypt.org/directory"
 
 entryPoints:
-  web:
-    address: ":80"
+  # web:
+  #   address: ":80"
   websecure:
-    address: ":443"
+    address: ":45454"
     transport:
       respondingTimeouts:
         readTimeout: "30m"
@@ -73,6 +73,5 @@ entryPoints:
 
 serversTransport:
   insecureSkipVerify: true
-
 ping:
-  entryPoint: "web"
+  entryPoint: "websecure"

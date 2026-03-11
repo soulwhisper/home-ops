@@ -10,9 +10,9 @@ services:
     environment:
       LOG_LEVEL: info
       POLL_CONFIG: |-
-        - url: https://github.com/soulwhisper/home-ops.git
+        - url: https://gh-proxy.org/https://github.com/soulwhisper/home-ops.git
           reference: refs/heads/main
-          interval: 60
+          interval: 600
       DEPLOY_CONFIG_BASE_DIR: ./infrastructure/synology
       SECRET_PROVIDER: 1password
       SECRET_PROVIDER_ACCESS_TOKEN_FILE: /run/secrets/1pw_token
