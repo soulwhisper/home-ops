@@ -13,8 +13,6 @@ services:
           memory: 128m
     env_file:
       - pangolin.sops.env
-    environment: # needed for configs rendering
-      - PANGOLIN_SERVER_SECRET=${PANGOLIN_SERVER_SECRET}
     volumes:
       - /opt/docker/pangolin/config:/app/config
     configs:
@@ -91,7 +89,6 @@ configs:
               base_domain: "noirprime.com"
               cert_resolver: "letsencrypt"
       server:
-          secret: "${PANGOLIN_SERVER_SECRET}"
           cors:
               origins: ["https://pangolin.noirprime.com:45454"]
               methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
