@@ -8,7 +8,7 @@ services:
     env_file:
       - gatus.sops.env
     volumes:
-      - /opt/docker/gatus:/config
+      - /opt/apps/gatus:/config
     configs:
       - source: gatus_config
         target: /config/config.yml
@@ -31,8 +31,8 @@ configs:
             success-threshold: 2
             send-on-resolved: true
       endpoints:
-        - name: "OpenWrt Easytier"
-          url: "http://opn.noirprime.com"
+        - name: "OpenWrt"
+          url: "http://opn.noirprime.com:64646/health"
           interval: 1m
           conditions:
             - "[STATUS] == 200"

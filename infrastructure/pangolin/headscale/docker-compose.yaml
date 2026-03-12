@@ -17,8 +17,8 @@ services:
       - "3478:3478/udp"
     command: serve
     volumes:
-      - /opt/docker/headscale/config:/etc/headscale
-      - /opt/docker/headscale/data:/var/lib/headscale
+      - /opt/apps/headscale/config:/etc/headscale
+      - /opt/apps/headscale/data:/var/lib/headscale
     configs:
       - source: headscale_config
         target: /etc/headscale/config.yaml

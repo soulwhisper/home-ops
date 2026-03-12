@@ -5,8 +5,8 @@ http:
       ipWhiteList:
         sourceRange:
           - 10.0.0.0/8 # internal
-          - 192.168.0.0/16 # internal
           - 172.16.0.0/12 # internal
+          - 192.168.0.0/16 # internal
           - 100.89.137.0/20 # Pangolin WireGuard
           - 100.64.0.0/10 # Headscale/Tailscale CGNAT
 

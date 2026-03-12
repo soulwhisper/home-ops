@@ -1,4 +1,5 @@
 ---
+name: exporters
 # Optimized for synology
 
 services:
@@ -19,14 +20,14 @@ services:
     image: "quay.io/prometheus/node-exporter:v1.10.2"
     container_name: "node-exporter"
     restart: "unless-stopped"
+    network_mode: host
+    pid: "host"
     command:
       - "--path.rootfs=/host"
       - "--path.udev.data=/host/run/udev/data"
       - "--web.listen-address=0.0.0.0:9100"
       - "--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+)($$|/)"
       - "--collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|mqueue|nsfs|overlay|proc|procfs|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$"
-    network_mode: host
-    pid: "host"
     volumes:
       - "/:/host:ro"
 
@@ -34,6 +35,8 @@ services:
     image: "quay.io/prometheuscommunity/smartctl-exporter:v0.14.0"
     container_name: "smartctl-exporter"
     restart: "unless-stopped"
+    privileged: "true"
+    user: "root"
     command:
       - "--no-smartctl.scan"
       - "--smartctl.device=/dev/nvme0;nvme"
@@ -42,5 +45,3 @@ services:
       - "--smartctl.device=/dev/sata2;sat"
     ports:
       - "9633:9633"
-    privileged: "true"
-    user: "root"

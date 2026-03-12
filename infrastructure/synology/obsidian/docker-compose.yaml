@@ -1,4 +1,21 @@
 ---
+name: obsidian-livesync
+
+services:
+  obsidian-livesync:
+    image: "couchdb:3.5.1"
+    container_name: "obsidian-livesync"
+    restart: "unless-stopped"
+    ports:
+      - "5984:5984/tcp"
+    configs:
+      - source: "local.ini"
+        target: "/opt/couchdb/etc/local.ini"
+    env_file:
+      - couchdb.sops.env
+    volumes:
+      - "/volume3/docker/obsidian-livesync:/opt/couchdb/data"
+
 configs:
   local.ini:
     content: |
@@ -21,19 +38,3 @@ configs:
       headers = accept, authorization, content-type, origin, referer
       methods = GET,PUT,POST,HEAD,DELETE
       max_age = 3600
-
-services:
-  obsidian-livesync:
-    image: "couchdb:3.5.1"
-    container_name: "obsidian-livesync"
-    restart: "unless-stopped"
-    ports:
-      - "5984:5984/tcp"
-    configs:
-      - source: "local.ini"
-        target: "/opt/couchdb/etc/local.ini"
-    environment:
-      - "COUCHDB_USER=${OBSIDIAN_COUCHDB_USER}"
-      - "COUCHDB_PASSWORD=${OBSIDIAN_COUCHDB_PASSWORD}"
-    volumes:
-      - "${DOCKER_ROOT}/obsidian-livesync:/opt/couchdb/data"

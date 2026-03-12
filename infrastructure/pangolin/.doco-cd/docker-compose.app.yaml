@@ -1,5 +1,6 @@
 ---
 # This file is not managed by doco-cd because it can't manage itself
+# Located at /opt/docker-compose.yml
 
 secrets:
   sops_token:

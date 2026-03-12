@@ -32,5 +32,5 @@ services:
       - "/dev/sata2"
     volumes:
       - "/run/udev:/run/udev:ro"
-      - "${DOCKER_ROOT}/scrutiny/config:/opt/scrutiny/config"
-      - "${DOCKER_ROOT}/scrutiny/influxdb:/opt/scrutiny/influxdb"
+      - "/volume3/docker/scrutiny/config:/opt/scrutiny/config"
+      - "/volume3/docker/scrutiny/influxdb:/opt/scrutiny/influxdb"

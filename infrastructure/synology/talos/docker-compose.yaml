@@ -23,4 +23,4 @@ services:
       - source: "config.json"
         target: "/opt/meshcentral/meshcentral-data/config.json"
     volumes:
-      - "${DOCKER_ROOT}/meshcentral/data:/opt/meshcentral/meshcentral-data"
+      - "/volume3/docker/meshcentral/data:/opt/meshcentral/meshcentral-data"

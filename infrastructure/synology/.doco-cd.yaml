@@ -4,8 +4,3 @@ auto_discover: true
 auto_discover_opts:
   depth: 1
   delete: true
-env_files:
-  - base.env
-external_secrets:
-  OBSIDIAN_COUCHDB_USER: op://nk7oeaocxia6oa3rznpi4n22p4/xq5hy6n5mu37jpircsiaj7uiou/j2o7uf3monmr677wueitzwavaa
-  OBSIDIAN_COUCHDB_PASSWORD: op://nk7oeaocxia6oa3rznpi4n22p4/xq5hy6n5mu37jpircsiaj7uiou/zmge2n5gv6auoqryweqnz2nk2u
