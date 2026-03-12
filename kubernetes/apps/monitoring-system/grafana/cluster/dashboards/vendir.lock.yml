@@ -37,12 +37,12 @@ directories:
     path: dragonfly
   path: _sources/database
 - contents:
-  - configDigest: 838d1fd0238521ae84631283fa9f8e8d6edd86d6c379917f88a637125decae90
+  - configDigest: daf2bcb2abcf32cfbbc882373c098433d48c497ee6a7e25b363d12b2319de31e
     git:
-      commitTitle: '[release/v1.7] v1.7.0 cherrypick (#8190)...'
-      sha: da2aac967d53c6d5264906fef05a397cd097b23e
+      commitTitle: '[release/v1.7] bump envoy ratelimit to c8765e89 (#8500)...'
+      sha: 3f75d826cc1dbd3d66632abbd45f96388d226c1d
       tags:
-      - v1.7.0
+      - v1.7.1
     path: gateway
   - configDigest: 2c2d52a9a6ad49c01930aed359636ab4d036c5735a863717a84fcc67c6d96e27
     http: {}
