@@ -12,7 +12,7 @@ services:
       POLL_CONFIG: |-
         - url: https://gh-proxy.org/https://github.com/soulwhisper/home-ops.git
           reference: refs/heads/main
-          interval: 600
+          interval: 300
       DEPLOY_CONFIG_BASE_DIR: ./infrastructure/pangolin
       SOPS_AGE_KEY_FILE: /run/secrets/sops_token
     healthcheck:

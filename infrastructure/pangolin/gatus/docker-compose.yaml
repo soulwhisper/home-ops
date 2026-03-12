@@ -36,7 +36,7 @@ configs:
           interval: 1m
           conditions:
             - "[STATUS] == 200"
-            - "[BODY] == "ok:f7k2-xQ9m-Tz3p"
+            - "[BODY] == ok:f7k2-xQ9m-Tz3p"
           alerts:
             - type: pushover
               failure-threshold: 10
