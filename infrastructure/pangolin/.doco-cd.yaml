@@ -1,5 +1,5 @@
 ---
-working_dir: ./infrastructure/synology
+working_dir: ./infrastructure/pangolin
 auto_discover: true
 auto_discover_opts:
   depth: 1

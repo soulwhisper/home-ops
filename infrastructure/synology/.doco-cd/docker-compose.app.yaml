@@ -1,0 +1,36 @@
+---
+# This file is not managed by doco-cd because it can't manage itself
+# Located at /opt/docker-compose.yml
+
+secrets:
+  sops_token:
+    file: /opt/sops_token
+services:
+  app:
+    container_name: doco-cd
+    environment:
+      LOG_LEVEL: info
+      POLL_CONFIG: |-
+        - url: https://gh-proxy.org/https://github.com/soulwhisper/home-ops.git
+          reference: refs/heads/main
+          interval: 300
+      DEPLOY_CONFIG_BASE_DIR: ./infrastructure/synology
+      SOPS_AGE_KEY_FILE: /run/secrets/sops_token
+    healthcheck:
+      test:
+        - CMD
+        - /doco-cd
+        - healthcheck
+      start_period: 15s
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    image: ghcr.io/kimdre/doco-cd:0.72.3
+    restart: unless-stopped
+    secrets:
+      - sops_token
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - data:/data
+volumes:
+  data: {}

@@ -1,10 +1,7 @@
 ---
-# meshcentral listens on port 4433 (AMT) and 444 (https)
+name: talos
 
-configs:
-  config.json:
-    content: |
-      { "settings": { "agentTimeStampServer": false }, "domains": { "": { "allowedOrigin": true } } }
+# meshcentral listens on port 4433 (AMT) and 444 (https)
 
 services:
   talos-api:
@@ -23,4 +20,9 @@ services:
       - source: "config.json"
         target: "/opt/meshcentral/meshcentral-data/config.json"
     volumes:
-      - "${DOCKER_ROOT}/meshcentral/data:/opt/meshcentral/meshcentral-data"
+      - "/volume3/docker/meshcentral/data:/opt/meshcentral/meshcentral-data"
+
+configs:
+  config.json:
+    content: |
+      { "settings": { "agentTimeStampServer": false }, "domains": { "": { "allowedOrigin": true } } }

@@ -1,0 +1,38 @@
+---
+name: scrutiny
+
+# optimized for synology
+
+services:
+  scrutiny:
+    image: "ghcr.io/starosdev/scrutiny:1.46.0-omnibus"
+    container_name: "scrutiny"
+    restart: "unless-stopped"
+    cap_add:
+      - SYS_ADMIN
+      - SYS_RAWIO
+    ports:
+      - "9204:8080" # webui
+      # - "8086:8086" # influxDB admin
+    configs:
+      - source: "collector.yaml"
+        target: "/opt/scrutiny/config/collector.yaml"
+    devices:
+      - "/dev/nvme0"
+      - "/dev/nvme1"
+      - "/dev/sata1"
+      - "/dev/sata2"
+    volumes:
+      - "/run/udev:/run/udev:ro"
+      - "/volume3/docker/scrutiny/config:/opt/scrutiny/config"
+      - "/volume3/docker/scrutiny/influxdb:/opt/scrutiny/influxdb"
+
+configs:
+  collector.yaml:
+    content: |
+      devices: [
+        { device: "/dev/nvme0", type: "nvme" },
+        { device: "/dev/nvme1", type: "nvme" },
+        { device: "/dev/sata1", type: "sat" },
+        { device: "/dev/sata2", type: "sat" }
+      ]
