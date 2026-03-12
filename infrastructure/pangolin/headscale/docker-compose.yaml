@@ -1,10 +1,20 @@
 ---
 name: headscale
+
+networks:
+  pangolin:
+    external: true
+    name: pangolin
+
 services:
   headscale:
     image: ghcr.io/juanfont/headscale:v0.28.0
     container_name: headscale
     restart: unless-stopped
+    networks:
+      - pangolin
+    ports:
+      - "3478:3478/udp"
     command: serve
     volumes:
       - /opt/docker/headscale/config:/etc/headscale
@@ -14,15 +24,6 @@ services:
         target: /etc/headscale/config.yaml
       - source: headscale_policy
         target: /etc/headscale/policy.json
-    ports:
-      - "3478:3478/udp"
-    networks:
-      - pangolin
-
-networks:
-  pangolin:
-    external: true
-    name: pangolin
 
 configs:
   headscale_config:

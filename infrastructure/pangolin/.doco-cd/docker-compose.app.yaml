@@ -2,8 +2,8 @@
 # This file is not managed by doco-cd because it can't manage itself
 
 secrets:
-  1pw_token:
-    file: /opt/1pw_token
+  sops_token:
+    file: /opt/sops_token
 services:
   app:
     container_name: doco-cd
@@ -13,9 +13,8 @@ services:
         - url: https://gh-proxy.org/https://github.com/soulwhisper/home-ops.git
           reference: refs/heads/main
           interval: 600
-      DEPLOY_CONFIG_BASE_DIR: ./infrastructure/vps-bifrost
-      SECRET_PROVIDER: 1password
-      SECRET_PROVIDER_ACCESS_TOKEN_FILE: /run/secrets/1pw_token
+      DEPLOY_CONFIG_BASE_DIR: ./infrastructure/pangolin
+      SOPS_AGE_KEY_FILE: /run/secrets/sops_token
     healthcheck:
       test:
         - CMD
@@ -28,7 +27,7 @@ services:
     image: ghcr.io/kimdre/doco-cd:0.72.3
     restart: unless-stopped
     secrets:
-      - 1pw_token
+      - sops_token
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - data:/data
