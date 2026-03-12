@@ -54,7 +54,7 @@ certificatesResolvers:
           - "1.0.0.1:53"
       email: "admin@noirprime.com"
       storage: "/letsencrypt/acme.json"
-      caServer: "https://acme-staging-acme-v02.api.letsencrypt.org/directory"
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
       # caServer: "https://acme-v02.api.letsencrypt.org/directory"
 
 entryPoints:
