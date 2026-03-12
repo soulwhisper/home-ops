@@ -13,6 +13,8 @@ services:
           memory: 128m
     env_file:
       - pangolin.sops.env
+    environment: # needed for configs rendering
+      - PANGOLIN_SERVER_SECRET=${PANGOLIN_SERVER_SECRET}
     volumes:
       - /opt/docker/pangolin/config:/app/config
     configs:
