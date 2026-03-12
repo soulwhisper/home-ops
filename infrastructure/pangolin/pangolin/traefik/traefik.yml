@@ -91,7 +91,7 @@ entryPoints:
       tls:
         certResolver: "letsencrypt"
       middlewares:
-        - crowdsec@file
+        - crowdsec
       encodedCharacters:
         allowEncodedSlash: true
         allowEncodedQuestionMark: true
