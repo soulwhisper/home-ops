@@ -8,9 +8,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 1g
         reservations:
-          memory: 128m
+          memory: 256m
     env_file:
       - pangolin.sops.env
     volumes:
@@ -19,11 +19,7 @@ services:
       - source: pangolin_config
         target: /app/config/config.yml
     healthcheck:
-      test:
-        - "CMD"
-        - "curl"
-        - "-f"
-        - "http://localhost:3001/api/v1/"
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
       interval: "10s"
       timeout: "10s"
       retries: 15
@@ -38,7 +34,7 @@ services:
     ports:
       - 51820:51820/udp
       - 21820:21820/udp
-      - 45454:45454 # avoid ICP Filing
+      - 45454:443 # avoid ICP Filing
     depends_on:
       pangolin:
         condition: service_healthy
@@ -66,6 +62,33 @@ services:
       - /opt/apps/traefik/logs:/var/log/traefik
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+
+  crowdsec:
+    image: docker.io/crowdsecurity/crowdsec:v1.7.6
+    container_name: crowdsec
+    restart: unless-stopped
+    command: -t
+    environment:
+      COLLECTIONS: crowdsecurity/traefik crowdsecurity/appsec-virtual-patching crowdsecurity/appsec-generic-rules
+      ENROLL_INSTANCE_NAME: pangolin-crowdsec
+      ENROLL_TAGS: docker
+      GID: "1000"
+      PARSERS: crowdsecurity/whitelists
+    volumes:
+      - /opt/apps/crowdsec/config:/etc/crowdsec
+      - /opt/aaps/crowdsec/data:/var/lib/crowdsec/data
+      - /opt/apps/traefik/logs:/var/log/traefik:ro
+    configs:
+      - source: crowdsec_acquis
+        target: /etc/crowdsec/acquis.yaml
+    labels:
+      - traefik.enable=false
+    healthcheck:
+      test: ["CMD", "cscli", "lapi", "status"]
+      start_period: 30s
+      interval: 10s
+      retries: 3
+      timeout: 5s
 
 networks:
   default:
@@ -100,3 +123,19 @@ configs:
           disable_user_create_org: false
           allow_raw_resources: true
           enable_integration_api: true
+
+  crowdsec_acquis:
+    content: |
+      ---
+      source: file
+      filenames:
+        - /var/log/traefik/access.log
+      labels:
+        type: traefik
+      ---
+      source: appsec
+      listen_addr: 0.0.0.0:7422
+      path: /
+      appsec_config: crowdsecurity/virtual-patching
+      labels:
+        type: appsec

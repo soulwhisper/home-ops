@@ -1,13 +1,13 @@
 ---
 http:
   routers:
-    # headscale-redirect:
-    #   rule: "Host(`hs.noirprime.com`)"
-    #   service: headscale
-    #   entryPoints:
-    #     - web
-    #   middlewares:
-    #     - redirect-to-https
+    headscale-redirect:
+      rule: "Host(`hs.noirprime.com`)"
+      service: headscale
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
 
     headscale:
       rule: "Host(`hs.noirprime.com`)"
