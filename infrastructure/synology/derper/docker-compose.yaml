@@ -12,10 +12,12 @@ services:
     environment:
       - "PGID=101"
       - "DERP_ENABLE_HTTP=false"
-      - "DERP_HOSTNAME=opn.noirprime.com"
+      - "DERP_VERIFY_CLIENTS=true"
+      - "DERP_HOSTNAME=derp.noirprime.com"
       - "DERP_CERTMODE=acme.sh"
       - "ACME_SH_EMAIL=admin@noirprime.com"
     env_file:
       - derper.sops.env
     volumes:
+      - "/var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock"
       - "/volume3/docker/derper:/data"
