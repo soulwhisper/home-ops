@@ -5,9 +5,7 @@ metadata:
   name: pangolin-newt
 spec:
   endpoints:
+    # set pangolin wildcard record at VPS panel
     - dnsName: gateway-ext.noirprime.com
-      recordType: CNAME
-      targets: ["pangolin.noirprime.com.cn"] # VPS
-    - dnsName: pangolin.noirprime.com.cn
       recordType: A
       targets: ["140.143.210.150"] # VPS
