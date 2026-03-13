@@ -1,5 +1,8 @@
 ---
 name: pangolin
+
+# TODO migrate to '.com.cn:443' after ICP filling
+
 services:
   pangolin:
     image: docker.io/fosrl/pangolin:ee-1.16.2
@@ -34,7 +37,7 @@ services:
     ports:
       - 51820:51820/udp
       - 21820:21820/udp
-      - 45454:443 # avoid ICP Filing
+      - 45454:443
     depends_on:
       pangolin:
         condition: service_healthy
@@ -72,7 +75,6 @@ services:
     image: docker.io/crowdsecurity/crowdsec:v1.7.6
     container_name: crowdsec
     restart: unless-stopped
-    # command: -t
     environment:
       COLLECTIONS: crowdsecurity/traefik crowdsecurity/appsec-virtual-patching crowdsecurity/appsec-generic-rules
       ENROLL_INSTANCE_NAME: pangolin-crowdsec

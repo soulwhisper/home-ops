@@ -29,7 +29,7 @@ spec:
               tag: main-5026d38
             args:
               - --gateway-name=kgateway-external
-              - --site-id=pangolin-home-ops
+              - --site-id=home-ops-cluster
               - --target-hostname=kgateway-external.networking-system.svc.cluster.local
               - --deny-countries=RU,KP,IR,BY,IL,NL,DE,SC,VG
             restartPolicy: Always
