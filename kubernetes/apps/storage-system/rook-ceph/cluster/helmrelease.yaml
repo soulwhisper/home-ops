@@ -60,7 +60,7 @@ spec:
             memory: 2Gi
         osd:
           limits:
-            memory: 8Gi # estimate 48Gi with 6 OSDs
+            memory: 4Gi
       storage:
         useAllNodes: false
         useAllDevices: false
@@ -78,7 +78,7 @@ spec:
               # P41 2TB
               - devicePathFilter: "/dev/disk/by-path/pci-0000:58:00.0-nvme-1"
                 config:
-                  osdsPerDevice: "2"
+                  osdsPerDevice: "1" # 2 for best performance
               # Koxia RC20 2TB
               # - devicePathFilter: "/dev/disk/by-path/pci-0000:5d:00.0-nvme-1"
               #   config:

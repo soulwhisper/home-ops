@@ -23,18 +23,26 @@ spec:
             runAsGroup: 1000
             fsGroup: 1000
             fsGroupChangePolicy: OnRootMismatch
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: "18"
+            envFrom:
+              - secretRef:
+                  name: n8n-initdb
         containers:
           app:
             image:
               repository: ghcr.io/n8n-io/n8n
               tag: 2.12.2
             env:
-              DB_SQLITE_VACUUM_ON_STARTUP: true
               EXECUTIONS_DATA_PRUNE: true
-              EXECUTIONS_DATA_MAX_AGE: 7
+              EXECUTIONS_DATA_MAX_AGE: 90
               EXECUTIONS_DATA_PRUNE_MAX_COUNT: 50000
               GENERIC_TIMEZONE: "Asia/Shanghai"
               N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: false
+              WEBHOOK_URL: https://n8n.noirprime.com/
               N8N_HOST: n8n.noirprime.com
               N8N_PROTOCOL: "https"
               N8N_PORT: &port 8080
@@ -46,7 +54,11 @@ spec:
                     name: n8n
                     key: N8N_ENCRYPTION_KEY
               N8N_PROXY_HOPS: 1
-              WEBHOOK_URL: https://n8n.noirprime.com/
+              DB_TYPE: postgresdb
+              DB_POSTGRESDB_HOST: postgres-rw.database-system.svc.cluster.local
+              DB_POSTGRESDB_DATABASE: n8n
+              DB_POSTGRESDB_USER: n8n
+              DB_POSTGRESDB_PASSWORD: n8n
             resources:
               requests:
                 cpu: 5m
