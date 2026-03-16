@@ -8,3 +8,4 @@ components:
 resources:
   - ./cnpg-operator/ks.yaml
   - ./dragonfly-operator/ks.yaml
+  - ./mosquitto/ks.yaml

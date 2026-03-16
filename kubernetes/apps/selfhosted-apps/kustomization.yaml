@@ -10,9 +10,11 @@ resources:
   - ./convertx/ks.yaml
   - ./dispatcharr/ks.yaml
   - ./freshrss/ks.yaml
+  - ./home-assistant/ks.yaml
   - ./homepage/ks.yaml
   - ./karakeep/ks.yaml
   - ./n8n/ks.yaml
   - ./netbox/ks.yaml
   - ./sillytavern/ks.yaml
   - ./stirling-pdf/ks.yaml
+  - ./zigbee2mqtt/ks.yaml
