@@ -46,7 +46,7 @@ configs:
       replication_factor = 1
       rpc_bind_addr = "[::]:9001"
       rpc_public_addr = "127.0.0.1:9001"
-      rpc_secret = "YOUR_RPC_SECRET_HERE"
+      rpc_secret = "adbc7a0edaa7e35de527d45762002ee6efa57c07cd870b3dc454c242e4ee99a3"
       [s3_api]
       s3_region = "us-east-1"
       api_bind_addr = "[::]:9000"
