@@ -31,7 +31,7 @@ I have decided to adopt **FRR-K8s** effectively decoupling the routing control p
 
 ```yaml
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/frrk8s.metallb.io/frrconfiguration_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/frrk8s.metallb.io/frrconfiguration_v1beta1.json
 apiVersion: frrk8s.metallb.io/v1beta1
 kind: FRRConfiguration
 metadata:
@@ -146,7 +146,7 @@ configFiles:
 
 ```yaml
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/cilium.io/ciliumbgpadvertisement_v2.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/cilium.io/ciliumbgpadvertisement_v2.json
 apiVersion: cilium.io/v2
 kind: CiliumBGPAdvertisement
 metadata:
@@ -168,7 +168,7 @@ spec:
               values: ["disabled"],
             }
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/cilium.io/ciliumbgpclusterconfig_v2.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/cilium.io/ciliumbgpclusterconfig_v2.json
 apiVersion: cilium.io/v2
 kind: CiliumBGPClusterConfig
 metadata:
@@ -185,7 +185,7 @@ spec:
           peerConfigRef:
             name: cilium-bird2-nodelocal
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/cilium.io/ciliumbgppeerconfig_v2.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/cilium.io/ciliumbgppeerconfig_v2.json
 apiVersion: cilium.io/v2
 kind: CiliumBGPPeerConfig
 metadata:

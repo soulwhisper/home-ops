@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -37,12 +37,16 @@ spec:
               repository: ghcr.io/n8n-io/n8n
               tag: 2.13.0
             env:
+              DB_TYPE: postgresdb
+              DB_POSTGRESDB_HOST: postgres-rw.database-system.svc.cluster.local
+              DB_POSTGRESDB_DATABASE: n8n
+              DB_POSTGRESDB_USER: n8n
+              DB_POSTGRESDB_PASSWORD: n8n
               EXECUTIONS_DATA_PRUNE: true
-              EXECUTIONS_DATA_MAX_AGE: 90
-              EXECUTIONS_DATA_PRUNE_MAX_COUNT: 50000
+              EXECUTIONS_DATA_MAX_AGE: 720
+              EXECUTIONS_DATA_PRUNE_MAX_COUNT: 0
               GENERIC_TIMEZONE: "Asia/Shanghai"
               N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: false
-              WEBHOOK_URL: https://n8n.noirprime.com/
               N8N_HOST: n8n.noirprime.com
               N8N_PROTOCOL: "https"
               N8N_PORT: &port 8080
@@ -54,11 +58,8 @@ spec:
                     name: n8n
                     key: N8N_ENCRYPTION_KEY
               N8N_PROXY_HOPS: 1
-              DB_TYPE: postgresdb
-              DB_POSTGRESDB_HOST: postgres-rw.database-system.svc.cluster.local
-              DB_POSTGRESDB_DATABASE: n8n
-              DB_POSTGRESDB_USER: n8n
-              DB_POSTGRESDB_PASSWORD: n8n
+              N8N_DEFAULT_BINARY_DATA_MODE: filesystem
+              WEBHOOK_URL: https://n8n.noirprime.com/
             resources:
               requests:
                 cpu: 5m
@@ -99,7 +100,9 @@ spec:
                   value: /webhook
               - path:
                   value: /webhook-test
-            backendRefs: [{}]
+            backendRefs:
+              - identifier: app
+                port: http
 
     persistence:
       app:

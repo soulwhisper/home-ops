@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -18,7 +18,7 @@ spec:
     name: dashboard-envoy-clusters
     key: envoy-clusters.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -37,7 +37,7 @@ spec:
     name: dashboard-envoy-gateway-global
     key: envoy-gateway-global.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -56,7 +56,7 @@ spec:
     name: dashboard-envoy-proxy-global
     key: envoy-proxy-global.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -75,7 +75,7 @@ spec:
     name: dashboard-envoy-global-ratelimit
     key: envoy-global-ratelimit.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -94,7 +94,7 @@ spec:
     name: dashboard-envoy-mixin-overview
     key: envoy-mixin-overview.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -113,7 +113,7 @@ spec:
     name: dashboard-envoy-mixin-upstream
     key: envoy-mixin-upstream.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:

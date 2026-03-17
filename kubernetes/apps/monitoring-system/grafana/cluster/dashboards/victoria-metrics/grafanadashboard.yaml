@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -18,7 +18,7 @@ spec:
     name: dashboard-victoria-logs
     key: victoria-logs.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -37,7 +37,7 @@ spec:
     name: dashboard-victoria-metrics-operator
     key: victoria-metrics-operator.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -56,7 +56,7 @@ spec:
     name: dashboard-victoria-metrics-dashboard
     key: victoria-metrics-dashboard.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -75,7 +75,7 @@ spec:
     name: dashboard-victoria-metrics-vmagent
     key: victoria-metrics-vmagent.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -94,7 +94,7 @@ spec:
     name: dashboard-victoria-metrics-vmalert
     key: victoria-metrics-vmalert.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:

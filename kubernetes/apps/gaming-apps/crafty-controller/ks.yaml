@@ -1,0 +1,25 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name crafty-controller
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: gaming-apps
+  path: "./kubernetes/apps/gaming-apps/crafty-controller/app"
+  dependsOn:
+    - name: gaming-nfs
+      namespace: gaming-apps
+  components:
+    - ../../../../components/kgateway-policy
+    - ../../../../components/volsync
+  postBuild:
+    substitute:
+      APP: *name

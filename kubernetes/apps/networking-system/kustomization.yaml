@@ -10,4 +10,3 @@ resources:
   - ./kgateway/ks.yaml
   - ./externaldns-adguard/ks.yaml
   - ./externaldns-cloudflare/ks.yaml
-  # - ./pangolin-newt/ks.yaml

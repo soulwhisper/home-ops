@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -18,7 +18,7 @@ spec:
     name: dashboard-k8s-system-api-server
     key: k8s-system-api-server.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -37,7 +37,7 @@ spec:
     name: dashboard-k8s-views-global
     key: k8s-views-global.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -56,7 +56,7 @@ spec:
     name: dashboard-k8s-views-nodes
     key: k8s-views-nodes.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -75,7 +75,7 @@ spec:
     name: dashboard-k8s-views-namespaces
     key: k8s-views-namespaces.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -94,7 +94,7 @@ spec:
     name: dashboard-k8s-views-pods
     key: k8s-views-pods.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:

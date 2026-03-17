@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -18,7 +18,7 @@ spec:
     name: dashboard-cilium-agent
     key: cilium-agent.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -37,7 +37,7 @@ spec:
     name: dashboard-cilium-operator
     key: cilium-operator.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -56,7 +56,7 @@ spec:
     name: dashboard-cilium-hubble-dashboard
     key: cilium-hubble-dashboard.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -75,7 +75,7 @@ spec:
     name: dashboard-cilium-hubble-dns
     key: cilium-hubble-dns.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -94,7 +94,7 @@ spec:
     name: dashboard-cilium-hubble-l7
     key: cilium-hubble-l7.json
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:

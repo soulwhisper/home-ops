@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/cilium.io/ciliumloadbalancerippool_v2.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/cilium.io/ciliumloadbalancerippool_v2.json
 apiVersion: cilium.io/v2
 kind: CiliumLoadBalancerIPPool
 metadata:

@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -77,6 +77,6 @@ spec:
         globalMounts:
           - path: /kavita/config
       shared:
-        existingClaim: nfs-shared-document
+        existingClaim: document
         globalMounts:
           - path: /data

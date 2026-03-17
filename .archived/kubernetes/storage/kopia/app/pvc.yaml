@@ -11,4 +11,4 @@ spec:
   resources:
     requests:
       storage: 300Gi
-  storageClassName: nfs-shared
+  storageClassName: media-nfs

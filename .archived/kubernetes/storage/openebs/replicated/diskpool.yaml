@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/openebs.io/diskpool_v1beta2.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/openebs.io/diskpool_v1beta2.json
 apiVersion: openebs.io/v1beta2
 kind: DiskPool
 metadata:
@@ -9,7 +9,7 @@ spec:
   node: exarch-01
   disks: ["/dev/sdb"]
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/openebs.io/diskpool_v1beta2.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/openebs.io/diskpool_v1beta2.json
 apiVersion: openebs.io/v1beta2
 kind: DiskPool
 metadata:
@@ -19,7 +19,7 @@ spec:
   node: exarch-02
   disks: ["/dev/sdb"]
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/openebs.io/diskpool_v1beta2.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/openebs.io/diskpool_v1beta2.json
 apiVersion: openebs.io/v1beta2
 kind: DiskPool
 metadata:

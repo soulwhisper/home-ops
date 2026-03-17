@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/storage.k8s.io/storageclass_v1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/storage.k8s.io/storageclass_v1.json
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -17,7 +17,7 @@ provisioner: io.openebs.csi-mayastor
 volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: Delete
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/storage.k8s.io/storageclass_v1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/storage.k8s.io/storageclass_v1.json
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:

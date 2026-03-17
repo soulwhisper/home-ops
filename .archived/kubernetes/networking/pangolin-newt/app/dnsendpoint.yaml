@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/externaldns.k8s.io/dnsendpoint_v1alpha1.json
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: pangolin-newt
+spec:
+  endpoints:
+    # set pangolin wildcard record at VPS panel
+    - dnsName: gateway-ext.noirprime.com
+      recordType: A
+      targets: ["140.143.210.150"] # VPS

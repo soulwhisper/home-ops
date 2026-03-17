@@ -20,8 +20,10 @@
     {
       description: "User apps: auto-merge minor updates after CI",
       matchFileNames: [
-        "kubernetes/apps/selfhosted-apps/**",
+        "kubernetes/apps/gaming-apps/**",
         "kubernetes/apps/media-apps/**",
+        "kubernetes/apps/selfhosted-apps/**",
+        "kubernetes/apps/smarthome-apps/**",
       ],
       matchUpdateTypes: ["minor"],
       automerge: true,

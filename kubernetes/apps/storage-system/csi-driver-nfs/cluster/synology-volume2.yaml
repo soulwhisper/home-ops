@@ -1,0 +1,26 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/storage.k8s.io/storageclass_v1.json
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: synology-volume2
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: "nas.homelab.internal"
+  share: "/volume2"
+  subDir: "${pvc.metadata.name}"
+  onDelete: retain
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+mountOptions:
+  - nfsvers=4.1
+  - softerr
+  - noatime
+  - nconnect=4
+  - timeo=30
+  - retrans=3
+  - noresvport
+  - rsize=131072
+  - wsize=131072
+  - actimeo=60

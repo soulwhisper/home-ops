@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.noirprime.com/frrk8s.metallb.io/frrconfiguration_v1beta1.json
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/frrk8s.metallb.io/frrconfiguration_v1beta1.json
 apiVersion: frrk8s.metallb.io/v1beta1
 kind: FRRConfiguration
 metadata:
