@@ -10,7 +10,7 @@ releases:
   - name: prometheus-crds
     namespace: monitoring-system
     chart: oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds
-    version: 27.0.0
+    version: 27.0.1
 
   - name: cilium
     namespace: kube-system
