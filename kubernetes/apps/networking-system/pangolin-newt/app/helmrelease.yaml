@@ -40,7 +40,7 @@ spec:
           app:
             image:
               repository: fosrl/newt
-              tag: 1.10.2
+              tag: 1.10.3
             env:
               BLUEPRINT_FILE: /etc/newt/blueprint.yaml
             envFrom:
