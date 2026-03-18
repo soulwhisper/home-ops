@@ -3,19 +3,23 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: &name dispatcharr
+  name: &name authentik
   annotations:
     config.home-ops.io/managed: "true"
-  labels:
-    config.home-ops.io/deps: "infra"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: selfhosted-apps
-  path: "./kubernetes/apps/selfhosted-apps/dispatcharr/app"
+  targetNamespace: security-system
+  path: "./kubernetes/apps/security-system/authentik/app"
+  wait: true
+  dependsOn:
+    - name: cnpg-cluster
+      namespace: database-system
+    - name: onepassword-connect
+      namespace: security-system
   components:
-    - ../../../../components/volsync
+    - ../../../../components/cnpg
   postBuild:
     substitute:
       APP: *name

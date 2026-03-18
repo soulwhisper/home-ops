@@ -1,0 +1,48 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprints-core
+data:
+  flow-authentication.yaml: |
+    version: 1
+    entries:
+      - model: authentik_flows.flow
+        identifiers:
+          slug: authentication
+        attrs:
+          name: "Default Authentication Flow"
+          designation: authentication
+          title: "Welcome to noirprime"
+
+  flow-authorization.yaml: |
+    version: 1
+    entries:
+      - model: authentik_flows.flow
+        identifiers:
+          slug: default-provider-authorization-implicit
+        attrs:
+          name: "Default Authorization Flow (Implicit)"
+          designation: authorization
+          policy_engine_mode: any
+
+  stage-password.yaml: |
+    version: 1
+    entries:
+      - model: authentik_stages_password.passwordstage
+        identifiers:
+          name: default-authentication-password
+        attrs:
+          backends:
+            - authentik.core.auth.InbuiltBackend
+
+  policy-reputation.yaml: |
+    version: 1
+    entries:
+      - model: authentik_policies_reputation.reputationpolicy
+        identifiers:
+          name: policy-reputation-block
+        attrs:
+          check_ip: true
+          check_username: true
+          threshold: -5

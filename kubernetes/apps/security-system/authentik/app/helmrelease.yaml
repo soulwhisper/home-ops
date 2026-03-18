@@ -1,0 +1,79 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name authentik
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: authentik
+
+  values:
+    postgresql:
+      enabled: false
+    global:
+      env:
+        - name: AUTHENTIK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: *name
+              key: AUTHENTIK_SECRET_KEY
+        - name: AUTHENTIK_POSTGRESQL__HOST
+          valueFrom:
+            secretKeyRef:
+              name: authentik-pguser
+              key: host
+        - name: AUTHENTIK_POSTGRESQL__USER
+          valueFrom:
+            secretKeyRef:
+              name: authentik-pguser
+              key: username
+        - name: AUTHENTIK_POSTGRESQL__PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: authentik-pguser
+              key: password
+        - name: AUTHENTIK_POSTGRESQL__NAME
+          valueFrom:
+            secretKeyRef:
+              name: authentik-pguser
+              key: db
+    blueprints:
+      configMaps:
+        - authentik-blueprints-core
+        - authentik-blueprints-apps-static
+        - authentik-blueprints-apps-forward
+        - authentik-blueprints-apps-oidc
+    server:
+      initContainers:
+        - name: init-db
+          image: ghcr.io/home-operations/postgres-init:18
+          envFrom:
+            - secretRef:
+                name: authentik-initdb
+      route:
+        main:
+          enabled: true
+          hostnames: [auth.noirprime.com]
+          parentRefs:
+            - name: kgateway-internal
+              namespace: networking-system
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+      replicas: 2
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+      pdb:
+        enabled: true
+        minAvailable: 1
+    worker:
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true

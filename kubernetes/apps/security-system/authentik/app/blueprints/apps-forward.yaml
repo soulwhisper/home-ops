@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprints-apps-forward
+data:
+  app-jellyfin.yaml: |
+    version: 1
+    entries:
+      - model: authentik_providers_proxy.proxyprovider
+        identifiers:
+          name: jellyfin-proxy-provider
+        attrs:
+          name: jellyfin-proxy-provider
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit]]
+          mode: forward_single
+          external_host: "https://jellyfin.noirprime.com"
+          access_token_validity: "hours=24"
+          cookie_domain: "noirprime.com"
+      - model: authentik_core.application
+        identifiers:
+          slug: jellyfin
+        attrs:
+          name: Jellyfin
+          provider: !KeyOf jellyfin-proxy-provider
+          meta_launch_url: "https://jellyfin.noirprime.com"
