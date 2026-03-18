@@ -1,0 +1,35 @@
+---
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+entries:
+  - model: authentik_providers_proxy.proxyprovider
+    identifiers:
+      name: victoria-metrics-logs-proxy-provider
+    attrs:
+      name: victoria-metrics-logs-proxy-provider
+      authorization_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-provider-authorization-implicit],
+        ]
+      mode: forward_single
+      external_host: "https://logs.noirprime.com"
+      access_token_validity: "hours=12"
+      cookie_domain: "noirprime.com"
+  - model: authentik_core.application
+    identifiers:
+      slug: victoria-metrics-logs
+    attrs:
+      name: VictoriaMetrics-Logs
+      provider: !KeyOf victoria-metrics-logs-proxy-provider
+      meta_launch_url: "https://logs.noirprime.com"
+      group: "Monitoring"
+      policy_engine_mode: all
+  - model: authentik_policies_binding.policybinding
+    identifiers:
+      target: !KeyOf victoria-metrics-logs
+      group: !Find [authentik_core.group, [name, homelab-admin]]
+      order: 0
+    attrs:
+      enabled: true
+      timeout: 30

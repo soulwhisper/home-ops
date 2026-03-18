@@ -1,0 +1,12 @@
+---
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+entries:
+  - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+    identifiers:
+      name: default-authentication-mfa-validation
+    attrs:
+      device_classes:
+        - totp
+      not_configured_action: skip
+      # not_configured_action: deny # for external

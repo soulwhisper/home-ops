@@ -1,0 +1,13 @@
+---
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+entries:
+  - model: authentik_providers_oauth2.scopemapping
+    identifiers:
+      scope_name: groups
+    attrs:
+      name: "Groups Scope Mapping"
+      scope_name: groups
+      description: "Return user groups as claim"
+      expression: |
+        return list(request.user.ak_groups.values_list("name", flat=True))

@@ -12,4 +12,4 @@ resources:
   - ./https-redirect.yaml
   - ./httplistenerpolicy.yaml
   - ./podmonitor.yaml
-  - ./trafficpolicy.yaml
+  - ./gatewayextension.yaml

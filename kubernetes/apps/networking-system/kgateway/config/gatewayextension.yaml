@@ -1,0 +1,24 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.kgateway.dev/gatewayextension_v1alpha1.json
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: GatewayExtension
+metadata:
+  name: authentik-ext-auth
+spec:
+  type: ExtAuth
+  extAuth:
+    httpService:
+      backendRef:
+        name: authentik-server
+        namespace: security-system
+        port: 80
+      authorizationRequest:
+        allowedHeaders:
+          patterns:
+            - exact: cookie
+            - exact: authorization
+            - prefix: x-authentik-
+      authorizationResponse:
+        allowedUpstreamHeaders:
+          patterns:
+            - prefix: x-authentik-

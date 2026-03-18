@@ -1,0 +1,14 @@
+---
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+entries:
+  - model: authentik_outposts.outpost
+    identifiers:
+      name: authentik-embedded-outpost
+    attrs:
+      name: authentik-embedded-outpost
+      type: proxy
+      config:
+        authentik_host: "https://auth.noirprime.com"
+        authentik_host_insecure: false
+        cookie_domain: "noirprime.com"

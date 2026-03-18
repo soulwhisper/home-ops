@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+entries:
+  - model: authentik_core.group
+    identifiers:
+      name: homelab-admin
+    attrs:
+      name: homelab-admin
+      is_superuser: false
+  - model: authentik_core.group
+    identifiers:
+      name: homelab-internal
+    attrs:
+      name: homelab-internal
+      is_superuser: false
+  - model: authentik_core.group
+    identifiers:
+      name: homelab-external
+    attrs:
+      name: homelab-external
+      is_superuser: false

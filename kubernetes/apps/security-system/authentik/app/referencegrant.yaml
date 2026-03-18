@@ -1,0 +1,15 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/referencegrant_v1beta1.json
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: authentik-ext-auth-grant
+spec:
+  from:
+    - group: gateway.envoyproxy.io
+      kind: GatewayExtension
+      namespace: networking-system
+  to:
+    - group: ""
+      kind: Service
+      name: authentik-server

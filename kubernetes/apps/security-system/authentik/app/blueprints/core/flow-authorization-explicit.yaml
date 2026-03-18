@@ -1,0 +1,11 @@
+---
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+entries:
+  - model: authentik_flows.flow
+    identifiers:
+      slug: default-provider-authorization-explicit
+    attrs:
+      name: "Default Authorization Flow (Explicit Consent)"
+      designation: authorization
+      policy_engine_mode: all

@@ -1,0 +1,55 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: authentik-external
+spec:
+  hostnames: ["auth.noirprime.com"]
+  parentRefs:
+    - name: kgateway-external
+      namespace: networking-system
+
+  rules:
+    # OIDC
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /application/o/
+      backendRefs: &backendref
+        - name: authentik-server
+          port: 80
+
+    # ForwardAuth
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /outpost.goauthentik.io/
+      backendRefs: *backendref
+
+    # Login Page
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /if/flow/
+        - path:
+            type: PathPrefix
+            value: /static/
+      backendRefs: *backendref
+
+    # Login Page, password reset / TOTP
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /if/user/
+      backendRefs: *backendref
+
+    # Others
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            statusCode: 404

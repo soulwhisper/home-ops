@@ -7,4 +7,33 @@ resources:
   - ./helmrelease.yaml
   - ./ocirepository.yaml
   # utils
-  - ./blueprints
+  - ./externalsecret.yaml
+  - ./httproute.yaml
+  - ./referencegrant.yaml
+generatorOptions:
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: "disabled"
+  disableNameSuffixHash: false
+configMapGenerator:
+  - name: authentik-blueprints-core
+    files:
+      - ./blueprints/core/flow-authentication.yaml
+      - ./blueprints/core/flow-authorization-explicit.yaml
+      - ./blueprints/core/flow-authorization-implicit.yaml
+      - ./blueprints/core/outpost-proxy.yaml
+      - ./blueprints/core/policy-mfa-required.yaml
+      - ./blueprints/core/policy-reputation.yaml
+      - ./blueprints/core/scope-groups-mapping.yaml
+      - ./blueprints/core/scope-groups.yaml
+      - ./blueprints/core/stage-password.yaml
+      - ./blueprints/core/stage-totp-setup.yaml
+      - ./blueprints/core/stage-totp-validate.yaml
+  - name: authentik-blueprints-apps-forward
+    files:
+      - ./blueprints/forward/victoria-metrics-alert.yaml
+      - ./blueprints/forward/victoria-metrics-cluster.yaml
+      - ./blueprints/forward/victoria-metrics-logs.yaml
+  - name: authentik-blueprints-apps-oidc
+    files:
+      - ./blueprints/oidc/grafana.yaml
+      - ./blueprints/oidc/jellyfin.yaml
