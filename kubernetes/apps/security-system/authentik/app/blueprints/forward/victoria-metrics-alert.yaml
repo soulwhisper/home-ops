@@ -10,7 +10,7 @@ entries:
       authorization_flow:
         !Find [
           authentik_flows.flow,
-          [slug, default-provider-authorization-implicit],
+          [slug, default-provider-authorization-implicit-consent],
         ]
       mode: forward_single
       external_host: "https://alert.noirprime.com"

@@ -11,7 +11,7 @@ entries:
       authorization_flow:
         !Find [
           authentik_flows.flow,
-          [slug, default-provider-authorization-implicit],
+          [slug, default-provider-authorization-implicit-consent],
         ]
       client_type: confidential
       redirect_uris:
