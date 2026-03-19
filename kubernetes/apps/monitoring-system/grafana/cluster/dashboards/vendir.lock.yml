@@ -89,12 +89,12 @@ directories:
       tags:
       - v1.138.0
     path: metrics
-  - configDigest: b7560a176ec0ce46fee83732f9a353d93f1fdf062aa2671adc120c58808aa7ac
+  - configDigest: f9f340d02610177b691d9f4f7adba5b56dc7a6a6933985eac839eae67c5f6c41
     git:
-      commitTitle: 'docs/CHANGELOG.md: cut v1.118.0...'
-      sha: aa3171cf4b441bf66c6f939af4420d68702216e4
+      commitTitle: 'docs/CHANGELOG.md: cut v1.121.0'
+      sha: b1003c0e65a4d9352d6f5b7f5201e5989b687687
       tags:
-      - v1.118.0
+      - v1.121.0
     path: logs
   path: _sources/victoria
 - contents:
