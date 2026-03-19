@@ -1,0 +1,152 @@
+---
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+#
+# Unified authentication flow with conditional MFA for homelab-admin.
+#
+# Flow path:
+#   All users  → identification → password → [MFA validate *] → login
+#   * MFA validate is policy-gated: runs only for homelab-admin members.
+#     - homelab-admin without MFA configured → redirected to TOTP enrollment
+#     - homelab-admin with MFA configured    → TOTP / WebAuthn / static-code prompt
+#     - homelab-internal / homelab-external  → stage skipped transparently
+#
+# No existing app blueprints require changes: setting flow_authentication on the
+# default brand applies this flow to all providers that omit authentication_flow.
+#
+entries:
+  # ---------------------------------------------------------------------------
+  # MFA validate stage
+  # Accepts TOTP (Aegis / Tofu), WebAuthn passkey / fingerprint, and static
+  # backup codes.  not_configured_action=configure forces first-time enrollment
+  # via the default TOTP setup flow; the user can add WebAuthn afterward from
+  # /if/user/ → MFA Devices.
+  # ---------------------------------------------------------------------------
+  - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+    id: stage-mfa-validate
+    identifiers:
+      name: homelab-mfa-validate
+    attrs:
+      name: homelab-mfa-validate
+      device_classes:
+        - static
+        - totp
+        - webauthn
+      not_configured_action: configure
+      configure_flow:
+        !Find [authentik_flows.flow, [slug, default-authenticator-totp-setup]]
+      # last_auth_threshold intentionally omitted (ak default = always prompt).
+      # Set to e.g. "hours=12" here if re-prompting within a session is disruptive.
+
+  # ---------------------------------------------------------------------------
+  # Expression policy: True only for homelab-admin members.
+  # Bound to the MFA validate stage binding; all other groups receive False and
+  # the stage is skipped at execution time (after identification resolves user).
+  # ---------------------------------------------------------------------------
+  - model: authentik_policies_expression.expressionpolicy
+    id: policy-mfa-admin
+    identifiers:
+      name: policy-mfa-admin-only
+    attrs:
+      name: policy-mfa-admin-only
+      expression: |
+        return ak_is_group_member(request.user, name="homelab-admin")
+
+  # ---------------------------------------------------------------------------
+  # Unified authentication flow
+  # ---------------------------------------------------------------------------
+  - model: authentik_flows.flow
+    id: flow-authentication
+    identifiers:
+      slug: homelab-authentication
+    attrs:
+      name: Homelab authentication
+      slug: homelab-authentication
+      designation: authentication
+      title: Sign in
+
+  # ---------------------------------------------------------------------------
+  # Stage bindings – reuse ak default stages; only the validate stage is new.
+  # ---------------------------------------------------------------------------
+
+  # order 10 – username / email lookup
+  - model: authentik_flows.flowstagebinding
+    id: fsb-identification
+    identifiers:
+      target: !KeyOf flow-authentication
+      stage:
+        !Find [
+          authentik_stages_identification.identificationstage,
+          [name, default-authentication-identification],
+        ]
+      order: 10
+    attrs:
+      order: 10
+
+  # order 20 – password check
+  - model: authentik_flows.flowstagebinding
+    id: fsb-password
+    identifiers:
+      target: !KeyOf flow-authentication
+      stage:
+        !Find [
+          authentik_stages_password.passwordstage,
+          [name, default-authentication-password],
+        ]
+      order: 20
+    attrs:
+      order: 20
+
+  # order 30 – MFA validate (homelab-admin only, see policy binding below)
+  # evaluate_on_plan: false  → do not evaluate at planning time (user is anonymous then)
+  # re_evaluate_policies: true → evaluate the group policy at execution time (user is known)
+  - model: authentik_flows.flowstagebinding
+    id: fsb-mfa-validate
+    identifiers:
+      target: !KeyOf flow-authentication
+      stage: !KeyOf stage-mfa-validate
+      order: 30
+    attrs:
+      order: 30
+      evaluate_on_plan: false
+      re_evaluate_policies: true
+
+  # order 40 – create session
+  - model: authentik_flows.flowstagebinding
+    id: fsb-user-login
+    identifiers:
+      target: !KeyOf flow-authentication
+      stage:
+        !Find [
+          authentik_stages_user_login.userloginstage,
+          [name, default-authentication-login],
+        ]
+      order: 40
+    attrs:
+      order: 40
+
+  # ---------------------------------------------------------------------------
+  # Policy binding: gate MFA validate stage on homelab-admin membership.
+  # Policy returning False causes the stage to be skipped for that user.
+  # ---------------------------------------------------------------------------
+  - model: authentik_policies_binding.policybinding
+    identifiers:
+      target: !KeyOf fsb-mfa-validate
+      policy: !KeyOf policy-mfa-admin
+      order: 0
+    attrs:
+      enabled: true
+      timeout: 30
+      negate: false
+
+  # ---------------------------------------------------------------------------
+  # Apply flow as the default brand authentication flow.
+  # Providers that do not explicitly set authentication_flow inherit this value,
+  # so all existing forward-auth and OIDC app blueprints are covered without
+  # modification.
+  # ---------------------------------------------------------------------------
+  - model: authentik_brands.brand
+    identifiers:
+      default: true
+    attrs:
+      flow_authentication: !KeyOf flow-authentication

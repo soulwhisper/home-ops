@@ -17,6 +17,7 @@ generatorOptions:
 configMapGenerator:
   - name: authentik-blueprints-core
     files:
+      - ./blueprints/core/flow-authentication.yaml
       - ./blueprints/core/outpost-proxy.yaml
       - ./blueprints/core/policy-reputation.yaml
       - ./blueprints/core/scope-groups-mapping.yaml
