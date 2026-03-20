@@ -11,7 +11,7 @@ The Kubernetes cluster is deployed using [Talos](https://www.talos.dev), leverag
 - [cloudnative-pg](https://github.com/cloudnative-pg/cloudnative-pg): Kubernetes-native PostgreSQL operator with VectorChord support and S3 backup integration.
 - [external-dns](https://github.com/kubernetes-sigs/external-dns): Split-horizon DNS management syncing records to AdGuard (internal) and Cloudflare (external).
 - [external-secrets](https://github.com/external-secrets/external-secrets): Syncs Kubernetes secrets from [1Password Connect](https://github.com/1Password/connect).
-- frr-k8s: Manages BGP sessions and BFD for high-availability networking.
+- [frr-k8s](https://github.com/metallb/frr-k8s): Manages BGP sessions and BFD for high-availability networking.
 - [rook-ceph](https://github.com/rook/rook): Distributed block storage for peristent storage.
 - [spegel](https://github.com/spegel-org/spegel): Stateless cluster local OCI registry mirror.
 - [victoria-metrics](https://github.com/VictoriaMetrics/VictoriaMetrics): High-performance monitoring and logging stack (victoria-logs).

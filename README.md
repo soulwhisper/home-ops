@@ -32,7 +32,7 @@ The project strictly adheres to **Infrastructure as Code (IaC)** and **GitOps** 
 ### Key Characteristics
 
 - **Kubernetes on Metal:** Built on [Talos Linux](https://www.talos.dev) using M.2 NVMe storage, optimizing for performance and immutability.
-- **Enterprise Networking:** Anchored by a managed Layer 3 core switch running **BGP/BFD/OSPF**, integrating seamlessly with [Cilium](https://github.com/cilium/cilium) for advanced pod networking and **OpenWrt** for edge services (NTP/DNS/Proxy).
+- **Enterprise Networking:** Anchored by a managed Layer 3 core switch running **BGP/BFD**, integrating seamlessly with [Cilium](https://github.com/cilium/cilium) for advanced pod networking and **OpenWrt** for edge services (NTP/DNS/VPN/TProxy).
 - **Hybrid Storage:** Leveraging **Synology** for centralized NFS/S3 object storage alongside localized high-performance [Rook-Ceph](https://github.com/rook/rook) block storage.
 - **Automated Operations:** Powered by [Flux](https://github.com/fluxcd/flux2) for continuous delivery, [GitHub Actions](https://github.com/features/actions) for CI pipelines, and [Renovate](https://github.com/renovatebot/renovate) for dependency management.
 
