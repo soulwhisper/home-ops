@@ -6,8 +6,16 @@ Thumbs.db
 .cache/
 site*/
 
+# Terraform
+.terraform/
+.terraform.lock.hcl
+.tfstate
+.tfstate.backup
+.tfvars
+
 # Other files
 kubeconfig
 talosconfig
 .env
 .iso
+.log

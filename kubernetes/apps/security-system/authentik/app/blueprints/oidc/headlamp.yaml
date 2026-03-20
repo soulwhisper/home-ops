@@ -4,9 +4,9 @@ version: 1
 entries:
   - model: authentik_providers_oauth2.oauth2provider
     identifiers:
-      name: grafana-oidc-provider
+      name: headlamp-oidc-provider
     attrs:
-      name: grafana-oidc-provider
+      name: headlamp-oidc-provider
       authorization_flow:
         !Find [
           authentik_flows.flow,
@@ -14,7 +14,7 @@ entries:
         ]
       client_type: confidential
       redirect_uris:
-        - url: "https://grafana.noirprime.com/login/generic_oauth"
+        - url: "https://headlamp.noirprime.com/oidc-callback"
           matching_mode: strict
       sub_mode: user_email
       include_claims_in_id_token: true
@@ -30,16 +30,16 @@ entries:
         - !Find [authentik_providers_oauth2.scopemapping, [scope_name, groups]]
   - model: authentik_core.application
     identifiers:
-      slug: grafana
+      slug: headlamp
     attrs:
-      name: Grafana
-      provider: !KeyOf grafana-oidc-provider
-      meta_launch_url: "https://grafana.noirprime.com"
+      name: headlamp
+      provider: !KeyOf headlamp-oidc-provider
+      meta_launch_url: "https://headlamp.noirprime.com"
       group: "Monitoring"
       policy_engine_mode: all
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf grafana
+      target: !KeyOf headlamp
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }

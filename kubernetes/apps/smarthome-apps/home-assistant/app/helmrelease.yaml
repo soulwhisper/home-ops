@@ -20,24 +20,35 @@ spec:
           reloader.stakater.com/auto: "true"
           config.home-ops.io/proxy: "https" # https_proxy needed
         initContainers:
-          init-db:
+          hacs-installer:
             image:
-              repository: ghcr.io/home-operations/postgres-init
-              tag: "18"
-            envFrom:
-              - secretRef:
-                  name: home-assistant-initdb
+              repository: busybox
+              tag: "latest"
+            command:
+              - sh
+              - -c
+              - |
+                HACS_VERSION=$(wget -qO- https://api.github.com/repos/hacs/integration/releases/latest \
+                  | grep '"tag_name"' | cut -d'"' -f4)
+                wget -O /tmp/hacs.zip \
+                  "https://github.com/hacs/integration/releases/download/${HACS_VERSION}/hacs.zip"
+                mkdir -p /config/custom_components/hacs
+                unzip -o /tmp/hacs.zip -d /config/custom_components/hacs
+                echo "HACS ${HACS_VERSION} installed."
         containers:
           app:
             image:
               repository: ghcr.io/home-assistant/home-assistant
               tag: 2026.3.2
             env:
-              RECORDER_DB_URL:
-                valueFrom:
-                  secretKeyRef:
-                    name: home-assistant-pguser
-                    key: uri
+              OIDC_CLIENT_ID:
+                secretKeyRef:
+                  name: *name
+                  key: oidc_client_id
+              OIDC_CLIENT_SECRET:
+                secretKeyRef:
+                  name: *name
+                  key: oidc_client_secret
             resources:
               requests:
                 cpu: 40m
@@ -120,6 +131,9 @@ spec:
         existingClaim: *name
         advancedMounts:
           *name :
+            hacs-installer:
+              - path: /config
+                subPath: config
             app:
               - path: /config
                 subPath: config

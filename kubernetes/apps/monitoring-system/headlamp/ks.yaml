@@ -12,3 +12,6 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: monitoring-system
   path: "./kubernetes/apps/monitoring-system/headlamp/app"
+  dependsOn:
+    - name: onepassword-connect
+      namespace: security-system

@@ -24,9 +24,34 @@ spec:
               repository: freshrss/freshrss
               tag: 1.28.1-alpine
             env:
-              CRON_MIN: "*"
-              DOMAIN: rss.noirprime.com
-              LISTEN: &port 8080
+              - name: CRON_MIN
+                value: "*"
+              - name: DOMAIN
+                value: rss.noirprime.com
+              - name: LISTEN
+                value: &port 8080
+              - name: FRESHRSS_INSTALL
+                value: "--default-user admin"
+              - name: OIDC_ENABLED
+                value: "1"
+              - name: OIDC_PROVIDER_METADATA_URL
+                value: "https://auth.noirprime.com/application/o/freshrss/.well-known/openid-configuration"
+              - name: OIDC_REMOTE_USER_CLAIM
+                value: "email"
+              - name: OIDC_CLIENT_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: *name
+                    key: oidc_client_id
+              - name: OIDC_CLIENT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: *name
+                    key: oidc_client_secret
+              - name: OIDC_SCOPES
+                value: "openid profile email"
+              - name: OIDC_X_FORWARDED_HEADERS
+                value: "X-Forwarded-Port X-Forwarded-Proto X-Forwarded-Host"
             resources:
               requests:
                 cpu: 12m

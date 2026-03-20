@@ -7,5 +7,6 @@ resources:
   - ./helmrelease.yaml
   - ./ocirepository.yaml
   # utils
+  - ./configmap.yaml
   - ./externalsecret.yaml
   - ./httproute.yaml

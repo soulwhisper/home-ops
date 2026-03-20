@@ -4,9 +4,9 @@ version: 1
 entries:
   - model: authentik_providers_oauth2.oauth2provider
     identifiers:
-      name: grafana-oidc-provider
+      name: immich-oidc-provider
     attrs:
-      name: grafana-oidc-provider
+      name: immich-oidc-provider
       authorization_flow:
         !Find [
           authentik_flows.flow,
@@ -14,7 +14,11 @@ entries:
         ]
       client_type: confidential
       redirect_uris:
-        - url: "https://grafana.noirprime.com/login/generic_oauth"
+        - url: "https://photo.noirprime.com/auth/login"
+          matching_mode: strict
+        - url: "https://photo.noirprime.com/user-settings"
+          matching_mode: strict
+        - url: "app.immich:///oauth-callback"
           matching_mode: strict
       sub_mode: user_email
       include_claims_in_id_token: true
@@ -30,16 +34,22 @@ entries:
         - !Find [authentik_providers_oauth2.scopemapping, [scope_name, groups]]
   - model: authentik_core.application
     identifiers:
-      slug: grafana
+      slug: immich
     attrs:
-      name: Grafana
-      provider: !KeyOf grafana-oidc-provider
-      meta_launch_url: "https://grafana.noirprime.com"
-      group: "Monitoring"
-      policy_engine_mode: all
+      name: immich
+      provider: !KeyOf immich-oidc-provider
+      meta_launch_url: "https://photo.noirprime.com"
+      group: "Media"
+      policy_engine_mode: any
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf grafana
+      target: !KeyOf immich
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
+    attrs: { enabled: true, timeout: 30 }
+  - model: authentik_policies_binding.policybinding
+    identifiers:
+      target: !KeyOf immich
+      group: !Find [authentik_core.group, [name, homelab-internal]]
+      order: 10
     attrs: { enabled: true, timeout: 30 }

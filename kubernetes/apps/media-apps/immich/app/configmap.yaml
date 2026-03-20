@@ -13,3 +13,10 @@ data:
   REDIS_DBINDEX: "0"
   IMMICH_MACHINE_LEARNING_URL: http://localhost:3003
   UPLOAD_LOCATION: /data
+  OAUTH_ENABLED: "true"
+  OAUTH_ISSUER_URL: "https://auth.noirprime.com/application/o/immich/"
+  OAUTH_SCOPE: "openid profile email"
+  OAUTH_AUTO_REGISTER: "true"
+  OAUTH_AUTO_LAUNCH: "false"
+  OAUTH_BUTTON_TEXT: "Login with Authentik"
+  OAUTH_MOBILE_OVERRIDE_ENABLED: "false"

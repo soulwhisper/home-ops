@@ -14,11 +14,7 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: smarthome-apps
   path: "./kubernetes/apps/smarthome-apps/home-assistant/app"
-  dependsOn:
-    - name: cnpg-cluster
-      namespace: database-system
   components:
-    - ../../../../components/cnpg
     - ../../../../components/volsync
   postBuild:
     substitute:

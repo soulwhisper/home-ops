@@ -16,7 +16,7 @@ spec:
     initContainers:
       # Generate kubeconfig file, ref:https://github.com/kubernetes-sigs/headlamp/issues/1826
       - name: create-kubeconfig
-        image: rancher/shell:v0.6.2
+        image: rancher/shell:v0.7.0
         command:
           - /bin/sh
           - "-c"
@@ -62,6 +62,12 @@ spec:
       reloader.stakater.com/auto: "true"
     config:
       pluginsDir: /build/plugins
+      oidc:
+        secret:
+          create: false
+        externalSecret:
+          enabled: true
+          name: *name
     service:
       port: 4466
     clusterRoleBinding:

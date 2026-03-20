@@ -4,19 +4,10 @@ kind: ConfigMap
 metadata:
   name: home-assistant
 data:
-  recorder.yaml: |
-    db_url: !env_var RECORDER_DB_URL
-    purge_keep_days: 365
-    commit_interval: 5
-    exclude:
-      domains:
-        - updater
-        - media_player
-      entity_globs:
-        - sensor.*_signal_strength
-        - sensor.*_rssi
-        - sensor.last_boot
-        - sensor.date
-        - sun.sun
-      event_types:
-        - call_service
+  openid.yaml: |
+    configure_url: "https://auth.noirprime.com/application/o/hass/.well-known/openid-configuration"
+    client_id: !env_var OIDC_CLIENT_ID
+    client_secret: !env_var OIDC_CLIENT_SECRET
+    scope: "openid profile email"
+    username_field: "email"
+    block_login: false

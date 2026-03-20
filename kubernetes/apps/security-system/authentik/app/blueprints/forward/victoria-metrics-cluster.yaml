@@ -30,6 +30,4 @@ entries:
       target: !KeyOf victoria-metrics-cluster
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
-    attrs:
-      enabled: true
-      timeout: 30
+    attrs: { enabled: true, timeout: 30 }

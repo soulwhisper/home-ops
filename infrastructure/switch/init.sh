@@ -70,7 +70,7 @@ interface vlan-interface 1000
 # Route
 ip route-static 0.0.0.0 0 10.255.255.2
 
-# eBGP with BFD & OSPF
+# eBGP with BFD
 bfd session init-mode active
 bgp 65000
  router-id 10.10.0.1
@@ -86,7 +86,7 @@ bgp 65000
   peer k8s enable
   import-route direct
 
-# LACP to K8S
+# to k8s, LACP 10/20/30
 interface bridge-aggregation 10
  description k8s-node-01
  link-aggregation mode dynamic
