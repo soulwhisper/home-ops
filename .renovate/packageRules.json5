@@ -6,6 +6,11 @@
       pinDigests: false,
     },
     {
+      matchManagers: ["git-refs", "github-tags"],
+      matchFileNames: ["**/vendir.yml", "**/vendir.lock.yml"],
+      enabled: false,
+    },
+    {
       description: "Override Helmfile Dependency Name",
       matchDatasources: ["docker"],
       matchManagers: ["helmfile"],
