@@ -1,0 +1,14 @@
+[env]
+KUBECONFIG = '{{config_root}}/infrastructure/talos/clusterconfig/kubeconfig'
+TALOSCONFIG = '{{config_root}}/infrastructure/talos/clusterconfig/talosconfig'
+
+KUBECONFIG_DIR = "$HOME/.kube"
+FLUX_SYSTEM_NAMESPACE = "gitops-system"
+ROOK_OPERATOR_NAMESPACE = "storage-system"
+ROOK_CLUSTER_NAMESPACE = "storage-system"
+
+[settings]
+pipx_uvx = true
+
+[tools]
+terraform = "latest"
