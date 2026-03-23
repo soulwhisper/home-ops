@@ -1,0 +1,52 @@
+---
+name: booklore
+
+# until upstream db migrate to postgres/sqlite
+
+services:
+  grimmory:
+    image: ghcr.io/grimmory-tools/grimmory:v2.3.0
+    container_name: grimmory
+    restart: unless-stopped
+    environment:
+      - "USER_ID=2000"
+      - "GROUP_ID=101"
+      - "TZ=Asia/Shanghai"
+      - "DATABASE_URL=jdbc:mariadb://mariadb:3306/grimmory"
+      - "DATABASE_USERNAME=grimmory"
+      - "DATABASE_PASSWORD=grimmory"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - "9205:6060"
+    volumes:
+      - /volume3/docker/grimmory/data:/app/data
+      - /volume3/docker/grimmory/bookdrop:/bookdrop
+      - /volume1/document:/books
+    healthcheck:
+      test: wget -q -O - http://localhost:6060/api/v1/healthcheck
+      interval: 60s
+      retries: 5
+      start_period: 60s
+      timeout: 10s
+
+  mariadb:
+    image: lscr.io/linuxserver/mariadb:11.4.5
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      - "PUID=2000"
+      - "PGID=101"
+      - "TZ=Asia/Shanghai"
+      - "MYSQL_ROOT_PASSWORD=ChangeMe_MariaDBRoot_2025!"
+      - "MYSQL_DATABASE=grimmory"
+      - "MYSQL_USER=grimmory"
+      - "MYSQL_PASSWORD=grimmory"
+    volumes:
+      - /volume3/docker/grimmory/mariadb:/config
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
