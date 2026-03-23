@@ -29,6 +29,7 @@ configMapGenerator:
       - ./blueprints/forward/victoria-metrics-logs.yaml
   - name: authentik-blueprints-apps-oidc
     files:
+      - ./blueprints/oidc/calibre.yaml
       - ./blueprints/oidc/freshrss.yaml
       - ./blueprints/oidc/grafana.yaml
       - ./blueprints/oidc/headlamp.yaml

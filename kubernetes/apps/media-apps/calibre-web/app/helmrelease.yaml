@@ -19,11 +19,12 @@ spec:
         containers:
           app:
             image:
-              repository: ghcr.io/linuxserver/calibre-web
-              tag: 0.6.26-ls375
+              repository: ghcr.io/crocodilestick/calibre-web-automated
+              tag: v4.0.6
             env:
               PUID: "2000"
               PGID: "100"
+              NETWORK_SHARE_MODE: "true"
             probes:
               liveness:
                 enabled: true
@@ -34,7 +35,7 @@ spec:
                       - /bin/sh
                       - -c
                       - >
-                        ls /books > /dev/null
+                        ls /calibre-library > /dev/null
                   initialDelaySeconds: 30
                   periodSeconds: 30
                   timeoutSeconds: 15
@@ -75,7 +76,7 @@ spec:
       shared:
         existingClaim: document
         globalMounts:
-          - path: /books
+          - path: /calibre-library
       tmpfs:
         type: emptyDir
         globalMounts:

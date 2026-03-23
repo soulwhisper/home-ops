@@ -51,7 +51,7 @@ spec:
 
 ### OIDC
 
-- app user mapping use `username` as identifier;
+- app user mapping use `email` as identifier;
 - create `client_id` and `client_secret` from UI;
 - update these secrets to 1password;
 - sync;

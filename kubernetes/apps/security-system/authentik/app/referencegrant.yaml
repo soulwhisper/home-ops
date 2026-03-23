@@ -12,4 +12,3 @@ spec:
   to:
     - group: ""
       kind: Service
-      name: authentik-server

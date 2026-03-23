@@ -4,7 +4,6 @@ The Kubernetes cluster is deployed using [Talos](https://www.talos.dev), leverag
 
 ### Core Components
 
-- [actions-runner-controller](https://github.com/actions/actions-runner-controller): Self-hosted Github runners, pre-pull images for spegel.
 - [cert-manager](https://github.com/cert-manager/cert-manager): Automates the management and issuance of TLS certificates.
 - [cilium](https://github.com/cilium/cilium): eBPF-based CNI providing networking, security, and observability with Gateway API support.
 - [cloudflared](https://github.com/cloudflare/cloudflared): Stable tunnel for secure ingress.
@@ -38,7 +37,8 @@ This Git repository contains following directories.
 ├── 📁 components             # re-useable components
 └── 📁 flux                   # flux configuration
 📁 infrastructure
+├── 📁 dnscontrol             # dns configuration
 ├── 📁 switch                 # switch configuration
-├── 📁 talos                  # talos configuration
-└── 📁 truenas                # truenas configuration
+├── 📁 synology               # synology configuration
+└── 📁 talos                  # talos configuration
 ```
