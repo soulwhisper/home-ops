@@ -35,7 +35,7 @@ configMapGenerator:
       - ./blueprints/forward/victoria-metrics-cluster.yaml
       - ./blueprints/forward/victoria-metrics-logs.yaml
       - ./blueprints/forward/z2m-code.yaml
-      - ./blueprints/forward/z2m.taml
+      - ./blueprints/forward/z2m.yaml
   - name: authentik-blueprints-apps-oidc
     files:
       - ./blueprints/oidc/calibre.yaml
