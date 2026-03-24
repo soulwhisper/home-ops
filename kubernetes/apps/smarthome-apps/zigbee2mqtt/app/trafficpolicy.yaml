@@ -3,7 +3,7 @@
 apiVersion: gateway.kgateway.dev/v1alpha1
 kind: TrafficPolicy
 metadata:
-  name: z2m-auth
+  name: zigbee2mqtt-auth
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
@@ -18,7 +18,7 @@ spec:
 apiVersion: gateway.kgateway.dev/v1alpha1
 kind: TrafficPolicy
 metadata:
-  name: z2m-code-auth
+  name: zigbee2mqtt-code-server-auth
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
