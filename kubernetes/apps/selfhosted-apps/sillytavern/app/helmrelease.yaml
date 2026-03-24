@@ -23,6 +23,10 @@ spec:
             image:
               repository: ghcr.io/sillytavern/sillytavern
               tag: 1.16.0
+            env:
+              SILLYTAVERN_WHITELIST: '["0.0.0.0/0", "::/0"]'
+              SILLYTAVERN_ENABLEUSERACCOUNTS: "false"
+              SILLYTAVERN_ENABLEDISCREETLOGIN: "true"
             resources:
               requests:
                 cpu: 10m

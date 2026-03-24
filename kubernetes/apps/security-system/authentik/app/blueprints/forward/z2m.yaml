@@ -4,30 +4,30 @@ version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
     identifiers:
-      name: victoria-metrics-cluster-proxy-provider
+      name: z2m-proxy-provider
     attrs:
-      name: victoria-metrics-cluster-proxy-provider
+      name: z2m-proxy-provider
       authorization_flow:
         !Find [
           authentik_flows.flow,
           [slug, default-provider-authorization-implicit-consent],
         ]
       mode: forward_single
-      external_host: "https://metrics.noirprime.com"
+      external_host: "https://z2m.noirprime.com"
       access_token_validity: "hours=12"
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
     identifiers:
-      slug: victoria-metrics-cluster
+      slug: z2m
     attrs:
-      name: VictoriaMetrics-Cluster
-      provider: !KeyOf victoria-metrics-cluster-proxy-provider
-      meta_launch_url: "https://metrics.noirprime.com"
-      group: "Observability"
+      name: z2m
+      provider: !KeyOf z2m-proxy-provider
+      meta_launch_url: "https://z2m.noirprime.com"
+      group: "SmartHome"
       policy_engine_mode: all
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf victoria-metrics-cluster
+      target: !KeyOf z2m
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }

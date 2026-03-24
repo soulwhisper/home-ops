@@ -8,3 +8,4 @@ resources:
   # utils
   - ./configmap.yaml
   - ./externalsecret.yaml
+  - ./trafficpolicy.yaml

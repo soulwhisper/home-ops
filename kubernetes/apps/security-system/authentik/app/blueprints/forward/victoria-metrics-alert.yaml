@@ -23,7 +23,7 @@ entries:
       name: VictoriaMetrics-Alert
       provider: !KeyOf victoria-metrics-alert-proxy-provider
       meta_launch_url: "https://alert.noirprime.com"
-      group: "Monitoring"
+      group: "Observability"
       policy_engine_mode: all
   - model: authentik_policies_binding.policybinding
     identifiers:

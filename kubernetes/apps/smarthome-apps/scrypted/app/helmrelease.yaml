@@ -76,7 +76,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: scrypted.svg
           gethomepage.dev/name: ScryptedNVR
-          gethomepage.dev/group: Service
+          gethomepage.dev/group: SmartHome
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

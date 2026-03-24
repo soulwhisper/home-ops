@@ -1,0 +1,30 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.kgateway.dev/trafficpolicy_v1alpha1.json
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: TrafficPolicy
+metadata:
+  name: frigate-auth
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: frigate-app
+  extAuth:
+    extensionRef:
+      name: authentik-ext-auth
+      namespace: networking-system
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.kgateway.dev/trafficpolicy_v1alpha1.json
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: TrafficPolicy
+metadata:
+  name: frigate-go2rtc-auth
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: frigate-go2rtc
+  extAuth:
+    extensionRef:
+      name: authentik-ext-auth
+      namespace: networking-system

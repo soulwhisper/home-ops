@@ -7,3 +7,4 @@ resources:
   - ./helmrelease.yaml
   # utils
   - ./externalsecret.yaml
+  - ./trafficpolicy.yaml

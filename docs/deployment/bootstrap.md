@@ -2,7 +2,7 @@
 
 ```shell
 cd home-ops
-direnv allow
+mise trust
 
 eval $(op signin)
 
