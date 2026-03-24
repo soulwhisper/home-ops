@@ -20,7 +20,7 @@ entries:
     identifiers:
       slug: victoria-metrics-alert
     attrs:
-      name: VictoriaMetrics-Alert
+      name: victoria-metrics-alert
       provider: !KeyOf victoria-metrics-alert-proxy-provider
       meta_launch_url: "https://alert.noirprime.com"
       group: "Observability"

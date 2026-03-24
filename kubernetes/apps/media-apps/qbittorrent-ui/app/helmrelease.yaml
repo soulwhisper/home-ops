@@ -31,7 +31,14 @@ spec:
             env:
               QUI__HOST: 0.0.0.0
               QUI__PORT: &port 7476
-              QUI__LOG_LEVEL: INFO
+              QUI__LOG_LEVEL: "INFO"
+              QUI__OIDC_DISABLE_BUILT_IN_LOGIN: "true"
+              QUI__OIDC_ENABLED: "true"
+              QUI__OIDC_ISSUER: "https://auth.noirprime.com/application/o/qui/"
+              QUI__OIDC_REDIRECT_URL: "https://qui.noirprime.com/api/auth/oidc/callback"
+            envFrom:
+              - secretRef:
+                  name: *name
             probes:
               liveness:
                 enabled: true
@@ -69,8 +76,8 @@ spec:
         annotations:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: qbittorrent.svg
-          gethomepage.dev/name: qUI
-          gethomepage.dev/group: Service
+          gethomepage.dev/name: qBittorrent-ui
+          gethomepage.dev/group: Download
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

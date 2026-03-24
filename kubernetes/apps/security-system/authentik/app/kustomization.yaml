@@ -24,12 +24,15 @@ configMapGenerator:
       - ./blueprints/core/scope-groups.yaml
   - name: authentik-blueprints-apps-forward
     files:
+      - ./blueprints/forward/audiomuse.yaml
       - ./blueprints/forward/bambuddy.yaml
       - ./blueprints/forward/frigate-go2rtc.yaml
       - ./blueprints/forward/frigate.yaml
       - ./blueprints/forward/hass-code.yaml
       - ./blueprints/forward/lyrion.yaml
       - ./blueprints/forward/metube.yaml
+      - ./blueprints/forward/qbittorrent.yaml
+      - ./blueprints/forward/scrypted.yaml
       - ./blueprints/forward/sillytavern.yaml
       - ./blueprints/forward/victoria-metrics-alert.yaml
       - ./blueprints/forward/victoria-metrics-cluster.yaml
@@ -48,4 +51,5 @@ configMapGenerator:
       - ./blueprints/oidc/karakeep.yaml
       - ./blueprints/oidc/kavita.yaml
       - ./blueprints/oidc/netbox.yaml
+      - ./blueprints/oidc/qbittorrent-ui.yaml
       - ./blueprints/oidc/stirling-pdf.yaml

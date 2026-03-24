@@ -20,7 +20,7 @@ entries:
     identifiers:
       slug: bambuddy
     attrs:
-      name: Bambuddy
+      name: bambuddy
       provider: !KeyOf bambuddy-proxy-provider
       meta_launch_url: "https://bambuddy.noirprime.com"
       group: "Service"

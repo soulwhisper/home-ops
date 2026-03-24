@@ -1,0 +1,45 @@
+---
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+entries:
+  - model: authentik_providers_oauth2.oauth2provider
+    identifiers:
+      name: qbittorrent-ui-oidc-provider
+    attrs:
+      name: qbittorrent-ui-oidc-provider
+      authorization_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-provider-authorization-implicit-consent],
+        ]
+      client_type: confidential
+      redirect_uris:
+        - url: "https://qui.noirprime.com/api/auth/oidc/callback"
+          matching_mode: strict
+      sub_mode: user_email
+      include_claims_in_id_token: true
+      signing_key:
+        !Find [
+          authentik_crypto.certificatekeypair,
+          [name, "authentik Self-signed Certificate"],
+        ]
+      property_mappings:
+        - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
+        - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
+        - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+        - !Find [authentik_providers_oauth2.scopemapping, [scope_name, groups]]
+  - model: authentik_core.application
+    identifiers:
+      slug: qbittorrent-ui
+    attrs:
+      name: qbittorrent-ui
+      provider: !KeyOf qbittorrent-ui-oidc-provider
+      meta_launch_url: "https://qui.noirprime.com"
+      group: "Download"
+      policy_engine_mode: all
+  - model: authentik_policies_binding.policybinding
+    identifiers:
+      target: !KeyOf qbittorrent-ui
+      group: !Find [authentik_core.group, [name, homelab-admin]]
+      order: 0
+    attrs: { enabled: true, timeout: 30 }

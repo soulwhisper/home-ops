@@ -20,7 +20,7 @@ entries:
     identifiers:
       slug: victoria-metrics-logs
     attrs:
-      name: VictoriaMetrics-Logs
+      name: victoria-metrics-logs
       provider: !KeyOf victoria-metrics-logs-proxy-provider
       meta_launch_url: "https://logs.noirprime.com"
       group: "Observability"
