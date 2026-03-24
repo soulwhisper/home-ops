@@ -4,30 +4,30 @@ version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
     identifiers:
-      name: victoria-metrics-cluster-proxy-provider
+      name: frigate-go2rtc-proxy-provider
     attrs:
-      name: victoria-metrics-cluster-proxy-provider
+      name: frigate-go2rtc-proxy-provider
       authorization_flow:
         !Find [
           authentik_flows.flow,
           [slug, default-provider-authorization-implicit-consent],
         ]
       mode: forward_single
-      external_host: "https://metrics.noirprime.com"
+      external_host: "https://frigate-go2rtc.noirprime.com"
       access_token_validity: "hours=12"
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
     identifiers:
-      slug: victoria-metrics-cluster
+      slug: frigate-go2rtc
     attrs:
-      name: victoria-metrics-cluster
-      provider: !KeyOf victoria-metrics-cluster-proxy-provider
-      meta_launch_url: "https://metrics.noirprime.com"
-      group: "Observability"
+      name: frigate-go2rtc
+      provider: !KeyOf frigate-go2rtc-proxy-provider
+      meta_launch_url: "https://frigate-go2rtc.noirprime.com"
+      group: "SmartHome"
       policy_engine_mode: all
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf victoria-metrics-cluster
+      target: !KeyOf frigate-go2rtc
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }

@@ -86,7 +86,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: frigate.svg
           gethomepage.dev/name: FrigateNVR
-          gethomepage.dev/group: Service
+          gethomepage.dev/group: SmartHome
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

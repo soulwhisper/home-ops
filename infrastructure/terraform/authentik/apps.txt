@@ -11,4 +11,5 @@ karakeep
 kavita
 n8n
 netbox
+qui
 spdf

@@ -4,30 +4,30 @@ version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
     identifiers:
-      name: victoria-metrics-cluster-proxy-provider
+      name: sillytavern-proxy-provider
     attrs:
-      name: victoria-metrics-cluster-proxy-provider
+      name: sillytavern-proxy-provider
       authorization_flow:
         !Find [
           authentik_flows.flow,
           [slug, default-provider-authorization-implicit-consent],
         ]
       mode: forward_single
-      external_host: "https://metrics.noirprime.com"
+      external_host: "https://tavern.noirprime.com"
       access_token_validity: "hours=12"
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
     identifiers:
-      slug: victoria-metrics-cluster
+      slug: sillytavern
     attrs:
-      name: victoria-metrics-cluster
-      provider: !KeyOf victoria-metrics-cluster-proxy-provider
-      meta_launch_url: "https://metrics.noirprime.com"
-      group: "Observability"
+      name: sillytavern
+      provider: !KeyOf sillytavern-proxy-provider
+      meta_launch_url: "https://tavern.noirprime.com"
+      group: "Service"
       policy_engine_mode: all
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf victoria-metrics-cluster
+      target: !KeyOf sillytavern
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }

@@ -28,9 +28,9 @@ spec:
             image:
               repository: ghcr.io/koush/scrypted
               tag: v0.144.1-noble-full
-            envFrom:
-              - secretRef:
-                  name: *name
+            env:
+              SCRYPTED_DEFAULT_AUTHENTICATION: "admin"
+              SCRYPTED_NVR_VOLUME: "/nvr"
             probes:
               liveness:
                 enabled: true
@@ -76,7 +76,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: scrypted.svg
           gethomepage.dev/name: ScryptedNVR
-          gethomepage.dev/group: Service
+          gethomepage.dev/group: SmartHome
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
@@ -93,7 +93,7 @@ spec:
       shared:
         existingClaim: surveillance
         globalMounts:
-          - path: /recs
+          - path: /nvr
             subPath: scrypted
       tmpfs:
         type: emptyDir

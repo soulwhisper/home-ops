@@ -29,3 +29,33 @@ homeassistant:
 ### N8N
 
 - must configure via WEB UI, [ref](https://docs.n8n.io/user-management/oidc/setup/);
+
+## Other
+
+### Crafty-4
+
+- login via `admin` and below password;
+
+```shell
+kubectl -n gaming-apps exec crafty-controller -- cat /crafty/app/config/default-creds.txt
+```
+
+### Dispatcharr
+
+- use its own user system;
+
+### Moviepilot
+
+- use its own user system;
+
+### Rook Ceph Dashboard
+
+- login via `admin` and below password;
+
+```shell
+kubectl -n storage-system get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode && echo
+```
+
+### Scrypted
+
+- signup as `admin`, then forwardAuth works;

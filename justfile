@@ -22,7 +22,7 @@ default:
 env:
   cp ~/.kube/config "$KUBECONFIG"
   cp ~/.talos/config "$TALOSCONFIG"
-  direnv allow
+  mise trust
   @echo "K8S environment restored."
 
 [doc('Force Flux to pull in changes from your Git repository')]
