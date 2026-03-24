@@ -20,9 +20,9 @@ spec:
           REMOTE_AUTH_ENABLED: "True"
           REMOTE_AUTH_BACKEND: "social_core.backends.open_id_connect.OpenIdConnectAuth"
           REMOTE_AUTH_AUTO_CREATE_USER: "True"
-          SOCIAL_AUTH_OIDC_ENDPOINT: "https://auth.example.com/application/o/netbox/"
+          SOCIAL_AUTH_OIDC_ENDPOINT: "https://auth.noirprime.com/application/o/netbox/"
           SOCIAL_AUTH_OIDC_SCOPE: "openid profile email roles"
-          LOGOUT_REDIRECT_URL: "https://auth.example.com/application/o/netbox/end-session/"
+          LOGOUT_REDIRECT_URL: "https://auth.noirprime.com/application/o/netbox/end-session/"
           SOCIAL_AUTH_PIPELINE:
             [
               "social_core.pipeline.social_auth.social_details",

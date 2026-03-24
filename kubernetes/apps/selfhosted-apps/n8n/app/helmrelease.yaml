@@ -52,14 +52,12 @@ spec:
               N8N_PORT: &port 8080
               N8N_LOG_LEVEL: info
               N8N_LOG_OUTPUT: console
-              N8N_ENCRYPTION_KEY:
-                valueFrom:
-                  secretKeyRef:
-                    name: n8n
-                    key: N8N_ENCRYPTION_KEY
               N8N_PROXY_HOPS: 1
               N8N_DEFAULT_BINARY_DATA_MODE: filesystem
               WEBHOOK_URL: https://n8n.noirprime.com/
+            envFrom:
+              - secretRef:
+                  name: *name
             resources:
               requests:
                 cpu: 5m

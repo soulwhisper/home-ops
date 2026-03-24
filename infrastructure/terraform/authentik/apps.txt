@@ -1,12 +1,14 @@
 # One app slug per line. Slug must match the application slug in authentik.
 # Lines beginning with # are ignored.
+calibre
 freshrss
 grafana
-headlamp
 hass
+headlamp
 immich
-jellyfish
+jellyfin
 karakeep
 kavita
+n8n
 netbox
 spdf
