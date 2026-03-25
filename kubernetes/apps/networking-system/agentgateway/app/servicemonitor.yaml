@@ -3,7 +3,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: &name kgateway
+  name: &name agentgateway
 spec:
   jobLabel: *name
   namespaceSelector:

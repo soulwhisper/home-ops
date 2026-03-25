@@ -6,7 +6,8 @@ namespace: networking-system
 components:
   - ../../components/namespace
 resources:
-  - ./cloudflare-tunnel/ks.yaml
+  - ./agentgateway/ks.yaml
   - ./kgateway/ks.yaml
+  - ./cloudflare-tunnel/ks.yaml
   - ./externaldns-adguard/ks.yaml
   - ./externaldns-cloudflare/ks.yaml
