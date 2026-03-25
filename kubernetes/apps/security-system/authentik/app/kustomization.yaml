@@ -26,9 +26,12 @@ configMapGenerator:
     files:
       - ./blueprints/forward/audiomuse.yaml
       - ./blueprints/forward/bambuddy.yaml
+      - ./blueprints/forward/convertx.yaml
       - ./blueprints/forward/frigate-go2rtc.yaml
       - ./blueprints/forward/frigate.yaml
       - ./blueprints/forward/hass-code.yaml
+      - ./blueprints/forward/homepage.yaml
+      - ./blueprints/forward/hubble.yaml
       - ./blueprints/forward/lyrion.yaml
       - ./blueprints/forward/metube.yaml
       - ./blueprints/forward/qbittorrent.yaml

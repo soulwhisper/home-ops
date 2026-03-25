@@ -12,8 +12,8 @@ entries:
           authentik_flows.flow,
           [slug, default-provider-authorization-implicit-consent],
         ]
-      mode: forward_single
-      external_host: "https://hass-code.noirprime.com"
+      mode: forward_domain
+      external_host: "https://auth.noirprime.com"
       access_token_validity: "hours=12"
       cookie_domain: "noirprime.com"
   - model: authentik_core.application

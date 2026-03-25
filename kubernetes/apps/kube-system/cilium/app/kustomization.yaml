@@ -8,3 +8,4 @@ resources:
   - ./ocirepository.yaml
   # utils
   - ./httproute.yaml
+  - ./trafficpolicy.yaml

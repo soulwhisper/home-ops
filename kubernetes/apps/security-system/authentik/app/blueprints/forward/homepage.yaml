@@ -4,9 +4,9 @@ version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
     identifiers:
-      name: victoria-metrics-cluster-proxy-provider
+      name: homepage-proxy-provider
     attrs:
-      name: victoria-metrics-cluster-proxy-provider
+      name: homepage-proxy-provider
       authorization_flow:
         !Find [
           authentik_flows.flow,
@@ -18,16 +18,22 @@ entries:
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
     identifiers:
-      slug: victoria-metrics-cluster
+      slug: homepage
     attrs:
-      name: victoria-metrics-cluster
-      provider: !KeyOf victoria-metrics-cluster-proxy-provider
-      meta_launch_url: "https://metrics.noirprime.com"
-      group: "Observability"
-      policy_engine_mode: all
+      name: homepage
+      provider: !KeyOf homepage-proxy-provider
+      meta_launch_url: "https://home.noirprime.com"
+      group: "Service"
+      policy_engine_mode: any
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf victoria-metrics-cluster
+      target: !KeyOf homepage
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
+    attrs: { enabled: true, timeout: 30 }
+  - model: authentik_policies_binding.policybinding
+    identifiers:
+      target: !KeyOf homepage
+      group: !Find [authentik_core.group, [name, homelab-internal]]
+      order: 10
     attrs: { enabled: true, timeout: 30 }
