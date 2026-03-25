@@ -6,6 +6,9 @@ resources:
   # app
   - ./gateway.yaml
   - ./gatewayparams.yaml
-  # utils
+  # provider
   - ./provider
+  # utils
+  - ./httproute.yaml
   - ./podmonitor.yaml
+  - ./trafficpolicy.yaml
