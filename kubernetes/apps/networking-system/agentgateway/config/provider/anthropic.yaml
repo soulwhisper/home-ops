@@ -22,13 +22,13 @@ spec:
               matches:
                 - "delete all"
                 - "drop database"
-            - response:
-                message: "Request rejected: Contains sensitive information"
-              regex:
-                action: Reject
-                builtins:
-                  - Email
-                  - CreditCard
+          - response:
+              message: "Request rejected: Contains sensitive information"
+            regex:
+              action: Reject
+              builtins:
+                - Email
+                - CreditCard
     auth:
       secretRef:
         name: *name
