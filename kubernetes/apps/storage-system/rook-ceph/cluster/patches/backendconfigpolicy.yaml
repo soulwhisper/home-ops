@@ -1,0 +1,15 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.kgateway.dev/backendconfigpolicy_v1alpha1.json
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: BackendConfigPolicy
+metadata:
+  name: rook-ceph-dashboard-tls
+spec:
+  targetRefs:
+    - group: ""
+      kind: Service
+      name: rook-ceph-mgr-dashboard
+  tls:
+    sni: "rook-ceph-mgr-dashboard.storage-system.svc.cluster.local"
+    secretRef:
+      name: rook-ceph-dashboard-ca

@@ -8,5 +8,8 @@ resources:
   - ./ocirepository.yaml
   # utils
   - ./httproute.yaml
-  # patch, official chart sc might be missing
-  # - ./storageclass.yaml
+  # patches
+  # * saml2 support
+  # - ./patches/backendconfigpolicy.yaml
+  # * official chart sc might be missing
+  # - ./patches/storageclass.yaml

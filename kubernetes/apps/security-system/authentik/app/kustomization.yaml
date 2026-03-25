@@ -55,4 +55,5 @@ configMapGenerator:
       - ./blueprints/oidc/kavita.yaml
       - ./blueprints/oidc/netbox.yaml
       - ./blueprints/oidc/qbittorrent-ui.yaml
+      - ./blueprints/oidc/rook-ceph.yaml
       - ./blueprints/oidc/stirling-pdf.yaml
