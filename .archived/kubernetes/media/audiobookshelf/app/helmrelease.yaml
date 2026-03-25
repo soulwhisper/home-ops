@@ -23,7 +23,7 @@ spec:
               tag: 2.32.1
             env:
               AUDIOBOOKSHELF_UID: 2000
-              AUDIOBOOKSHELF_GID: 101
+              AUDIOBOOKSHELF_GID: 2000
               CONFIG_PATH: /config
               METADATA_PATH: /config/metadata
             envFrom:

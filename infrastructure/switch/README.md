@@ -26,7 +26,7 @@ graph TD
 
 - Router / Firewall / DHCP / NTP / DNS / TProxy : `OpenWRT@ESXi`;
 - NAS / Infrastructure Services : `Synology DS1825+`;
-- EBGP / OSPF : `H3C S6520-24S-SI`;
+- EBGP / BFD : `H3C S6520-24S-SI`;
 - Computing : `MS-01`;
 
 ### Notes

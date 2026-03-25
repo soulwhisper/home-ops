@@ -1,0 +1,62 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: &name ollama-qwen
+spec:
+  ai:
+    provider:
+      openai:
+        model: qwen3:8b
+      host: ollama.servitor-apps.svc.cluster.local
+      port: 11434
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: &name ollama-qwen
+spec:
+  parentRefs:
+    - name: agentgateway-proxy
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /ollama/qwen
+      backendRefs:
+        - name: *name
+          group: agentgateway.dev
+          kind: AgentgatewayBackend
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: &name ollama-embed
+spec:
+  ai:
+    provider:
+      openai:
+        model: nomic-embed-text
+      host: ollama.servitor-apps.svc.cluster.local
+      port: 11434
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: &name ollama-embed
+spec:
+  parentRefs:
+    - name: agentgateway-proxy
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /ollama/embed
+      backendRefs:
+        - name: *name
+          group: agentgateway.dev
+          kind: AgentgatewayBackend

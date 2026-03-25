@@ -1,0 +1,66 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name dify-sandbox
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: gitops-system
+
+  values:
+    defaultPodOptions:
+      hostUsers: false
+    controllers:
+      *name :
+        annotations:
+          reloader.stakater.com/auto: "true"
+          config.home-ops.io/proxy: "https" # https_proxy needed
+        containers:
+          app:
+            image:
+              repository: langgenius/dify-sandbox
+              tag: 0.2.14
+            env:
+              API_KEY: "dify-sandbox"
+              GIN_MODE: "release"
+              WORKER_TIMEOUT: "15"
+              ENABLE_NETWORK: "true"
+              HTTP_PROXY: "http://dify-proxy.servitor-apps.svc.cluster.local:3128"
+              HTTPS_PROXY: "http://dify-proxy.servitor-apps.svc.cluster.local:3128"
+              SANDBOX_PORT: "8194"
+            envFrom:
+              - secretRef:
+                  name: dify-database
+            resources:
+              requests:
+                cpu: 20m
+              limits:
+                memory: 1Gi
+            # sandbox requires access to '/usr/local/bin'
+
+    service:
+      app:
+        ports:
+          http:
+            port: 8194
+
+    persistence:
+      config:
+        type: configMap
+        name: *name
+        globalMounts:
+          - path: /conf/config.yaml
+            subPath: sandbox-config.yaml
+      tmpfs:
+        type: emptyDir
+        globalMounts:
+          - path: /var/sandbox
+            subPath: sandbox
+          - path: /logs
+            subPath: logs
+          - path: /tmp
+            subPath: tmp
