@@ -1,0 +1,11 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name agentgateway-crds
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: agentgateway-crds

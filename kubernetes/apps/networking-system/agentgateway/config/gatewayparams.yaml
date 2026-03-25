@@ -1,0 +1,31 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.kgateway.dev/gatewayparameters_v1alpha1.json
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: GatewayParameters
+metadata:
+  name: agentgateway-params
+spec:
+  deployment:
+    spec:
+      replicas: 2
+      template:
+        spec:
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  app: agentgateway
+  podDisruptionBudget:
+    metadata:
+      labels:
+        app.kubernetes.io/name: agentgateway-config
+    spec:
+      minAvailable: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi

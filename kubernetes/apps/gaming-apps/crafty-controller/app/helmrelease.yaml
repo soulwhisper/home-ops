@@ -24,7 +24,7 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000 # crafty user
             runAsGroup: 1000
-            fsGroup: 101 # synology:admin
+            fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         containers:
           app:

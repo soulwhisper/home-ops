@@ -1,0 +1,53 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name agentgateway-crds
+  annotations:
+    config.home-ops.io/managed: "true"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: networking-system
+  path: "./kubernetes/apps/networking-system/agentgateway/crds"
+  wait: true
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name agentgateway
+  annotations:
+    config.home-ops.io/managed: "true"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: networking-system
+  path: "./kubernetes/apps/networking-system/agentgateway/app"
+  wait: true
+  dependsOn:
+    - name: agentgateway-crds
+      namespace: networking-system
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name agentgateway-config
+  annotations:
+    config.home-ops.io/managed: "true"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: agentgateway
+  targetNamespace: networking-system
+  path: "./kubernetes/apps/networking-system/agentgateway/config"
+  wait: true
+  dependsOn:
+    - name: agentgateway
+      namespace: networking-system
+    - name: onepassword-connect
+      namespace: security-system
