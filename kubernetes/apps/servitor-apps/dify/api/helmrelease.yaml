@@ -35,7 +35,7 @@ spec:
           app:
             image:
               repository: langgenius/dify-api
-              tag: 1.13.0
+              tag: 1.13.2
             env:
               MODE: "api"
               PLUGIN_DAEMON_URL: "dify-database.servitor-apps.svc.cluster.local:5002"
