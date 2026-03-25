@@ -12,29 +12,29 @@ spec:
         host: &host api.deepseek.com
         port: 443
         path: "/v1/chat/completions"
-    policies:
-      ai:
-        promptGuard:
-          request:
+  policies:
+    ai:
+      promptGuard:
+        request:
+          - response:
+              message: "Request rejected: Contains destructive actions"
+            regex:
+              action: Reject
+              matches:
+                - "delete all"
+                - "drop database"
             - response:
-                message: "Request rejected: Contains destructive actions"
+                message: "Request rejected: Contains sensitive information"
               regex:
                 action: Reject
-                matches:
-                  - "delete all"
-                  - "drop database"
-              - response:
-                  message: "Request rejected: Contains sensitive information"
-                regex:
-                  action: Reject
-                  builtins:
-                    - Email
-                    - CreditCard
-      auth:
-        secretRef:
-          name: *name
-      tls:
-        sni: *host
+                builtins:
+                  - Email
+                  - CreditCard
+    auth:
+      secretRef:
+        name: *name
+    tls:
+      sni: *host
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
 apiVersion: gateway.networking.k8s.io/v1
