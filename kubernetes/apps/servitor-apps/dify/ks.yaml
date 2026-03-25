@@ -12,8 +12,8 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: selfhosted-apps
-  path: "./kubernetes/apps/selfhosted-apps/dify/proxy"
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/dify/proxy"
   wait: true
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
@@ -29,12 +29,12 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: selfhosted-apps
-  path: "./kubernetes/apps/selfhosted-apps/dify/database"
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/dify/database"
   wait: true
   dependsOn:
     - name: dify-proxy
-      namespace: selfhosted-apps
+      namespace: servitor-apps
     - name: cnpg-cluster
       namespace: database-system
     - name: dragonfly-operator
@@ -60,17 +60,17 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: selfhosted-apps
-  path: "./kubernetes/apps/selfhosted-apps/dify/sandbox"
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/dify/sandbox"
   dependsOn:
     - name: dify-database
-      namespace: selfhosted-apps
+      namespace: servitor-apps
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: &name dify-app
+  name: &name dify-api
   annotations:
     config.home-ops.io/managed: "true"
   labels:
@@ -79,11 +79,11 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: selfhosted-apps
-  path: "./kubernetes/apps/selfhosted-apps/dify/app"
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/dify/api"
   dependsOn:
     - name: dify-database
-      namespace: selfhosted-apps
+      namespace: servitor-apps
     - name: cnpg-cluster
       namespace: database-system
   components:
@@ -100,6 +100,44 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
+  name: &name dify-worker
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/dify/worker"
+  dependsOn:
+    - name: dify-api
+      namespace: servitor-apps
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name dify-beat
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/dify/beat"
+  dependsOn:
+    - name: dify-api
+      namespace: servitor-apps
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
   name: &name dify-web
   annotations:
     config.home-ops.io/managed: "true"
@@ -109,8 +147,8 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: selfhosted-apps
-  path: "./kubernetes/apps/selfhosted-apps/dify/web"
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/dify/web"
   dependsOn:
-    - name: dify-app
-      namespace: selfhosted-apps
+    - name: dify-api
+      namespace: servitor-apps

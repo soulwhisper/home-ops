@@ -12,8 +12,8 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: selfhosted-apps
-  path: "./kubernetes/apps/selfhosted-apps/comfyui/app"
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/comfyui/app"
   components:
     - ../../../../components/volsync
   postBuild:

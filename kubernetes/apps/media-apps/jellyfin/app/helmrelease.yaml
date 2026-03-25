@@ -23,7 +23,7 @@ spec:
               tag: 10.11.6
             env:
               PUID: "2000"
-              PGID: "101" # synology:admin
+              PGID: "2000"
             probes:
               liveness:
                 enabled: true

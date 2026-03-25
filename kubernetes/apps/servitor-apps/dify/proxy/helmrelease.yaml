@@ -28,7 +28,7 @@ spec:
               HTTP_PORT: "3128"
               COREDUMP_DIR: "/var/spool/squid"
               REVERSE_PROXY_PORT: "8194"
-              SANDBOX_HOST: "dify-sandbox.selfhosted-apps.svc.cluster.local"
+              SANDBOX_HOST: "dify-sandbox.servitor-apps.svc.cluster.local"
               SANDBOX_PORT: "8194"
             resources:
               requests:

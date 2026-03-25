@@ -29,10 +29,9 @@ spec:
               GIN_MODE: "release"
               WORKER_TIMEOUT: "15"
               ENABLE_NETWORK: "true"
-              HTTP_PROXY: "http://dify-proxy.selfhosted-apps.svc.cluster.local:3128"
-              HTTPS_PROXY: "http://dify-proxy.selfhosted-apps.svc.cluster.local:3128"
+              HTTP_PROXY: "http://dify-proxy.servitor-apps.svc.cluster.local:3128"
+              HTTPS_PROXY: "http://dify-proxy.servitor-apps.svc.cluster.local:3128"
               SANDBOX_PORT: "8194"
-              PIP_MIRROR_URL: "https://pypi.tuna.tsinghua.edu.cn/simple"
             envFrom:
               - secretRef:
                   name: dify-database

@@ -73,6 +73,10 @@ kubectl rook-ceph ceph dashboard sso status
 kubectl -n gaming-apps exec crafty-controller -- cat /crafty/app/config/default-creds.txt
 ```
 
+### Dify
+
+- use its own user system;
+
 ### Dispatcharr
 
 - use its own user system;

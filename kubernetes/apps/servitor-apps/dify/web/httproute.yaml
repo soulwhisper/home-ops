@@ -23,8 +23,8 @@ spec:
             type: PathPrefix
             value: /console/api
       backendRefs:
-        - name: dify-app
-          namespace: selfhosted-apps
+        - name: dify-api
+          namespace: servitor-apps
           port: 5001
     # /api
     - matches:
@@ -32,8 +32,8 @@ spec:
             type: PathPrefix
             value: /api
       backendRefs:
-        - name: dify-app
-          namespace: selfhosted-apps
+        - name: dify-api
+          namespace: servitor-apps
           port: 5001
     # /v1
     - matches:
@@ -41,8 +41,8 @@ spec:
             type: PathPrefix
             value: /v1
       backendRefs:
-        - name: dify-app
-          namespace: selfhosted-apps
+        - name: dify-api
+          namespace: servitor-apps
           port: 5001
     # /files
     - matches:
@@ -50,8 +50,8 @@ spec:
             type: PathPrefix
             value: /files
       backendRefs:
-        - name: dify-app
-          namespace: selfhosted-apps
+        - name: dify-api
+          namespace: servitor-apps
           port: 5001
     # /mcp
     - matches:
@@ -59,8 +59,8 @@ spec:
             type: PathPrefix
             value: /mcp
       backendRefs:
-        - name: dify-app
-          namespace: selfhosted-apps
+        - name: dify-api
+          namespace: servitor-apps
           port: 5001
     # /explore
     - matches:
@@ -69,7 +69,7 @@ spec:
             value: /explore
       backendRefs:
         - name: dify-web
-          namespace: selfhosted-apps
+          namespace: servitor-apps
           port: 3000
     # /
     - matches:
@@ -78,7 +78,7 @@ spec:
             value: /
       backendRefs:
         - name: dify-web
-          namespace: selfhosted-apps
+          namespace: servitor-apps
           port: 3000
     # /e/
     - matches:
@@ -93,5 +93,5 @@ spec:
                 value: http://dify.noirprime.com/e/
       backendRefs:
         - name: dify-database
-          namespace: selfhosted-apps
+          namespace: servitor-apps
           port: 5002

@@ -3,7 +3,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: &name ollama
+  name: &name sillytavern
   annotations:
     config.home-ops.io/managed: "true"
   labels:
@@ -12,14 +12,10 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: selfhosted-apps
-  path: "./kubernetes/apps/selfhosted-apps/ollama/app"
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/sillytavern/app"
   components:
     - ../../../../components/volsync
   postBuild:
     substitute:
       APP: *name
-      VOLSYNC_CAPACITY: 50Gi
-      VOLSYNC_ACCESSMODES: ReadWriteMany
-      VOLSYNC_STORAGECLASS: ceph-filesystem
-      VOLSYNC_SNAPSHOTCLASS: ceph-filesystem-snapshot

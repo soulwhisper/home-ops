@@ -27,7 +27,7 @@ spec:
         containers:
           app:
             image:
-              repository: langgenius/dify-plugin-daemon
+              repository: langgenius/dify-database-daemon
               tag: 0.5.3-local
             env:
               DB_HOST: "postgres-rw.database-system.svc.cluster.local"
@@ -35,22 +35,25 @@ spec:
               DB_USERNAME: *name
               DB_PASSWORD: *name
               DB_DATABASE: *name
-              REDIS_HOST: "dify-database-dragonfly.selfhosted-apps.svc.cluster.local"
+              REDIS_HOST: "dify-database-dragonfly.servitor-apps.svc.cluster.local"
               REDIS_PORT: "6379"
               SERVER_PORT: "5002"
               MAX_PLUGIN_PACKAGE_SIZE: "52428800"
               PPROF_ENABLED: "false"
-              DIFY_INNER_API_URL: "http://dify-app.selfhosted-apps.svc.cluster.local:5001"
+              DIFY_INNER_API_URL: "http://dify-api.servitor-apps.svc.cluster.local:5001"
               PLUGIN_REMOTE_INSTALLING_HOST: "localhost"
               PLUGIN_REMOTE_INSTALLING_PORT: "5003"
               PLUGIN_WORKING_PATH: "/app/storage/cwd"
-              PYTHON_ENV_INIT_TIMEOUT: "-120"
               PLUGIN_MAX_EXECUTION_TIMEOUT: "600"
               PLUGIN_STORAGE_TYPE: "local"
               PLUGIN_STORAGE_LOCAL_ROOT: "/app/storage"
+              PLUGIN_STDIO_BUFFER_SIZE: "1024"
+              PLUGIN_STDIO_MAX_BUFFER_SIZE: "5242880"
               PLUGIN_INSTALLED_PATH: "plugin"
               PLUGIN_PACKAGE_CACHE_PATH: "plugin_packages"
               PLUGIN_MEDIA_CACHE_PATH: "assets"
+              PLUGIN_DAEMON_TIMEOUT: "600.0"
+              PYTHON_ENV_INIT_TIMEOUT: "120"
               THIRD_PARTY_SIGNATURE_VERIFICATION_ENABLED: "true"
               THIRD_PARTY_SIGNATURE_VERIFICATION_PUBLIC_KEYS: "/app/keys/publickey.pem"
               FORCE_VERIFYING_SIGNATURE: "false"
