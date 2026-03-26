@@ -43,3 +43,24 @@ spec:
   postBuild:
     substitute:
       APP: *name
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name home-assistant-mcp
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: monitoring-system
+  path: "./kubernetes/apps/monitoring-system/home-assistant/mcp"
+  dependsOn:
+    - name: home-assistant
+      namespace: smarthome-apps
+    - name: kagent
+      namespace: servitor-apps

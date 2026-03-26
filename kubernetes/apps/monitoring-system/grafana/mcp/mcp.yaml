@@ -3,20 +3,22 @@
 apiVersion: kagent.dev/v1alpha1
 kind: MCPServer
 metadata:
-  name: home-assistant
+  name: grafana
   labels:
     kagent.dev/discovery: disabled
 spec:
   deployment:
-    image: "ghcr.io/homeassistant-ai/ha-mcp:7.1.0"
     args:
-      - "run"
-      - "fastmcp-http.json"
-    cmd: fastmcp
+      - "mcp-grafana@latest"
+      - "-t"
+      - "streamable-http"
+      - "--address"
+      - "0.0.0.0:8000"
+    cmd: uvx
     env:
-      HOMEASSISTANT_URL: "http://home-assistant.smarthome-apps.svc.cluster.local:8123"
+      GRAFANA_URL: "http://grafana-service.monitoring-system.svc.cluster.local:3000"
     secretRefs:
-      - home-assistant-agent
+      - grafana-mcp
     resources:
       requests:
         cpu: 100m
@@ -26,5 +28,5 @@ spec:
         memory: 512Mi
   transportType: http
   HTTPTransport:
-    targetPort: 8086
+    targetPort: 8000
     path: "/mcp"

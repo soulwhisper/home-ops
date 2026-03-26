@@ -6,3 +6,4 @@ resources:
   - ./grafana.yaml
   - ./home-assistant.yaml
   - ./kubernetes.yaml
+  - ./victoria-logs.yaml

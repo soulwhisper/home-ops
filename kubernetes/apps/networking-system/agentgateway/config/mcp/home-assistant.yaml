@@ -3,24 +3,23 @@
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: home-assistant-mcp-backend
+  name: &name home-assistant-mcp
 spec:
   mcp:
     targets:
-      - name: home-assistant
+      - name: *name
+        protocol: StreamableHTTP
         selector:
           services:
             matchLabels:
-              app.kubernetes.io/name: home-assistant-agent-mcp
-            matchNamespaces:
-              - servitor-apps
-        protocol: StreamableHTTP
+              app.kubernetes.io/name: *name
+            matchNamespaces: ["smarthome-apps"]
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: home-assistant-mcp-route
+  name: &name home-assistant-mcp
 spec:
   parentRefs:
     - name: agentgateway-proxy
@@ -31,6 +30,6 @@ spec:
             type: PathPrefix
             value: /mcp
       backendRefs:
-        - name: home-assistant-mcp-backend
+        - name: *name
           group: agentgateway.dev
           kind: AgentgatewayBackend
