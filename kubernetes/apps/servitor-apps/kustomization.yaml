@@ -7,5 +7,10 @@ components:
   - ../../components/namespace
 resources:
   - ./dify/ks.yaml
+  - ./kagent/ks.yaml
   - ./ollama/ks.yaml
   - ./sillytavern/ks.yaml
+  # agent
+  # - ./agent
+  # * todo list
+  # - @toolbox-sdk/server

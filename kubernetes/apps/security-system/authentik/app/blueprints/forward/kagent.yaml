@@ -4,9 +4,9 @@ version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
     identifiers:
-      name: agentgateway-proxy-provider
+      name: kagent-proxy-provider
     attrs:
-      name: agentgateway-proxy-provider
+      name: kagent-proxy-provider
       authorization_flow:
         !Find [
           authentik_flows.flow,
@@ -18,16 +18,16 @@ entries:
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
     identifiers:
-      slug: agentgateway
+      slug: kagent
     attrs:
-      name: agentgateway
-      provider: !KeyOf agentgateway-proxy-provider
-      meta_launch_url: "https://ai.noirprime.com"
+      name: kagent
+      provider: !KeyOf kagent-proxy-provider
+      meta_launch_url: "https://agent.noirprime.com"
       group: "Observability"
       policy_engine_mode: all
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf agentgateway
+      target: !KeyOf kagent
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }

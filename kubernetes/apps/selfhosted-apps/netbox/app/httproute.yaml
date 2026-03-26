@@ -9,7 +9,6 @@ metadata:
     gethomepage.dev/icon: netbox.svg
     gethomepage.dev/name: Netbox
     gethomepage.dev/group: Service
-    gethomepage.dev/pod-selector: "app.kubernetes.io/component=netbox"
     gatus.home-operations.com/endpoint: |
       conditions:
         - "[STATUS] == 200"

@@ -10,6 +10,15 @@ spec:
       replicas: 2
       template:
         spec:
+          containers:
+            - name: agentgateway
+              ports:
+                - name: metrics
+                  containerPort: 15020
+                  protocol: TCP
+                - name: ui
+                  containerPort: 15000
+                  protocol: TCP
           topologySpreadConstraints:
             - maxSkew: 1
               topologyKey: kubernetes.io/hostname
@@ -23,6 +32,16 @@ spec:
         app.kubernetes.io/name: agentgateway-config
     spec:
       minAvailable: 1
+  rawConfig:
+    config:
+      adminAddr: 0.0.0.0:15000
+  service:
+    spec:
+      ports:
+        - port: 15000
+          name: portal
+          targetPort: 15000
+          protocol: TCP
   resources:
     requests:
       cpu: 100m

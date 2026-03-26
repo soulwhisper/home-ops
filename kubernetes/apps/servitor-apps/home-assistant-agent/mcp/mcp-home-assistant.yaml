@@ -1,0 +1,30 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kagent.dev/mcpserver_v1alpha1.json
+apiVersion: kagent.dev/v1alpha1
+kind: MCPServer
+metadata:
+  name: home-assistant
+  labels:
+    kagent.dev/discovery: disabled
+spec:
+  deployment:
+    image: "ghcr.io/homeassistant-ai/ha-mcp:7.1.0"
+    args:
+      - "run"
+      - "fastmcp-http.json"
+    cmd: fastmcp
+    env:
+      HOMEASSISTANT_URL: "http://home-assistant.smarthome-apps.svc.cluster.local:8123"
+    secretRefs:
+      - home-assistant-agent
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  transportType: http
+  HTTPTransport:
+    targetPort: 8086
+    path: "/mcp"

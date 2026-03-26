@@ -1,0 +1,32 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kagent.dev/agent_v1alpha2.json
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: grafana-abnormally
+spec:
+  # This is a template
+  description: This agent can use a single tool to retrieve the contents of a webpage.
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: |-
+      You're a friendly and helpful agent that uses the fetch tool to retrieve webpage contents.
+
+      # Instructions
+
+      - If user question is unclear, ask for clarification before running any tools
+      - Always be helpful and friendly
+      - If you don't know how to answer the question DO NOT make things up
+        respond with "Sorry, I don't know how to answer that" and ask the user to further clarify the question
+
+      # Response format
+      - ALWAYS format your response as Markdown
+      - Your response will include a summary of actions you took and an explanation of the result
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: mcp-website-fetcher
+          kind: MCPServer
+          toolNames:
+            - fetch

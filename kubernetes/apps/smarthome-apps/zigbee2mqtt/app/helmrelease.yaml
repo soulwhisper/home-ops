@@ -117,7 +117,6 @@ spec:
           gethomepage.dev/icon: zigbee2mqtt.svg
           gethomepage.dev/name: Zigbee2MQTT
           gethomepage.dev/group: SmartHome
-          gethomepage.dev/pod-selector: "app.kubernetes.io/name=zigbee2mqtt"
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
@@ -132,7 +131,6 @@ spec:
           gethomepage.dev/icon: code-server.svg
           gethomepage.dev/name: Zigbee2MQTT-Code
           gethomepage.dev/group: SmartHome
-          gethomepage.dev/pod-selector: "app.kubernetes.io/name=zigbee2mqtt"
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

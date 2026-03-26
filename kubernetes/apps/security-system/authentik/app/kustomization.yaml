@@ -33,6 +33,7 @@ configMapGenerator:
       - ./blueprints/forward/hass-code.yaml
       - ./blueprints/forward/homepage.yaml
       - ./blueprints/forward/hubble.yaml
+      - ./blueprints/forward/kagent.yaml
       - ./blueprints/forward/lyrion.yaml
       - ./blueprints/forward/metube.yaml
       - ./blueprints/forward/qbittorrent.yaml

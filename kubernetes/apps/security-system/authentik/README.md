@@ -3,7 +3,7 @@
 ### Groups
 
 - admin: allow all;
-- internal: specific `media / smarthome / selfhosted / servitor / gaming` apps;
+- internal: specific `magos / media / smarthome / selfhosted / servitor / gaming` apps;
 - external: invited only, usually for `gaming`;
 
 ### Users

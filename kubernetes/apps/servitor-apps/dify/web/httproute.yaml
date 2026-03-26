@@ -9,7 +9,6 @@ metadata:
     gethomepage.dev/icon: "sh-langflow"
     gethomepage.dev/name: Dify
     gethomepage.dev/group: Service
-    gethomepage.dev/pod-selector: "app.kubernetes.io/name=dify-web"
 spec:
   hostnames: ["dify.noirprime.com"]
   parentRefs:

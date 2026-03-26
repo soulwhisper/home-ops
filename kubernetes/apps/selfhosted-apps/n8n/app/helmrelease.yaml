@@ -81,7 +81,6 @@ spec:
           gethomepage.dev/icon: n8n.svg
           gethomepage.dev/name: N8N
           gethomepage.dev/group: Service
-          gethomepage.dev/pod-selector: "app.kubernetes.io/name=n8n"
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

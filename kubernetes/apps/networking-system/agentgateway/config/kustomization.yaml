@@ -8,7 +8,10 @@ resources:
   - ./gatewayparams.yaml
   # provider
   - ./provider
+  # mcp-backend
+  - ./mcp
   # utils
   - ./httproute.yaml
   - ./podmonitor.yaml
+  - ./servicemonitor.yaml
   - ./trafficpolicy.yaml

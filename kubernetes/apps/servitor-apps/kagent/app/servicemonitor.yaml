@@ -3,16 +3,17 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: &name agentgateway
+  name: &name kagent
 spec:
   jobLabel: *name
   namespaceSelector:
     matchNames:
-      - networking-system
+      - servitor-apps
   selector:
     matchLabels:
       app.kubernetes.io/name: *name
   endpoints:
-    - port: http
+    - port: controller
       path: /metrics
+      scheme: http
       honorLabels: true
