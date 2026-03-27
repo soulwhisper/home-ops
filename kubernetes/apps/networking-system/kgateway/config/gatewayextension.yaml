@@ -11,14 +11,17 @@ spec:
       backendRef:
         name: authentik-server
         namespace: security-system
-        port: 80
+        port: 9000
+      pathPrefix: "/outpost.goauthentik.io/auth/envoy"
       authorizationRequest:
-        allowedHeaders:
-          patterns:
-            - exact: cookie
-            - exact: authorization
-            - prefix: x-authentik-
+        headersToAdd:
+          x-forwarded-host: "%REQ(:authority)%"
+          x-forwarded-proto: "%PROTOCOL%"
       authorizationResponse:
-        allowedUpstreamHeaders:
-          patterns:
-            - prefix: x-authentik-
+        headersToBackend:
+          - "x-authentik-username"
+          - "x-authentik-groups"
+          - "x-authentik-email"
+          - "x-authentik-name"
+          - "x-authentik-uid"
+          - "set-cookie"
