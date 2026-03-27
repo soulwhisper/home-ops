@@ -4,9 +4,9 @@ version: 1
 entries:
   - model: authentik_providers_oauth2.oauth2provider
     identifiers:
-      name: grafana-oidc-provider
+      name: &provider grafana-oidc-provider
     attrs:
-      name: grafana-oidc-provider
+      name: *provider
       authorization_flow:
         !Find [
           authentik_flows.flow,
@@ -30,16 +30,16 @@ entries:
         - !Find [authentik_providers_oauth2.scopemapping, [scope_name, groups]]
   - model: authentik_core.application
     identifiers:
-      slug: grafana
+      slug: &name grafana
     attrs:
-      name: Grafana
-      provider: !KeyOf grafana-oidc-provider
+      name: *name
+      provider: !KeyOf *provider
       meta_launch_url: "https://grafana.noirprime.com"
       group: "Observability"
       policy_engine_mode: all
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf grafana
+      target: !KeyOf *name
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }

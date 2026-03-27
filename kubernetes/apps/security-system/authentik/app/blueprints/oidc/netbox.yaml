@@ -4,9 +4,9 @@ version: 1
 entries:
   - model: authentik_providers_oauth2.oauth2provider
     identifiers:
-      name: netbox-oidc-provider
+      name: &provider netbox-oidc-provider
     attrs:
-      name: netbox-oidc-provider
+      name: *provider
       authorization_flow:
         !Find [
           authentik_flows.flow,
@@ -30,16 +30,16 @@ entries:
         - !Find [authentik_providers_oauth2.scopemapping, [scope_name, groups]]
   - model: authentik_core.application
     identifiers:
-      slug: netbox
+      slug: &name netbox
     attrs:
-      name: netbox
-      provider: !KeyOf netbox-oidc-provider
+      name: *name
+      provider: !KeyOf *provider
       meta_launch_url: "https://netbox.noirprime.com"
       group: "Service"
       policy_engine_mode: all
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf netbox
+      target: !KeyOf *name
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }

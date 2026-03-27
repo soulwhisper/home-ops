@@ -4,9 +4,9 @@ version: 1
 entries:
   - model: authentik_outposts.outpost
     identifiers:
-      name: authentik-embedded-outpost
+      name: &name authentik-embedded-outpost
     attrs:
-      name: authentik-embedded-outpost
+      name: *name
       type: proxy
       config:
         authentik_host: "https://auth.noirprime.com"

@@ -3,7 +3,7 @@
 version: 1
 entries:
   - model: authentik_providers_saml.samlpropertymapping
-    id: rook-ceph-dashboard-username
+    id: &mapping rook-ceph-dashboard-username
     identifiers:
       name: "SAML Mapping: Username"
     attrs:
@@ -12,11 +12,11 @@ entries:
       expression: |
         return request.user.username
   - model: authentik_providers_saml.samlprovider
-    id: rook-ceph-dashboard-saml-provider
+    id: &provider rook-ceph-dashboard-saml-provider
     identifiers:
-      name: rook-ceph-dashboard-saml-provider
+      name: *provider
     attrs:
-      name: rook-ceph-dashboard-saml-provider
+      name: *provider
       authorization_flow:
         !Find [
           authentik_flows.flow,
@@ -26,14 +26,14 @@ entries:
       sp_binding: post
       audience: "https://rook.noirprime.com/auth/saml2/metadata"
       issuer: "https://auth.noirprime.com/"
-      name_id_mapping: !KeyOf rook-ceph-dashboard-username
+      name_id_mapping: !KeyOf *mapping
       signing_kp:
         !Find [
           authentik_crypto.certificatekeypair,
           [name, "authentik Self-signed Certificate"],
         ]
       property_mappings:
-        - !KeyOf rook-ceph-dashboard-username
+        - !KeyOf *mapping
         - !Find [
             authentik_providers_saml.samlpropertymapping,
             [managed, "goauthentik.io/providers/saml/name"],
@@ -43,18 +43,18 @@ entries:
             [managed, "goauthentik.io/providers/saml/email"],
           ]
   - model: authentik_core.application
-    id: rook-ceph-dashboard
+    id: &name rook-ceph-dashboard
     identifiers:
-      slug: rook-ceph-dashboard
+      slug: *name
     attrs:
-      name: rook-ceph-dashboard
-      provider: !KeyOf rook-ceph-dashboard-saml-provider
+      name: *name
+      provider: !KeyOf *provider
       meta_launch_url: "https://rook.noirprime.com"
       group: "Storage"
       policy_engine_mode: all
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf rook-ceph-dashboard
+      target: !KeyOf *name
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }

@@ -4,9 +4,9 @@ version: 1
 entries:
   - model: authentik_providers_oauth2.oauth2provider
     identifiers:
-      name: n8n-oidc-provider
+      name: &provider n8n-oidc-provider
     attrs:
-      name: n8n-oidc-provider
+      name: *provider
       authorization_flow:
         !Find [
           authentik_flows.flow,
@@ -30,22 +30,22 @@ entries:
         - !Find [authentik_providers_oauth2.scopemapping, [scope_name, groups]]
   - model: authentik_core.application
     identifiers:
-      slug: n8n
+      slug: &name n8n
     attrs:
-      name: n8n
-      provider: !KeyOf n8n-oidc-provider
+      name: *name
+      provider: !KeyOf *provider
       meta_launch_url: "https://n8n.noirprime.com"
       group: "Service"
       policy_engine_mode: any
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf n8n
+      target: !KeyOf *name
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }
   - model: authentik_policies_binding.policybinding
     identifiers:
-      target: !KeyOf n8n
+      target: !KeyOf *name
       group: !Find [authentik_core.group, [name, homelab-internal]]
       order: 10
     attrs: { enabled: true, timeout: 30 }
