@@ -37,3 +37,9 @@ entries:
       group: !Find [authentik_core.group, [name, homelab-internal]]
       order: 10
     attrs: { enabled: true, timeout: 30 }
+  - model: authentik_outposts.outpost
+    identifiers:
+      name: authentik-embedded-outpost
+    attrs:
+      providers:
+        - !Append [!KeyOf *provider]

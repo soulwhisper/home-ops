@@ -16,8 +16,7 @@
 
 - 1. add `trafficpolicy.yaml` to app folder;
 - 2. copy other app as template, change `provider name`, `application slug/name`, `meta_launch_url`, `policybinding`;
-- 3. add provider to `app/blueprints/core/outpost-proxy.yaml`, under providers list;
-- 4. thats all.
+- 3. thats all.
 
 ### Add a new OIDC App
 
