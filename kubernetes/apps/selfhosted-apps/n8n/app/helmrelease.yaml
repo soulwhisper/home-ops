@@ -35,7 +35,7 @@ spec:
           app:
             image:
               repository: ghcr.io/n8n-io/n8n
-              tag: 2.14.0
+              tag: 2.14.2
             env:
               DB_TYPE: postgresdb
               DB_POSTGRESDB_HOST: postgres-rw.database-system.svc.cluster.local
@@ -81,7 +81,6 @@ spec:
           gethomepage.dev/icon: n8n.svg
           gethomepage.dev/name: N8N
           gethomepage.dev/group: Service
-          gethomepage.dev/pod-selector: "app.kubernetes.io/name=n8n"
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-kubernetes
+data:
+  config.toml: |
+    log_level = 2
+    read_only = true
+    stateless = true
+    port = "8080"
+    list_output = "yaml"
+    toolsets = ["core", "config", "helm", "kubevirt"]
+    [[denied_resources]]
+    group = ""
+    version = "v1"
+    kind = "Secret"
+    [[denied_resources]]
+    group = "external-secrets.io"
+    version = "v1"
+    kind = "ExternalSecret"

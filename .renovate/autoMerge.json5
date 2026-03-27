@@ -23,6 +23,7 @@
         "kubernetes/apps/gaming-apps/**",
         "kubernetes/apps/media-apps/**",
         "kubernetes/apps/selfhosted-apps/**",
+        "kubernetes/apps/servitor-apps/**",
         "kubernetes/apps/smarthome-apps/**",
       ],
       matchUpdateTypes: ["minor"],

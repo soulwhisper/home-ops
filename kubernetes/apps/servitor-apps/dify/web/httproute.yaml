@@ -1,0 +1,96 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: dify
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/icon: "sh-langflow"
+    gethomepage.dev/name: Dify
+    gethomepage.dev/group: Service
+spec:
+  hostnames: ["dify.noirprime.com"]
+  parentRefs:
+    - name: kgateway-internal
+      namespace: networking-system
+
+  rules:
+    # /console/api
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /console/api
+      backendRefs:
+        - name: dify-api
+          namespace: servitor-apps
+          port: 5001
+    # /api
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: dify-api
+          namespace: servitor-apps
+          port: 5001
+    # /v1
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1
+      backendRefs:
+        - name: dify-api
+          namespace: servitor-apps
+          port: 5001
+    # /files
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /files
+      backendRefs:
+        - name: dify-api
+          namespace: servitor-apps
+          port: 5001
+    # /mcp
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /mcp
+      backendRefs:
+        - name: dify-api
+          namespace: servitor-apps
+          port: 5001
+    # /explore
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /explore
+      backendRefs:
+        - name: dify-web
+          namespace: servitor-apps
+          port: 3000
+    # /
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: dify-web
+          namespace: servitor-apps
+          port: 3000
+    # /e/
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /e/
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            add:
+              - name: Dify-Hook-Url
+                value: http://dify.noirprime.com/e/
+      backendRefs:
+        - name: dify-database
+          namespace: servitor-apps
+          port: 5002

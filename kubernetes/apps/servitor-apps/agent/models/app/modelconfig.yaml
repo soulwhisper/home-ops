@@ -1,0 +1,12 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kagent.dev/modelconfig_v1alpha2.json
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: &name deepseek
+spec:
+  apiKeySecret: models
+  apiKeySecretKey: *name
+  provider: OpenAI
+  openAI:
+    baseUrl: "http://agentgateway-proxy.networking-system.svc.cluster.local/deepseek"

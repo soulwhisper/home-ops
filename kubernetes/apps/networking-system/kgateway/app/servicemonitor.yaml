@@ -11,7 +11,7 @@ spec:
       - networking-system
   selector:
     matchLabels:
-      app.kubernetes.io/name: kgateway
+      app.kubernetes.io/name: *name
   endpoints:
     - port: http
       path: /metrics

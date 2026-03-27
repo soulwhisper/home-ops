@@ -1,0 +1,29 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: mcp-federation
+spec:
+  mcp:
+    targets:
+      - name: grafana
+        selector:
+          services:
+            matchLabels:
+              app.kubernetes.io/name: mcp-grafana
+      - name: haas
+        selector:
+          services:
+            matchLabels:
+              app.kubernetes.io/name: mcp-home-assistant
+      - name: kubernetes
+        selector:
+          services:
+            matchLabels:
+              app.kubernetes.io/name: mcp-kubernetes
+      - name: logs
+        selector:
+          services:
+            matchLabels:
+              app.kubernetes.io/name: mcp-victoria-logs

@@ -10,7 +10,7 @@ releases:
   - name: prometheus-crds
     namespace: monitoring-system
     chart: oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds
-    version: 27.0.1
+    version: 28.0.1
 
   - name: cilium
     namespace: kube-system
@@ -37,7 +37,7 @@ releases:
   - name: gateway-api-crds
     namespace: kube-system
     chart: oci://ghcr.io/wiremind/wiremind-helm-charts/gateway-api-crds
-    version: 1.4.0
+    version: 1.5.1
     needs: ["kube-system/spegel"]
 
   # for component crds

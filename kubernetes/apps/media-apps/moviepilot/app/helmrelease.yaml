@@ -29,7 +29,7 @@ spec:
           app:
             image:
               repository: ghcr.io/jxxghp/moviepilot
-              tag: 2.9.17
+              tag: 2.9.19
             env:
               NGINX_PORT: &port 3000
               PORT: &apiPort 3001
@@ -63,7 +63,7 @@ spec:
                     name: *pguser
                     key: password
               PUID: "2000"
-              PGID: "101" # synology:admin
+              PGID: "2000"
             envFrom:
               - configMapRef:
                   name: *name

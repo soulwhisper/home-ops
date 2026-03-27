@@ -102,7 +102,6 @@ spec:
           gethomepage.dev/icon: home-assistant.svg
           gethomepage.dev/name: Home-Assistant
           gethomepage.dev/group: SmartHome
-          gethomepage.dev/pod-selector: "app.kubernetes.io/name=home-assistant"
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
@@ -117,7 +116,6 @@ spec:
           gethomepage.dev/icon: code-server.svg
           gethomepage.dev/name: Home-Assistant-Code
           gethomepage.dev/group: SmartHome
-          gethomepage.dev/pod-selector: "app.kubernetes.io/name=home-assistant"
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
