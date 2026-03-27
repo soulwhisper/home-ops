@@ -38,3 +38,24 @@ spec:
   postBuild:
     substitute:
       APP: *name
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name kagent-config
+  annotations:
+    config.home-ops.io/managed: "true"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/kagent/config"
+  dependsOn:
+    - name: kagent
+      namespace: servitor-apps
+    - name: agentgateway
+      namespace: networking-system
+    - name: onepassword-connect
+      namespace: security-system

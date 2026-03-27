@@ -3,7 +3,7 @@
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: &name anthropic
+  name: &name anthropic-api
 spec:
   ai:
     provider:
@@ -37,7 +37,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: &name anthropic
+  name: &name anthropic-api
 spec:
   parentRefs:
     - name: agentgateway-proxy
@@ -55,7 +55,7 @@ spec:
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: anthropic
+  name: anthropic-api
 spec:
   refreshInterval: 12h
   secretStoreRef:

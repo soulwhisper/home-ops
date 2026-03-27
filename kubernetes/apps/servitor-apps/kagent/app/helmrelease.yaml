@@ -11,6 +11,8 @@ spec:
     name: kagent
 
   values:
+    controller:
+      replicas: 2
     database:
       postgres:
         url: "postgresql://kagent:kagent@postgres-rw.database-system.svc.cluster.local:5432/kagent"
@@ -32,7 +34,7 @@ spec:
         host: "ollama.servitor-apps.svc.cluster.local:11434"
     # kmcp
     kmcp:
-      enabled: true
+      enabled: false
     # agents for tests
     agents:
       argo-rollouts-agent:

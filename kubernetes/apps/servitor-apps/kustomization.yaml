@@ -13,5 +13,3 @@ resources:
   - ./sillytavern/ks.yaml
   # mcp
   - ./mcp
-  # agent
-  - ./agent
