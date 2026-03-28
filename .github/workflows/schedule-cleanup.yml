@@ -20,7 +20,7 @@ jobs:
           app-id: ${{ secrets.PRIVATE_APP_ID }}
           private-key: ${{ secrets.PRIVATE_APP_KEY }}
       - name: Cleanup workflow stale runs
-        uses: Mattraks/delete-workflow-runs@bd2822c9d98065c9766fb1f4bbc32325c47de4fb # v2
+        uses: Mattraks/delete-workflow-runs@b3018382ca039b53d238908238bd35d1fb14f8ee # v2
         with:
           token: "${{ steps.app-token.outputs.token }}"
           repository: "${{ github.repository }}"
@@ -28,7 +28,7 @@ jobs:
           keep_minimum_runs: "0"
           delete_run_by_conclusion_pattern: "cancelled,skipped"
       - name: Cleanup workflow success runs
-        uses: Mattraks/delete-workflow-runs@bd2822c9d98065c9766fb1f4bbc32325c47de4fb # v2
+        uses: Mattraks/delete-workflow-runs@b3018382ca039b53d238908238bd35d1fb14f8ee # v2
         with:
           token: "${{ steps.app-token.outputs.token }}"
           repository: "${{ github.repository }}"
@@ -36,7 +36,7 @@ jobs:
           keep_minimum_runs: "3"
           delete_run_by_conclusion_pattern: "success"
       - name: Clenaup workflow failure runs
-        uses: Mattraks/delete-workflow-runs@bd2822c9d98065c9766fb1f4bbc32325c47de4fb # v2
+        uses: Mattraks/delete-workflow-runs@b3018382ca039b53d238908238bd35d1fb14f8ee # v2
         with:
           token: "${{ steps.app-token.outputs.token }}"
           repository: "${{ github.repository }}"
