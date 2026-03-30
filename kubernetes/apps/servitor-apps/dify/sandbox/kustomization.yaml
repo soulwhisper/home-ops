@@ -5,6 +5,8 @@ kind: Kustomization
 resources:
   # app
   - ./helmrelease.yaml
+  # utils
+  - ./ciliumnetworkpolicy.yaml
 configMapGenerator:
   - name: dify-sandbox
     files:

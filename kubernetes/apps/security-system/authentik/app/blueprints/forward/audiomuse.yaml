@@ -13,7 +13,7 @@ entries:
           [slug, default-provider-authorization-implicit-consent],
         ]
       mode: forward_domain
-      external_host: &domain "https://auth.noirprime.com"
+      external_host: &domain "https://muse.noirprime.com"
       access_token_validity: "hours=12"
       cookie_domain: "noirprime.com"
   - model: authentik_core.application

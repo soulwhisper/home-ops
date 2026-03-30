@@ -14,6 +14,9 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: smarthome-apps
   path: "./kubernetes/apps/smarthome-apps/zigbee2mqtt/app"
+  dependsOn:
+    - name: mosquitto
+      namespace: smarthome-apps
   components:
     - ../../../../components/volsync
   postBuild:

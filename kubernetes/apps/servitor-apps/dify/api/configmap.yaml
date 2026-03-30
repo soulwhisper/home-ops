@@ -23,7 +23,7 @@ data:
   MIGRATION_ENABLED: "true"
   GUNICORN_TIMEOUT: "360"
   SERVER_WORKER_AMOUNT: "1"
-  # :: database
+  # :: database, hardcoded
   DB_HOST: "postgres-rw.database-system.svc.cluster.local"
   DB_PORT: "5432"
   DB_USERNAME: "dify-database"
@@ -43,7 +43,7 @@ data:
   STORAGE_TYPE: "opendal"
   OPENDAL_SCHEME: "fs"
   OPENDAL_FS_ROOT: "storage"
-  # :: vector
+  # :: vector, hardcoded
   VECTOR_STORE: "pgvector"
   PGVECTO_RS_HOST: "postgres-rw.database-system.svc.cluster.local"
   PGVECTO_RS_PORT: "5432"

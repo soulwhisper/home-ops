@@ -72,20 +72,20 @@ machine:
             enable_unprivileged_ports = true
             enable_unprivileged_icmp = true
   install:
-    # renovate: depName=ghcr.io/siderolabs/installer datasource=docker
-    image: factory.talos.dev/metal-installer/725652984f86e96d59370c2f1a3ec6cf87c065de5c0c00263fcfc0b033d0f2b7:v1.12.0
+    # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
+    image: factory.talos.dev/metal-installer/d01c9ce181bcdc2ebb3dc64d810e0431dc39f0d7a3c1a33676b2ac2f93f7a84d:v1.12.6
     grubUseUKICmdline: true
     diskSelector:
       model: "SQF-C3AV1-256GDEDM"
   kubelet:
-    # renovate: depName=ghcr.io/siderolabs/kubelet datasource=docker
-    image: ghcr.io/siderolabs/kubelet:v1.35.0
+    # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
+    image: ghcr.io/siderolabs/kubelet:v1.35.3
     nodeIP:
       validSubnets:
         - 10.10.0.0/24
   nodeLabels:
     topology.kubernetes.io/region: main
-    topology.kubernetes.io/zone: home
+    topology.kubernetes.io/zone: homelab
     intel.feature.node.kubernetes.io/gpu: "true"
   sysctls:
     # moviepilot requires high inotify limits for media library watching (~500k files)
@@ -115,24 +115,26 @@ machine:
     - apiVersion: v1
       kind: Pod
       metadata:
-        name: intel-irq-balancer
+        name: network-irq-optimizer
         namespace: kube-system
       spec:
         hostNetwork: true
         hostPID: true
         containers:
-          - name: intel-irq-binder
+          - name: irq-optimizer
             image: alpine
             securityContext:
               privileged: true
             command: ["/bin/sh", "-c"]
             args:
               - |
-                # for intel 13900H with X710 10G NICs, bind all 'ice' IRQs to P-cores for best performance
-                for irq in $(grep 'ice' /proc/interrupts | awk '{print $1}' | tr -d ':'); do
-                  echo "0-11" > /proc/irq/$irq/smp_affinity_list
+                # 13900H P-cores (HT enabled) are 0-11. E-cores are 12-19.
+                while true; do
+                  for irq in $(grep 'ice' /proc/interrupts | awk '{print $1}' | tr -d ':'); do
+                    echo "2-11" > /proc/irq/$irq/smp_affinity_list
+                  done
+                  sleep 3600
                 done
-                echo "IRQ Binding complete."
             volumeMounts:
               - name: proc
                 mountPath: /proc
@@ -160,17 +162,6 @@ name: lo # fix forwardKubeDNSToHost
 up: true
 addresses:
   - address: 169.254.116.108/32
----
-apiVersion: v1alpha1
-kind: LinkAliasConfig
-name: amt0
-selector:
-  match: link.bus_path == "0000:59:00.0"
----
-apiVersion: v1alpha1
-kind: LinkConfig
-name: amt0
-up: false
 ---
 apiVersion: v1alpha1
 kind: ExtensionServiceConfig

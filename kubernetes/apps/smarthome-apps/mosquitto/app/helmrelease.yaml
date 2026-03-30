@@ -13,13 +13,14 @@ spec:
 
   values:
     configMaps:
-      config:
+      *name :
         data:
           mosquitto.conf: |
-            allow_anonymous true
+            allow_anonymous false
             autosave_interval 60
             connection_messages false
             listener 1883
+            password_file /etc/mosquitto/password_file
             per_listener_settings false
             persistence true
             persistence_location /config
@@ -64,11 +65,17 @@ spec:
             port: 1883
 
     persistence:
-      config:
+      app:
         existingClaim: *name
-      config-file:
+      config:
         type: configMap
-        identifier: config
+        identifier: *name
         globalMounts:
           - path: /mosquitto/config/mosquitto.conf
             subPath: mosquitto.conf
+      secrets:
+        type: secret
+        name: *name
+        globalMounts:
+          - path: /etc/mosquitto/password_file
+            readOnly: true

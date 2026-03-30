@@ -63,7 +63,8 @@ spec:
       host: postgres-rw.database-system.svc.cluster.local
       database: *name
       username: *name
-      password: *name
+      existingSecretName: netbox-pguser
+      existingSecretKey: password
     initContainers:
       - name: init-db
         image: ghcr.io/home-operations/postgres-init:18

@@ -14,7 +14,6 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: smarthome-apps
   path: ./kubernetes/apps/smarthome-apps/mosquitto/app
-  wait: true
   components:
     - ../../../../components/volsync
   postBuild:

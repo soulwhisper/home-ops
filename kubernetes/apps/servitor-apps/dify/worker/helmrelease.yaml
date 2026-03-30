@@ -29,7 +29,7 @@ spec:
               repository: langgenius/dify-api
               tag: 1.13.3
             env:
-              MODE: "beat"
+              MODE: "worker"
             envFrom:
               - configMapRef:
                   name: dify-api

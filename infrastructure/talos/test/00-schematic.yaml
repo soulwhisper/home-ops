@@ -1,12 +1,20 @@
 ---
 # schematic for test environment
+# d69b3cd2ada0bf771c4a8329295bfbe4b5e357fd08de568d11d5f37dfd4254b1
 customization:
   bootloader: sd-boot
   extraKernelArgs:
-    - cpufreq.default_governor=performance
-    - -lockdown # secureboot
-    - lockdown=integrity # secureboot
-    - console=ttyS0 # hci only
+    # test
+    - intel_pstate=passive
+    - cpufreq.default_governor=conservative
+    # hci
+    - console=ttyS0
+    # secureboot
+    - -lockdown
+    - lockdown=integrity
+    # others
+    - talos.auditd.disabled=1
+    - sysctl.kernel.kexec_load_disabled=1
   systemExtensions:
     officialExtensions:
       - siderolabs/i915

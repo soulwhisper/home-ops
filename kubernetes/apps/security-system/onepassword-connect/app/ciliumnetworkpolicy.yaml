@@ -1,0 +1,19 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: onepassword-connect-ingress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: onepassword-connect
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: external-secrets
+            io.kubernetes.pod.namespace: security-system
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

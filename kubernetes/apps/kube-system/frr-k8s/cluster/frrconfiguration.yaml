@@ -8,10 +8,10 @@ metadata:
 spec:
   bgp:
     routers:
-      - asn: 65510
+      - asn: 65100
         neighbors:
-          - address: "10.255.255.1" # Switch
-            asn: 65510
+          - address: "10.10.0.1" # Switch
+            asn: 65000
             port: 179
             holdTime: 30s
             keepaliveTime: 10s

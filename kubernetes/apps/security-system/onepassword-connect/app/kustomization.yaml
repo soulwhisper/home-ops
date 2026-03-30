@@ -6,5 +6,6 @@ resources:
   # app
   - ./helmrelease.yaml
   # utils
-  - ./externalsecret.yaml
+  - ./ciliumnetworkpolicy.yaml
   - ./clustersecretstore.yaml
+  - ./externalsecret.yaml

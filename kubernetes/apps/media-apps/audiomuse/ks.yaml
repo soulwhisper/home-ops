@@ -22,7 +22,7 @@ spec:
     - name: media-nfs
       namespace: media-apps
     - name: ollama
-      namespace: selfhosted-apps
+      namespace: servitor-apps
   components:
     - ../../../../components/cnpg
     - ../../../../components/dragonfly

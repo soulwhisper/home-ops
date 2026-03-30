@@ -7,15 +7,15 @@ data:
   # : general
   TEMP_DIR: "/app/temp_audio"
   AI_MODEL_PROVIDER: "OLLAMA"
-  OLLAMA_SERVER_URL: "http://ollama.selfhosted-apps.svc.cluster.local:11434/api/generate"
-  OLLAMA_MODEL_NAME: "mistral:7b"
+  OLLAMA_SERVER_URL: "http://ollama.servitor-apps.svc.cluster.local:11434/api/generate"
+  OLLAMA_MODEL_NAME: "qwen:8b"
   # : backend
   MEDIASERVER_TYPE: "lyrion"
   LYRION_URL: "http://lyrion.media-apps.svc.cluster.local:9000"
   MUSIC_LIBRARIES: "/music"
   # : redis
   REDIS_URL: "redis://audiomuse-dragonfly.media-apps.svc.cluster.local:6379/0"
-  # : postgres, values from secret 'audiomuse-pguser'
+  # : postgres, hardcoded
   POSTGRES_USER: "audiomuse"
   POSTGRES_PASSWORD: "audiomuse"
   POSTGRES_DB: "audiomuse"

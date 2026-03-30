@@ -1,0 +1,34 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: dify-sandbox-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: dify-sandbox
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: dify-proxy
+      toPorts:
+        - ports:
+            - port: "3128"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: dify-api
+      toPorts:
+        - ports:
+            - port: "5001"
+              protocol: TCP
+    # DNS
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP

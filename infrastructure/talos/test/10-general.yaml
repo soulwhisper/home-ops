@@ -76,19 +76,19 @@ machine:
             enable_unprivileged_ports = true
             enable_unprivileged_icmp = true
   install:
-    # renovate: depName=ghcr.io/siderolabs/installer datasource=docker
-    image: factory.talos.dev/metal-installer/581fa250999874d472153c8c65a7008e1bbf0742864fab8b4668438c983df5a6:v1.12.0
+    # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
+    image: factory.talos.dev/metal-installer/d69b3cd2ada0bf771c4a8329295bfbe4b5e357fd08de568d11d5f37dfd4254b1:v1.12.6
     grubUseUKICmdline: true
     disk: /dev/sda
   kubelet:
-    # renovate: depName=ghcr.io/siderolabs/kubelet datasource=docker
-    image: ghcr.io/siderolabs/kubelet:v1.35.0
+    # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
+    image: ghcr.io/siderolabs/kubelet:v1.35.3
     nodeIP:
       validSubnets:
         - 172.19.82.0/24
   nodeLabels:
     topology.kubernetes.io/region: main
-    topology.kubernetes.io/zone: home
+    topology.kubernetes.io/zone: homelab
     intel.feature.node.kubernetes.io/gpu: "true"
   sysctls:
     # moviepilot requires high inotify limits for media library watching (~500k files)
@@ -143,17 +143,6 @@ addresses:
   - address: 169.254.116.108/32
 ---
 apiVersion: v1alpha1
-kind: LinkAliasConfig
-name: amt0
-selector:
-  match: link.bus_path == "0000:59:00.0"
----
-apiVersion: v1alpha1
-kind: LinkConfig
-name: amt0
-up: false
----
-apiVersion: v1alpha1
 kind: ExtensionServiceConfig
 name: nut-client
 configFiles:
@@ -165,3 +154,10 @@ configFiles:
 apiVersion: v1alpha1
 kind: OOMConfig
 triggerExpression: "false" # disable until 'MemAvailable' implemented
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: docker.io
+endpoints:
+  - url: https://mirror.gcr.io
+skipFallback: false

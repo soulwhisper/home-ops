@@ -1,9 +1,0 @@
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/source.toolkit.fluxcd.io/helmrepository_v1.json
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
-  name: emqx
-  namespace: database-system
-spec:
-  url: https://repos.emqx.io/charts
