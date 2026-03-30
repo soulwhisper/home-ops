@@ -3,12 +3,12 @@
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: &name ollama-qwen
+  name: &name ollama-tools
 spec:
   ai:
     provider:
       openai:
-        model: qwen3:8b
+        model: nemotron-cascade-2
       host: ollama.servitor-apps.svc.cluster.local
       port: 11434
 ---
@@ -16,7 +16,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: &name ollama-qwen
+  name: &name ollama-tools
 spec:
   parentRefs:
     - name: agentgateway-proxy
@@ -24,7 +24,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /ollama/qwen
+            value: /ollama/tools
       backendRefs:
         - name: *name
           group: agentgateway.dev
@@ -34,12 +34,12 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: &name ollama-embed
+  name: &name ollama-embed-zh
 spec:
   ai:
     provider:
       openai:
-        model: nomic-embed-text
+        model: qwen3-embedding:4b
       host: ollama.servitor-apps.svc.cluster.local
       port: 11434
 ---
@@ -47,7 +47,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: &name ollama-embed
+  name: &name ollama-embed-zh
 spec:
   parentRefs:
     - name: agentgateway-proxy
@@ -55,7 +55,38 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /ollama/embed
+            value: /ollama/embed/zh
+      backendRefs:
+        - name: *name
+          group: agentgateway.dev
+          kind: AgentgatewayBackend
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: &name ollama-embed-en
+spec:
+  ai:
+    provider:
+      openai:
+        model: snowflake-arctic-embed:335m
+      host: ollama.servitor-apps.svc.cluster.local
+      port: 11434
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: &name ollama-embed-en
+spec:
+  parentRefs:
+    - name: agentgateway-proxy
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /ollama/embed/en
       backendRefs:
         - name: *name
           group: agentgateway.dev

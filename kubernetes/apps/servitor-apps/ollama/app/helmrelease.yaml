@@ -28,7 +28,7 @@ spec:
               OLLAMA_HOST: "0.0.0.0"
               OLLAMA_KEEP_ALIVE: "-1"
               OLLAMA_NUM_PARALLEL: "2"
-              OLLAMA_MAX_LOADED_MODELS: "2"
+              OLLAMA_MAX_LOADED_MODELS: "3"
               OLLAMA_FLASH_ATTENTION: "1"
               OLLAMA_KV_CACHE_TYPE: "q8_0"
             lifecycle:
@@ -39,8 +39,9 @@ spec:
                     - -c
                     - |
                       (sleep 10 && \
-                       ollama pull nomic-embed-text && \
-                       ollama pull qwen3:8b) &
+                       ollama pull nemotron-cascade-2 && \
+                       ollama pull qwen3-embedding:4b && \
+                       ollama pull snowflake-arctic-embed:335m) &
             probes:
               liveness:
                 enabled: true
@@ -62,11 +63,11 @@ spec:
                   periodSeconds: 5
             resources:
               requests:
-                cpu: 2000m
-                memory: 6Gi
+                cpu: 8000m
+                memory: 28Gi
               limits:
-                cpu: 4000m
-                memory: 12Gi
+                cpu: 12000m
+                memory: 32Gi
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
