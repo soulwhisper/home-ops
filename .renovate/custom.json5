@@ -12,6 +12,16 @@
   customManagers: [
     {
       customType: "regex",
+      description: "Process Talos images",
+      fileMatch: ["infrastructure/talos/.+\\.yaml$"],
+      matchStrings: [
+        "#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)(?:\\s+packageName=(?<packageName>[^\\s]+))?\\s+image:\\s*(?<depPart>.*?:)(?<currentValue>[v\\d\\.]+)",
+      ],
+      datasourceTemplate: "{{{datasource}}}",
+      depNameTemplate: "{{{depName}}}",
+    },
+    {
+      customType: "regex",
       description: "Process Helmfile oci charts",
       fileMatch: ["(^|/)helmfile\\.yaml$"],
       matchStrings: [
