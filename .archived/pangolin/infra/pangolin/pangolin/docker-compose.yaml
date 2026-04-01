@@ -72,7 +72,7 @@ services:
         target: /etc/traefik/dynamic_config.yml
 
   crowdsec:
-    image: docker.io/crowdsecurity/crowdsec:v1.7.6
+    image: docker.io/crowdsecurity/crowdsec:v1.7.7
     container_name: crowdsec
     restart: unless-stopped
     environment:
