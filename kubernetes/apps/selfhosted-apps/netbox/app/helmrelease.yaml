@@ -95,7 +95,7 @@ spec:
     # below is the reason using official chart
     image:
       repository: ghcr.io/soulwhisper/netbox-custom
-      tag: 4.5.5
+      tag: 4.5.6
     plugins:
       - netbox_attachments
       - netbox_bgp
