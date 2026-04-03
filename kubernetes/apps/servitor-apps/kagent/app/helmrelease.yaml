@@ -29,7 +29,7 @@ spec:
     providers:
       default: ollama
     ollama:
-      model: "qwen3:8b"
+      model: "gemma-4:e4b"
       config:
         host: "ollama.servitor-apps.svc.cluster.local:11434"
     # kmcp

@@ -39,9 +39,9 @@ spec:
                     - -c
                     - |
                       (sleep 10 && \
-                       ollama pull nemotron-cascade-2 && \
+                       ollama pull gemma-4:26b-a4b && \
                        ollama pull qwen3-embedding:4b && \
-                       ollama pull snowflake-arctic-embed:335m) &
+                       ollama pull gemma-4:e4b) &
             probes:
               liveness:
                 enabled: true
