@@ -10,7 +10,7 @@ spec:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
   ref:
-    tag: 0.8.3
+    tag: 0.8.4
   url: oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/source.toolkit.fluxcd.io/ocirepository_v1.json
