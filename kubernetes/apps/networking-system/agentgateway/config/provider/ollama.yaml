@@ -8,7 +8,7 @@ spec:
   ai:
     provider:
       openai:
-        model: gemma-4:26b-a4b
+        model: gemma4:26b
       host: ollama.servitor-apps.svc.cluster.local
       port: 11434
 ---
@@ -25,6 +25,37 @@ spec:
         - path:
             type: PathPrefix
             value: /local/main
+      backendRefs:
+        - name: *name
+          group: agentgateway.dev
+          kind: AgentgatewayBackend
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: &name local-fast
+spec:
+  ai:
+    provider:
+      openai:
+        model: gemma4:e4b
+      host: ollama.servitor-apps.svc.cluster.local
+      port: 11434
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: &name local-fast
+spec:
+  parentRefs:
+    - name: agentgateway-proxy
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /local/fast
       backendRefs:
         - name: *name
           group: agentgateway.dev
@@ -56,37 +87,6 @@ spec:
         - path:
             type: PathPrefix
             value: /local/embed
-      backendRefs:
-        - name: *name
-          group: agentgateway.dev
-          kind: AgentgatewayBackend
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaybackend_v1alpha1.json
-apiVersion: agentgateway.dev/v1alpha1
-kind: AgentgatewayBackend
-metadata:
-  name: &name local-fast
-spec:
-  ai:
-    provider:
-      openai:
-        model: gemma-4:e4b
-      host: ollama.servitor-apps.svc.cluster.local
-      port: 11434
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: &name local-fast
-spec:
-  parentRefs:
-    - name: agentgateway-proxy
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /local/fast
       backendRefs:
         - name: *name
           group: agentgateway.dev
