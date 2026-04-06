@@ -57,7 +57,7 @@ jobs:
           fi
       - name: Run flux-local test
         if: steps.skip-checks.outputs.skip != 'true'
-        uses: docker://ghcr.io/allenporter/flux-local:v8.1.0
+        uses: docker://ghcr.io/allenporter/flux-local:v8.2.0
         with:
           args: test --enable-helm --all-namespaces --path /github/workspace/kubernetes/flux/cluster -v
 
@@ -98,7 +98,7 @@ jobs:
           fi
       - name: Run flux-local diff
         if: steps.skip-checks.outputs.skip != 'true'
-        uses: docker://ghcr.io/allenporter/flux-local:v8.1.0
+        uses: docker://ghcr.io/allenporter/flux-local:v8.2.0
         with:
           args: >-
             diff ${{ matrix.resources }}
