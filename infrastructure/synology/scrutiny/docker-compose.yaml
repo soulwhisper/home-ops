@@ -5,7 +5,7 @@ name: scrutiny
 
 services:
   scrutiny:
-    image: "ghcr.io/starosdev/scrutiny:1.49.1-omnibus"
+    image: "ghcr.io/starosdev/scrutiny:1.49.2-omnibus"
     container_name: "scrutiny"
     restart: "unless-stopped"
     cap_add:
