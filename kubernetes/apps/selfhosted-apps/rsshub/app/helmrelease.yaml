@@ -1,0 +1,77 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name rsshub
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: gitops-system
+
+  values:
+    defaultPodOptions:
+      hostUsers: false
+    controllers:
+      *name :
+        annotations:
+          reloader.stakater.com/auto: "true"
+          config.home-ops.io/proxy: "https" # https_proxy needed
+        containers:
+          app:
+            image:
+              repository: ghcr.io/diygod/rsshub
+              tag: chromium-bundled-2026-04-06
+            env:
+              NODE_ENV: "production"
+              NODE_OPTIONS: "--max-old-space-size=1536"
+              CACHE_TYPE: "redis"
+              CACHE_EXPIRE: "300"
+              CACHE_CONTENT_EXPIRE: "3600"
+              REDIS_URL: "redis://rsshub-dragonfly.selfhosted-apps.svc.cluster.local:6379/0"
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: &port 1200
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness: *probes
+              startup:
+                enabled: true
+                spec:
+                  failureThreshold: 30
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 500m
+                memory: 1Gi
+              limits:
+                memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              readOnlyRootFilesystem: true
+
+    service:
+      app:
+        ports:
+          http:
+            port: *port
+    route:
+      app:
+        hostnames: ["rss.noirprime.com"]
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/icon: si-rss
+          gethomepage.dev/name: RSSHub
+          gethomepage.dev/group: Service
+        parentRefs:
+          - name: kgateway-internal
+            namespace: networking-system

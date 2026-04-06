@@ -1,0 +1,39 @@
+---
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+entries:
+  - model: authentik_providers_proxy.proxyprovider
+    identifiers:
+      name: &provider miniflux-proxy-provider
+    attrs:
+      name: *provider
+      authorization_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-provider-authorization-implicit-consent],
+        ]
+      mode: forward_domain
+      external_host: &domain "https://miniflux.noirprime.com"
+      access_token_validity: "hours=12"
+      cookie_domain: "noirprime.com"
+  - model: authentik_core.application
+    identifiers:
+      slug: &name miniflux
+    attrs:
+      name: *name
+      provider: !KeyOf *provider
+      meta_launch_url: *domain
+      group: "Service"
+      policy_engine_mode: all
+  - model: authentik_policies_binding.policybinding
+    identifiers:
+      target: !KeyOf *name
+      group: !Find [authentik_core.group, [name, homelab-admin]]
+      order: 0
+    attrs: { enabled: true, timeout: 30 }
+  - model: authentik_outposts.outpost
+    identifiers:
+      name: authentik-embedded-outpost
+    attrs:
+      providers:
+        - !Append [!KeyOf *provider]

@@ -9,9 +9,9 @@ resources:
   - ./bambuddy/ks.yaml
   - ./convertx/ks.yaml
   - ./dispatcharr/ks.yaml
-  - ./freshrss/ks.yaml
   - ./homepage/ks.yaml
   - ./karakeep/ks.yaml
-  - ./n8n/ks.yaml
+  - ./miniflux/ks.yaml
   - ./netbox/ks.yaml
+  - ./rsshub/ks.yaml
   - ./stirling-pdf/ks.yaml

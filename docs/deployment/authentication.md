@@ -26,10 +26,6 @@ homeassistant:
 
 - must configure via WEB UI, [ref](https://wiki.kavitareader.com/guides/admin-settings/open-id-connect/);
 
-### N8N
-
-- must configure via WEB UI, [ref](https://docs.n8n.io/user-management/oidc/setup/);
-
 ### Rook Ceph Dashboard
 
 - set saml2 manually, assume idp user is also `admin`;
@@ -64,6 +60,10 @@ kubectl rook-ceph ceph dashboard sso status
 ```
 
 ## Other
+
+### Astrbot
+
+- use its own user system;
 
 ### Crafty-4
 

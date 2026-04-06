@@ -3,23 +3,20 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: &name n8n
+  name: &name rsshub
   annotations:
     config.home-ops.io/managed: "true"
-  labels:
-    config.home-ops.io/deps: "infra"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: selfhosted-apps
-  path: "./kubernetes/apps/selfhosted-apps/n8n/app"
+  path: "./kubernetes/apps/selfhosted-apps/rsshub/app"
   dependsOn:
-    - name: cnpg-cluster
+    - name: dragonfly-operator
       namespace: database-system
   components:
-    - ../../../../components/cnpg
-    - ../../../../components/volsync
+    - ../../../../components/dragonfly
   postBuild:
     substitute:
       APP: *name

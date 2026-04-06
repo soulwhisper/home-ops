@@ -3,7 +3,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: &name karakeep
+  name: &name astrbot
   annotations:
     config.home-ops.io/managed: "true"
   labels:
@@ -12,11 +12,8 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: selfhosted-apps
-  path: "./kubernetes/apps/selfhosted-apps/karakeep/app"
-  dependsOn:
-    - name: ollama
-      namespace: servitor-apps
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/astrbot/app"
   components:
     - ../../../../components/volsync
   postBuild:
