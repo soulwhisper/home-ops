@@ -19,6 +19,30 @@ spec:
         annotations:
           reloader.stakater.com/auto: "true"
           config.home-ops.io/proxy: "https" # https_proxy needed
+        initContainers:
+          pull-models:
+            image:
+              repository: ollama/ollama
+              tag: 0.20.2
+            command:
+              - /bin/sh
+              - -c
+              - |
+                MODELS="gemma4:26b qwen3-embedding:4b gemma4:e4b"
+                echo "Starting temporary Ollama server..."
+                ollama serve &
+                SERVE_PID=$!
+                until ollama list >/dev/null 2>&1; do sleep 2; done
+                for model in $MODELS; do
+                  if ollama list | grep -q "$model"; then
+                    echo "Model $model already exists, skipping."
+                  else
+                    echo "Pulling model: $model..."
+                    ollama pull "$model"
+                  fi
+                done
+                kill $SERVE_PID
+                wait $SERVE_PID
         containers:
           app:
             image:
@@ -31,17 +55,6 @@ spec:
               OLLAMA_MAX_LOADED_MODELS: "3"
               OLLAMA_FLASH_ATTENTION: "1"
               OLLAMA_KV_CACHE_TYPE: "q8_0"
-            lifecycle:
-              postStart:
-                exec:
-                  command:
-                    - /bin/sh
-                    - -c
-                    - |
-                      (sleep 10 && \
-                       ollama pull gemma4:26b && \
-                       ollama pull qwen3-embedding:4b && \
-                       ollama pull gemma4:e4b) &
             probes:
               liveness:
                 enabled: true
