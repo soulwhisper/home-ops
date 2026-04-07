@@ -38,7 +38,7 @@ spec:
           app:
             image:
               repository: ghcr.io/immich-app/immich-server
-              tag: v2.6.3@sha256:0cc1f82953d9598eb9e9dd11cbde1f50fe54f9c46c4506b089e8ad7bfc9d1f0c
+              tag: v2.7.0@sha256:ee60b98e7fcc836d61d7f5e7689514f3de7a9480f31ec6ca62d6221056b46ae1
             env:
               DB_USERNAME:
                 valueFrom:
@@ -101,7 +101,7 @@ spec:
           machine-learning:
             image:
               repository: ghcr.io/immich-app/immich-machine-learning
-              tag: v2.6.3
+              tag: v2.7.0
             env:
               TRANSFORMERS_CACHE: /cache
             envFrom: *envFrom
