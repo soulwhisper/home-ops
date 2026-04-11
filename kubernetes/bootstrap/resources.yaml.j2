@@ -10,7 +10,7 @@ metadata:
   name: onepassword-connect
   namespace: security-system
 stringData:
-  # ONEPASSWORD_CREDENTIALS=`cat 1password-credentials.json | base64 | tr '/+' '_-' | tr -d '=' | tr -d '\n'`.
+  # ONEPASSWORD_CREDENTIALS=$(cat 1password-credentials.json | base64 | tr '/+' '_-' | tr -d '=' | tr -d '\n')
   # both secrets should not contain a trailing new line
   1password-credentials.json: op://DevOps/1password-api/credentials
   token: op://DevOps/1password-api/token

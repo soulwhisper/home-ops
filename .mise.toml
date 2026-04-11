@@ -8,7 +8,7 @@ ROOK_OPERATOR_NAMESPACE = "storage-system"
 ROOK_CLUSTER_NAMESPACE = "storage-system"
 
 [settings]
-pipx_uvx = true
+pipx.uvx = true
 
 [tools]
 terraform = "latest"

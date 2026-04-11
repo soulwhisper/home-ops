@@ -8,85 +8,17 @@ spec:
   interval: 30m
   chartRef:
     kind: OCIRepository
-    name: app-template
-    namespace: gitops-system
+    name: onepassword-connect
 
   values:
-    controllers:
-      *name :
-        strategy: RollingUpdate
-        annotations:
-          reloader.stakater.com/auto: "true"
-          config.home-ops.io/proxy: "https" # https_proxy needed
-        containers:
-          api:
-            image:
-              repository: ghcr.io/1password/connect-api
-              tag: 1.8.2
-            env:
-              XDG_DATA_HOME: &configDir /config
-              OP_HTTP_PORT: &port 8080
-              OP_BUS_PORT: 11220
-              OP_BUS_PEERS: localhost:11221
-              OP_SESSION:
-                valueFrom:
-                  secretKeyRef:
-                    name: *name
-                    key: 1password-credentials.json
-            probes: &probes
-              liveness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /heartbeat
-                    port: *port
-                  initialDelaySeconds: 15
-                  periodSeconds: 30
-                  failureThreshold: 3
-              readiness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /health
-                    port: *port
-                  initialDelaySeconds: 15
-            resources: &resources
-              requests:
-                cpu: 10m
-              limits:
-                memory: 256M
-            securityContext: &securityContext
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-              readOnlyRootFilesystem: true
-          sync:
-            image:
-              repository: ghcr.io/1password/connect-sync
-              tag: 1.8.2
-            env:
-              XDG_DATA_HOME: *configDir
-              OP_HTTP_PORT: 8081
-              OP_BUS_PORT: 11221
-              OP_BUS_PEERS: localhost:11220
-              OP_SESSION:
-                valueFrom:
-                  secretKeyRef:
-                    name: *name
-                    key: 1password-credentials.json
-            probes: *probes
-            resources: *resources
-            securityContext: *securityContext
-
-    service:
-      app:
-        ports:
-          http:
-            port: *port
-
-    persistence:
-      tmpfs:
-        type: emptyDir
-        globalMounts:
-          - path: *configDir
+    connect:
+      replicas: 1
+      credentialsName: *name
+      credentialsKey: 1password-credentials.json
+      api:
+        httpPort: 8080
+        imageRepository: ghcr.io/1password/connect-api
+        serviceMonitor:
+          enabled: true
+      sync:
+        imageRepository: ghcr.io/1password/connect-sync
