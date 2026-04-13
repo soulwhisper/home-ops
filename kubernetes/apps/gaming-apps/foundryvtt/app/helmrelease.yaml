@@ -26,7 +26,7 @@ spec:
         containers:
           app:
             image:
-              repository: felddy/foundryvtt
+              repository: ghcr.io/felddy/foundryvtt
               tag: 14.360.0
             env:
               FOUNDRY_HOSTNAME: "fvtt.noirprime.com"
