@@ -10,6 +10,7 @@ resources:
   - ./astrbot/ks.yaml
   - ./dify/ks.yaml
   - ./kagent/ks.yaml
+  - ./langfuse/ks.yaml
   - ./ollama/ks.yaml
   - ./sillytavern/ks.yaml
   # mcp

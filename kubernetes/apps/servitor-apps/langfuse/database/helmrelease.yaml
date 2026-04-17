@@ -3,7 +3,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &name dify-api
+  name: &name langfuse-database
 spec:
   interval: 30m
   chartRef:
@@ -20,8 +20,8 @@ spec:
         pod:
           securityContext:
             runAsNonRoot: true
-            runAsUser: 1001
-            runAsGroup: 1001
+            runAsUser: 101
+            runAsGroup: 101
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         initContainers:
@@ -31,28 +31,30 @@ spec:
               tag: "18"
             envFrom:
               - secretRef:
-                  name: dify-api-initdb
+                  name: langfuse-database-initdb
         containers:
           app:
             image:
-              repository: langgenius/dify-api
-              tag: 1.13.3
+              repository: clickhouse/clickhouse-server
+              tag: 26.1.11.9-alpine
             env:
-              MODE: "api"
-              PLUGIN_DAEMON_URL: "dify-database.servitor-apps.svc.cluster.local:5002"
-              PLUGIN_REMOTE_INSTALL_HOST: "dify-database.servitor-apps.svc.cluster.local"
-              PLUGIN_REMOTE_INSTALL_PORT: "5003"
-            envFrom:
-              - configMapRef:
-                  name: *name
-              - secretRef:
-                  name: *name
+              CLICKHOUSE_DB: "default"
+              CLICKHOUSE_USER:
+                valueFrom:
+                  configMapKeyRef:
+                    name: *name
+                    key: CLICKHOUSE_USER
+              CLICKHOUSE_PASSWORD:
+                valueFrom:
+                  configMapKeyRef:
+                    name: *name
+                    key: CLICKHOUSE_PASSWORD
             resources:
               requests:
-                cpu: 100m
-                memory: 512Mi
+                cpu: 2000m
+                memory: 8Gi
               limits:
-                memory: 1Gi
+                memory: 8Gi
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
@@ -62,17 +64,20 @@ spec:
       app:
         ports:
           http:
-            port: 5001
+            primary: true
+            port: 8123
+          clickhouse:
+            port: 9000
 
     persistence:
       app:
         existingClaim: *name
         globalMounts:
-          - path: /app/api/storage
+          - path: /var/lib/clickhouse
       tmpfs:
         type: emptyDir
         globalMounts:
-          - path: /app/logs
+          - path: /var/log/clickhouse-server
             subPath: logs
           - path: /tmp
             subPath: tmp

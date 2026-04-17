@@ -160,4 +160,28 @@ spec:
       name: ceph-filesystem-snapshot
       isDefault: false
       deletionPolicy: Delete
-    cephObjectStores: []
+    cephObjectStores:
+      # endpoint: http://rook-ceph-rgw-ceph-objectstore.storage-system.svc.cluster.local
+      - name: ceph-objectstore
+        spec:
+          metadataPool:
+            failureDomain: host
+            replicated:
+              size: 3
+          dataPool:
+            failureDomain: host
+            replicated:
+              size: 3
+          preservePoolsOnDelete: true
+          gateway:
+            port: 80
+            resources:
+              requests:
+                cpu: 100m
+              limits:
+                memory: 1Gi
+            instances: 1
+        storageClass:
+          name: ceph-bucket
+        ingress:
+          enabled: false
