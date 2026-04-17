@@ -36,7 +36,7 @@ spec:
           app:
             image:
               repository: clickhouse/clickhouse-server
-              tag: 26.1.11.9-alpine
+              tag: 26.3.9.8-alpine
             env:
               CLICKHOUSE_DB: "default"
               CLICKHOUSE_USER:
