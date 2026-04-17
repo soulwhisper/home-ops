@@ -23,7 +23,7 @@ spec:
           pull-models:
             image:
               repository: ollama/ollama
-              tag: 0.20.7
+              tag: 0.21.0
             command:
               - /bin/sh
               - -c
@@ -47,7 +47,7 @@ spec:
           app:
             image:
               repository: ollama/ollama
-              tag: 0.20.7
+              tag: 0.21.0
             env:
               OLLAMA_HOST: "0.0.0.0"
               OLLAMA_KEEP_ALIVE: "-1"
