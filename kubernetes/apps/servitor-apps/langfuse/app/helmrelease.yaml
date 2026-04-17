@@ -22,7 +22,7 @@ spec:
           app:
             image:
               repository: ghcr.io/langfuse/langfuse
-              tag: 3.167.4
+              tag: 3.168.0
             env:
               CLICKHOUSE_MIGRATION_URL: "clickhouse://langfuse-clickhouse-cluster.servitor-apps.svc.cluster.local:9000"
               CLICKHOUSE_URL: "http://langfuse-clickhouse-cluster.servitor-apps.svc.cluster.local:8123"
