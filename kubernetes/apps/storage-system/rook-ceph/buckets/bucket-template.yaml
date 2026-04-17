@@ -3,12 +3,12 @@
 apiVersion: objectbucket.io/v1alpha1
 kind: ObjectBucketClaim
 metadata:
-  name: ceph-bucket-postgres
+  name: ceph-bucket-template
 spec:
-  bucketName: postgres
+  bucketName: template
   storageClassName: ceph-bucket
   additionalConfig:
-    bucketOwner: "postgres"
+    bucketOwner: "template"
     bucketPolicy: |
       {
         "Version": "2012-10-17",
@@ -16,19 +16,19 @@ spec:
           {
             "Effect": "Allow",
             "Principal": {
-              "AWS": "arn:aws:iam:::user/postgres"
+              "AWS": "arn:aws:iam:::user/template"
             },
             "Action": [
               "s3:*"
             ],
             "Resource": [
-              "arn:aws:s3:::postgres/*",
-              "arn:aws:s3:::postgres"
+              "arn:aws:s3:::template/*",
+              "arn:aws:s3:::template"
             ]
           }
         ]
       }
-    # postgres objects have retentionPolicy 30d
+    # retentionPolicy 30d
     bucketLifecycle: |
       {
         "Rules": [
@@ -47,14 +47,33 @@ spec:
 apiVersion: ceph.rook.io/v1
 kind: CephObjectStoreUser
 metadata:
-  name: postgres
+  name: template
 spec:
   store: ceph-objectstore
   clusterNamespace: storage-system
   keys:
     - accessKeyRef:
         name: rook-ceph-rgw-user
-        key: POSTGRES_ACCESS_KEY
+        key: TEMPLATE_ACCESS_KEY
       secretKeyRef:
         name: rook-ceph-rgw-user
-        key: POSTGRES_SECRET_KEY
+        key: TEMPLATE_SECRET_KEY
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/external-secrets.io/externalsecret_v1.json
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: rook-ceph-rgw-user
+spec:
+  refreshInterval: 12h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    template:
+      data:
+        TEMPLATE_ACCESS_KEY: "{{ .template_access_key }}"
+        TEMPLATE_SECRET_KEY: "{{ .template_secret_key }}"
+  dataFrom:
+    - extract:
+        key: minio

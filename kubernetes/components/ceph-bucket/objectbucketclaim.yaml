@@ -1,0 +1,9 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/objectbucket.io/objectbucketclaim_v1alpha1.json
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: "ceph-bucket-${APP}"
+spec:
+  bucketName: "${APP}"
+  storageClassName: ceph-bucket

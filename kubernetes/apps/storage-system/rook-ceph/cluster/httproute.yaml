@@ -3,15 +3,12 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: rook-ceph-dashboard
+  name: &name rook-ceph-mgr-dashboard
   annotations:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/icon: rook.svg
     gethomepage.dev/name: Rook
     gethomepage.dev/group: Storage
-    gatus.home-operations.com/endpoint: |
-      conditions:
-        - "[STATUS] == 200"
 spec:
   hostnames: ["rook.noirprime.com"]
   parentRefs:
@@ -19,6 +16,25 @@ spec:
       namespace: networking-system
   rules:
     - backendRefs:
-        - name: rook-ceph-mgr-dashboard
-          namespace: storage-system
+        - name: *name
           port: 7000 # 8443 if saml2
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: &name rook-ceph-rgw-ceph-objectstore-external
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/icon: ceph.svg
+    gethomepage.dev/name: CephBuckets
+    gethomepage.dev/group: Storage
+spec:
+  hostnames: ["s3.noirprime.com"]
+  parentRefs:
+    - name: kgateway-internal
+      namespace: networking-system
+  rules:
+    - backendRefs:
+        - name: *name
+          port: 80

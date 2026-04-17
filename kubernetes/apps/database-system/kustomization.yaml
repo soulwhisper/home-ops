@@ -6,5 +6,6 @@ namespace: database-system
 components:
   - ../../components/namespace
 resources:
+  - ./clickhouse-operator/ks.yaml
   - ./cnpg-operator/ks.yaml
   - ./dragonfly-operator/ks.yaml

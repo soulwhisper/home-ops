@@ -13,18 +13,16 @@ spec:
 
   values:
     fullnameOverride: *name
-    defaultPodOptions:
-      securityContext:
-        runAsNonRoot: true
-        # ping group specified
-        runAsUser: 65534
-        runAsGroup: 65534
-
     controllers:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
           config.home-ops.io/proxy: "all" # all_proxy needed
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
         containers:
           app:
             image:

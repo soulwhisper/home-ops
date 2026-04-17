@@ -81,3 +81,15 @@ snapshot-all:
   kubectl get replicationsources --no-headers -A | while read -r ns name _; do \
     just snapshot "$ns" "$name"; \
   done
+
+[doc('List all buckets in Rook-Ceph RGW')]
+bucket-list:
+  kubectl rook_ceph --namespace=storage-system --operator-namespace=storage-system \
+    radosgw-admin --rgw-realm=ceph-objectstore --rgw-zone=ceph-objectstore \
+    bucket list
+
+[doc('Check bucket stats in Rook-Ceph RGW')]
+bucket-stats name:
+  kubectl rook_ceph --namespace=storage-system --operator-namespace=storage-system \
+    radosgw-admin --rgw-realm=ceph-objectstore --rgw-zone=ceph-objectstore \
+    bucket stats --bucket "{{ name }}"

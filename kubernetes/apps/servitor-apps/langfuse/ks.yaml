@@ -1,0 +1,51 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name langfuse-worker
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/langfuse/worker"
+  wait: true
+  dependsOn:
+    - name: clickhouse-operator
+      namespace: database-system
+    - name: cnpg-cluster
+      namespace: database-system
+    - name: dragonfly-operator
+      namespace: database-system
+  components:
+    - ../../../../components/ceph-bucket
+    - ../../../../components/clickhouse
+    - ../../../../components/cnpg
+    - ../../../../components/dragonfly
+  postBuild:
+    substitute:
+      APP: langfuse
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name langfuse-web
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/langfuse/app"
+  dependsOn:
+    - name: langfuse-worker
+      namespace: servitor-apps

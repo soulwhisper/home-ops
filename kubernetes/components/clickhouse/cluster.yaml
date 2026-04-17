@@ -1,0 +1,66 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/clickhouse.com/keepercluster_v1alpha1.json
+apiVersion: clickhouse.com/v1alpha1
+kind: KeeperCluster
+metadata:
+  name: "${APP}-clickhouse-keeper"
+spec:
+  replicas: 1
+  dataVolumeClaimSpec:
+    storageClassName: ceph-block
+    accessModes: ["ReadWriteOnce"]
+    resources:
+      requests:
+        storage: 5Gi
+  podTemplate:
+    topologyZoneKey: topology.kubernetes.io/zone
+    nodeHostnameKey: kubernetes.io/hostname
+  containerTemplate:
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/clickhouse.com/clickhousecluster_v1alpha1.json
+apiVersion: clickhouse.com/v1alpha1
+kind: ClickHouseCluster
+metadata:
+  name: "${APP}-clickhouse-cluster"
+spec:
+  replicas: 1
+  shards: 1
+  keeperClusterRef:
+    name: "${APP}-clickhouse-keeper"
+  dataVolumeClaimSpec:
+    storageClassName: ceph-block
+    accessModes: ["ReadWriteOnce"]
+    resources:
+      requests:
+        storage: 50Gi
+  podTemplate:
+    topologyZoneKey: topology.kubernetes.io/zone
+    nodeHostnameKey: kubernetes.io/hostname
+  containerTemplate:
+    resources:
+      requests:
+        cpu: "2000m"
+        memory: "4Gi"
+      limits:
+        cpu: "2000m"
+        memory: "4Gi"
+  settings:
+    defaultUserPassword:
+      passwordType: plaintext_password
+      configMap:
+        key: "${APP}-clickhouse-credentials"
+        name: password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "${APP}-clickhouse-credentials"
+data:
+  password: "${APP}"

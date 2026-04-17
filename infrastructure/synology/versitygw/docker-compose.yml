@@ -1,0 +1,22 @@
+---
+name: versitygw
+services:
+  versitygw:
+    image: "ghcr.io/versity/versitygw:v1.4.0"
+    container_name: "versitygw"
+    restart: "unless-stopped"
+    command:
+      - "posix"
+      - "/tmp/gw"
+    ports:
+      - "9000:9000/tcp"
+      - "9001:9001/tcp"
+    env_file:
+      - versitygw.sops.env
+    environment:
+      - "VGW_PORT=:9000"
+      - "VGW_WEBUI_PORT=:9001"
+      - "VGW_WEBUI_GATEWAYS=http://10.10.0.100:9000"
+      - "VGW_WEBUI_ADMIN_GATEWAYS=http://10.10.0.100:9000"
+    volumes:
+      - "/volume3/docker/versitygw:/tmp/gw"
