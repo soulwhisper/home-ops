@@ -81,7 +81,7 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: storage-system
+  targetNamespace: &namespace storage-system
   path: "./kubernetes/apps/storage-system/rook-ceph/buckets"
   wait: true
   healthChecks:
