@@ -71,7 +71,7 @@ directories:
         lazy: true
         git:
           url: https://github.com/envoyproxy/gateway
-          ref: v1.7.1
+          ref: v1.7.2
         includePaths:
           - "charts/gateway-addons-helm/dashboards/envoy-*.json"
           - "charts/gateway-addons-helm/dashboards/global-*.json"
