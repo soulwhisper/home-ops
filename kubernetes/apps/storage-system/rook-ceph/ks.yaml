@@ -69,35 +69,3 @@ spec:
       kind: CephObjectStore
       failed: status.phase != 'Ready'
       current: status.phase == 'Ready'
-# ---
-# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
-# this is a template
-# apiVersion: kustomize.toolkit.fluxcd.io/v1
-# kind: Kustomization
-# metadata:
-#   name: &name rook-ceph-buckets
-#   annotations:
-#     config.home-ops.io/managed: "true"
-# spec:
-#   commonMetadata:
-#     labels:
-#       app.kubernetes.io/name: *name
-#   targetNamespace: &namespace storage-system
-#   path: "./kubernetes/apps/storage-system/rook-ceph/buckets"
-#   wait: true
-#   healthChecks:
-#     - apiVersion: objectbucket.io/v1alpha1
-#       kind: ObjectBucketClaim
-#       name: ceph-bucket-langfuse
-#       namespace: *namespace
-#   healthCheckExprs:
-#     # status checks is case-sensitive
-#     - apiVersion: objectbucket.io/v1alpha1
-#       kind: ObjectBucketClaim
-#       failed: status.phase != 'Bound'
-#       current: status.phase == 'Bound'
-#   dependsOn:
-#     - name: onepassword-connect
-#       namespace: security-system
-#     - name: rook-ceph-cluster
-#       namespace: storage-system
