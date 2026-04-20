@@ -3,16 +3,17 @@
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: &name anthropic-api
+  name: &name siliconflow-api
 spec:
   ai:
     provider:
-      anthropic: {}
+      openai:
+        model: "Pro/MiniMaxAI/MiniMax-M2.5"
+        host: &host api.siliconflow.cn
+        port: 443
+        path: "/v1/chat/completions"
   policies:
     ai:
-      routes:
-        "/v1/messages": Messages
-        "*": Passthrough
       promptGuard:
         request:
           - response:
@@ -32,12 +33,14 @@ spec:
     auth:
       secretRef:
         name: *name
+    tls:
+      sni: *host
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: &name anthropic-api
+  name: &name siliconflow-api
 spec:
   parentRefs:
     - name: agentgateway-proxy
@@ -45,7 +48,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /anthropic
+            value: /siliconflow
       backendRefs:
         - name: *name
           group: agentgateway.dev
@@ -55,7 +58,7 @@ spec:
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: anthropic-api
+  name: siliconflow-api
 spec:
   refreshInterval: 12h
   secretStoreRef:
@@ -64,7 +67,7 @@ spec:
   target:
     template:
       data:
-        Authorization: "{{ .anthropic }}"
+        Authorization: "{{ .siliconflow }}"
   dataFrom:
     - extract:
         key: llm-api

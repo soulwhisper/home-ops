@@ -11,7 +11,7 @@ resources:
   - ./dify/ks.yaml
   - ./kagent/ks.yaml
   - ./langfuse/ks.yaml
-  - ./ollama/ks.yaml
   - ./sillytavern/ks.yaml
+  - ./tei/ks.yaml
   # mcp
   - ./mcp
