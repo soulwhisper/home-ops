@@ -32,7 +32,7 @@ services:
       timeout: 10s
 
   mariadb:
-    image: lscr.io/linuxserver/mariadb:11.4.9
+    image: lscr.io/linuxserver/mariadb:11.4.10
     container_name: mariadb
     restart: unless-stopped
     environment:
