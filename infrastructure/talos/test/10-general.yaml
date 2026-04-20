@@ -77,7 +77,7 @@ machine:
             enable_unprivileged_icmp = true
   install:
     # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
-    image: factory.talos.dev/metal-installer/d69b3cd2ada0bf771c4a8329295bfbe4b5e357fd08de568d11d5f37dfd4254b1:v1.12.6
+    image: factory.talos.dev/metal-installer/5bf167b739a3594940f8012df8e9659662dddd8e6e3b2a3ed5262f16bbf1d7c0:v1.12.6
     grubUseUKICmdline: true
     disk: /dev/sda
   kubelet:
@@ -92,15 +92,15 @@ machine:
     intel.feature.node.kubernetes.io/gpu: "true"
   sysctls:
     # moviepilot requires high inotify limits for media library watching (~500k files)
-    fs.inotify.max_user_watches: 1048576 # default 8192; 1M supports large media libraries
-    fs.inotify.max_user_instances: 1048576 # default 128; matches watches for consistency
+    fs.inotify.max_user_watches: 8192 # default 8192; recommended 1048576 supports large media libraries
+    fs.inotify.max_user_instances: 8192 # default 128; matches watches for consistency
     # ARP table size for BGP+Cilium: large cluster peering table requires expanded neighbor cache
-    net.ipv4.neigh.default.gc_thresh1: 32768 # GC start threshold (default 128)
-    net.ipv4.neigh.default.gc_thresh2: 65536 # GC soft threshold (default 512)
-    net.ipv4.neigh.default.gc_thresh3: 131072 # GC hard threshold (default 1024)
+    net.ipv4.neigh.default.gc_thresh1: 1024 # GC start threshold (default 128)
+    net.ipv4.neigh.default.gc_thresh2: 2048 # GC soft threshold (default 512)
+    net.ipv4.neigh.default.gc_thresh3: 4096 # GC hard threshold (default 1024)
     # 10G NIC throughput tuning (Intel X710, ice driver)
     # Reference: https://www.kernel.org/doc/Documentation/networking/scaling.txt
-    net.core.netdev_max_backlog: 30000 # packet queue depth per NIC (default 1000)
+    net.core.netdev_max_backlog: 16384 # packet queue depth per NIC (default 1000)
     net.core.somaxconn: 32768 # listen() backlog (default 4096)
     net.ipv4.tcp_max_syn_backlog: 8192 # SYN queue per socket (default 256)
     net.core.rmem_max: 134217728 # 128MB socket recv buffer max

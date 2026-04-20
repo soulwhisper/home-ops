@@ -1,25 +1,15 @@
 ---
 # schematic for production environment
-# d01c9ce181bcdc2ebb3dc64d810e0431dc39f0d7a3c1a33676b2ac2f93f7a84d
+# ca4e814e9b30bbcdf282715f2a93fd9b130ae8f75109ccaef45e06382a08caf5
 customization:
   bootloader: sd-boot
   extraKernelArgs:
-    # performance&longevity
-    - intel_pstate=passive
-    - cpufreq.default_governor=conservative
-    - skew_tick=1
-    - intel_idle.max_cstate=1
-    # network&storage
+    # stability
     - pcie_aspm=off
-    - intel_iommu=on
-    - iommu=pt
     - nvme_core.default_ps_max_latency_us=0
     # hardware
     - i915.enable_guc=3
     - module_blacklist=igc
-    # others
-    - talos.auditd.disabled=1
-    - sysctl.kernel.kexec_load_disabled=1
   systemExtensions:
     officialExtensions:
       - siderolabs/i915
