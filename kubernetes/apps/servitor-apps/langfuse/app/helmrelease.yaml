@@ -24,8 +24,6 @@ spec:
               repository: ghcr.io/langfuse/langfuse
               tag: 3.169.0
             env:
-              CLICKHOUSE_MIGRATION_URL: "clickhouse://langfuse-clickhouse-cluster.servitor-apps.svc.cluster.local:9000"
-              CLICKHOUSE_URL: "http://langfuse-clickhouse-cluster.servitor-apps.svc.cluster.local:8123"
               LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: &bucket_endpoint
                 valueFrom:
                   configMapKeyRef:
@@ -48,7 +46,6 @@ spec:
               LANGFUSE_S3_BATCH_EXPORT_ENDPOINT: *bucket_endpoint
               LANGFUSE_S3_BATCH_EXPORT_ACCESS_KEY_ID: *bucket_access_key_id
               LANGFUSE_S3_BATCH_EXPORT_SECRET_ACCESS_KEY: *bucket_secret_access_key
-              REDIS: langfuse-dragonfly.servitor-apps.svc.cluster.local
             envFrom:
               - configMapRef:
                   name: langfuse

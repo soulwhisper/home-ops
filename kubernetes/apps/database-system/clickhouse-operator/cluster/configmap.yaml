@@ -1,0 +1,29 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-credentials
+data:
+  default_password: clickhouse
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-init-db
+data:
+  00-langfuse.sql: |
+    CREATE DATABASE IF NOT EXISTS langfuse ON CLUSTER '{cluster}';
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-init-user
+data:
+  langfuse.yaml: |
+    users:
+      langfuse:
+        password:
+          - 'langfuse'
+        profile: default
+        grants:
+          - query: "GRANT ALL ON langfuse.*"

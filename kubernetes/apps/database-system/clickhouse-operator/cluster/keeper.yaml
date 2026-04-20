@@ -1,0 +1,25 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/clickhouse.com/keepercluster_v1alpha1.json
+apiVersion: clickhouse.com/v1alpha1
+kind: KeeperCluster
+metadata:
+  name: default
+spec:
+  replicas: 3
+  dataVolumeClaimSpec:
+    storageClassName: ceph-block
+    accessModes: ["ReadWriteOnce"]
+    resources:
+      requests:
+        storage: 10Gi
+  podTemplate:
+    topologyZoneKey: topology.kubernetes.io/zone
+    nodeHostnameKey: kubernetes.io/hostname
+  containerTemplate:
+    resources:
+      requests: # default = 2C4G
+        cpu: "250m"
+        memory: "256Mi"
+      limits: # default = 4C8G
+        cpu: "500m"
+        memory: "512Mi"

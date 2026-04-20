@@ -16,7 +16,7 @@ spec:
   path: "./kubernetes/apps/servitor-apps/langfuse/worker"
   wait: true
   dependsOn:
-    - name: clickhouse-operator
+    - name: clickhouse-cluster
       namespace: database-system
     - name: cnpg-cluster
       namespace: database-system
@@ -24,7 +24,6 @@ spec:
       namespace: database-system
   components:
     - ../../../../components/ceph-bucket
-    - ../../../../components/clickhouse
     - ../../../../components/cnpg
     - ../../../../components/dragonfly
   postBuild:
