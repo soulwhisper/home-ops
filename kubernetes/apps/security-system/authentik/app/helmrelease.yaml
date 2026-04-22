@@ -13,7 +13,6 @@ spec:
   values:
     postgresql:
       enabled: false
-    global:
       env:
         - name: AUTHENTIK_SECRET_KEY
           valueFrom:
@@ -46,6 +45,14 @@ spec:
         - authentik-blueprints-apps-forward
         - authentik-blueprints-apps-oidc
     server:
+      replicas: 2
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+      pdb:
+        enabled: true
+        minAvailable: 1
       initContainers:
         - name: init-db
           image: ghcr.io/home-operations/postgres-init:18
@@ -63,6 +70,7 @@ spec:
         enabled: true
         serviceMonitor:
           enabled: true
+    worker:
       replicas: 2
       topologySpreadConstraints:
         - maxSkew: 1
@@ -71,7 +79,6 @@ spec:
       pdb:
         enabled: true
         minAvailable: 1
-    worker:
       metrics:
         enabled: true
         serviceMonitor:

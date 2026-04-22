@@ -37,6 +37,7 @@ cluster:
             score:
               disabled:
                 - name: ImageLocality
+                - name: SelectorSpread
           pluginConfig:
             - name: PodTopologySpread
               args:
@@ -45,6 +46,9 @@ cluster:
                   - maxSkew: 1
                     topologyKey: kubernetes.io/hostname
                     whenUnsatisfiable: ScheduleAnyway
+                    matchLabelKeys:
+                      - pod-template-hash
+                      - controller-revision-hash
 machine:
   env:
     http_proxy: http://172.19.82.10:1080

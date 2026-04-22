@@ -7,14 +7,24 @@ metadata:
 spec:
   kube:
     deployment:
-      replicas: 3
+      replicas: 2
+    podTemplate:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          matchLabelKeys:
+            - gateway.networking.k8s.io/gateway-name
+            - pod-template-hash
     envoyContainer:
       resources:
         requests:
-          cpu: "500m"
+          cpu: "100m"
           memory: "512Mi"
         limits:
-          cpu: "2"
-          memory: "2Gi"
+          memory: "1Gi"
     service:
       externalTrafficPolicy: Local
+    podDisruptionBudget:
+      spec:
+        minAvailable: 1

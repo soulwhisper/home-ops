@@ -13,7 +13,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-k8s-system-api-server
     key: k8s-system-api-server.json
@@ -32,7 +32,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-k8s-views-global
     key: k8s-views-global.json
@@ -51,7 +51,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-k8s-views-nodes
     key: k8s-views-nodes.json
@@ -70,7 +70,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-k8s-views-namespaces
     key: k8s-views-namespaces.json
@@ -89,7 +89,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-k8s-views-pods
     key: k8s-views-pods.json
@@ -108,7 +108,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-k8s-volumes
     key: k8s-volumes.json

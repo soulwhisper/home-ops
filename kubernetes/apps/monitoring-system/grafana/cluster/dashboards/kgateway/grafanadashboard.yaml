@@ -13,7 +13,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-agentgateway
     key: agentgateway.json
@@ -32,7 +32,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-envoy
     key: envoy.json
@@ -51,7 +51,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-kgateway
     key: kgateway.json

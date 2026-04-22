@@ -3,14 +3,14 @@
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
 metadata:
-  name: prometheus
+  name: &name victoria-metrics
 spec:
   instanceSelector:
     matchLabels:
       grafana.internal/instance: grafana
   datasource:
     type: victoriametrics-metrics-datasource
-    name: prometheus
+    name: *name
     access: proxy
     isDefault: true
     url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428
@@ -19,14 +19,14 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
 metadata:
-  name: victoriametrics-logs
+  name: &name victoria-logs
 spec:
   instanceSelector:
     matchLabels:
       grafana.internal/instance: grafana
   datasource:
     type: victoriametrics-logs-datasource
-    name: victoriametrics-logs
+    name: *name
     access: proxy
     url: http://victoria-logs-server.monitoring-system.svc.cluster.local:9428
 ---
@@ -34,14 +34,45 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
 metadata:
-  name: alertmanager
+  name: &name victoria-traces
+spec:
+  instanceSelector:
+    matchLabels:
+      grafana.internal/instance: grafana
+  datasource:
+    type: jaeger
+    name: *name
+    access: proxy
+    url: http://victoria-traces.monitoring-system.svc.cluster.local:10428/select/jaeger
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: victoria-logs
+        spanStartTimeShift: -1m
+        spanEndTimeShift: 1m
+        tags: [{ key: "service.name", value: "service" }]
+        filterByTraceID: true
+        filterBySpanID: false
+      tracesToMetrics:
+        datasourceUid: victoria-metrics
+        spanStartTimeShift: -2m
+        spanEndTimeShift: 2m
+      nodeGraph:
+        enabled: true
+      spanBar:
+        type: Duration
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadatasource_v1beta1.json
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: &name alertmanager
 spec:
   instanceSelector:
     matchLabels:
       grafana.internal/instance: grafana
   datasource:
     type: alertmanager
-    name: alertmanager
+    name: *name
     access: proxy
     url: http://vmalertmanager-victoria-metrics-cluster.monitoring-system.svc.cluster.local:9093
     jsonData:

@@ -13,7 +13,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-cert-manager
     key: cert-manager.json
@@ -32,7 +32,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-cloudflared
     key: cloudflared.json
@@ -51,7 +51,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-external-dns
     key: external-dns.json
@@ -70,7 +70,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-node-exporter-full
     key: node-exporter-full.json
@@ -89,7 +89,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-smartctl-exporter
     key: smartctl-exporter.json
@@ -108,7 +108,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
     - inputName: "VAR_REPLICATIONDESTNAME"
       datasourceName: ".*-bootstrap"
   configMapRef:
@@ -129,7 +129,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: grafana-operator-dashboard
     key: grafana-operator.json
@@ -148,7 +148,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-synology
     key: synology.json
@@ -167,7 +167,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-openwrt
     key: openwrt.json
@@ -186,7 +186,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_SIGNCL-PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-blackbox-exporter
     key: blackbox-exporter.json
@@ -205,7 +205,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-unifi-sites
     key: unifi-sites.json
@@ -224,7 +224,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-unifi-uap
     key: unifi-uap.json
@@ -243,7 +243,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-unifi-clients
     key: unifi-clients.json

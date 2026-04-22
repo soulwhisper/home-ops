@@ -45,7 +45,7 @@ spec:
     news:
       news_feed_enabled: "false"
     panels:
-      disable_sanitize_html: "true"
+      disable_sanitize_html: "false"
     plugins:
       plugin_admin_enabled: "false"
     server:
@@ -62,6 +62,10 @@ spec:
       replicas: 2
       template:
         spec:
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
           initContainers:
             - name: init-db
               image: ghcr.io/home-operations/postgres-init:18
@@ -96,6 +100,7 @@ spec:
               resources:
                 requests:
                   cpu: 50m
+                  memory: 256Mi
                 limits:
                   memory: 512Mi
   disableDefaultAdminSecret: true

@@ -13,7 +13,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-envoy-clusters
     key: envoy-clusters.json
@@ -32,7 +32,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-envoy-gateway-global
     key: envoy-gateway-global.json
@@ -51,7 +51,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-envoy-proxy-global
     key: envoy-proxy-global.json
@@ -70,7 +70,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-envoy-global-ratelimit
     key: envoy-global-ratelimit.json
@@ -89,7 +89,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-envoy-mixin-overview
     key: envoy-mixin-overview.json
@@ -108,7 +108,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-envoy-mixin-upstream
     key: envoy-mixin-upstream.json
@@ -127,7 +127,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-envoy-mixin-downstream
     key: envoy-mixin-downstream.json

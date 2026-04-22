@@ -13,7 +13,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-victoria-logs
     key: victoria-logs.json
@@ -32,7 +32,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-victoria-metrics-operator
     key: victoria-metrics-operator.json
@@ -51,7 +51,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-victoria-metrics-dashboard
     key: victoria-metrics-dashboard.json
@@ -70,7 +70,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-victoria-metrics-vmagent
     key: victoria-metrics-vmagent.json
@@ -89,7 +89,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-victoria-metrics-vmalert
     key: victoria-metrics-vmalert.json
@@ -108,7 +108,7 @@ spec:
       grafana.internal/instance: grafana
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "prometheus"
+      datasourceName: "victoria-metrics"
   configMapRef:
     name: dashboard-victoria-metrics-vmauth
     key: victoria-metrics-vmauth.json

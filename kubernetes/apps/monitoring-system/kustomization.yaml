@@ -14,11 +14,13 @@ resources:
   # monitoring stack
   - ./grafana/ks.yaml
   - ./kube-state-metrics/ks.yaml
+  - ./opentelemetry-collector/ks.yaml
   - ./prometheus-crds/ks.yaml
   - ./silence-operator/ks.yaml
   # monitoring backend
   - ./victoria-logs/ks.yaml # replace loki and promtail
   - ./victoria-metrics/ks.yaml # replace kube-prometheus-stack
+  - ./victoria-traces/ks.yaml # replace tempo
   # others
   - ./headlamp/ks.yaml
   - ./kromgo/ks.yaml
