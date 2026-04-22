@@ -14,6 +14,10 @@ spec:
     fullnameOverride: *name
     mode: deployment
     replicaCount: 1
+    image:
+      repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
+    command:
+      name: "otelcol-k8s"
     resources:
       requests: { cpu: 10m, memory: 128Mi }
       limits: { memory: 256Mi }
@@ -72,19 +76,8 @@ spec:
         probabilistic_sampler:
           sampling_percentage: 10
       exporters:
-        otlphttp/victoria-traces:
-          traces_endpoint: "http://victoria-traces.monitoring-system.svc.cluster.local:10428/insert/opentelemetry/v1/traces"
-          compression: gzip
-          timeout: 10s
-          retry_on_failure:
-            enabled: true
-            initial_interval: 5s
-            max_interval: 30s
-            max_elapsed_time: 300s
-          sending_queue:
-            enabled: true
-            num_consumers: 4
-            queue_size: 1000
+        otlphttp:
+          endpoint: "http://victoria-traces.monitoring-system.svc.cluster.local:10428/insert/opentelemetry/v1/traces"
       service:
         extensions: [health_check]
         telemetry:
@@ -106,4 +99,4 @@ spec:
               - k8sattributes
               - probabilistic_sampler
               - batch
-            exporters: [otlphttp/victoria-traces]
+            exporters: [otlphttp]
