@@ -22,7 +22,7 @@ spec:
           app:
             image:
               repository: soulter/astrbot
-              tag: v4.23.3
+              tag: v4.23.5
             resources:
               requests:
                 cpu: 10m
