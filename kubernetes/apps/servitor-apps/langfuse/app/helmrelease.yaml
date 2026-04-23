@@ -22,7 +22,7 @@ spec:
           app:
             image:
               repository: ghcr.io/langfuse/langfuse
-              tag: 3.169.0
+              tag: 3.170.0
             env:
               LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: &bucket_endpoint
                 valueFrom:
