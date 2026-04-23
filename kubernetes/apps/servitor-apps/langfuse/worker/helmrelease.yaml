@@ -30,7 +30,7 @@ spec:
           app:
             image:
               repository: ghcr.io/langfuse/langfuse-worker
-              tag: 3.169.0
+              tag: 3.170.0
             env:
               DATABASE_URL:
                 valueFrom:
