@@ -86,7 +86,7 @@ machine:
     disk: /dev/sda
   kubelet:
     # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
-    image: ghcr.io/siderolabs/kubelet:v1.35.3
+    image: ghcr.io/siderolabs/kubelet:v1.36.0
     nodeIP:
       validSubnets:
         - 172.19.82.0/24

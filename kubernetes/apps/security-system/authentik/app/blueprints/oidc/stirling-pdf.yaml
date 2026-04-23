@@ -3,7 +3,7 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: ak-oidc-spdf
+  name: authentik-blueprints-oidc-spdf
 spec:
   refreshInterval: 12h
   secretStoreRef:

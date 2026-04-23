@@ -3,7 +3,7 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: ak-oidc-headlamp
+  name: authentik-blueprints-oidc-headlamp
 spec:
   refreshInterval: 12h
   secretStoreRef:

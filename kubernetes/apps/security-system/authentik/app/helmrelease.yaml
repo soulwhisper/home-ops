@@ -43,20 +43,20 @@ spec:
     blueprints:
       configMaps:
         - authentik-blueprints-core
-        - authentik-blueprints-apps-forward
+        - authentik-blueprints-forward
       # new odic apps, add es names below
       secrets:
-        - ak-oidc-calibre
-        - ak-oidc-grafana
-        - ak-oidc-headlamp
-        - ak-oidc-hass
-        - ak-oidc-immich
-        - ak-oidc-jellyfin
-        - ak-oidc-karakeep
-        - ak-oidc-kavita
-        - ak-oidc-netbox
-        - ak-oidc-qui
-        - ak-oidc-spdf
+        - authentik-blueprints-oidc-calibre
+        - authentik-blueprints-oidc-grafana
+        - authentik-blueprints-oidc-headlamp
+        - authentik-blueprints-oidc-hass
+        - authentik-blueprints-oidc-immich
+        - authentik-blueprints-oidc-jellyfin
+        - authentik-blueprints-oidc-karakeep
+        - authentik-blueprints-oidc-kavita
+        - authentik-blueprints-oidc-netbox
+        - authentik-blueprints-oidc-qui
+        - authentik-blueprints-oidc-spdf
     server:
       replicas: 2
       topologySpreadConstraints:

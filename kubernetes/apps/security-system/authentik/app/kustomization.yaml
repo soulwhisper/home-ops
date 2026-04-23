@@ -34,7 +34,7 @@ configMapGenerator:
       - ./blueprints/core/policy-reputation.yaml
       - ./blueprints/core/scope-groups-mapping.yaml
       - ./blueprints/core/scope-groups.yaml
-  - name: authentik-blueprints-apps-forward
+  - name: authentik-blueprints-forward
     files:
       - ./blueprints/forward/agentgateway.yaml
       - ./blueprints/forward/audiomuse.yaml

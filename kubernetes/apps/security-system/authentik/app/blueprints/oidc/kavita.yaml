@@ -3,7 +3,7 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: ak-oidc-kavita
+  name: authentik-blueprints-oidc-kavita
 spec:
   refreshInterval: 12h
   secretStoreRef:

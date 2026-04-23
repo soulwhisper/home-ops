@@ -3,7 +3,7 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: ak-oidc-grafana
+  name: authentik-blueprints-oidc-grafana
 spec:
   refreshInterval: 12h
   secretStoreRef:

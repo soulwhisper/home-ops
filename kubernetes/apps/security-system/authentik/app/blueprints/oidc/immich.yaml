@@ -3,7 +3,7 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: ak-oidc-immich
+  name: authentik-blueprints-oidc-immich
 spec:
   refreshInterval: 12h
   secretStoreRef:
