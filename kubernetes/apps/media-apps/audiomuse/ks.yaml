@@ -21,8 +21,8 @@ spec:
       namespace: database-system
     - name: media-nfs
       namespace: media-apps
-    - name: ollama
-      namespace: servitor-apps
+    # - name: ollama
+    #   namespace: servitor-apps
   components:
     - ../../../../components/cnpg
     - ../../../../components/dragonfly

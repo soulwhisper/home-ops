@@ -1,45 +1,67 @@
 ---
-# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
-version: 1
-entries:
-  - model: authentik_providers_oauth2.oauth2provider
-    identifiers:
-      name: &provider qbittorrent-ui-oidc-provider
-    attrs:
-      name: *provider
-      authorization_flow:
-        !Find [
-          authentik_flows.flow,
-          [slug, default-provider-authorization-implicit-consent],
-        ]
-      client_type: confidential
-      redirect_uris:
-        - url: "https://qui.noirprime.com/api/auth/oidc/callback"
-          matching_mode: strict
-      sub_mode: user_email
-      include_claims_in_id_token: true
-      signing_key:
-        !Find [
-          authentik_crypto.certificatekeypair,
-          [name, "authentik Self-signed Certificate"],
-        ]
-      property_mappings:
-        - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
-        - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
-        - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
-        - !Find [authentik_providers_oauth2.scopemapping, [scope_name, groups]]
-  - model: authentik_core.application
-    identifiers:
-      slug: &name qbittorrent-ui
-    attrs:
-      name: *name
-      provider: !KeyOf *provider
-      meta_launch_url: "https://qui.noirprime.com"
-      group: "Download"
-      policy_engine_mode: all
-  - model: authentik_policies_binding.policybinding
-    identifiers:
-      target: !KeyOf *name
-      group: !Find [authentik_core.group, [name, homelab-admin]]
-      order: 0
-    attrs: { enabled: true, timeout: 30 }
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/external-secrets.io/externalsecret_v1.json
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: ak-oidc-qui
+spec:
+  refreshInterval: 12h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  dataFrom:
+    - extract:
+        key: authentik
+  target:
+    template:
+      data:
+        qui.yaml: |
+          # yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+          version: 1
+          context:
+            client_id: "{{ .qui_oidc_client_id }}"
+            client_secret: "{{ .qui_oidc_client_secret }}"
+          entries:
+            - model: authentik_providers_oauth2.oauth2provider
+              identifiers:
+                name: &provider qui-oidc-provider
+              attrs:
+                name: *provider
+                client_id: !Context client_id
+                client_secret: !Context client_secret
+                authorization_flow:
+                  !Find [
+                    authentik_flows.flow,
+                    [slug, default-provider-authorization-implicit-consent],
+                  ]
+                client_type: confidential
+                redirect_uris:
+                  - url: "https://qui.noirprime.com/api/auth/oidc/callback"
+                    matching_mode: strict
+                sub_mode: user_email
+                include_claims_in_id_token: true
+                signing_key:
+                  !Find [
+                    authentik_crypto.certificatekeypair,
+                    [name, "authentik Self-signed Certificate"],
+                  ]
+                property_mappings:
+                  - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
+                  - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
+                  - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+                  - !Find [authentik_providers_oauth2.scopemapping, [scope_name, groups]]
+            - model: authentik_core.application
+              identifiers:
+                slug: &name qui
+              attrs:
+                name: *name
+                provider: !KeyOf *provider
+                meta_launch_url: "https://qui.noirprime.com"
+                group: "Download"
+                policy_engine_mode: all
+            - model: authentik_policies_binding.policybinding
+              identifiers:
+                target: !KeyOf *name
+                group: !Find [authentik_core.group, [name, homelab-admin]]
+                order: 0
+              attrs: { enabled: true, timeout: 30 }

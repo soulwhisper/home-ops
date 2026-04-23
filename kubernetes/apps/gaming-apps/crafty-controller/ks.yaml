@@ -18,7 +18,6 @@ spec:
     - name: gaming-nfs
       namespace: gaming-apps
   components:
-    - ../../../../components/kgateway-policy
     - ../../../../components/volsync
   postBuild:
     substitute:

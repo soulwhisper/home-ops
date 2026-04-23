@@ -10,6 +10,18 @@ resources:
   - ./externalsecret.yaml
   - ./httproute.yaml
   - ./referencegrant.yaml
+  # oidc blueprints
+  - ./blueprints/oidc/calibre.yaml
+  - ./blueprints/oidc/grafana.yaml
+  - ./blueprints/oidc/headlamp.yaml
+  - ./blueprints/oidc/home-assistant.yaml
+  - ./blueprints/oidc/immich.yaml
+  - ./blueprints/oidc/jellyfin.yaml
+  - ./blueprints/oidc/karakeep.yaml
+  - ./blueprints/oidc/kavita.yaml
+  - ./blueprints/oidc/netbox.yaml
+  - ./blueprints/oidc/qbittorrent-ui.yaml
+  - ./blueprints/oidc/stirling-pdf.yaml
 generatorOptions:
   annotations:
     kustomize.toolkit.fluxcd.io/substitute: "disabled"
@@ -46,17 +58,3 @@ configMapGenerator:
       - ./blueprints/forward/victoria-metrics-logs.yaml
       - ./blueprints/forward/z2m-code.yaml
       - ./blueprints/forward/z2m.yaml
-  - name: authentik-blueprints-apps-oidc
-    files:
-      - ./blueprints/oidc/calibre.yaml
-      - ./blueprints/oidc/grafana.yaml
-      - ./blueprints/oidc/headlamp.yaml
-      - ./blueprints/oidc/home-assistant.yaml
-      - ./blueprints/oidc/immich.yaml
-      - ./blueprints/oidc/jellyfin.yaml
-      - ./blueprints/oidc/karakeep.yaml
-      - ./blueprints/oidc/kavita.yaml
-      - ./blueprints/oidc/netbox.yaml
-      - ./blueprints/oidc/qbittorrent-ui.yaml
-      - ./blueprints/oidc/rook-ceph.yaml
-      - ./blueprints/oidc/stirling-pdf.yaml

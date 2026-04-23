@@ -6,9 +6,9 @@ metadata:
 data:
   # : general
   TEMP_DIR: "/app/temp_audio"
-  AI_MODEL_PROVIDER: "OLLAMA"
-  OLLAMA_SERVER_URL: "http://ollama.servitor-apps.svc.cluster.local:11434/api/generate"
-  OLLAMA_MODEL_NAME: "qwen:8b"
+  # AI_MODEL_PROVIDER: "OLLAMA"
+  # OLLAMA_SERVER_URL: "http://ollama.servitor-apps.svc.cluster.local:11434/api/generate"
+  # OLLAMA_MODEL_NAME: "qwen:8b"
   # : backend
   MEDIASERVER_TYPE: "lyrion"
   LYRION_URL: "http://lyrion.media-apps.svc.cluster.local:9000"

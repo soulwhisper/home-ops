@@ -20,9 +20,16 @@
 
 ### Add a new OIDC App
 
-- 1. set OIDC settings at app side;
-- 2. copy other app as template, change `provider name`, `application slug/name`, `meta_launch_url`, `redirect_uris`, `policybinding`;
-- 3. add ip slug into `infrastructure/terraform/authentik/apps.txt`;
-- 4. apply terraform at least once;
-- 5. sync 1password secrets in the cluster;
-- 6. thats all.
+- 1. set OIDC es at app side;
+- 2. copy other app as template, change `provider name`, `application slug/name`, `meta_launch_url`, `redirect_uris`, `policybinding`, `client_id`, `client_secret`;
+- 3. add es name under authentik helmrelease `blueprints.secrets`;
+- 4. thats all.
+
+```shell
+# how to create client_id and client_secret
+APP="calibre"; \
+CLIENT_ID="${APP}-$(openssl rand -hex 4)"; \
+CLIENT_SECRET=$(openssl rand -hex 32); \
+echo -e "ID:\t${CLIENT_ID}\nSecret:\t${CLIENT_SECRET}"
+
+```

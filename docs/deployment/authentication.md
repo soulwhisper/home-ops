@@ -28,7 +28,8 @@ homeassistant:
 
 ### Rook Ceph Dashboard
 
-- set saml2 manually, assume idp user is also `admin`;
+- use its own auth, or set saml2 manually;
+- assume idp user is also `admin`;
 - need `BackendConfigPolicy` to solve backend schema issues;
 
 ```shell

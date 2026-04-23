@@ -18,7 +18,6 @@ spec:
     - name: media-nfs
       namespace: media-apps
   components:
-    - ../../../../components/kgateway-policy
     - ../../../../components/volsync
   postBuild:
     substitute:

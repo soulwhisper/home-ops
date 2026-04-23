@@ -14,9 +14,9 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: selfhosted-apps
   path: "./kubernetes/apps/selfhosted-apps/karakeep/app"
-  dependsOn:
-    - name: ollama
-      namespace: servitor-apps
+  # dependsOn:
+  #   - name: ollama
+  #     namespace: servitor-apps
   components:
     - ../../../../components/volsync
   postBuild:
