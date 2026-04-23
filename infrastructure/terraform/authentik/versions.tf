@@ -6,7 +6,7 @@ terraform {
     # before any authentik resources/data-sources are accessed.
     authentik = {
       source  = "goauthentik/authentik"
-      version = "~> 2025.12.1"
+      version = "~> 2026.2.0"
     }
 
     onepassword = {
