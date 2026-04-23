@@ -5,7 +5,7 @@ name: booklore
 
 services:
   grimmory:
-    image: ghcr.io/grimmory-tools/grimmory:v2.3.0
+    image: ghcr.io/grimmory-tools/grimmory:v2.3.1
     container_name: grimmory
     restart: unless-stopped
     environment:
