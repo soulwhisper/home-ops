@@ -21,8 +21,8 @@ spec:
         pod:
           securityContext:
             runAsNonRoot: true
-            runAsUser: 10000 # hermes user
-            runAsGroup: 10000
+            runAsUser: 2000
+            runAsGroup: 2000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         containers:
@@ -36,6 +36,26 @@ spec:
             envFrom: &envFrom
               - secretRef:
                   name: *name
+            probes:
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: &port 8642
+                  failureThreshold: 60
+                  periodSeconds: 5
+              liveness: &liveness
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: *port
+                  periodSeconds: 30
+                  failureThreshold: 3
+              readiness: *liveness
             resources:
               requests: &requests
                 cpu: 10m
@@ -63,7 +83,7 @@ spec:
       app:
         ports:
           http:
-            port: 8642
+            port: *port
       web:
         primary: true
         ports:
