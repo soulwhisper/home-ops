@@ -1,0 +1,105 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: guardrails
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: backend-chat-complex
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: backend-chat-fast
+  backend:
+    ai:
+      promptGuard:
+        request:
+          # 1. reject sensitive information
+          - regex:
+              builtins:
+                - Ssn
+                - CreditCard
+                - Email
+              action: Reject
+            response:
+              message: "Request contains PII and cannot be processed"
+          # 2. reject system override
+          - regex:
+              action: Reject
+              matches:
+                - "(?i)(ignore|disregard|forget|override|bypass|skip|dismiss|drop|abandon)\\s+(all\\s+|any\\s+|your\\s+)?(previous|prior|earlier|above|existing|current|original|initial|given|preset)\\s+(instructions|rules|guidelines|directives|constraints|restrictions|prompts|programming|configuration)"
+                - "(?i)(the (previous|above|old|original|initial|existing) (instructions?|rules?|guidelines?|constraints?)\\s+(are|is|were|should be|must be)\\s+(ignored|void|null|overridden|replaced|superseded|invalidated|canceled|revoked|obsolete))"
+                - "(?i)(from now on|effective immediately|starting now|henceforth)\\s*(,\\s+)?(you\\s+)?(will|shall|must|should|are to|need to)\\s+(be|act|respond|answer|behave|operate|function)"
+                - "(?i)(your new|revised|updated)\\s+(purpose|goal|objective|role|instruction|directive|rule)"
+            response:
+              message: "Request blocked: prompt injection detected. Attempts to override system instructions are not permitted."
+              statusCode: 403
+          # 3. reject role hijacking
+          - regex:
+              action: Reject
+              matches:
+                - "(?i)(you are now|you're now|from now on you are|henceforth you are|you have become|you are no longer)\\s+(a |an |the )?(unrestricted|unfiltered|uncensored|unlimited|jailbroken|evil|malicious|dangerous|DAN|unethical|amoral|rogue|hacker)"
+                - "(?i)(do anything now|DAN mode|DAN jailbreak|enable DAN|activate DAN|DAN [0-9]+\\.[0-9]+|STAN mode|DUDE mode|AIM mode)"
+                - "(?i)(enter|enable|activate|switch to|turn on|engage|unlock)\\s+(developer|dev|debug|admin|sudo|root|god|maintenance|unrestricted|unfiltered|jailbreak)\\s*(mode|access|privileges|console)"
+                - "(?i)(pretend|imagine|simulate|act like|impersonate|roleplay|role-play)\\s+(you are|you're|to be|that you are|being)\\s+(a |an |the )?(unrestricted|uncensored|evil|unfiltered|jailbroken|hacker|criminal|malicious|unethical|amoral)"
+            response:
+              message: "Request blocked: jailbreak attempt detected. Role hijacking and persona manipulation are not permitted."
+              statusCode: 403
+          # 4. reject system prompt extraction
+          - regex:
+              action: Reject
+              matches:
+                - "(?i)(show|print|display|reveal|output|tell|give|share|repeat|recite|echo|dump|expose|leak|disclose)\\s+(me\\s+)?(your|the)?\\s*(system|initial|original|first|hidden|secret|internal|underlying|prepended)\\s*(prompt|instructions?|message|context|configuration|rules?|directives?|preamble)"
+                - "(?i)(what|which|tell me)\\s+(are|is|were)\\s+(your|the)\\s+(system|initial|original|hidden|secret|internal)\\s+(prompt|instructions?|message|rules?|directives?|guidelines?)"
+                - "(?i)(repeat|recite|output|print|give me)\\s+(the\\s+)?(exact|verbatim|word for word|complete|full|entire|unmodified)\\s+(text|content|wording|instructions?|prompt|message)"
+                - "(?i)(put|encode|write|format|output)\\s+(your|the|all)?\\s*(system|initial|hidden|internal)?\\s*(prompt|instructions?|rules?)\\s+(in|into|as|using)\\s+(a |an )?(code block|json|xml|yaml|base64|hex)"
+            response:
+              message: "Request blocked: system prompt extraction attempt detected. Internal instructions are confidential."
+              statusCode: 403
+          # 5. reject evasion injection
+          - regex:
+              action: Reject
+              matches:
+                - "(?i)(decode|decrypt|decipher|translate|interpret|execute|run|follow|obey)\\s+(this|the following|these|the)?\\s*(base64|base-64|b64|rot13|rot-13|hex|hexadecimal|binary|encoded|encrypted|obfuscated)\\s*(string|text|message|instruction|command|payload)?"
+                - "(?i)(respond|reply|answer|output)\\s+(only\\s+)?in\\s+(base64|hex|binary|rot13|morse|leetspeak|leet|1337|pig latin|unicode)"
+                - "(?i)<\\|?(system|im_start|im_end|endoftext|assistant|user)\\|?>"
+                - "(?i)(\\[SYSTEM\\]|\\[INST\\]|\\[\\/INST\\]|\\[ASSISTANT\\]|###\\s*(system|instruction|override|ignore))"
+            response:
+              message: "Request blocked: encoding evasion or prompt delimiter injection detected."
+              statusCode: 403
+          # 6. mask secrets
+          - regex:
+              action: Mask
+              matches:
+                - "\\bAKIA[0-9A-Z]{16}\\b"
+                - "\\bsk-[a-zA-Z0-9_-]{20,}\\b"
+                - "(?i)(password|passwd|secret|token|api[_-]?key)\\s*[=:]\\s*[\"']?[^\\s\"']{8,}"
+                - "-----BEGIN\\s+(RSA\\s+|EC\\s+)?PRIVATE KEY-----"
+                - "(?i)(mongodb|postgres|postgresql|mysql|redis)://[^\\s\"'<>]{10,}"
+              response:
+                message: "Response filtered: credentials redacted from model output."
+        response:
+          # 1. reject destructive actions
+          - regex:
+              action: Reject
+              matches:
+                - "delete all"
+                - "drop database"
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: backend-chat-complex-force-max-thinking
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: backend-chat-complex
+  backend:
+    ai:
+      transformations:
+        - field: reasoning_effort
+          expression: "'max'"

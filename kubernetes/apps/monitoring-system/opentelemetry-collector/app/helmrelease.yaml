@@ -15,12 +15,12 @@ spec:
     mode: deployment
     replicaCount: 1
     image:
-      repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
+      repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib
     command:
-      name: "otelcol-k8s"
+      name: "otelcol-contrib"
     resources:
-      requests: { cpu: 10m, memory: 128Mi }
-      limits: { memory: 256Mi }
+      requests: { cpu: 10m, memory: 512Mi }
+      limits: { memory: 1Gi }
     serviceMonitor:
       enabled: true
     service:
@@ -56,28 +56,49 @@ spec:
     alternateConfig:
       extensions:
         health_check:
-          endpoint: ${env:MY_POD_IP}:13133
+          endpoint: 0.0.0.0:13133
       receivers:
         otlp:
           protocols:
             grpc:
-              endpoint: ${env:MY_POD_IP}:4317
+              endpoint: 0.0.0.0:4317
             http:
-              endpoint: ${env:MY_POD_IP}:4318
+              endpoint: 0.0.0.0:4318
       processors:
         memory_limiter:
           check_interval: 1s
           limit_percentage: 80
           spike_limit_percentage: 25
+        tail_sampling:
+          decision_wait: 10s
+          policies:
+            - name: errors-policy
+              type: status_code
+              status_code: { status_codes: [ERROR] }
+            - name: latency-policy
+              type: latency
+              latency: { threshold_ms: 5000 }
+            - name: probability-policy
+              type: probabilistic
+              probabilistic: { sampling_percentage: 10 }
         batch:
           send_batch_size: 1024
           send_batch_max_size: 2048
-          timeout: 5s
-        probabilistic_sampler:
-          sampling_percentage: 10
+          timeout: 1s
       exporters:
         otlphttp:
           endpoint: "http://victoria-traces.monitoring-system.svc.cluster.local:10428/insert/opentelemetry/v1/traces"
+          tls:
+            insecure: true
+          sending_queue:
+            enabled: true
+            num_consumers: 10
+            queue_size: 5000
+          retry_on_failure:
+            enabled: true
+            initial_interval: 5s
+            max_interval: 30s
+            max_elapsed_time: 300s
       service:
         extensions: [health_check]
         telemetry:
@@ -86,10 +107,10 @@ spec:
               - pull:
                   exporter:
                     prometheus:
-                      host: ${env:MY_POD_IP}
+                      host: 0.0.0.0
                       port: 8888
           logs:
-            level: info
+            level: warn
             encoding: json
         pipelines:
           traces:

@@ -51,3 +51,5 @@ spec:
       namespace: networking-system
     - name: onepassword-connect
       namespace: security-system
+    - name: opentelemetry-collector
+      namespace: monitoring-system

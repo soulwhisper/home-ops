@@ -1,0 +1,80 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: backend-chat-complex
+spec:
+  ai:
+    provider:
+      openai:
+        model: deepseek-v4-pro
+        host: &host api.deepseek.com
+        port: 443
+        path: "/chat/completions"
+  policies:
+    auth:
+      secretRef:
+        name: deepseek-credentials
+    tls:
+      sni: *host
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: backend-chat-fast
+spec:
+  ai:
+    provider:
+      openai:
+        model: deepseek-v4-flash
+        host: &host api.deepseek.com
+        port: 443
+        path: "/chat/completions"
+  policies:
+    auth:
+      secretRef:
+        name: deepseek-credentials
+    tls:
+      sni: *host
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: backend-embedding
+spec:
+  ai:
+    provider:
+      openai:
+        model: "BAAI/bge-m3"
+        host: &host api.siliconflow.cn
+        port: 443
+        path: "/v1/embeddings"
+  policies:
+    auth:
+      secretRef:
+        name: siliconflow-credentials
+    tls:
+      sni: *host
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: backend-rerank
+spec:
+  ai:
+    provider:
+      openai:
+        model: "BAAI/bge-reranker-v2-m3"
+        host: &host api.siliconflow.cn
+        port: 443
+        path: "/v1/rerank"
+  policies:
+    auth:
+      secretRef:
+        name: siliconflow-credentials
+    tls:
+      sni: *host
