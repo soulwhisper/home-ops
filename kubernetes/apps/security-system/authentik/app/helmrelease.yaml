@@ -44,8 +44,9 @@ spec:
       configMaps:
         - authentik-blueprints-core
         - authentik-blueprints-forward
-      # new odic apps, add es names below
       secrets:
+        - authentik-blueprints-core-users
+        # new odic apps, add es names below
         - authentik-blueprints-oidc-calibre
         - authentik-blueprints-oidc-grafana
         - authentik-blueprints-oidc-headlamp

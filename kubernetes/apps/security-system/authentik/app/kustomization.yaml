@@ -10,6 +10,8 @@ resources:
   - ./externalsecret.yaml
   - ./httproute.yaml
   - ./referencegrant.yaml
+  # core blueprints
+  - ./blueprints/core/basic-users.yaml
   # oidc blueprints
   - ./blueprints/oidc/calibre.yaml
   - ./blueprints/oidc/grafana.yaml

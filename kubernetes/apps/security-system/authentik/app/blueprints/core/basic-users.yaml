@@ -1,0 +1,43 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/external-secrets.io/externalsecret_v1.json
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: authentik-blueprints-core-users
+spec:
+  refreshInterval: 12h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  dataFrom:
+    - extract:
+        key: app_user
+  target:
+    template:
+      data:
+        homelab-users.yaml: |
+          # yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+          version: 1
+          entries:
+            - model: authentik_core.user
+              identifiers:
+                username: admin
+              attrs:
+                name: Administrator
+                username: admin
+                email: admin@noirprime.com
+                password: "{{ .admin_pass }}"
+                is_active: true
+                groups:
+                  - !KeyOf homelab-admin
+            - model: authentik_core.user
+              identifiers:
+                username: family
+              attrs:
+                name: Family
+                username: family
+                email: family@noirprime.com
+                password: "{{ .family_pass }}"
+                is_active: true
+                groups:
+                  - !KeyOf homelab-internal

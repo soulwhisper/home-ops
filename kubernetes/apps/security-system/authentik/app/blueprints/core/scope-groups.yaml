@@ -7,7 +7,7 @@ entries:
       name: homelab-admin
     attrs:
       name: homelab-admin
-      is_superuser: false
+      is_superuser: true
   - model: authentik_core.group
     identifiers:
       name: homelab-internal
