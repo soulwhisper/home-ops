@@ -45,9 +45,9 @@ configMapGenerator:
       - ./blueprints/forward/frigate-go2rtc.yaml
       - ./blueprints/forward/frigate.yaml
       - ./blueprints/forward/hass-code.yaml
+      - ./blueprints/forward/hermes-agent.yaml
       - ./blueprints/forward/homepage.yaml
       - ./blueprints/forward/hubble.yaml
-      - ./blueprints/forward/kagent.yaml
       - ./blueprints/forward/lyrion.yaml
       - ./blueprints/forward/metube.yaml
       - ./blueprints/forward/miniflux.yaml
@@ -55,8 +55,9 @@ configMapGenerator:
       - ./blueprints/forward/rsshub.yaml
       - ./blueprints/forward/scrypted.yaml
       - ./blueprints/forward/sillytavern.yaml
-      - ./blueprints/forward/victoria-metrics-alert.yaml
-      - ./blueprints/forward/victoria-metrics-cluster.yaml
-      - ./blueprints/forward/victoria-metrics-logs.yaml
+      - ./blueprints/forward/victoria-alert.yaml
+      - ./blueprints/forward/victoria-logs.yaml
+      - ./blueprints/forward/victoria-metrics.yaml
+      - ./blueprints/forward/victoria-traces.yaml
       - ./blueprints/forward/z2m-code.yaml
       - ./blueprints/forward/z2m.yaml

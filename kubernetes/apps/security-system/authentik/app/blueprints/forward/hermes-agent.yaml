@@ -4,7 +4,7 @@ version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
     identifiers:
-      name: &provider victoria-metrics-alert-proxy-provider
+      name: &provider hermes-proxy-provider
     attrs:
       name: *provider
       authorization_flow:
@@ -13,17 +13,17 @@ entries:
           [slug, default-provider-authorization-implicit-consent],
         ]
       mode: forward_domain
-      external_host: &domain "https://alert.noirprime.com"
+      external_host: &domain "https://hermes.noirprime.com"
       access_token_validity: "hours=12"
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
     identifiers:
-      slug: &name victoria-metrics-alert
+      slug: &name hermes
     attrs:
       name: *name
       provider: !KeyOf *provider
       meta_launch_url: *domain
-      group: "Observability"
+      group: "SmartHome"
       policy_engine_mode: all
   - model: authentik_policies_binding.policybinding
     identifiers:

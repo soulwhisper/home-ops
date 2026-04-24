@@ -19,10 +19,10 @@ spec:
       namespace: database-system
     - name: dragonfly-operator
       namespace: database-system
+    - name: agentgateway
+      namespace: networking-system
     - name: media-nfs
       namespace: media-apps
-    # - name: ollama
-    #   namespace: servitor-apps
   components:
     - ../../../../components/cnpg
     - ../../../../components/dragonfly

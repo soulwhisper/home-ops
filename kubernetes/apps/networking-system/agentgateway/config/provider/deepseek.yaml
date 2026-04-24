@@ -11,7 +11,7 @@ spec:
         model: deepseek-v4-pro
         host: &host api.deepseek.com
         port: 443
-        path: "/v1/chat/completions"
+        path: "/chat/completions"
   policies:
     ai:
       promptGuard:

@@ -4,7 +4,7 @@ version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
     identifiers:
-      name: &provider victoria-metrics-cluster-proxy-provider
+      name: &provider victoria-metrics-proxy-provider
     attrs:
       name: *provider
       authorization_flow:
@@ -18,7 +18,7 @@ entries:
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
     identifiers:
-      slug: &name victoria-metrics-cluster
+      slug: &name victoria-metrics
     attrs:
       name: *name
       provider: !KeyOf *provider

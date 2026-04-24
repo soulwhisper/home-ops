@@ -41,6 +41,8 @@ spec:
             envFrom: &envFrom
               - configMapRef:
                   name: *name
+              - secretRef:
+                  name: *name
             ports:
               - name: http
                 containerPort: &port 8000

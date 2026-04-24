@@ -7,8 +7,8 @@ components:
   - ../../components/namespace
 resources:
   # app
-  - ./astrbot/ks.yaml
   - ./dify/ks.yaml
+  - ./hermes-agent/ks.yaml
   - ./langfuse/ks.yaml
   - ./sillytavern/ks.yaml
   - ./tei/ks.yaml
