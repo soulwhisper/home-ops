@@ -8,7 +8,7 @@ spec:
   ai:
     provider:
       openai:
-        model: deepseek-chat
+        model: deepseek-v4-pro
         host: &host api.deepseek.com
         port: 443
         path: "/v1/chat/completions"
