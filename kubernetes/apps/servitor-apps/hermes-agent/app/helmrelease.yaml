@@ -30,9 +30,7 @@ spec:
             image:
               repository: nousresearch/hermes-agent
               tag: v2026.4.23
-            args:
-              - gateway
-              - run
+            args: ["gateway", "run"]
             env:
               HERMES_TUI: "1"
             envFrom: &envFrom
@@ -51,8 +49,7 @@ spec:
             image:
               repository: nousresearch/hermes-agent
               tag: v2026.4.23
-            args:
-              - dashboard
+            args: ["dashboard"]
             env:
               GATEWAY_HEALTH_URL: "http://localhost:8642"
             envFrom: *envFrom
@@ -83,6 +80,10 @@ spec:
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
+        rules:
+          - backendRefs:
+              - identifier: web
+                port: http
 
     persistence:
       app:
