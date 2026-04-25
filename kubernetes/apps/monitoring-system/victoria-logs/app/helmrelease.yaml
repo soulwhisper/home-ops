@@ -11,11 +11,12 @@ spec:
     name: victoria-logs-single
 
   values:
+    global:
+      image:
+        registry: quay.io
     server:
       fullnameOverride: *name
       retentionPeriod: 14d
-      image:
-        registry: "quay.io"
       persistentVolume:
         enabled: true
         storageClassName: ceph-block

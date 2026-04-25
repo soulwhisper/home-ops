@@ -12,6 +12,9 @@ spec:
 
   values:
     fullnameOverride: *name
+    global:
+      image:
+        registry: quay.io
     victoria-metrics-operator:
       enabled: false
     defaultDashboards:
@@ -44,7 +47,7 @@ spec:
           url: "http://vmauth-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8427"
 
     # : vmagent
-    # : http://vmagent-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428
+    # : http://vmagent-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8429
     vmagent:
       spec:
         extraArgs:
@@ -64,7 +67,7 @@ spec:
             - src_paths:
                 - "/api/v1/query.*"
                 - "/api/v1/label/.*"
-              url_prefix: "http://vmagent-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428"
+              url_prefix: "http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428"
             - src_paths:
                 - "/select/logsql/.*"
               url_prefix: "http://victoria-logs-server.monitoring-system.svc.cluster.local:9428"
@@ -81,7 +84,7 @@ spec:
           receiver: "default"
           repeat_interval: 12h
           routes:
-            - receiver: "null"
+            - receiver: "blackhole"
               matchers:
                 - alertname =~ "InfoInhibitor|Watchdog"
             - receiver: "default"
@@ -94,7 +97,7 @@ spec:
             targetMatch:
               - severity = "warning"
         receivers:
-          - name: "null"
+          - name: "blackhole"
           - name: "default"
             webhook_configs:
               # : apprise-webhook
@@ -138,7 +141,7 @@ spec:
                   name: *name
                   key: PUSHOVER_USER_KEY
                 urlTitle: View in Alertmanager
-                # https_proxy is needed for stablity
+                # https_proxy is needed for stability
                 # httpConfig:
                 #   proxyURL: "${HTTPS_PROXY}"
                 #   noProxy: "${NO_PROXY}"

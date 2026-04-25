@@ -12,12 +12,10 @@ spec:
 
   values:
     fullnameOverride: *name
+    global:
+      image:
+        registry: quay.io
+    podMonitor:
+      enabled: true
     remoteWrite:
       - url: "http://victoria-logs-server.monitoring-system.svc.cluster.local:9428"
-    resources:
-      limits:
-        cpu: 100m
-        memory: 128Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
