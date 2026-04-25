@@ -21,7 +21,7 @@ _... managed by Flux, Renovate and GitHub Actions_ <img src="https://fonts.gstat
       <img src="https://img.shields.io/discord/673534664354430999?style=for-the-badge&label&logo=discord&logoColor=white&color=blue" alt="Discord">
     </a>
     <a href="https://deepwiki.com/soulwhisper/home-ops">
-      <img src="https://deepwiki.com/badge.svg" alt="DeepWiki">
+      <img src="https://img.shields.io/badge/deepwiki-purple?style=for-the-badge&label=&logo=deepl&logoColor=white&color=blue" alt="DeepWiki">
     </a>
   </p>
   <p>
