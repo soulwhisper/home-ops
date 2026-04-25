@@ -16,7 +16,7 @@ spec:
         registry: quay.io
     server:
       fullnameOverride: *name
-      retentionPeriod: 14d
+      retentionPeriod: 90d
       persistentVolume:
         enabled: true
         storageClassName: ceph-block

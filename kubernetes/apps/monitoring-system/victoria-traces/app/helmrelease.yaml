@@ -8,68 +8,18 @@ spec:
   interval: 30m
   chartRef:
     kind: OCIRepository
-    name: app-template
-    namespace: gitops-system
+    name: victoria-traces-single
 
   values:
-    controllers:
-      *name :
-        annotations:
-          reloader.stakater.com/auto: "true"
-        pod:
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 2000
-            runAsGroup: 2000
-            fsGroup: 2000
-            fsGroupChangePolicy: OnRootMismatch
-        containers:
-          app:
-            image:
-              repository: quay.io/victoriametrics/victoria-traces
-              tag: v0.8.1
-            args:
-              - -storageDataPath=/data
-              - -retentionPeriod=7d
-              - -httpListenAddr=:10428
-              - -loggerFormat=json
-              - -memory.allowedPercent=80
-            probes:
-              liveness: &probes
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /health
-                    port: &port 10428
-                  initialDelaySeconds: 30
-                  periodSeconds: 30
-                  failureThreshold: 3
-              readiness: *probes
-              startup: *probes
-            resources:
-              requests:
-                cpu: 100m
-                memory: 512Mi
-              limits:
-                memory: 2Gi
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-              readOnlyRootFilesystem: true
-
-    service:
-      app:
-        ports:
-          http:
-            port: *port
-
-    persistence:
-      app:
-        existingClaim: *name
-        globalMounts:
-          - path: /data
-      tmpfs:
-        type: emptyDir
-        globalMounts:
-          - path: /tmp
+    global:
+      image:
+        registry: quay.io
+    server:
+      fullnameOverride: *name
+      retentionPeriod: 14d
+      persistentVolume:
+        enabled: true
+        storageClassName: ceph-block
+        size: 50Gi
+      serviceMonitor:
+        enabled: true

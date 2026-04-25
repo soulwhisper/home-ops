@@ -33,8 +33,9 @@ spec:
     # : http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428
     vmsingle:
       spec:
-        retentionPeriod: "14d"
+        retentionPeriod: "90d"
         storage:
+          storageClassName: ceph-block
           resources:
             requests:
               storage: 50Gi
@@ -51,8 +52,7 @@ spec:
     vmagent:
       spec:
         extraArgs:
-          promscrape:
-            dropOriginalLabels: "true"
+          promscrape.dropOriginalLabels: "true"
 
     # : vmauth
     # : http://vmauth-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8427

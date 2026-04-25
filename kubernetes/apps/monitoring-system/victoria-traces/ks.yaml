@@ -15,9 +15,3 @@ spec:
   targetNamespace: monitoring-system
   path: "./kubernetes/apps/monitoring-system/victoria-traces/app"
   wait: true
-  components:
-    - ../../../../components/volsync
-  postBuild:
-    substitute:
-      APP: *name
-      VOLSYNC_CAPACITY: 50Gi

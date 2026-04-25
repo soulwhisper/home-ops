@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   # app
   - ./helmrelease.yaml
+  - ./ocirepository.yaml
   # utils
   - ./httproute.yaml
-  - ./servicemonitor.yaml
+  - ./trafficpolicy.yaml
