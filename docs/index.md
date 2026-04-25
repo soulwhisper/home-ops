@@ -20,6 +20,9 @@ _... managed by Flux, Renovate and GitHub Actions_ <img src="https://fonts.gstat
     <a href="https://discord.gg/home-operations">
       <img src="https://img.shields.io/discord/673534664354430999?style=for-the-badge&label&logo=discord&logoColor=white&color=blue" alt="Discord">
     </a>
+    <a href="https://deepwiki.com/soulwhisper/home-ops">
+      <img src="https://deepwiki.com/badge.svg" alt="DeepWiki">
+    </a>
   </p>
   <p>
     <a href="https://talos.dev">
