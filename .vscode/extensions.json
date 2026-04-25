@@ -1,23 +1,19 @@
 {
   "recommendations": [
-    "MS-CEINTL.vscode-language-pack-zh-hans",
-    "helm-ls.helm-ls",
-    "jnoortheen.nix-ide",
-    "savh.json5-kit",
-    "ms-azuretools.vscode-docker",
-    "ms-python.python",
-    "redhat.vscode-yaml",
-    "tamasfe.even-better-toml",
+    "aaron-bond.better-comments",
+    "codeium.codeium",
     "esbenp.prettier-vscode",
-    "shardulm94.trailing-spaces",
     "fnando.linter",
-    "davidanson.vscode-markdownlint",
-    "shd101wyy.markdown-preview-enhanced",
-    "eamodio.gitlens",
     "gruntfuggly.todo-tree",
     "ionutvmi.path-autocomplete",
-    "luisfontes19.vscode-swissknife",
-    "ms-kubernetes-tools.vscode-kubernetes-tools",
+    "johnpapa.vscode-peacock",
+    "MS-CEINTL.vscode-language-pack-zh-hans",
+    "nefrob.vscode-just-syntax",
+    "redhat.vscode-yaml",
     "samuelcolvin.jinjahtml",
+    "savh.json5-kit",
+    "shardulm94.trailing-spaces",
+    "streetsidesoftware.code-spell-checker",
+    "tamasfe.even-better-toml"
   ]
 }
