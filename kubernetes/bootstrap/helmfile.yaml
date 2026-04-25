@@ -54,15 +54,6 @@ releases:
     version: 0.48.0
     values: ["./values.yaml.gotmpl"]
     needs: ["security-system/external-secrets"]
-    hooks:
-      # Apply cluster settings
-      - events: ["postsync"]
-        command: "kubectl"
-        args:
-          - "apply"
-          - "--namespace=gitops-system"
-          - "--filename=../components/namespace/cluster-settings.yaml"
-          - "--wait=true"
 
   - name: flux-instance
     namespace: gitops-system
