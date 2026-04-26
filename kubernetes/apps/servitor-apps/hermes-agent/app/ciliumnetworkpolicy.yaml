@@ -1,0 +1,60 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: hermes-agent-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: hermes-agent
+  egress:
+    # Backend
+    - toServices:
+        - k8sService:
+            serviceName: agentgateway-proxy
+            namespace: networking-system
+      toPorts:
+        - ports:
+            - { port: "80", protocol: TCP }
+          rules:
+            http:
+              - method: "POST"
+                path: "/chat/complex"
+              - method: "POST"
+                path: "/chat/fast"
+              - method: "POST"
+                path: "/embedding"
+              - method: "POST"
+                path: "/rerank"
+              - method: "POST"
+                pathRegex: "/mcp/.*"
+
+    # Web Search
+    # - toServices:
+    #     - k8sService:
+    #         serviceName: firecrawl
+    #         namespace: servitor-apps
+    #   toPorts:
+    #     - ports:
+    #         - { port: "3002", protocol: TCP }
+    #       rules:
+    #         http:
+    #           - method: "POST"
+    #             path: "/v1/scrape"
+    #           - method: "POST"
+    #             path: "/v1/search"
+    #           - method: "POST"
+    #             path: "/v1/crawl"
+    #           - method: "GET"
+    #             pathRegex: "/v1/crawl/[a-zA-Z0-9-]+/status"
+
+    # DNS
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - { port: "53", protocol: TCP }
+            - { port: "53", protocol: UDP }

@@ -14,6 +14,7 @@ spec:
   values:
     defaultPodOptions:
       automountServiceAccountToken: false
+      hostUsers: false
     controllers:
       *name :
         annotations:
@@ -31,8 +32,6 @@ spec:
               repository: nousresearch/hermes-agent
               tag: v2026.4.23
             args: ["gateway", "run"]
-            env:
-              HERMES_TUI: "1"
             envFrom: &envFrom
               - secretRef:
                   name: *name
@@ -44,8 +43,8 @@ spec:
                   httpGet:
                     path: /health
                     port: &port 8642
-                  failureThreshold: 60
-                  periodSeconds: 5
+                  failureThreshold: 30
+                  periodSeconds: 10
               liveness: &liveness
                 enabled: true
                 custom: true
@@ -54,11 +53,13 @@ spec:
                     path: /health
                     port: *port
                   periodSeconds: 30
-                  failureThreshold: 3
+                  failureThreshold: 5
+                  timeoutSeconds: 10
               readiness: *liveness
             resources:
-              requests: &requests
-                cpu: 10m
+              requests:
+                cpu: 200m
+                memory: 1Gi
               limits:
                 memory: 4Gi
             securityContext: &securityContext
@@ -72,9 +73,10 @@ spec:
             args: ["dashboard"]
             env:
               GATEWAY_HEALTH_URL: "http://localhost:8642"
-            envFrom: *envFrom
             resources:
-              requests: *requests
+              requests:
+                cpu: 50m
+                memory: 128Mi
               limits:
                 memory: 512Mi
             securityContext: *securityContext

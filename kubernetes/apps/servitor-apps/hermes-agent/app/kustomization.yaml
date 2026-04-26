@@ -6,5 +6,6 @@ resources:
   # app
   - ./helmrelease.yaml
   # utils
+  - ./ciliumnetworkpolicy.yaml
   - ./externalsecret.yaml
   - ./trafficpolicy.yaml
