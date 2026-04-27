@@ -54,7 +54,11 @@ spec:
                 memory: 4Gi
             securityContext:
               allowPrivilegeEscalation: false
-              capabilities: { add: ["CHOWN" "DAC_OVERRIDE" "SETGID" "SETUID"], drop: ["ALL"] }
+              capabilities:
+                {
+                  add: ["CHOWN", "DAC_OVERRIDE", "SETGID", "SETUID"],
+                  drop: ["ALL"],
+                }
               readOnlyRootFilesystem: true
 
     service:
