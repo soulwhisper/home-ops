@@ -23,7 +23,7 @@ spec:
           app:
             image:
               repository: langgenius/dify-sandbox
-              tag: 0.2.14
+              tag: 0.2.15
             env:
               API_KEY: "dify-sandbox"
               GIN_MODE: "release"
