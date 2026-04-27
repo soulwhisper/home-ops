@@ -24,9 +24,7 @@ spec:
               - method: "POST"
                 path: "/chat/fast"
               - method: "POST"
-                path: "/embedding"
-              - method: "POST"
-                path: "/rerank"
+                path: "/chat/vision"
               - method: "POST"
                 pathRegex: "/mcp/.*"
 

@@ -32,6 +32,8 @@ spec:
               repository: nousresearch/hermes-agent
               tag: v2026.4.23
             args: ["gateway", "run"]
+            env:
+              HERMES_UID: "2000"
             envFrom: &envFrom
               - secretRef:
                   name: *name
@@ -73,6 +75,7 @@ spec:
             args: ["dashboard"]
             env:
               GATEWAY_HEALTH_URL: "http://localhost:8642"
+              HERMES_UID: "2000"
             resources:
               requests:
                 cpu: 50m

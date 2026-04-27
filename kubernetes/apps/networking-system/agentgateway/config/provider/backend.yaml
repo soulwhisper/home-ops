@@ -43,35 +43,15 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: backend-embedding
+  name: backend-chat-vision
 spec:
   ai:
     provider:
       openai:
-        model: "BAAI/bge-m3"
+        model: "Qwen/Qwen3-VL-30B-A3B-Instruct"
         host: &host api.siliconflow.cn
         port: 443
-        path: "/v1/embeddings"
-  policies:
-    auth:
-      secretRef:
-        name: siliconflow-credentials
-    tls:
-      sni: *host
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/agentgateway.dev/agentgatewaybackend_v1alpha1.json
-apiVersion: agentgateway.dev/v1alpha1
-kind: AgentgatewayBackend
-metadata:
-  name: backend-rerank
-spec:
-  ai:
-    provider:
-      openai:
-        model: "BAAI/bge-reranker-v2-m3"
-        host: &host api.siliconflow.cn
-        port: 443
-        path: "/v1/rerank"
+        path: "/v1/chat/completions"
   policies:
     auth:
       secretRef:

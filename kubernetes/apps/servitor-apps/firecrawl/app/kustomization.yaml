@@ -7,9 +7,3 @@ resources:
   - ./helmrelease.yaml
   # utils
   - ./configmap.yaml
-  - ./externalsecret.yaml
-  - ./trafficpolicy.yaml
-generatorOptions:
-  annotations:
-    kustomize.toolkit.fluxcd.io/substitute: disabled
-  disableNameSuffixHash: true

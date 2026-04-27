@@ -8,6 +8,7 @@ components:
 resources:
   # app
   - ./dify/ks.yaml
+  - ./firecrawl/ks.yaml
   - ./hermes-agent/ks.yaml
   - ./langfuse/ks.yaml
   - ./sillytavern/ks.yaml

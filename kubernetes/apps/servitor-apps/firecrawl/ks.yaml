@@ -1,0 +1,43 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name firecrawl-database
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/firecrawl/database"
+  dependsOn:
+    - name: dragonfly-operator
+      namespace: database-system
+  components:
+    - ../../../../components/dragonfly
+  postBuild:
+    substitute:
+      APP: *name
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name firecrawl
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/firecrawl/app"
+  dependsOn:
+    - name: firecrawl-database
+      namespace: servitor-apps
