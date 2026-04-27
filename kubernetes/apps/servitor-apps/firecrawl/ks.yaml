@@ -41,3 +41,5 @@ spec:
   dependsOn:
     - name: firecrawl-database
       namespace: servitor-apps
+    - name: searxng
+      namespace: selfhosted-apps

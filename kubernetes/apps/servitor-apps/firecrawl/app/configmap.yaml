@@ -23,3 +23,5 @@ data:
   BROWSER_POOL_SIZE: "2"
   MAX_CPU: "0.75"
   MAX_RAM: "0.75"
+  # SearXNG
+  SEARXNG_ENDPOINT: "http://searxng.selfhosted-apps.svc.cluster.local:8080"

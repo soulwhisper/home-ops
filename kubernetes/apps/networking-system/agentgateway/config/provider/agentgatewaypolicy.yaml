@@ -12,6 +12,9 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: backend-chat-fast
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: backend-chat-vision
   backend:
     ai:
       promptGuard:

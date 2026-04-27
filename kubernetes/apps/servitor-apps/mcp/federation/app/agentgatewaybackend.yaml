@@ -7,12 +7,17 @@ metadata:
 spec:
   mcp:
     targets:
+      - name: firecrawl
+        selector:
+          services:
+            matchLabels:
+              app.kubernetes.io/name: mcp-firecrawl
       - name: grafana
         selector:
           services:
             matchLabels:
               app.kubernetes.io/name: mcp-grafana
-      - name: haas
+      - name: hass
         selector:
           services:
             matchLabels:

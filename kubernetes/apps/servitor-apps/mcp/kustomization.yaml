@@ -6,9 +6,8 @@ resources:
   # federation
   - ./federation/ks.yaml
   # servers
+  - ./firecrawl/ks.yaml
   - ./grafana/ks.yaml
   - ./home-assistant/ks.yaml
   - ./kubernetes/ks.yaml
   - ./victoria-logs/ks.yaml
-  # * todo list
-  # - @toolbox-sdk/server
