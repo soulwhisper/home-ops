@@ -77,7 +77,7 @@ machine:
             enable_unprivileged_icmp = true
   install:
     # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
-    image: factory.talos.dev/metal-installer/ca4e814e9b30bbcdf282715f2a93fd9b130ae8f75109ccaef45e06382a08caf5:v1.12.7
+    image: factory.talos.dev/metal-installer/ca4e814e9b30bbcdf282715f2a93fd9b130ae8f75109ccaef45e06382a08caf5:v1.13.0
     grubUseUKICmdline: true
     diskSelector:
       model: "SQF-C3AV1-256GDEDM"
