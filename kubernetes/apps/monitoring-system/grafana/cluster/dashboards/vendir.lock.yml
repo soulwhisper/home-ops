@@ -82,12 +82,12 @@ directories:
     path: k8s-volumes
   path: _sources/kubernetes
 - contents:
-  - configDigest: 411a62746d19ff480ceb8eab175ffa85f150fb7c223c09ea2aef9e0c93aa81c1
+  - configDigest: 6af6f47b968aa7ced3ee5b5724f031fac08e0557608af64e89169760cd27b72e
     git:
-      commitTitle: follow-up for  d07c1c73d1b830bb15c00241d7d0c2926a635d20...
-      sha: 33d524bf137e5fe7054fcdafa2d5db5ed2400d9f
+      commitTitle: 'docs/changelog: cut release v1.141.0...'
+      sha: b803a46e7f474649e3d7a770bf49f4e53a979d9c
       tags:
-      - v1.140.0
+      - v1.141.0
     path: metrics
   - configDigest: f9f340d02610177b691d9f4f7adba5b56dc7a6a6933985eac839eae67c5f6c41
     git:
