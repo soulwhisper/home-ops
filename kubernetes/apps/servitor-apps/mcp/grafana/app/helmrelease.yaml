@@ -23,7 +23,7 @@ spec:
           app:
             image:
               repository: grafana/mcp-grafana
-              tag: 0.12.0
+              tag: 0.12.1
             command:
               - "--transport"
               - "streamable-http"
