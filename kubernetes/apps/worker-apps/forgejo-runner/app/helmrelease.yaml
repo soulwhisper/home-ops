@@ -42,7 +42,7 @@ spec:
               - env:
                   - name: DEBIAN_FRONTEND
                     value: noninteractive
-                image: ghcr.io/soulwhisper/forgejo-runner:ubuntu-24.04
+                image: ghcr.io/soulwhisper/forgejo-runner-gitops:ubuntu-24.04
                 imagePullPolicy: IfNotPresent
                 name: main
                 resources:
@@ -91,7 +91,7 @@ spec:
                     value: "1"
                   - name: DOCKER_CERT_PATH
                     value: /certs/client
-                image: ghcr.io/soulwhisper/forgejo-runner:ubuntu-24.04
+                image: ghcr.io/soulwhisper/forgejo-runner-gitops:ubuntu-24.04
                 imagePullPolicy: IfNotPresent
                 name: main
                 resources:

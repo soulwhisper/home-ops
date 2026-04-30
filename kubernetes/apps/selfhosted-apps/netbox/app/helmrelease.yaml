@@ -94,8 +94,8 @@ spec:
         type: Recreate
     # below is the reason using official chart
     image:
-      repository: ghcr.io/soulwhisper/netbox-custom
-      tag: 4.5.8
+      repository: ghcr.io/soulwhisper/netbox
+      tag: 4.5.9
     plugins:
       - netbox_attachments
       - netbox_bgp
