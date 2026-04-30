@@ -1,0 +1,148 @@
+---
+# Zot
+# with patch: infrastructure/talos/test/30-private-mirrors.yaml
+# replace 'https://zot.noirprime.com' with 'http://10.10.0.100:9002'
+
+services:
+  zotregistry:
+    image: "ghcr.io/project-zot/zot-linux-amd64:v2.1.16"
+    container_name: "zotregistry"
+    restart: "unless-stopped"
+    ports:
+      - "9002:9002/tcp"
+    configs:
+      - source: "config.json"
+        target: "/etc/zot/config.json"
+    volumes:
+      - "/volume3/docker/zotregistry:/var/lib/zotregistry"
+
+configs:
+  config.json:
+    content: |
+      {
+        "distSpecVersion": "1.1.0",
+        "storage": {
+          "rootDirectory": "/var/lib/zotregistry",
+          "commit": false,
+          "dedupe": true,
+          "gc": true,
+          "gcDelay": "1h",
+          "gcInterval": "24h",
+          "retention": {
+            "dryRun": false,
+            "delay": "24h",
+            "policies": [
+              {
+                "repositories": ["**"],
+                "deleteReferrers": true,
+                "deleteUntagged": true,
+                "keepTags": [
+                  {
+                    "mostRecentlyPushedCount": 10,
+                    "mostRecentlyPulledCount": 5
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "http": {
+          "address": "0.0.0.0",
+          "port": "9002"
+        },
+        "log": {
+          "level": "debug"
+        },
+        "extensions": {
+          "ui": {
+            "enable": true
+          },
+          "search": {
+            "enable": true,
+            "cve": {
+              "updateInterval": "2h"
+            }
+          },
+          "scrub": {
+            "enable": true,
+            "interval": "24h"
+          },
+          "sync": {
+            "enable": true,
+            "registries": [
+              {
+                "urls": ["https://index.docker.io"],
+                "content": [
+                  {
+                    "prefix": "**",
+                    "destination": "/docker.io",
+                    "stripPrefix": true
+                  }
+                ],
+                "onDemand": true,
+                "tlsVerify": true
+              },
+              {
+                "urls": ["https://gcr.io"],
+                "content": [
+                  {
+                    "prefix": "**",
+                    "destination": "/gcr.io",
+                    "stripPrefix": true
+                  }
+                ],
+                "onDemand": true,
+                "tlsVerify": true
+              },
+              {
+                "urls": ["https://ghcr.io"],
+                "content": [
+                  {
+                    "prefix": "**",
+                    "destination": "/ghcr.io",
+                    "stripPrefix": true
+                  }
+                ],
+                "onDemand": true,
+                "tlsVerify": true
+              },
+              {
+                "urls": ["https://quay.io"],
+                "content": [
+                  {
+                    "prefix": "**",
+                    "destination": "/quay.io",
+                    "stripPrefix": true
+                  }
+                ],
+                "onDemand": true,
+                "tlsVerify": true
+              },
+              {
+                "urls": ["https://registry.k8s.io"],
+                "content": [
+                  {
+                    "prefix": "**",
+                    "destination": "/registry.k8s.io",
+                    "stripPrefix": true
+                  }
+                ],
+                "onDemand": true,
+                "tlsVerify": true
+              },
+              {
+                "urls": ["https://public.ecr.aws"],
+                "content": [
+                  {
+                    "prefix": "**",
+                    "destination": "/public.ecr.aws",
+                    "stripPrefix": true
+                  }
+                ],
+                "onDemand": true,
+                "tlsVerify": true
+              }
+            ]
+          }
+        }
+      }

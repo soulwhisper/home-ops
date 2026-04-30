@@ -1,0 +1,31 @@
+---
+# forgejo
+# nas.homelab.internal A 10.10.0.100
+# worker HTTP => http://nas.homelab.internal:9003
+# worker SSH => ssh://nas.homelab.internal:9004
+
+services:
+  forgejo:
+    image: "codeberg.org/forgejo/forgejo:15.0.1"
+    container_name: "forgejo"
+    restart: "unless-stopped"
+    ports:
+      - "9003:9003/tcp"
+      - "9004:9004/tcp"
+    environment:
+      - "DEFAULT_UI_LOCATION=Asia/Shanghai"
+      - "USER_UID=1000"
+      - "USER_GID=1000"
+      # server
+      - "DOMAIN=nas.homelab.internal"
+      - "HTTP_PORT=9003"
+      - "SSH_PORT=9004"
+      - "DB_TYPE=sqlite3"
+      - "LFS_START_SERVER=true"
+      - "START_SSH_SERVER=true"
+      # webhook
+      - "ALLOWED_HOST_LIST=private"
+      - "SKIP_TLS_VERIFY=true"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/volume3/docker/forgejo:/data"
