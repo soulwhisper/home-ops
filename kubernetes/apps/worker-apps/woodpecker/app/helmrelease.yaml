@@ -1,0 +1,40 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name woodpecker
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: woodpecker
+
+  values:
+    agent:
+      env:
+        WOODPECKER_SERVER: "woodpecker-server:9000"
+        WOODPECKER_BACKEND: "kubernetes"
+        WOODPECKER_BACKEND_K8S_NAMESPACE: "worker-apps"
+        WOODPECKER_BACKEND_K8S_NAMESPACE_PER_ORGANIZATION: "false"
+        WOODPECKER_BACKEND_K8S_STORAGE_CLASS: "ceph-filesystem"
+        WOODPECKER_BACKEND_K8S_VOLUME_SIZE: "10G"
+        WOODPECKER_BACKEND_K8S_STORAGE_RWX: true
+        WOODPECKER_BACKEND_K8S_POD_LABELS: ""
+        WOODPECKER_BACKEND_K8S_POD_ANNOTATIONS: ""
+        WOODPECKER_CONNECT_RETRY_COUNT: "3"
+    server:
+      env:
+        WOODPECKER_HOST: "https://ci.noirprime.com"
+        WOODPECKER_OPEN: "true"
+      extraSecretNamesForEnvFrom: ["woodpecker"]
+      persistentVolume:
+        enabled: true
+        size: 10Gi
+        storageClass: ceph-block
+      prometheus:
+        podmonitor:
+          enabled: true
+          interval: 60s
+      metrics:
+        enabled: true

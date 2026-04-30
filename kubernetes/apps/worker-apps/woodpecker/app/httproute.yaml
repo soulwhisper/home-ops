@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: woodpecker
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/icon: woodpecker-ci.svg
+    gethomepage.dev/name: Woodpecker
+    gethomepage.dev/group: Service
+spec:
+  hostnames: ["ci.noirprime.com"]
+  parentRefs:
+    - name: kgateway-internal
+      namespace: networking-system
+
+  rules:
+    - backendRefs:
+        - name: woodpecker-server
+          namespace: worker-apps
+          port: 80
