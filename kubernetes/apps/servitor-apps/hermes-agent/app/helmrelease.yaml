@@ -30,7 +30,7 @@ spec:
           app:
             image:
               repository: nousresearch/hermes-agent
-              tag: v2026.4.23
+              tag: v2026.4.30
             args: ["gateway", "run"]
             env:
               HERMES_UID: "2000"
@@ -71,7 +71,7 @@ spec:
           web:
             image:
               repository: nousresearch/hermes-agent
-              tag: v2026.4.23
+              tag: v2026.4.30
             args: ["dashboard"]
             env:
               GATEWAY_HEALTH_URL: "http://localhost:8642"
