@@ -136,7 +136,7 @@ spec:
           register-runner:
             image:
               repository: code.forgejo.org/forgejo/runner
-              tag: 12.9.0
+              tag: 12.10.0
             command:
               - sh
               - -c
@@ -162,7 +162,7 @@ spec:
           runner:
             image:
               repository: code.forgejo.org/forgejo/runner
-              tag: 12.9.0
+              tag: 12.10.0
             command:
               - /bin/forgejo-runner
               - daemon
