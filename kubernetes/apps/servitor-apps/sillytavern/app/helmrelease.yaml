@@ -22,7 +22,7 @@ spec:
           app:
             image:
               repository: ghcr.io/sillytavern/sillytavern
-              tag: 1.17.0
+              tag: 1.18.0
             env:
               SILLYTAVERN_WHITELIST: '["0.0.0.0/0", "::/0"]'
               SILLYTAVERN_ENABLEUSERACCOUNTS: "false"
