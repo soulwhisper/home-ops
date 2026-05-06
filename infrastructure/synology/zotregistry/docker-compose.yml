@@ -1,20 +1,87 @@
 ---
-# Zot
-# with patch: infrastructure/talos/test/30-private-mirrors.yaml
-# replace 'https://zot.noirprime.com' with 'http://10.10.0.100:9002'
+# Zot Clustering
+# with patch: infrastructure/talos/prod/30-private-mirrors.yaml
+# set zot.homelab.internal A 10.10.0.81-83
+
+name: zotregistry
+
+x-zot-shared: &zot-shared
+  image: "ghcr.io/project-zot/zot-linux-amd64:v2.1.16"
+  restart: "unless-stopped"
+  ulimits:
+    nofile:
+      soft: 65536
+      hard: 65536
+  configs:
+    - source: "config.json"
+      target: "/etc/zot/config.json"
+  env_file:
+    - zotregistry.sops.env
+  depends_on:
+    valkey:
+      condition: service_healthy
 
 services:
-  zotregistry:
-    image: "ghcr.io/project-zot/zot-linux-amd64:v2.1.16"
-    container_name: "zotregistry"
+  zot-valkey:
+    image: "valkey/valkey:8.1-alpine"
+    container_name: "zot-valkey"
     restart: "unless-stopped"
-    ports:
-      - "9002:9002/tcp"
-    configs:
-      - source: "config.json"
-        target: "/etc/zot/config.json"
-    volumes:
-      - "/volume3/docker/zotregistry:/var/lib/zotregistry"
+    networks:
+      zot-internal: {}
+    command:
+      - "valkey-server"
+      - "--appendonly"
+      - "no"
+      - "--save"
+      - ""
+      - "--maxmemory"
+      - "256mb"
+      - "--maxmemory-policy"
+      - "allkeys-lru"
+      - "--protected-mode"
+      - "no"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  zot-1:
+    <<: *zot-shared
+    container_name: "zot-1"
+    networks:
+      zot-internal: {}
+      zot-lan:
+        ipv4_address: "10.10.0.81"
+
+  zot-2:
+    <<: *zot-shared
+    container_name: "zot-2"
+    networks:
+      zot-internal: {}
+      zot-lan:
+        ipv4_address: "10.10.0.82"
+
+  zot-3:
+    <<: *zot-shared
+    container_name: "zot-3"
+    networks:
+      zot-internal: {}
+      zot-lan:
+        ipv4_address: "10.10.0.83"
+
+networks:
+  zot-internal:
+    driver: bridge
+  zot-lan:
+    driver: macvlan
+    driver_opts:
+      parent: "${MACVLAN_PARENT:-bond0}"
+    ipam:
+      config:
+        - subnet: 10.10.0.0/24
+          gateway: 10.10.0.254
+          ip_range: 10.10.0.80/30
 
 configs:
   config.json:
@@ -22,12 +89,26 @@ configs:
       {
         "distSpecVersion": "1.1.0",
         "storage": {
-          "rootDirectory": "/var/lib/zotregistry",
+          "rootDirectory": "/tmp/zot",
           "commit": false,
           "dedupe": true,
           "gc": true,
-          "gcDelay": "1h",
+          "gcDelay": "2h",
           "gcInterval": "24h",
+          "remoteCache": true,
+          "cacheDriver": {
+            "name": "redis",
+            "url": "redis://zot-valkey:6379"
+          },
+          "storageDriver": {
+            "name": "s3",
+            "rootdirectory": "/zot",
+            "region": "us-east-1",
+            "regionendpoint": "nas.homelab.internal:9000",
+            "bucket": "zot",
+            "secure": false,
+            "skipverify": false
+          },
           "retention": {
             "dryRun": false,
             "delay": "24h",
@@ -46,12 +127,20 @@ configs:
             ]
           }
         },
+        "cluster": {
+          "members": [
+            "zot-1:9002",
+            "zot-2:9002",
+            "zot-3:9002"
+          ],
+          "hashKey": "pL3sD6fG8hJ9kL0zXcVbN1mQ2wE4rT5yU7iI8oO9pPaAsSdDfFgGhHjJkK"
+        },
         "http": {
           "address": "0.0.0.0",
           "port": "9002"
         },
         "log": {
-          "level": "debug"
+          "level": "warn"
         },
         "extensions": {
           "ui": {
@@ -71,7 +160,7 @@ configs:
             "enable": true,
             "registries": [
               {
-                "urls": ["https://index.docker.io"],
+                "urls": ["https://mirror.gcr.io"],
                 "content": [
                   {
                     "prefix": "**",

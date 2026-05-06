@@ -56,3 +56,20 @@ spec:
       namespace: database-system
     - name: rook-ceph-cluster
       namespace: storage-system
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name cnpg-maintenance
+  annotations:
+    config.home-ops.io/managed: "true"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: database-system
+  path: ./kubernetes/apps/database-system/cnpg-operator/maintenance
+  dependsOn:
+    - name: cnpg-cluster
+      namespace: database-system

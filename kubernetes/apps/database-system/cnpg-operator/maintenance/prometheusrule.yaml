@@ -9,14 +9,26 @@ metadata:
     role: alert-rules
 spec:
   groups:
-    # Optional, Monthly DR rehearsal checks, work with forgejo runners
     - name: dr-test.rules
       rules:
-        - alert: DRTestOverdue
+        - alert: PostgresBackupVerifyFailed
           expr: |
-            (time() - dr_test_last_success_timestamp{target="postgres"}) > 60 * 60 * 24 * 45
-            or absent(dr_test_last_success_timestamp{target="postgres"})
+            kube_job_status_failed{namespace="database-system",job_name=~"postgres-backup-verify-.*"} > 0
+          for: 15m
+          labels: { severity: critical }
+          annotations:
+            summary: Postgres WAL archive verification job failed
+            description: |
+              The weekly barman-cloud-check-wal-archive job has reported
+              a failure. The S3 backup chain may be broken — recent backups
+              might not be restorable. Investigate before next backup window.
+        - alert: PostgresBackupVerifyMissing
+          expr: |
+            (time() - max(kube_job_status_completion_time{namespace="database-system",job_name=~"postgres-backup-verify-.*"})) > 60 * 60 * 24 * 10
           for: 1h
           labels: { severity: warning }
           annotations:
-            summary: DR rehearsal has not succeeded in over 45 days
+            summary: Postgres backup verification has not run in 10 days
+            description: |
+              No successful run of postgres-backup-verify in the last 10 days
+              (expected weekly). CronJob may be suspended or pod scheduling blocked.

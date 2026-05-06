@@ -17,6 +17,7 @@ spec:
         type: cronjob
         cronjob:
           schedule: "0 4 * * 0"
+          activeDeadlineSeconds: 1800 # 30m
           backoffLimit: 0
           concurrencyPolicy: Forbid
           failedJobsHistory: 1
@@ -24,85 +25,43 @@ spec:
         pod:
           securityContext:
             runAsNonRoot: true
-            runAsUser: 2000
-            runAsGroup: 2000
-            fsGroup: 2000
-            fsGroupChangePolicy: OnRootMismatch
+            runAsUser: 65534
+            runAsGroup: 65534
         containers:
           app:
             image:
               repository: ghcr.io/cloudnative-pg/plugin-barman-cloud
-              tag: v5.11.36
+              tag: v0.6.0
             command:
               - barman-cloud-check-wal-archive
+            args:
               - --endpoint-url=http://nas.homelab.internal:9000
               - s3://postgres/
               - postgres-v1
             env:
-              - name: AWS_ACCESS_KEY_ID
+              AWS_ACCESS_KEY_ID:
                 valueFrom:
                   secretKeyRef:
                     name: cloudnative-pg
                     key: aws-access-key-id
-              - name: AWS_SECRET_ACCESS_KEY
+              AWS_SECRET_ACCESS_KEY:
                 valueFrom:
                   secretKeyRef:
                     name: cloudnative-pg
                     key: aws-secret-access-key
             resources:
               requests:
-                cpu: 100m
+                cpu: 10m
+                memory: 64Mi
               limits:
-                memory: 512Mi
+                memory: 256Mi
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
 
     persistence:
-      app:
-        type: secret
-        name: *name
-        globalMounts:
-          - path: /usr/src/app/config/mumc_config.yaml
-            subPath: mumc_config.yaml
       tmpfs:
         type: emptyDir
         globalMounts:
-          - path: /usr/src/app/logs
-            subPath: logs
----
-apiVersion: batch/v1
-kind: CronJob
-# Weekly backup verification — exits non-zero if WAL archive is broken.
-# Surfaces as PrometheusRule via kube-state-metrics jobs metrics.
-metadata:
-  name: postgres-backup-verify
-spec:
-  schedule: "0 4 * * 0"
-  concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 1
-  failedJobsHistoryLimit: 3
-  jobTemplate:
-    spec:
-      backoffLimit: 0
-      template:
-        spec:
-          restartPolicy: Never
-          containers:
-            - name: verify
-              image: ghcr.io/cloudnative-pg/plugin-barman-cloud:v0.6.0
-              env:
-                - name: AWS_ACCESS_KEY_ID
-                  valueFrom:
-                    secretKeyRef:
-                      { name: cloudnative-pg, key: aws-access-key-id }
-                - name: AWS_SECRET_ACCESS_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      { name: cloudnative-pg, key: aws-secret-access-key }
-              command:
-                - barman-cloud-check-wal-archive
-                - --endpoint-url=http://nas.homelab.internal:9000
-                - s3://postgres/
-                - postgres-v1
+          - path: /tmp
