@@ -137,8 +137,10 @@ reset node:
   case "$confirm" in
     y|Y)
       if [ "{{node}}" = "cluster" ]; then
-        talosctl reset --system-labels-to-wipe STATE \
+        talosctl reset \
+          --system-labels-to-wipe STATE \
           --system-labels-to-wipe EPHEMERAL \
+          --system-labels-to-wipe u-local-hostpath \
           --graceful=false --wait=false --reboot
       else
         talosctl -n {{node}} reset --graceful=false --reboot

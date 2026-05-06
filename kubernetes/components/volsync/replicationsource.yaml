@@ -14,7 +14,7 @@ spec:
     cacheAccessModes:
       - "${VOLSYNC_CACHE_ACCESSMODES:-ReadWriteOnce}"
     cacheCapacity: "${VOLSYNC_CACHE_CAPACITY:-5Gi}"
-    cacheStorageClassName: "${VOLSYNC_CACHE_SNAPSHOTCLASS:-ceph-block}" # openebs-hostpath disabled until system on pcie3x2
+    cacheStorageClassName: "${VOLSYNC_CACHE_SNAPSHOTCLASS:-openebs-hostpath}"
     compression: zstd-fastest
     copyMethod: Snapshot
     moverSecurityContext:

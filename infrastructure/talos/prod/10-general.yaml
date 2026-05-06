@@ -186,3 +186,20 @@ name: docker.io
 endpoints:
   - url: https://mirror.gcr.io
 skipFallback: false
+# until '20-mount-hostpath.yaml' is implemented
+---
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+provisioning:
+  diskSelector:
+    match: system_disk
+  maxSize: 80GiB
+---
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: local-hostpath
+provisioning:
+  diskSelector:
+    match: system_disk
+  maxSize: 140GiB

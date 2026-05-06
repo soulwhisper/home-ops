@@ -5,6 +5,6 @@ name: local-cache
 volumeType: disk
 provisioning:
   diskSelector:
-    match: '/dev/disk/by-path/pci-0000:59:00.0-nvme-1' in disk.symlinks
+    match: "'/dev/disk/by-path/pci-0000:59:00.0-nvme-1' in disk.symlinks"
 filesystem:
   type: xfs

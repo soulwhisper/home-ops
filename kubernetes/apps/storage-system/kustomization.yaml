@@ -7,6 +7,7 @@ components:
   - ../../components/namespace
 resources:
   - ./csi-driver-nfs/ks.yaml
+  - ./openebs-localpv/ks.yaml
   - ./rook-ceph/ks.yaml
   - ./snapshot-controller/ks.yaml
   - ./volsync/ks.yaml

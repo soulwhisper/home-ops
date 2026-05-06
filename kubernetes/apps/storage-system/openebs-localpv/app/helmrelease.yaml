@@ -11,16 +11,16 @@ spec:
     name: openebs-localpv
 
   values:
-    analytics:
-      enabled: false
     fullnameOverride: *name
     global:
-      imageRegistry: "mirror.gcr.io"
+      imageRegistry: "quay.io"
+    analytics:
+      enabled: false
     hostpathClass:
       enabled: true
       name: openebs-hostpath
       isDefaultClass: false
     localpv:
       replicas: 2
-      # with '35-mount-hostpath.yaml'
-      basePath: /var/mnt/local-cache
+      # Optional, use '/var/mnt/local-cache' with '20-mount-hostpath.yaml'
+      basePath: /var/mnt/local-hostpath
