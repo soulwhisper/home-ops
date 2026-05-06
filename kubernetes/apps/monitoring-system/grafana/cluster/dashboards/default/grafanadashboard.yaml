@@ -190,60 +190,60 @@ spec:
   configMapRef:
     name: dashboard-blackbox-exporter
     key: blackbox-exporter.json
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDashboard
-metadata:
-  name: unifi-sites
-spec:
-  folderRef: devices
-  resyncPeriod: 30m
-  allowCrossNamespaceImport: true
-  instanceSelector:
-    matchLabels:
-      grafana.internal/instance: grafana
-  datasources:
-    - inputName: "DS_PROMETHEUS"
-      datasourceName: "victoria-metrics"
-  configMapRef:
-    name: dashboard-unifi-sites
-    key: unifi-sites.json
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDashboard
-metadata:
-  name: unifi-uap
-spec:
-  folderRef: devices
-  resyncPeriod: 30m
-  allowCrossNamespaceImport: true
-  instanceSelector:
-    matchLabels:
-      grafana.internal/instance: grafana
-  datasources:
-    - inputName: "DS_PROMETHEUS"
-      datasourceName: "victoria-metrics"
-  configMapRef:
-    name: dashboard-unifi-uap
-    key: unifi-uap.json
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDashboard
-metadata:
-  name: unifi-clients
-spec:
-  folderRef: devices
-  resyncPeriod: 30m
-  allowCrossNamespaceImport: true
-  instanceSelector:
-    matchLabels:
-      grafana.internal/instance: grafana
-  datasources:
-    - inputName: "DS_PROMETHEUS"
-      datasourceName: "victoria-metrics"
-  configMapRef:
-    name: dashboard-unifi-clients
-    key: unifi-clients.json
+# ---
+# # yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# apiVersion: grafana.integreatly.org/v1beta1
+# kind: GrafanaDashboard
+# metadata:
+#   name: unifi-sites
+# spec:
+#   folderRef: devices
+#   resyncPeriod: 30m
+#   allowCrossNamespaceImport: true
+#   instanceSelector:
+#     matchLabels:
+#       grafana.internal/instance: grafana
+#   datasources:
+#     - inputName: "DS_PROMETHEUS"
+#       datasourceName: "victoria-metrics"
+#   configMapRef:
+#     name: dashboard-unifi-sites
+#     key: unifi-sites.json
+# ---
+# # yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# apiVersion: grafana.integreatly.org/v1beta1
+# kind: GrafanaDashboard
+# metadata:
+#   name: unifi-uap
+# spec:
+#   folderRef: devices
+#   resyncPeriod: 30m
+#   allowCrossNamespaceImport: true
+#   instanceSelector:
+#     matchLabels:
+#       grafana.internal/instance: grafana
+#   datasources:
+#     - inputName: "DS_PROMETHEUS"
+#       datasourceName: "victoria-metrics"
+#   configMapRef:
+#     name: dashboard-unifi-uap
+#     key: unifi-uap.json
+# ---
+# # yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/grafana.integreatly.org/grafanadashboard_v1beta1.json
+# apiVersion: grafana.integreatly.org/v1beta1
+# kind: GrafanaDashboard
+# metadata:
+#   name: unifi-clients
+# spec:
+#   folderRef: devices
+#   resyncPeriod: 30m
+#   allowCrossNamespaceImport: true
+#   instanceSelector:
+#     matchLabels:
+#       grafana.internal/instance: grafana
+#   datasources:
+#     - inputName: "DS_PROMETHEUS"
+#       datasourceName: "victoria-metrics"
+#   configMapRef:
+#     name: dashboard-unifi-clients
+#     key: unifi-clients.json

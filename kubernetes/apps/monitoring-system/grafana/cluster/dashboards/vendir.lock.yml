@@ -1,138 +1,133 @@
 apiVersion: vendir.k14s.io/v1alpha1
 directories:
-- contents:
-  - configDigest: 37575973b28981210d2f580d461e95295cdf12ccc4853abf672799d3a7916019
-    http: {}
-    path: ceph-cluster
-  - configDigest: 6c53b6534e0a755761d96f1db2cbd9c541fd7b5805d80e3fd6c47896b0e02e9e
-    http: {}
-    path: ceph-osd
-  - configDigest: 859d6eb576ccb3d4ddb6c416bf8a9c7f8beb91f30713d1a3f5acd06c21f18402
-    http: {}
-    path: ceph-pools
-  path: _sources/ceph
-- contents:
-  - configDigest: 9eec33aca17ea2a1930eac2839e61826090b5baabbb98afb2aaf983fe6ab4e07
-    git:
-      commitTitle: Prepare for release v1.19.3...
-      sha: f5eb641b18502ebeca412b40c1bec7ff3d8bf9eb
-      tags:
-      - v1.19.3
-    path: .
-  path: _sources/cilium
-- contents:
-  - configDigest: fe6d51609c2d26f1e71173afa05ac19c1addf592367367af8f6e58313f9abb6a
-    git:
-      commitTitle: Release cluster-v0.0.5 (#36)...
-      sha: cececeb393fb7c5400b4fa290aca68041293a127
-      tags:
-      - cluster-v0.0.5
-    path: cnpg
-  - configDigest: b99fa2b4330c9c642b03d00afe8a3b852ed66ea072377f1dc339f449f33e7298
-    git:
-      commitTitle: feat(operator):release version v1.5.0 (#486)...
-      sha: 2192d38824f712d203d6a490cb625a5e12526fe5
-      tags:
-      - v1.5.0
-    path: dragonfly
-  path: _sources/database
-- contents:
-  - configDigest: 23a19372237ec0ebbe558f45498408901dde6e716fd1c53877f58fb7160ccdd5
-    git:
-      commitTitle: '[release/v1.7] bump go to 1.25.9 (#8776)...'
-      sha: 097611e4ec6f2736ef601515a4126fc4e9fdb0fb
-      tags:
-      - v1.7.2
-    path: gateway
-  - configDigest: 2c2d52a9a6ad49c01930aed359636ab4d036c5735a863717a84fcc67c6d96e27
-    http: {}
-    path: envoy-mixin-overview
-  - configDigest: f7b3d87e22e139875b0714c917c852f9897543b308270227d62fc2bf00a92c57
-    http: {}
-    path: envoy-mixin-upstream
-  - configDigest: ed02d923e4710dd56eaea4d102281cfc7ee90f572169721d298502c3b20f5ceb
-    http: {}
-    path: envoy-mixin-downstream
-  path: _sources/envoy
-- contents:
-  - configDigest: c9e48287ea9684f1cf9b49549a96532a6020303e76834b5373e81fc33eb6bc97
-    git:
-      commitTitle: 'dashboards: add initial agentgateway dashboard (#3)...'
-      sha: ed6c5b2177981126a0eb9b73e919c6a59e5b839b
-    path: .
-  path: _sources/kgateway
-- contents:
-  - configDigest: e2b09003c7643f7797f26aafc5a5bda8981bfb6778986db52397f1c1f1a8f307
-    http: {}
-    path: k8s-system-api-server
-  - configDigest: b00ce572f00a12ece6ae115bb953afc7ae474ecd8966592373eb32fa0982ff9c
-    http: {}
-    path: k8s-views-global
-  - configDigest: 725feff831ed3d187d80fc258c6cc6a017ba213b63b90096691508832ca48c9a
-    http: {}
-    path: k8s-views-nodes
-  - configDigest: ce9ec65ce41816886ae3fbe7a107d1c303500c342e62a9faf7b393685e4e9195
-    http: {}
-    path: k8s-views-namespaces
-  - configDigest: 42d25289b64b7118b22d19a86a43885ef8eef62f1a4de5c9e4f711805342aa8c
-    http: {}
-    path: k8s-views-pods
-  - configDigest: 0b166ce4b0436a82890400fddf199b3ccc045eb3e1812b4900038f2f9b81794f
-    http: {}
-    path: k8s-volumes
-  path: _sources/kubernetes
-- contents:
-  - configDigest: 9103702a7bd632fbdfd03f3d857d3c34c7a2577254654ad7a4c6833cf794d646
-    git:
-      commitTitle: 'docs/changelog: cut release v1.142.0...'
-      sha: 64ccd2ed44828d09cafc4a4c4587c62f122f63ce
-      tags:
-      - v1.142.0
-    path: metrics
-  - configDigest: f9f340d02610177b691d9f4f7adba5b56dc7a6a6933985eac839eae67c5f6c41
-    git:
-      commitTitle: 'docs/CHANGELOG.md: cut v1.121.0'
-      sha: b1003c0e65a4d9352d6f5b7f5201e5989b687687
-      tags:
-      - v1.121.0
-    path: logs
-  path: _sources/victoria
-- contents:
-  - configDigest: 9c4f79ef06dc3bae7be46c392bde085f279012dd3410ae1b77249f0679ac00d4
-    http: {}
-    path: cert-manager
-  - configDigest: 1d57c615caf913255e49906761112b4e5b84103dcea831f473ab9a9f4ecbe135
-    http: {}
-    path: cloudflared
-  - configDigest: ffbdcb7f6c266d56f299320cbeb19e05132fdb453c05a50c01a2b660dcede111
-    http: {}
-    path: external-dns
-  - configDigest: e7b9c489ae1ab51df1583f1559d485e9e2827dc8350ce913836e8db52d6a2ffb
-    http: {}
-    path: node-exporter-full
-  - configDigest: 4df4c2d56d1559a5204d66f43dfce2e8a830e47af0cf56132b4b230d39e105f0
-    http: {}
-    path: smartctl-exporter
-  - configDigest: 1c16f4db3131b0706e512c0b1282b2f8bf78ad48282c53889156a80b6f294a22
-    http: {}
-    path: volsync
-  path: _sources/default
-- contents:
-  - configDigest: 824515bc9411036b778e951db855d12feaf87be3b0d3d1fb7829dd7c766adfcd
-    http: {}
-    path: synology
-  - configDigest: e826579f984080e908bc6b12f35b50bd8993ff18140e8b3a6eb1f19b1fe3689c
-    http: {}
-    path: openwrt
-  path: _sources/infrastructure
-- contents:
-  - configDigest: 162d4cb6ccb8dace1246e4f3f80c67d7d500ce224334875ef2c3a5aed24bbd9a
-    http: {}
-    path: blackbox-exporter
-  - configDigest: 39d7a52f0ee6fb37b39b9dd821ddb47b7b566ba1668a274cb2d631e5c1e68c62
-    git:
-      commitTitle: 'Merge pull request #55 from aharper343/feat/country-dashboard'
-      sha: bb8b3dc50f99214b748c31e8d81ca7b2154972a5
-    path: unifi
-  path: _sources/devices
+  - contents:
+      - configDigest: 37575973b28981210d2f580d461e95295cdf12ccc4853abf672799d3a7916019
+        http: {}
+        path: ceph-cluster
+      - configDigest: 6c53b6534e0a755761d96f1db2cbd9c541fd7b5805d80e3fd6c47896b0e02e9e
+        http: {}
+        path: ceph-osd
+      - configDigest: 859d6eb576ccb3d4ddb6c416bf8a9c7f8beb91f30713d1a3f5acd06c21f18402
+        http: {}
+        path: ceph-pools
+    path: _sources/ceph
+  - contents:
+      - configDigest: 9eec33aca17ea2a1930eac2839e61826090b5baabbb98afb2aaf983fe6ab4e07
+        git:
+          commitTitle: Prepare for release v1.19.3...
+          sha: f5eb641b18502ebeca412b40c1bec7ff3d8bf9eb
+          tags:
+            - v1.19.3
+        path: .
+    path: _sources/cilium
+  - contents:
+      - configDigest: fe6d51609c2d26f1e71173afa05ac19c1addf592367367af8f6e58313f9abb6a
+        git:
+          commitTitle: Release cluster-v0.0.5 (#36)...
+          sha: cececeb393fb7c5400b4fa290aca68041293a127
+          tags:
+            - cluster-v0.0.5
+        path: cnpg
+      - configDigest: b99fa2b4330c9c642b03d00afe8a3b852ed66ea072377f1dc339f449f33e7298
+        git:
+          commitTitle: feat(operator):release version v1.5.0 (#486)...
+          sha: 2192d38824f712d203d6a490cb625a5e12526fe5
+          tags:
+            - v1.5.0
+        path: dragonfly
+    path: _sources/database
+  - contents:
+      - configDigest: 23a19372237ec0ebbe558f45498408901dde6e716fd1c53877f58fb7160ccdd5
+        git:
+          commitTitle: "[release/v1.7] bump go to 1.25.9 (#8776)..."
+          sha: 097611e4ec6f2736ef601515a4126fc4e9fdb0fb
+          tags:
+            - v1.7.2
+        path: gateway
+      - configDigest: 2c2d52a9a6ad49c01930aed359636ab4d036c5735a863717a84fcc67c6d96e27
+        http: {}
+        path: envoy-mixin-overview
+      - configDigest: f7b3d87e22e139875b0714c917c852f9897543b308270227d62fc2bf00a92c57
+        http: {}
+        path: envoy-mixin-upstream
+      - configDigest: ed02d923e4710dd56eaea4d102281cfc7ee90f572169721d298502c3b20f5ceb
+        http: {}
+        path: envoy-mixin-downstream
+    path: _sources/envoy
+  - contents:
+      - configDigest: c9e48287ea9684f1cf9b49549a96532a6020303e76834b5373e81fc33eb6bc97
+        git:
+          commitTitle: "dashboards: add initial agentgateway dashboard (#3)..."
+          sha: ed6c5b2177981126a0eb9b73e919c6a59e5b839b
+        path: .
+    path: _sources/kgateway
+  - contents:
+      - configDigest: e2b09003c7643f7797f26aafc5a5bda8981bfb6778986db52397f1c1f1a8f307
+        http: {}
+        path: k8s-system-api-server
+      - configDigest: b00ce572f00a12ece6ae115bb953afc7ae474ecd8966592373eb32fa0982ff9c
+        http: {}
+        path: k8s-views-global
+      - configDigest: 725feff831ed3d187d80fc258c6cc6a017ba213b63b90096691508832ca48c9a
+        http: {}
+        path: k8s-views-nodes
+      - configDigest: ce9ec65ce41816886ae3fbe7a107d1c303500c342e62a9faf7b393685e4e9195
+        http: {}
+        path: k8s-views-namespaces
+      - configDigest: 42d25289b64b7118b22d19a86a43885ef8eef62f1a4de5c9e4f711805342aa8c
+        http: {}
+        path: k8s-views-pods
+      - configDigest: 0b166ce4b0436a82890400fddf199b3ccc045eb3e1812b4900038f2f9b81794f
+        http: {}
+        path: k8s-volumes
+    path: _sources/kubernetes
+  - contents:
+      - configDigest: 9103702a7bd632fbdfd03f3d857d3c34c7a2577254654ad7a4c6833cf794d646
+        git:
+          commitTitle: "docs/changelog: cut release v1.142.0..."
+          sha: 64ccd2ed44828d09cafc4a4c4587c62f122f63ce
+          tags:
+            - v1.142.0
+        path: metrics
+      - configDigest: f9f340d02610177b691d9f4f7adba5b56dc7a6a6933985eac839eae67c5f6c41
+        git:
+          commitTitle: "docs/CHANGELOG.md: cut v1.121.0"
+          sha: b1003c0e65a4d9352d6f5b7f5201e5989b687687
+          tags:
+            - v1.121.0
+        path: logs
+    path: _sources/victoria
+  - contents:
+      - configDigest: 9c4f79ef06dc3bae7be46c392bde085f279012dd3410ae1b77249f0679ac00d4
+        http: {}
+        path: cert-manager
+      - configDigest: 1d57c615caf913255e49906761112b4e5b84103dcea831f473ab9a9f4ecbe135
+        http: {}
+        path: cloudflared
+      - configDigest: ffbdcb7f6c266d56f299320cbeb19e05132fdb453c05a50c01a2b660dcede111
+        http: {}
+        path: external-dns
+      - configDigest: e7b9c489ae1ab51df1583f1559d485e9e2827dc8350ce913836e8db52d6a2ffb
+        http: {}
+        path: node-exporter-full
+      - configDigest: 4df4c2d56d1559a5204d66f43dfce2e8a830e47af0cf56132b4b230d39e105f0
+        http: {}
+        path: smartctl-exporter
+      - configDigest: 1c16f4db3131b0706e512c0b1282b2f8bf78ad48282c53889156a80b6f294a22
+        http: {}
+        path: volsync
+    path: _sources/default
+  - contents:
+      - configDigest: 824515bc9411036b778e951db855d12feaf87be3b0d3d1fb7829dd7c766adfcd
+        http: {}
+        path: synology
+      - configDigest: e826579f984080e908bc6b12f35b50bd8993ff18140e8b3a6eb1f19b1fe3689c
+        http: {}
+        path: openwrt
+    path: _sources/infrastructure
+  - contents:
+      - configDigest: 162d4cb6ccb8dace1246e4f3f80c67d7d500ce224334875ef2c3a5aed24bbd9a
+        http: {}
+        path: blackbox-exporter
+    path: _sources/devices
 kind: LockConfig

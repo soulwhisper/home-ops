@@ -11,7 +11,7 @@ spec:
   targets:
     staticConfig:
       static:
-        - pve.homelab.internal
+        - esxi.homelab.internal
         - nas.homelab.internal
         - unifi.homelab.internal
         - zigbee.homelab.internal
