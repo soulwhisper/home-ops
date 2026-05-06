@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cloudnative-pg-maintenance-rules
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    # Optional, Monthly DR rehearsal checks, work with forgejo runners
+    - name: dr-test.rules
+      rules:
+        - alert: DRTestOverdue
+          expr: |
+            (time() - dr_test_last_success_timestamp{target="postgres"}) > 60 * 60 * 24 * 45
+            or absent(dr_test_last_success_timestamp{target="postgres"})
+          for: 1h
+          labels: { severity: warning }
+          annotations:
+            summary: DR rehearsal has not succeeded in over 45 days
