@@ -17,6 +17,16 @@ spec:
         enabled: true
         http:
           honorLabels: true
+        metricRelabelings:
+          # kube_pod_container_status_(waiting|terminated)_reason explodes container × reason matrix.
+          # Drop the per-reason rows; keep aggregated counters via the no-reason variants.
+          - action: drop
+            sourceLabels: [__name__]
+            regex: kube_pod_container_status_(waiting|terminated)_reason
+          # Init container status
+          - action: drop
+            sourceLabels: [__name__]
+            regex: kube_pod_init_container_status_(waiting|terminated)_reason
     rbac:
       extraRules:
         - apiGroups:

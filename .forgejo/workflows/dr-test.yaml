@@ -1,0 +1,74 @@
+---
+# ! WIP
+# Monthly DR rehearsal: restore the production CNPG cluster into a
+# disposable namespace from the latest barman-cloud backup, validate
+# that postgres comes up & is queryable, then tear down. Pushes a
+# `dr_test_last_success_timestamp` metric to VictoriaMetrics on success.
+name: dr-test
+on:
+  schedule:
+    # 03:00 UTC on the 1st of every month
+    - cron: "0 3 1 * *"
+  workflow_dispatch: {}
+
+jobs:
+  postgres-restore:
+    runs-on: default
+    timeout-minutes: 60
+    env:
+      NS: dr-test-postgres-${{ github.run_id }}
+      VM_PUSH_URL: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/import/prometheus
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Render restore manifest
+        run: |
+          mkdir -p out
+          # take the production cluster, rename it, switch to recovery bootstrap
+          yq '
+            .metadata.namespace = strenv(NS) |
+            .metadata.name = "postgres-dr" |
+            .spec.instances = 1 |
+            .spec.bootstrap = {"recovery": {"source": "postgres-v1"}} |
+            .spec.externalClusters = [{
+              "name": "postgres-v1",
+              "plugin": {
+                "name": "barman-cloud.cloudnative-pg.io",
+                "parameters": {"barmanObjectName": "barman-cloud", "serverName": "postgres-v1"}
+              }
+            }]
+          ' kubernetes/apps/database-system/cnpg-operator/cluster/postgres.yaml > out/postgres.yaml
+
+      - name: Apply
+        run: |
+          kubectl create ns "$NS" --dry-run=client -o yaml | kubectl apply -f -
+          # Copy the secrets needed for restore into the new ns.
+          kubectl -n database-system get secret cloudnative-pg -o yaml \
+            | yq '.metadata.namespace = strenv(NS) | del(.metadata.uid,.metadata.resourceVersion,.metadata.creationTimestamp)' \
+            | kubectl apply -f -
+          # Plugin needs the ObjectStore replicated.
+          kubectl -n database-system get objectstore barman-cloud -o yaml \
+            | yq '.metadata.namespace = strenv(NS) | del(.metadata.uid,.metadata.resourceVersion,.metadata.creationTimestamp)' \
+            | kubectl apply -f -
+          kubectl apply -f out/postgres.yaml
+
+      - name: Wait for cluster ready
+        run: |
+          kubectl -n "$NS" wait --for=condition=Ready cluster/postgres-dr --timeout=30m
+
+      - name: Validate
+        run: |
+          kubectl -n "$NS" exec postgres-dr-1 -c postgres -- \
+            psql -U postgres -tAc "SELECT count(*) FROM pg_database WHERE datname='immich';" \
+            | grep -q '^1$'
+
+      - name: Push success metric
+        if: success()
+        run: |
+          ts=$(date +%s)
+          curl -fsSL --data-binary "dr_test_last_success_timestamp{job=\"dr-test\",target=\"postgres\"} $ts" "$VM_PUSH_URL"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          kubectl delete ns "$NS" --wait=false --ignore-not-found

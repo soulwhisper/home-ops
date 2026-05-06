@@ -33,12 +33,16 @@ spec:
     # : http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428
     vmsingle:
       spec:
-        retentionPeriod: "90d"
+        retentionPeriod: "30d"
         storage:
           storageClassName: ceph-block
           resources:
             requests:
-              storage: 50Gi
+              storage: 100Gi
+        # cap series intake to protect Ceph from runaway cardinality
+        extraArgs:
+          storage.maxHourlySeries: "200000"
+          storage.maxDailySeries: "500000"
 
     # : vmalert
     # : http://vmalert-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8080
@@ -150,13 +154,22 @@ spec:
       vmScrape:
         spec:
           metricRelabelConfigs:
-            # Drop high cardinality labels
+            # Drop high-cardinality histogram buckets (keep _sum/_count for averages).
+            # Trade-off: K8s SLI dashboards lose P99 latency panels.
             - action: drop
               sourceLabels: [__name__]
               regex: (apiserver|etcd|rest_client)_request(|_sli|_slo)_duration_seconds_bucket
             - action: drop
               sourceLabels: [__name__]
               regex: (apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket)
+            # Admission control is patched out by Talos; no point in scraping.
+            - action: drop
+              sourceLabels: [__name__]
+              regex: apiserver_admission_.+
+            # Watch cache & long-running rq are platform-engineering metrics.
+            - action: drop
+              sourceLabels: [__name__]
+              regex: apiserver_(longrunning_requests|registered_watchers|init_events_total)
 
     kubelet:
       vmScrape:
@@ -172,10 +185,11 @@ spec:
             - sourceLabels: [id, pod]
               action: drop
               regex: ".+;"
+            # KEEP container_blkio_device_usage_total — needed for per-pod IOPS panels.
             # Optional, Drop less useful container blkio metrics.
-            - sourceLabels: [__name__]
-              action: drop
-              regex: "container_blkio_device_usage_total"
+            # - sourceLabels: [__name__]
+            #   action: drop
+            #   regex: "container_blkio_device_usage_total"
             # Optional, Drop less useful container filesystem io metrics.
             - sourceLabels: [__name__]
               action: drop
@@ -184,6 +198,11 @@ spec:
             - sourceLabels: [__name__]
               action: drop
               regex: "container_(tasks_state|threads_max)"
+            # Drop kubelet runtime/PLEG/volume_manager bucket histograms — Talos changes
+            # are infrequent, panels rarely consulted.
+            - action: drop
+              sourceLabels: [__name__]
+              regex: (kubelet_runtime_operations|kubelet_pod_worker_duration_seconds|kubelet_pleg_relist_duration_seconds|volume_manager_.+)_bucket
 
     # disable chart components
     grafana:

@@ -144,12 +144,15 @@ spec:
           *name :
             app:
               - path: /data
+      cache:
+        existingClaim: immich-cache
+        advancedMounts:
+          *name :
+            machine-learning:
+              - path: /cache
       tmpfs:
         type: emptyDir
         advancedMounts:
           *name :
             machine-learning:
-              - path: /cache
-                subPath: cache
               - path: /tmp
-                subPath: tmp

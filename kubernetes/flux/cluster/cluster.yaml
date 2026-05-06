@@ -58,6 +58,8 @@ spec:
           name: _
         spec:
           dependsOn:
+            - name: cert-manager
+              namespace: security-system
             - name: onepassword-connect
               namespace: security-system
             - name: rook-ceph-cluster

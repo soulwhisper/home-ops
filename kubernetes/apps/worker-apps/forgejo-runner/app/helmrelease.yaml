@@ -105,10 +105,17 @@ spec:
                     mountPath: /certs
                     readOnly: true
             volumes:
-              - name: docker-storage
-                emptyDir: {}
               - name: docker-certs
                 emptyDir: {}
+              - name: docker-storage
+                ephemeral:
+                  volumeClaimTemplate:
+                    spec:
+                      accessModes: [ReadWriteOnce]
+                      storageClassName: ceph-block
+                      resources:
+                        requests:
+                          storage: 20Gi
             restartPolicy: Never
     controllers:
       *name :

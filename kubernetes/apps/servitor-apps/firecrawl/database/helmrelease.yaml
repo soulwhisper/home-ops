@@ -64,6 +64,6 @@ spec:
 
     persistence:
       app:
-        type: emptyDir
+        existingClaim: *name
         globalMounts:
           - path: /var/lib/postgresql/data

@@ -9,6 +9,7 @@ resources:
   # utils
   - ./httproute.yaml
   - ./servicemonitor.yaml
+  - ./poddisruptionbudget.yaml
   # dashboards
   - ./dashboards/ceph
   - ./dashboards/cilium

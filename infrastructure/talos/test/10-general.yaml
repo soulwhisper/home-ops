@@ -96,7 +96,7 @@ machine:
     intel.feature.node.kubernetes.io/gpu: "true"
   sysctls:
     # moviepilot requires high inotify limits for media library watching (~500k files)
-    fs.inotify.max_user_watches: 8192 # default 8192; recommended 1048576 supports large media libraries
+    fs.inotify.max_user_watches: 1048576 # default 8192; recommended 1048576 supports large media libraries
     fs.inotify.max_user_instances: 8192 # default 128; matches watches for consistency
     # ARP table size for BGP+Cilium: large cluster peering table requires expanded neighbor cache
     net.ipv4.neigh.default.gc_thresh1: 1024 # GC start threshold (default 128)

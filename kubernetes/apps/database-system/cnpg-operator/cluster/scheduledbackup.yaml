@@ -13,3 +13,56 @@ spec:
   method: plugin
   pluginConfiguration:
     name: barman-cloud.cloudnative-pg.io
+---
+apiVersion: batch/v1
+kind: CronJob
+# Weekly backup verification — exits non-zero if WAL archive is broken.
+# Surfaces as PrometheusRule via kube-state-metrics jobs metrics.
+metadata:
+  name: postgres-backup-verify
+spec:
+  schedule: "0 4 * * 0"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: verify
+              image: ghcr.io/cloudnative-pg/plugin-barman-cloud:v0.6.0
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      { name: cloudnative-pg, key: aws-access-key-id }
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      { name: cloudnative-pg, key: aws-secret-access-key }
+              command:
+                - barman-cloud-check-wal-archive
+                - --endpoint-url=http://nas.homelab.internal:9000
+                - s3://postgres/
+                - postgres-v1
+# Optional, Monthly DR rehearsal checks, work with forgejo runners.
+# ---
+# apiVersion: monitoring.coreos.com/v1
+# kind: PrometheusRule
+# metadata:
+#   name: dr-test-rules
+# spec:
+#   groups:
+#     - name: dr-test.rules
+#       rules:
+#         - alert: DRTestOverdue
+#           expr: |
+#             (time() - dr_test_last_success_timestamp{target="postgres"}) > 60 * 60 * 24 * 45
+#             or absent(dr_test_last_success_timestamp{target="postgres"})
+#           for: 1h
+#           labels: { severity: warning }
+#           annotations:
+#             summary: DR rehearsal has not succeeded in over 45 days

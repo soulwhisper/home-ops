@@ -15,9 +15,10 @@ spec:
     mode: deployment
     replicaCount: 1
     image:
-      repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib
+      repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
     command:
-      name: "otelcol-contrib"
+      name: "otelcol-k8s"
+    useGOMEMLIMIT: true
     resources:
       requests: { cpu: 10m, memory: 512Mi }
       limits: { memory: 1Gi }
@@ -86,7 +87,7 @@ spec:
           send_batch_max_size: 2048
           timeout: 1s
       exporters:
-        otlphttp:
+        otlphttp/victoria-traces:
           endpoint: "http://victoria-traces.monitoring-system.svc.cluster.local:10428/insert/opentelemetry/v1/traces"
           tls:
             insecure: true
@@ -118,6 +119,6 @@ spec:
             processors:
               - memory_limiter
               - k8sattributes
-              - probabilistic_sampler
+              - tail_sampling
               - batch
-            exporters: [otlphttp]
+            exporters: [otlphttp/victoria-traces]
