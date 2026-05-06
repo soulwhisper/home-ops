@@ -2,7 +2,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: firecrawl-database
+  name: immich-cache
 spec:
   accessModes: [ReadWriteOnce]
   resources:

@@ -12,6 +12,8 @@ spec:
     namespace: gitops-system
 
   values:
+    defaultPodOptions:
+      automountServiceAccountToken: true
     configMaps:
       config:
         suffix: config
@@ -104,6 +106,8 @@ spec:
                   - name: docker-certs
                     mountPath: /certs
                     readOnly: true
+                  - name: docker-storage
+                    mountPath: /var/lib/docker
             volumes:
               - name: docker-certs
                 emptyDir: {}

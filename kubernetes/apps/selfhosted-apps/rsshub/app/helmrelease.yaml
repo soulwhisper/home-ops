@@ -54,6 +54,11 @@ spec:
                 memory: 1Gi
               limits:
                 memory: 2Gi
+            resizePolicy:
+              - resourceName: cpu
+                restartPolicy: NotRequired
+              - resourceName: memory
+                restartPolicy: NotRequired
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }

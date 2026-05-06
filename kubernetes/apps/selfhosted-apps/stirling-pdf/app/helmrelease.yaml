@@ -33,6 +33,11 @@ spec:
                 cpu: 10m
               limits:
                 memory: 4Gi
+            resizePolicy:
+              - resourceName: cpu
+                restartPolicy: NotRequired
+              - resourceName: memory
+                restartPolicy: NotRequired
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }

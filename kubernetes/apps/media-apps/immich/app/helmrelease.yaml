@@ -13,7 +13,6 @@ spec:
 
   values:
     defaultPodOptions:
-      automountServiceAccountToken: false
       enableServiceLinks: false
     controllers:
       *name :
@@ -112,6 +111,11 @@ spec:
               requests: *requests
               limits:
                 memory: 4Gi
+            resizePolicy:
+              - resourceName: cpu
+                restartPolicy: NotRequired
+              - resourceName: memory
+                restartPolicy: NotRequired
             securityContext: *securityContext
 
     service:

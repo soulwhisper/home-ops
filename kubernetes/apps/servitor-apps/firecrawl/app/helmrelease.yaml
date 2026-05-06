@@ -161,6 +161,11 @@ spec:
               limits:
                 cpu: 1000m
                 memory: 1536Mi
+            resizePolicy:
+              - resourceName: cpu
+                restartPolicy: NotRequired
+              - resourceName: memory
+                restartPolicy: NotRequired
 
     service:
       app:
