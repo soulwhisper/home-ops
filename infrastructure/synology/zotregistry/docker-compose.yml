@@ -22,7 +22,7 @@ x-zot-shared: &zot-shared
 
 services:
   zot-valkey:
-    image: "valkey/valkey:8.1-alpine"
+    image: "valkey/valkey:9.1-alpine"
     container_name: "zot-valkey"
     restart: "unless-stopped"
     command:
