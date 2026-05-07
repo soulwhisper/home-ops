@@ -11,6 +11,43 @@ spec:
   groups:
     - name: dr-test.rules
       rules:
+        - alert: PostgresBackupStale
+          # No successful backup in last 36h (daily schedule + 12h grace)
+          expr: |
+            (time() - cnpg_collector_last_available_backup_timestamp{namespace="database-system",pod=~"postgres-.*"}) > 60 * 60 * 36
+            or absent(cnpg_collector_last_available_backup_timestamp{namespace="database-system",pod=~"postgres-.*"})
+          for: 30m
+          labels: { severity: critical }
+          annotations:
+            summary: Postgres has no successful backup in last 36 hours
+            description: |
+              Last available backup timestamp is more than 36h old (or missing).
+              ScheduledBackup may be failing, or the barman-cloud plugin cannot
+              reach the S3 endpoint. Check `kubectl get backups -n database-system`
+              and the CNPG operator logs.
+        - alert: PostgresBackupFailing
+          expr: |
+            cnpg_collector_last_failed_backup_timestamp{namespace="database-system",pod=~"postgres-.*"}
+              > cnpg_collector_last_available_backup_timestamp{namespace="database-system",pod=~"postgres-.*"}
+          for: 1h
+          labels: { severity: warning }
+          annotations:
+            summary: Postgres latest backup attempt failed
+            description: |
+              The most recent backup attempt failed (failed_ts > available_ts).
+              Subsequent attempts may recover, but investigate to be sure.
+        - alert: PostgresWALArchiveStale
+          # WAL should be archived continuously; >1h gap with active DB suggests
+          # archive_command is failing.
+          expr: |
+            (time() - cnpg_collector_first_recoverability_point{namespace="database-system",pod=~"postgres-.*"}) > 60 * 60 * 24 * 31
+          for: 30m
+          labels: { severity: warning }
+          annotations:
+            summary: Postgres recoverability window has exceeded 31 days
+            description: |
+              The earliest recoverable point is older than retention policy (30d).
+              Either retention is not enforcing properly, or new WALs aren't archived.
         - alert: PostgresBackupVerifyFailed
           expr: |
             kube_job_status_failed{namespace="database-system",job_name=~"postgres-backup-verify-.*"} > 0

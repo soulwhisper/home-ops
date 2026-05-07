@@ -1,7 +1,6 @@
 ---
 # Zot Clustering
 # with patch: infrastructure/talos/prod/30-private-mirrors.yaml
-# set zot.homelab.internal A 10.10.0.81-83
 
 name: zotregistry
 
@@ -15,10 +14,10 @@ x-zot-shared: &zot-shared
   configs:
     - source: "config.json"
       target: "/etc/zot/config.json"
-  env_file:
-    - zotregistry.sops.env
+  extra_hosts:
+    - "nas.homelab.internal:host-gateway"
   depends_on:
-    valkey:
+    zot-valkey:
       condition: service_healthy
 
 services:
@@ -26,8 +25,6 @@ services:
     image: "valkey/valkey:8.1-alpine"
     container_name: "zot-valkey"
     restart: "unless-stopped"
-    networks:
-      zot-internal: {}
     command:
       - "valkey-server"
       - "--appendonly"
@@ -46,48 +43,67 @@ services:
       timeout: 2s
       retries: 5
 
+  zot-caddy:
+    image: "caddy:2-alpine"
+    container_name: "zot-caddy"
+    restart: "unless-stopped"
+    ports:
+      - "9002:9002"
+    configs:
+      - source: "Caddyfile"
+        target: "/etc/caddy/Caddyfile"
+    depends_on:
+      - zot-1
+      - zot-2
+      - zot-3
+
   zot-1:
     <<: *zot-shared
     container_name: "zot-1"
-    networks:
-      zot-internal: {}
-      zot-lan:
-        ipv4_address: "10.10.0.81"
+    env_file:
+      - zotregistry.sops.env
 
   zot-2:
     <<: *zot-shared
     container_name: "zot-2"
-    networks:
-      zot-internal: {}
-      zot-lan:
-        ipv4_address: "10.10.0.82"
+    env_file:
+      - zotregistry.sops.env
 
   zot-3:
     <<: *zot-shared
     container_name: "zot-3"
-    networks:
-      zot-internal: {}
-      zot-lan:
-        ipv4_address: "10.10.0.83"
-
-networks:
-  zot-internal:
-    driver: bridge
-  zot-lan:
-    driver: macvlan
-    driver_opts:
-      parent: "${MACVLAN_PARENT:-bond0}"
-    ipam:
-      config:
-        - subnet: 10.10.0.0/24
-          gateway: 10.10.0.254
-          ip_range: 10.10.0.80/30
+    env_file:
+      - zotregistry.sops.env
 
 configs:
+  Caddyfile:
+    content: |
+      {
+        auto_https off
+        admin off
+      }
+      :9002 {
+        reverse_proxy zot-1:9002 zot-2:9002 zot-3:9002 {
+          lb_policy round_robin
+          lb_try_duration 5s
+          health_uri /readyz
+          health_interval 10s
+          health_timeout 3s
+          fail_duration 30s
+          max_fails 2
+        }
+        encode gzip
+        log {
+          output stdout
+          format console
+          level WARN
+        }
+      }
+
   config.json:
     content: |
       {
-        "distSpecVersion": "1.1.0",
+        "distSpecVersion": "1.1.1",
         "storage": {
           "rootDirectory": "/tmp/zot",
           "commit": false,
@@ -102,10 +118,10 @@ configs:
           },
           "storageDriver": {
             "name": "s3",
-            "rootdirectory": "/zot",
             "region": "us-east-1",
             "regionendpoint": "nas.homelab.internal:9000",
             "bucket": "zot",
+            "forcepathstyle": true,
             "secure": false,
             "skipverify": false
           },
@@ -133,7 +149,7 @@ configs:
             "zot-2:9002",
             "zot-3:9002"
           ],
-          "hashKey": "pL3sD6fG8hJ9kL0zXcVbN1mQ2wE4rT5yU7iI8oO9pPaAsSdDfFgGhHjJkK"
+          "hashKey": "Ahj9MFEqgzjWFBVJ"
         },
         "http": {
           "address": "0.0.0.0",
@@ -147,10 +163,7 @@ configs:
             "enable": true
           },
           "search": {
-            "enable": true,
-            "cve": {
-              "updateInterval": "2h"
-            }
+            "enable": true
           },
           "scrub": {
             "enable": true,
@@ -158,6 +171,7 @@ configs:
           },
           "sync": {
             "enable": true,
+            "downloadDir": "/tmp/zot",
             "registries": [
               {
                 "urls": ["https://mirror.gcr.io"],

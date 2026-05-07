@@ -24,18 +24,21 @@ spec:
           successfulJobsHistory: 1
         pod:
           securityContext:
+            # CNPG postgres image uses postgres UID 26, GID 102
             runAsNonRoot: true
-            runAsUser: 65534
-            runAsGroup: 65534
+            runAsUser: 26
+            runAsGroup: 102
+            fsGroup: 102
         containers:
           app:
             image:
-              repository: ghcr.io/cloudnative-pg/plugin-barman-cloud
-              tag: v0.12.0
+              repository: ghcr.io/cloudnative-pg/postgresql
+              tag: 18
             command:
               - barman-cloud-check-wal-archive
             args:
               - --endpoint-url=http://nas.homelab.internal:9000
+              - --read-timeout=300
               - s3://postgres/
               - postgres-v1
             env:
