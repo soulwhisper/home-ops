@@ -19,7 +19,7 @@ jobs:
       NS: dr-test-postgres-${{ github.run_id }}
       VM_PUSH_URL: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/import/prometheus
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Render restore manifest
         run: |
