@@ -1,4 +1,7 @@
-set quiet := true
+set lazy
+set positional-arguments
+set quiet
+set script-interpreter := ['bash', '-euo', 'pipefail']
 set shell := ['bash', '-euo', 'pipefail', '-c']
 
 BUCKETS := 'postgres volsync zot'
@@ -9,9 +12,8 @@ default:
   @just --list
 
 [doc('Init/Reset Garage'), no-exit-message]
+[script]
 garage mode:
-    #!/usr/bin/env bash
-    set -euo pipefail
     function get_op_secret() {
         local item="$1"
         local field="$2"
@@ -54,9 +56,8 @@ garage mode:
     done
 
 [doc('Init/Reset Versity S3 Gateway'), no-exit-message]
+[script]
 versity mode:
-    #!/usr/bin/env bash
-    set -euo pipefail
     function get_op_secret() {
         local item="$1"
         local field="$2"

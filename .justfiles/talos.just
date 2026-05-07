@@ -1,4 +1,7 @@
-set quiet := true
+set lazy
+set positional-arguments
+set quiet
+set script-interpreter := ['bash', '-euo', 'pipefail']
 set shell := ['bash', '-euo', 'pipefail', '-c']
 
 TALOS_ENDPOINT := `talosctl config info --output json | jq --raw-output '.endpoints[]' | shuf -n 1`
@@ -8,8 +11,8 @@ default:
   @just --list
 
 [doc('Get latest ISO for talos, with https_proxy support')]
+[script]
 image mode:
-  #!/usr/bin/env bash
   IMAGE_VERSION=$(curl --silent --noproxy '*' https://factory.talos.dev/versions \
     | jq --raw-output 'map(select(test("^v[0-9.]+$"))) | sort_by(. | ltrimstr("v") | split(".") | map(tonumber)) | reverse | .[0]' \
     | tail -n1)
@@ -21,12 +24,13 @@ image mode:
   mv "/tmp/talos-{{mode}}-${IMAGE_VERSION}-metal-amd64.iso" "${OPS_DIR}"
 
 [doc('Get schema ID for specific environment')]
+[script]
 _schema mode:
   curl --silent --noproxy '*' -X POST --data-binary @"${TALOS_DIR}/{{mode}}/00-schematic.yaml" https://factory.talos.dev/schematics | jq --raw-output '.id'
 
 [doc('Generate talos configuration')]
+[script]
 generate mode:
-  #!/usr/bin/env bash
   op inject -i "${TALOS_DIR}/secret.yaml" | talosctl gen config \
     main https://k8s.homelab.internal:6443 \
     --with-docs=false --with-examples=false --force \
@@ -42,13 +46,14 @@ generate mode:
   mkdir -p ~/.talos && cp "${TALOSCONFIG}" ~/.talos/config
 
 [doc('Apply talos configuration to node')]
+[script]
 apply node *args:
   @echo "Applying talos configuration to {{node}}"
   talosctl apply-config --nodes {{node}} --file ${TALOS_DIR}/clusterconfig/main-{{node}}.yaml {{args}}
 
 [doc('Bootstrap talos cluster, INSECURE')]
+[script]
 _bootstrap_talos:
-  #!/usr/bin/env bash
   for FILE in $(ls ${TALOS_DIR}/clusterconfig/*.yaml); do
     NODE=$(basename "$FILE" .yaml | sed 's/^main-//')
     echo "🚀 Bootstrapping Talos Node: $NODE"
@@ -66,8 +71,8 @@ _bootstrap_talos:
   done
 
 [doc('Bootstrap K8S')]
+[script]
 _bootstrap_k8s:
-  #!/usr/bin/env bash
   echo "🔍 Checking if cluster is already bootstrapped..."
   ETCD_STATUS=$(talosctl -n "{{TALOS_ENDPOINT}}" get service etcd -o json 2>/dev/null | jq -r '.spec.running' || echo "false")
   if [ "$ETCD_STATUS" == "true" ]; then
@@ -92,8 +97,8 @@ _bootstrap_k8s:
     fi
 
 [doc('Fetch kubeconfig')]
+[script]
 kubeconfig:
-  #!/usr/bin/env bash
   function retry {
     local retries=$1
     shift
@@ -115,8 +120,8 @@ kubeconfig:
   mkdir -p ~/.kube && cp "${KUBECONFIG}" ~/.kube/config
 
 [doc('Reboot node')]
+[script]
 reboot node:
-  #!/usr/bin/env bash
   printf "Reboot node {{node}}? (y/N) "
   read -r confirm
   case "$confirm" in
@@ -130,8 +135,8 @@ reboot node:
   esac
 
 [doc('Reset node or cluster')]
+[script]
 reset node:
-  #!/usr/bin/env bash
   printf "Reset {{node}}? (y/N) "
   read -r confirm
   case "$confirm" in

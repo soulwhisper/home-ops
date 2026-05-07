@@ -1,4 +1,8 @@
-set quiet := true
+#!/usr/bin/env -S just --justfile
+
+set lazy
+set quiet
+set script-interpreter := ['bash', '-euo', 'pipefail']
 set shell := ['bash', '-euo', 'pipefail', '-c']
 
 mod infra ".justfiles/infra.just"
@@ -19,6 +23,7 @@ default:
   just --list
 
 [doc('Restore configuration files from backup location')]
+[script]
 env:
   cp ~/.kube/config "$KUBECONFIG"
   cp ~/.talos/config "$TALOSCONFIG"
@@ -26,10 +31,12 @@ env:
   @echo "K8S environment restored."
 
 [doc('Force Flux to pull in changes from your Git repository')]
+[script]
 reconcile:
   flux --namespace gitops-system reconcile kustomization gitops-system --with-source
 
 [doc('Bootstrap Cluster')]
+[script]
 bootstrap:
   @echo "Make sure you disable all proxies."
   @echo "Bootstrapping Talos..."
@@ -44,9 +51,11 @@ bootstrap:
   @echo "completed."
   @echo "Cluster bootstrapped. Please reboot nodes."
 
+[script]
 _template file:
   minijinja-cli {{file}} {{minijinja_args}} | op inject
 
+[script]
 _bootstrap_apps:
   just _template "{{K8S_DIR}}/bootstrap/resources.yaml.j2" | kubectl apply --server-side -f -
   @echo "Syncing Helm Releases..."
