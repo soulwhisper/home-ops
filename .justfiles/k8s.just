@@ -55,17 +55,17 @@ delete-ks ns ks:
 [doc('Sync single Flux HelmRelease')]
 [script]
 sync-hr ns name:
-  kubectl -n {{ns}} annotate --field-manager flux-client-side-apply --overwrite hr {{name}} reconcile.fluxcd.io/requestedAt="$(date +%s)" reconcile.fluxcd.io/forceAt="$(date +%s)"; \
+  kubectl -n {{ns}} annotate --field-manager flux-client-side-apply --overwrite hr {{name}} reconcile.fluxcd.io/requestedAt="$(date +%s)" reconcile.fluxcd.io/forceAt="$(date +%s)"
 
 [doc('Sync single Flux Kustomizations')]
 [script]
 sync-ks ns name:
-  kubectl -n {{ns}} annotate --field-manager flux-client-side-apply --overwrite ks {{name}} reconcile.fluxcd.io/requestedAt="$(date +%s)"; \
+  kubectl -n {{ns}} annotate --field-manager flux-client-side-apply --overwrite ks {{name}} reconcile.fluxcd.io/requestedAt="$(date +%s)"
 
 [doc('Sync single ExternalSecret')]
 [script]
 sync-es ns name:
-  kubectl -n {{ns}} annotate --field-manager flux-client-side-apply --overwrite es {{name}} force-sync="$(date +%s)"; \
+  kubectl -n {{ns}} annotate --field-manager flux-client-side-apply --overwrite es {{name}} force-sync="$(date +%s)"
 
 [doc('Sync all Flux HelmReleases')]
 [script]

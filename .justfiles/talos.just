@@ -79,22 +79,28 @@ _bootstrap_k8s:
     echo "✅ Etcd is Running. Cluster implies bootstrapped. Skipping."
     exit 0
   fi
-  echo "🚀 Etcd is Running. Attempting bootstrap..."
+  echo "🚀 Etcd is Running. Sending bootstrap command..."
   count=0
-  until talosctl -n "{{TALOS_ENDPOINT}}" bootstrap 2>&1 | grep -E "AlreadyExists|No error"|| [ "$count" -ge 12 ]; do
-    echo "⏳ Sending bootstrap command (Attempt $((++count))/12)..."
-        sleep 5
-    done
-    FINAL_RUNNING=$(talosctl -n "{{TALOS_ENDPOINT}}" get service etcd -o json 2>/dev/null | jq -r '.spec.running' || echo "false")
-    if [ "$FINAL_RUNNING" == "true" ]; then
-       echo "✅ Bootstrap successful (Etcd is running)."
-       exit 0
-    else
-       if [ "$count" -ge 12 ]; then
-           echo "❌ Failed to bootstrap cluster. Etcd is not running."
-           exit 1
-       fi
+  until talosctl -n "{{TALOS_ENDPOINT}}" bootstrap 2>&1 | grep -E "AlreadyExists|No error"; do
+    count=$((count + 1))
+    if [ "$count" -ge 12 ]; then
+      echo "❌ Failed to send bootstrap command after 12 attempts."
+      exit 1
     fi
+    echo "⏳ Retrying bootstrap command (attempt $count/12)..."
+    sleep 5
+  done
+  echo "⏳ Waiting for etcd to come up..."
+  count=0
+  until [ "$(talosctl -n "{{TALOS_ENDPOINT}}" get service etcd -o json 2>/dev/null | jq -r '.spec.running' || echo "false")" == "true" ]; do
+    count=$((count + 1))
+    if [ "$count" -ge 60 ]; then
+      echo "❌ Etcd did not become ready within 5 minutes."
+      exit 1
+    fi
+    sleep 5
+  done
+  echo "✅ Bootstrap successful (etcd is running)."
 
 [doc('Fetch kubeconfig')]
 [script]
