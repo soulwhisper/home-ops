@@ -13,4 +13,5 @@ resources:
   - ./firecrawl/ks.yaml
   - ./hermes-agent/ks.yaml
   - ./langfuse/ks.yaml
+  - ./open-notebook/ks.yaml
   - ./sillytavern/ks.yaml
