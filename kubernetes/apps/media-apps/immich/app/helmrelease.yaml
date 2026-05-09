@@ -136,7 +136,7 @@ spec:
           gethomepage.dev/group: Media
           gethomepage.dev/widget.type: immich
           gethomepage.dev/widget.url: http://immich.media-apps.svc.cluster.local:2283
-          gethomepage.dev/widget.key: '{{ "{{HOMEPAGE_VAR_IMMICH_API_KEY}}" }}'
+          gethomepage.dev/widget.key: '{{ "{{HOMEPAGE_VAR_IMMICH_API_KEY}}" }}' # yamllint disable-line rule:quoted-strings
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

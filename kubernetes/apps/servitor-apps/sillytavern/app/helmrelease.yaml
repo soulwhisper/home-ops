@@ -24,7 +24,7 @@ spec:
               repository: ghcr.io/sillytavern/sillytavern
               tag: 1.18.0
             env:
-              SILLYTAVERN_WHITELIST: '["0.0.0.0/0", "::/0"]'
+              SILLYTAVERN_WHITELIST: '["0.0.0.0/0", "::/0"]' # yamllint disable-line rule:quoted-strings
               SILLYTAVERN_ENABLEUSERACCOUNTS: "false"
               SILLYTAVERN_ENABLEDISCREETLOGIN: "true"
             resources:

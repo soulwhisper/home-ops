@@ -1,5 +1,7 @@
 ---
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# yamllint disable rule:truthy
+
 name: "Docs"
 
 on:
@@ -7,7 +9,6 @@ on:
   push:
     branches: ["main"]
     paths:
-      - .github/workflows/docs.yaml
       - docs/**
 
 permissions:

@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:truthy
 apiVersion: v1alpha1
 kind: HostnameConfig
 auto: off

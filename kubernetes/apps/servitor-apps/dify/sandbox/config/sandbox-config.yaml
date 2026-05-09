@@ -1,3 +1,5 @@
+---
+# yamllint disable rule:truthy
 app:
   port: 8194
   debug: True

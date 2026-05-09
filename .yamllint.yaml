@@ -1,0 +1,21 @@
+---
+# https://yamllint.readthedocs.io/en/stable/
+extends: default
+
+ignore: |
+  *.sops.yaml
+  *.sops.yml
+  **/blueprints/**/*.yaml
+
+rules:
+  braces: disable
+  comments:
+    require-starting-space: false
+    min-spaces-from-content: 1
+  comments-indentation: disable
+  indentation:
+    spaces: 2
+  line-length: disable
+  quoted-strings:
+    quote-type: consistent
+    required: false

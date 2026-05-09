@@ -1,5 +1,7 @@
 ---
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# yamllint disable rule:truthy
+
 name: Flux-checks
 permissions:
   contents: read
@@ -136,7 +138,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v3
         with:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          header: ${{ github.event.pull_request.number }}/kubernetes/${{ matrix.resource }}
+          header: ${{ github.event.pull_request.number }}/kubernetes/${{ matrix.resources }}
           message: |
             ```diff
             ${{ steps.diff.outputs.diff }}

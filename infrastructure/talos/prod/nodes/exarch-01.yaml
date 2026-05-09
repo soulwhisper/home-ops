@@ -1,9 +1,11 @@
 ---
+# yamllint disable rule:truthy
 apiVersion: v1alpha1
 kind: HostnameConfig
 auto: off
 hostname: exarch-01
 ---
+# yamllint disable rule:truthy
 apiVersion: v1alpha1
 kind: BondConfig
 name: bond0

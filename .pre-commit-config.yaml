@@ -1,0 +1,55 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/j178/prek/refs/heads/master/prek.schema.json
+minimum_prek_version: "0.3.4"
+exclude: "^.*/.*_sources/"
+repos:
+  # Basic file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: check-merge-conflict
+      - id: detect-private-key
+        exclude: (^|/)\.pre-commit-config\.ya?ml$
+
+  # GitHub Actions linting
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+
+  # GitHub Actions security audit
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.24.1
+    hooks:
+      - id: zizmor
+        args:
+          - "--config=.github/zizmor.yaml"
+          - "--persona=regular"
+          - "--min-severity=medium"
+          - "--min-confidence=medium"
+
+  # YAML lint
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [--strict]
+
+  # K8S
+  - repo: local
+    hooks:
+      - id: kubeconform
+        name: kubeconform
+        entry: kubeconform
+        args:
+          - "-strict"
+          - "-summary"
+          - "-schema-location=default"
+          - "-schema-location=https://soulwhisper.github.io/CRD-catalog/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+        language: system
+        files: ^kubernetes/.*\.ya?ml$

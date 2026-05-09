@@ -35,7 +35,7 @@ spec:
       randomSampling: "true"
       attributes:
         add:
-          - expression: 'request.headers["x-header-tag"]'
+          - expression: 'request.headers["x-header-tag"]' # yamllint disable-line rule:quoted-strings
             name: request
           - expression: "request.host"
             name: host

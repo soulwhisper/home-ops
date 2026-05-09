@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:truthy
 # ! WIP
 # Monthly DR rehearsal: restore the production CNPG cluster into a
 # disposable namespace from the latest barman-cloud backup, validate

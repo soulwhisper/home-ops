@@ -1,5 +1,3 @@
-#!/usr/bin/env -S just --justfile
-
 set lazy
 set quiet
 set script-interpreter := ['bash', '-euo', 'pipefail']
@@ -29,6 +27,11 @@ env:
   cp ~/.kube/config "$KUBECONFIG"
   cp ~/.talos/config "$TALOSCONFIG"
   @echo "K8S environment restored."
+
+[doc('Lint all files')]
+[script]
+lint:
+  prek run --all-files
 
 [doc('Force Flux to pull in changes from your Git repository')]
 [script]
