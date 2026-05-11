@@ -48,7 +48,7 @@ generate mode:
 [doc('Apply talos configuration to node')]
 [script]
 apply node *args:
-  @echo "Applying talos configuration to {{node}}"
+  echo "Applying talos configuration to {{node}}"
   talosctl apply-config --nodes {{node}} --file ${TALOS_DIR}/clusterconfig/main-{{node}}.yaml {{args}}
 
 [doc('Bootstrap talos cluster, INSECURE')]

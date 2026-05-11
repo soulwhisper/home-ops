@@ -6,9 +6,17 @@ metadata:
   name: &name agentgateway-api-auth
 spec:
   targetRefs:
+    # fake authentication for OpenAI-compatible clients
+    # only add llm backend below
     - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: agentgateway-proxy
+      kind: HTTPRoute
+      name: backend-chat-complex
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: backend-chat-fast
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: backend-chat-vision
   traffic:
     apiKeyAuthentication:
       mode: Strict

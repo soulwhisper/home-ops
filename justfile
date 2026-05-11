@@ -26,7 +26,7 @@ env:
   mise trust
   cp ~/.kube/config "$KUBECONFIG"
   cp ~/.talos/config "$TALOSCONFIG"
-  @echo "K8S environment restored."
+  echo "K8S environment restored."
 
 [doc('Lint all files')]
 [script]
@@ -41,18 +41,18 @@ reconcile:
 [doc('Bootstrap Cluster')]
 [script]
 bootstrap:
-  @echo "Make sure you disable all proxies."
-  @echo "Bootstrapping Talos..."
+  echo "Make sure you disable all proxies."
+  echo "Bootstrapping Talos..."
   just talos _bootstrap_talos
-  @echo "completed."
-  @echo "Bootstrapping K8s..."
+  echo "completed."
+  echo "Bootstrapping K8s..."
   just talos _bootstrap_k8s
   just talos kubeconfig
-  @echo "completed."
-  @echo "Bootstrapping Apps..."
+  echo "completed."
+  echo "Bootstrapping Apps..."
   just _bootstrap_apps
-  @echo "completed."
-  @echo "Cluster bootstrapped. Please reboot nodes."
+  echo "completed."
+  echo "Cluster bootstrapped. Please reboot nodes."
 
 [script]
 _template file:
@@ -61,7 +61,7 @@ _template file:
 [script]
 _bootstrap_apps:
   just _template "{{K8S_DIR}}/bootstrap/resources.yaml.j2" | kubectl apply --server-side -f -
-  @echo "Syncing Helm Releases..."
+  echo "Syncing Helm Releases..."
   count=0; until helmfile --file "{{K8S_DIR}}/bootstrap/helmfile.yaml" sync --hide-notes; do
     count=$((count + 1))
     if [ $count -ge 5 ]; then exit 1; fi

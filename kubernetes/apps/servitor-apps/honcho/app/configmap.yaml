@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: honcho
+data:
+  # https://github.com/plastic-labs/honcho/blob/main/.env.template
+  LOG_LEVEL: "INFO"
+  AUTH_USE_AUTH: "false"
+  DERIVER_ENABLED: "true"
+  DERIVER_WORKERS: "2"
+  METRICS_ENABLED: "true"
+  VECTOR_STORE_MIGRATED: "true"
+  VECTOR_STORE_TYPE: "pgvector"
+  DB_CONNECTION_URI: "postgresql+psycopg://honcho:honcho@postgres-rw.database-system.svc.cluster.local:5432/honcho"
+  CACHE_ENABLED: "true"
+  CACHE_URL: "redis://honcho-dragonfly.servitor-apps.svc.cluster.local:6379/0"
