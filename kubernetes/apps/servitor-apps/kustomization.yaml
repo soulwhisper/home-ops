@@ -12,7 +12,9 @@ resources:
   - ./dify/ks.yaml
   - ./firecrawl/ks.yaml
   - ./hermes-agent/ks.yaml
+  - ./hindsight/ks.yaml
   - ./honcho/ks.yaml
   - ./langfuse/ks.yaml
   - ./open-notebook/ks.yaml
   - ./sillytavern/ks.yaml
+  - ./tei/ks.yaml

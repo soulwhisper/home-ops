@@ -24,10 +24,11 @@ spec:
   postgresql:
     shared_preload_libraries:
       - vchord
+      - vchord_bm25
     parameters:
       effective_io_concurrency: "200"
       max_connections: "400"
-      shared_buffers: "4GB" # 25-90% total memory
+      shared_buffers: "2GB"
   resources:
     requests:
       cpu: 500m
@@ -40,18 +41,30 @@ spec:
         ensure: present
         login: true
         superuser: false
+      - name: hindsight
+        ensure: present
+        login: true
+        superuser: false
 
   bootstrap:
     initdb:
       postInitSQL:
         - CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
+        # https://docs.immich.app/administration/postgres-standalone/#without-superuser-permission
         - CREATE DATABASE immich;
         - |
           \c immich
+          ALTER DATABASE immich OWNER TO immich;
           CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
           CREATE EXTENSION IF NOT EXISTS earthdistance CASCADE;
-          ALTER SCHEMA vchord OWNER TO immich;
-          ALTER DATABASE immich OWNER TO immich;
+        - CREATE DATABASE hindsight;
+        - |
+          \c hindsight
+          ALTER DATABASE hindsight OWNER TO hindsight;
+          CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
+          CREATE EXTENSION IF NOT EXISTS pg_tokenizer CASCADE;
+          CREATE EXTENSION IF NOT EXISTS vchord_bm25 CASCADE;
+          SELECT create_tokenizer('llmlingua2', $$ model = "llmlingua2" $$);
 
   # :: Notice: backup.barmanObjectStore is deprecated
   # :: recover cluster, uncomment below

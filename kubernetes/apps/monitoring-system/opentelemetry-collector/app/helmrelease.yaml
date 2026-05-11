@@ -86,9 +86,26 @@ spec:
           send_batch_size: 1024
           send_batch_max_size: 2048
           timeout: 1s
+        filter/gen_ai:
+          traces:
+            span:
+              - 'attributes["gen_ai.system"] == nil'
       exporters:
         otlphttp/victoria-traces:
           endpoint: "http://victoria-traces.monitoring-system.svc.cluster.local:10428/insert/opentelemetry/v1/traces"
+          tls:
+            insecure: true
+          sending_queue:
+            enabled: true
+            num_consumers: 10
+            queue_size: 5000
+          retry_on_failure:
+            enabled: true
+            initial_interval: 5s
+            max_interval: 30s
+            max_elapsed_time: 300s
+        otlphttp/langfuse:
+          endpoint: "http://langfuse-web.servitor-apps.svc.cluster.local:3000/api/public/otel"
           tls:
             insecure: true
           sending_queue:
@@ -122,3 +139,7 @@ spec:
               - tail_sampling
               - batch
             exporters: [otlphttp/victoria-traces]
+          traces/llm:
+            receivers: [otlp]
+            processors: [filter/gen_ai, batch]
+            exporters: [otlphttp/langfuse]
