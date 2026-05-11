@@ -7,11 +7,21 @@ metadata:
 spec:
   mcp:
     targets:
+      - name: context
+        selector:
+          services:
+            matchLabels:
+              app.kubernetes.io/name: mcp-context
       - name: firecrawl
         selector:
           services:
             matchLabels:
               app.kubernetes.io/name: mcp-firecrawl
+      - name: github
+        selector:
+          services:
+            matchLabels:
+              app.kubernetes.io/name: mcp-github
       - name: grafana
         selector:
           services:

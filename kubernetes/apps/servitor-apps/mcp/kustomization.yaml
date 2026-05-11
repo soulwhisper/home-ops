@@ -6,7 +6,9 @@ resources:
   # federation
   - ./federation/ks.yaml
   # servers
+  - ./context/ks.yaml
   - ./firecrawl/ks.yaml
+  - ./github/ks.yaml
   - ./grafana/ks.yaml
   - ./home-assistant/ks.yaml
   - ./kubernetes/ks.yaml

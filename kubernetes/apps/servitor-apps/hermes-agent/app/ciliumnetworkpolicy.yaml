@@ -47,6 +47,22 @@ spec:
     #           - method: "GET"
     #             pathRegex: "/v1/crawl/[a-zA-Z0-9-]+/status"
 
+    # Memory
+    - toServices:
+        - k8sService:
+            serviceName: honcho
+            namespace: servitor-apps
+      toPorts:
+        - ports:
+            - { port: "8000", protocol: TCP }
+    - toServices:
+        - k8sService:
+            serviceName: hindsight
+            namespace: servitor-apps
+      toPorts:
+        - ports:
+            - { port: "8888", protocol: TCP }
+
     # DNS
     - toEndpoints:
         - matchLabels:
