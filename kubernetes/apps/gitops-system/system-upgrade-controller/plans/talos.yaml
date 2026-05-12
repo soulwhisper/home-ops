@@ -8,7 +8,23 @@ spec:
   talos:
     # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
     version: v1.13.0
+
+  # defaults
+  maintenance:
+    windows:
+      # Sunday 01:00 - 05:00
+      - start: "0 1 * * 0"
+        duration: "4h"
+        timezone: "Asia/Shanghai"
+  drain:
+    deleteLocalData: true
+    ignoreDaemonSets: true
+    force: true
+  parallelism: 1
   policy:
+    force: false
+    stage: false
+    placement: soft
     rebootMode: default
   healthChecks:
     - apiVersion: volsync.backube/v1alpha1

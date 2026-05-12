@@ -33,16 +33,14 @@
       allowedVersions: "18",
     },
     {
-      description: "Pin talos version if something breaks",
+      description: "Separate talos and kubelet versions",
       matchDatasources: ["docker"],
-      matchPackageNames: ["ghcr.io/siderolabs/installer"],
-      allowedVersions: ">= v1.9.3",
-    },
-    {
-      description: "Pin kubelet version if something breaks",
-      matchDatasources: ["docker"],
-      matchPackageNames: ["ghcr.io/siderolabs/kubelet"],
-      allowedVersions: ">= v1.32.1",
+      matchPackageNames: [
+        "ghcr.io/siderolabs/installer",
+        "ghcr.io/siderolabs/kubelet",
+      ],
+      separateMajorMinor: true,
+      separateMinorPatch: true,
     },
   ],
 }

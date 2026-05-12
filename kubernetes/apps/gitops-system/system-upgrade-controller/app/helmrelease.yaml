@@ -11,4 +11,5 @@ spec:
     name: tuppr
 
   values:
+    fullnameOverride: *name
     replicaCount: 2

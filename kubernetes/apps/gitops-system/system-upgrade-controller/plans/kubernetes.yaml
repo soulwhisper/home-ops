@@ -8,6 +8,14 @@ spec:
   kubernetes:
     # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
     version: v1.36.0
+
+  # defaults
+  maintenance:
+    windows:
+      # Monday 01:00 - 05:00
+      - start: "0 1 * * 1"
+        duration: "4h"
+        timezone: "Asia/Shanghai"
   healthChecks:
     - apiVersion: volsync.backube/v1alpha1
       kind: ReplicationSource
@@ -16,4 +24,4 @@ spec:
     - apiVersion: ceph.rook.io/v1
       kind: CephCluster
       expr: |-
-        status.ceph.health in ['HEALTH_OK'] || status.ceph.health in ['HEALTH_WARN']
+        status.ceph.health in ["HEALTH_OK", "HEALTH_WARN"]
