@@ -3,7 +3,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &name hindsight
+  name: &name mcp-inspector
 spec:
   interval: 30m
   chartRef:
@@ -18,37 +18,19 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
-        initContainers:
-          init-db:
-            image:
-              repository: ghcr.io/home-operations/postgres-init
-              tag: "18"
-            envFrom:
-              - secretRef:
-                  name: hindsight-initdb
         containers:
           app:
             image:
-              repository: ghcr.io/vectorize-io/hindsight
-              tag: 0.6.1-slim
+              repository: ghcr.io/modelcontextprotocol/inspector
+              tag: 0.21.2-hotfix-3
             env:
-              HINDSIGHT_API_OTEL_TRACES_ENABLED: "true"
-              HINDSIGHT_API_OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
-              HINDSIGHT_API_VECTOR_EXTENSION: "vchord"
-              HINDSIGHT_API_TEXT_SEARCH_EXTENSION: "vchord"
-              HINDSIGHT_API_DATABASE_URL:
-                valueFrom:
-                  secretKeyRef:
-                    name: hindsight-pguser
-                    key: uri
-            envFrom:
-              - secretRef:
-                  name: *name
+              HOST: "0.0.0.0"
+              MCP_AUTO_OPEN_ENABLED: "false"
             resources:
               requests:
-                cpu: 50m
+                cpu: 10m
               limits:
-                memory: 1Gi
+                memory: 256Mi
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
@@ -59,16 +41,16 @@ spec:
         ports:
           http:
             primary: true
-            port: 9999
-          api:
-            port: 8888
+            port: 6274
+          rest:
+            port: 6277
     route:
       app:
-        hostnames: ["memory.noirprime.com"]
+        hostnames: ["mcp.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: metabrainz.svg
-          gethomepage.dev/name: Hindsight
+          gethomepage.dev/icon: mcp.svg
+          gethomepage.dev/name: MCP-Inspector
           gethomepage.dev/group: Service
         parentRefs:
           - name: kgateway-internal

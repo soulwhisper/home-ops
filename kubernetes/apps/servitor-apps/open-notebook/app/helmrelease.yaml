@@ -12,7 +12,6 @@ spec:
     namespace: gitops-system
 
   values:
-    defaultPodOptions:
     controllers:
       *name :
         annotations:
@@ -35,7 +34,7 @@ spec:
               SURREAL_PASSWORD: root
               SURREAL_NAMESPACE: open_notebook
               SURREAL_DATABASE: open_notebook
-            envFrom: &envFrom
+            envFrom:
               - secretRef:
                   name: *name
             resources:

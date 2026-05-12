@@ -11,6 +11,7 @@ resources:
   - ./dispatcharr/ks.yaml
   - ./homepage/ks.yaml
   - ./karakeep/ks.yaml
+  - ./meilisearch/ks.yaml
   - ./miniflux/ks.yaml
   - ./netbox/ks.yaml
   - ./rsshub/ks.yaml

@@ -3,7 +3,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: &name karakeep
+  name: &name meilisearch
   annotations:
     config.home-ops.io/managed: "true"
   labels:
@@ -13,12 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: selfhosted-apps
-  path: "./kubernetes/apps/selfhosted-apps/karakeep/app"
-  dependsOn:
-    - name: agentgateway
-      namespace: networking-system
-    - name: meilisearch
-      namespace: selfhosted-apps
+  path: "./kubernetes/apps/selfhosted-apps/meilisearch/app"
   components:
     - ../../../../components/volsync
   postBuild:

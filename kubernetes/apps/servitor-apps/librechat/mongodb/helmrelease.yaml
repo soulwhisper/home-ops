@@ -3,7 +3,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &name open-notebook-database
+  name: &name librechat-mongodb
 spec:
   interval: 30m
   chartRef:
@@ -18,26 +18,16 @@ spec:
           reloader.stakater.com/auto: "true"
         pod:
           securityContext:
-            # hardcoded uid/gid
-            # https://github.com/surrealdb/surrealdb/issues/2601
             runAsNonRoot: true
-            runAsUser: 65532
-            runAsGroup: 65532
+            runAsUser: 999
+            runAsGroup: 999
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         containers:
           app:
             image:
-              # upgrade until: https://github.com/lfnovo/open-notebook/issues/378
-              repository: surrealdb/surrealdb
-              tag: v2
-            args: ["start"]
-            env:
-              SURREAL_PATH: "rocksdb:/data"
-              SURREAL_USER: root
-              SURREAL_PASS: root
-              SURREAL_LOG: info
-              SURREAL_EXPERIMENTAL_GRAPHQL: true
+              repository: library/mongo
+              tag: 8.3.1
             resources:
               requests:
                 cpu: 100m
@@ -52,11 +42,10 @@ spec:
       app:
         ports:
           http:
-            appProtocol: kubernetes.io/ws
-            port: 8000
+            port: 27017
 
     persistence:
       app:
         existingClaim: *name
         globalMounts:
-          - path: /data
+          - path: /data/db

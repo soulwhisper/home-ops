@@ -6,15 +6,23 @@ namespace: servitor-apps
 components:
   - ../../components/namespace
 resources:
-  # mcp
-  - ./mcp
   # app
   - ./dify/ks.yaml
-  - ./firecrawl/ks.yaml
   - ./hermes-agent/ks.yaml
-  - ./hindsight/ks.yaml
-  - ./honcho/ks.yaml
-  - ./langfuse/ks.yaml
+  - ./librechat/ks.yaml
+  - ./mcp-inspector/ks.yaml
   - ./open-notebook/ks.yaml
   - ./sillytavern/ks.yaml
+  # mcp
+  - ./mcp
+  # : providers
+  # search = selfhosted-apps/searxng, selfhosted-apps/meilisearch
+  # scraper
+  - ./firecrawl/ks.yaml
+  # memory
+  - ./hindsight/ks.yaml
+  - ./honcho/ks.yaml
+  # local models
   - ./tei/ks.yaml
+  # : observability
+  - ./langfuse/ks.yaml
