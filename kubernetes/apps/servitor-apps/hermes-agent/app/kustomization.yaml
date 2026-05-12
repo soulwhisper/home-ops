@@ -8,4 +8,5 @@ resources:
   # utils
   - ./ciliumnetworkpolicy.yaml
   - ./externalsecret.yaml
+  - ./httproute.yaml
   - ./trafficpolicy.yaml

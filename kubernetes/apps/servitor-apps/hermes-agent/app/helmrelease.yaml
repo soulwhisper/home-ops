@@ -21,19 +21,16 @@ spec:
         pod:
           securityContext:
             runAsNonRoot: true
-            runAsUser: 2000
-            runAsGroup: 2000
+            runAsUser: 1000 # hermes user
+            runAsGroup: 1000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         containers:
           app:
             image:
-              repository: nousresearch/hermes-agent
-              tag: v2026.5.7
-            args: ["gateway", "run"]
-            env:
-              HERMES_UID: "2000"
-            envFrom: &envFrom
+              repository: ghcr.io/soulwhisper/hermes-suite
+              tag: 2026.5.7-0.51.44
+            envFrom:
               - secretRef:
                   name: *name
             probes:
@@ -63,51 +60,21 @@ spec:
                 memory: 1Gi
               limits:
                 memory: 4Gi
-            securityContext: &securityContext
+            securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
-          web:
-            image:
-              repository: nousresearch/hermes-agent
-              tag: v2026.5.7
-            args: ["dashboard"]
-            env:
-              GATEWAY_HEALTH_URL: "http://localhost:8642"
-              HERMES_UID: "2000"
-            resources:
-              requests:
-                cpu: 50m
-                memory: 128Mi
-              limits:
-                memory: 512Mi
-            securityContext: *securityContext
 
     service:
       app:
         ports:
-          http:
+          api:
+            primary: true
             port: *port
-      web:
-        primary: true
-        ports:
           http:
             port: 9119
-    route:
-      app:
-        hostnames: ["hermes.noirprime.com"]
-        annotations:
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: si-hermes
-          gethomepage.dev/name: HermesAgent
-          gethomepage.dev/group: Service
-        parentRefs:
-          - name: kgateway-internal
-            namespace: networking-system
-        rules:
-          - backendRefs:
-              - identifier: web
-                port: http
+          web:
+            port: 8787
 
     persistence:
       app:
@@ -125,3 +92,7 @@ spec:
         globalMounts:
           - path: /tmp
             subPath: tmp
+          - path: /var/log/supervisor
+            subPath: supervisor-log
+          - path: /var/run/supervisor
+            subPath: supervisor-run

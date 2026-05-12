@@ -45,7 +45,8 @@ configMapGenerator:
       - ./blueprints/forward/frigate-go2rtc.yaml
       - ./blueprints/forward/frigate.yaml
       - ./blueprints/forward/hass-code.yaml
-      - ./blueprints/forward/hermes-agent.yaml
+      - ./blueprints/forward/hermes-dashboard.yaml
+      - ./blueprints/forward/hermes-webui.yaml
       - ./blueprints/forward/homepage.yaml
       - ./blueprints/forward/hubble.yaml
       - ./blueprints/forward/lyrion.yaml

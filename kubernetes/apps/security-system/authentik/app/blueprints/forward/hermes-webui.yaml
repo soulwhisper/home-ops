@@ -4,7 +4,7 @@ version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
     identifiers:
-      name: &provider hermes-proxy-provider
+      name: &provider hermes-webui-proxy-provider
     attrs:
       name: *provider
       authorization_flow:
@@ -18,12 +18,12 @@ entries:
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
     identifiers:
-      slug: &name hermes
+      slug: &name hermes-webui
     attrs:
       name: *name
       provider: !KeyOf *provider
       meta_launch_url: *domain
-      group: "SmartHome"
+      group: "Service"
       policy_engine_mode: all
   - model: authentik_policies_binding.policybinding
     identifiers:

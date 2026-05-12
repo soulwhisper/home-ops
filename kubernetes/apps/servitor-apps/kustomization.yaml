@@ -9,7 +9,6 @@ resources:
   # app
   - ./dify/ks.yaml
   - ./hermes-agent/ks.yaml
-  - ./librechat/ks.yaml
   - ./mcp-inspector/ks.yaml
   - ./open-notebook/ks.yaml
   - ./sillytavern/ks.yaml
