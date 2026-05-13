@@ -4,7 +4,7 @@ version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
     identifiers:
-      name: &provider hermes-webui-proxy-provider
+      name: &provider hermes-agent-proxy-provider
     attrs:
       name: *provider
       authorization_flow:
@@ -18,7 +18,7 @@ entries:
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
     identifiers:
-      slug: &name hermes-webui
+      slug: &name hermes-agent
     attrs:
       name: *name
       provider: !KeyOf *provider

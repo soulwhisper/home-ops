@@ -69,12 +69,21 @@ spec:
       app:
         ports:
           api:
-            primary: true
             port: *port
-          http:
-            port: 9119
           web:
+            primary: true
             port: 8787
+    route:
+      app:
+        hostnames: ["hermes.noirprime.com"]
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/icon: si-hermes
+          gethomepage.dev/name: HermesUI
+          gethomepage.dev/group: Service
+        parentRefs:
+          - name: kgateway-internal
+            namespace: networking-system
 
     persistence:
       app:
