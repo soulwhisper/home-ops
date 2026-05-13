@@ -21,15 +21,15 @@ spec:
         pod:
           securityContext:
             runAsNonRoot: true
-            runAsUser: 1000 # hermes user
-            runAsGroup: 1000
+            runAsUser: 10000 # hermes
+            runAsGroup: 10000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         containers:
           app:
             image:
               repository: ghcr.io/soulwhisper/hermes-suite
-              tag: 2026.5.7-0.51.44
+              tag: 2026.5.7
             envFrom:
               - secretRef:
                   name: *name
@@ -90,6 +90,9 @@ spec:
         existingClaim: *name
         globalMounts:
           - path: /opt/data
+            subPath: hermes
+          - path: /workspace
+            subPath: workspace
       cache:
         type: emptyDir
         medium: Memory
@@ -101,7 +104,3 @@ spec:
         globalMounts:
           - path: /tmp
             subPath: tmp
-          - path: /var/log/supervisor
-            subPath: supervisor-log
-          - path: /var/run/supervisor
-            subPath: supervisor-run
