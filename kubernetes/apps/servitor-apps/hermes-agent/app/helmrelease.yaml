@@ -13,23 +13,19 @@ spec:
 
   values:
     defaultPodOptions:
-      hostUsers: false
+      hostUsers: false # supervisord
     controllers:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
-        pod:
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000 # hermes user
-            runAsGroup: 1000
-            fsGroup: 2000
-            fsGroupChangePolicy: OnRootMismatch
         containers:
           app:
             image:
               repository: ghcr.io/soulwhisper/hermes-suite
               tag: 2026.5.7-0.51.44
+            env:
+              HERMES_UID: "2000"
+              HERMES_GID: "2000"
             envFrom:
               - secretRef:
                   name: *name
