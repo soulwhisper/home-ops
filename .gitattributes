@@ -1,5 +1,7 @@
 docs/** linguist-vendored
 infrastructure/** linguist-vendored
+**/_sources/** linguist-generated=true
+**/_sources/**/*.json -diff
 * text=auto eol=lf
 *.env -linguist-detectable
 *.json -linguist-detectable
