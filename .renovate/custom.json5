@@ -32,16 +32,6 @@
     },
     {
       customType: "regex",
-      description: "Fix vendir git refs",
-      fileMatch: ["(^|/)vendir\\.yml$"],
-      matchStrings: [
-        "git:\\s+url: (?<depName>.*?)\\s+ref: (?<currentValue>.*?)\\n",
-        "git:\\s+ref: (?<currentValue>[^\\s]+)\\s+url: (?<depName>[^\\s]+)",
-      ],
-      datasourceTemplate: "git-refs",
-    },
-    {
-      customType: "regex",
       description: "Update Grafana Dashboard IDs",
       managerFilePatterns: ["(^|/)vendir\\.yml$"],
       matchStrings: [
