@@ -18,14 +18,18 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10000 # hermes
+            runAsGroup: 10000
+            fsGroup: 2000
+            fsGroupChangePolicy: OnRootMismatch
         containers:
           app:
             image:
               repository: ghcr.io/soulwhisper/hermes-suite
-              tag: 0.51.52-20260507
-            env:
-              HERMES_UID: "2000"
-              HERMES_GID: "2000"
+              tag: 2026.5.7
             envFrom:
               - secretRef:
                   name: *name
@@ -86,6 +90,9 @@ spec:
         existingClaim: *name
         globalMounts:
           - path: /opt/data
+            subPath: hermes
+          - path: /workspace
+            subPath: workspace
       cache:
         type: emptyDir
         medium: Memory
@@ -97,7 +104,3 @@ spec:
         globalMounts:
           - path: /tmp
             subPath: tmp
-          - path: /var/log/supervisor
-            subPath: supervisor-log
-          - path: /var/run/supervisor
-            subPath: supervisor-run
