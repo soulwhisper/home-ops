@@ -30,6 +30,8 @@ spec:
             image:
               repository: ghcr.io/soulwhisper/hermes-suite
               tag: 2026.5.7
+            env:
+              HERMES_SERVICES: "dashboard,gateway,webui"
             envFrom:
               - secretRef:
                   name: *name
@@ -69,21 +71,12 @@ spec:
       app:
         ports:
           api:
-            port: *port
-          web:
             primary: true
+            port: *port
+          http:
+            port: 9119
+          web:
             port: 8787
-    route:
-      app:
-        hostnames: ["hermes.noirprime.com"]
-        annotations:
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: si-hermes
-          gethomepage.dev/name: HermesUI
-          gethomepage.dev/group: Service
-        parentRefs:
-          - name: kgateway-internal
-            namespace: networking-system
 
     persistence:
       app:
