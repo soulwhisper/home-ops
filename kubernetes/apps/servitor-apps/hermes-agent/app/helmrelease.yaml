@@ -29,7 +29,7 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/hermes-suite
-              tag: 2026.5.7
+              tag: 2026.5.16
             env:
               HERMES_SERVICES: "dashboard,gateway,webui"
             envFrom:
