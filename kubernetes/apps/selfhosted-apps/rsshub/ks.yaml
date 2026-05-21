@@ -16,6 +16,7 @@ spec:
     - name: dragonfly-operator
       namespace: database-system
   components:
+    - ../../../../components/authentik
     - ../../../../components/dragonfly
   postBuild:
     substitute:

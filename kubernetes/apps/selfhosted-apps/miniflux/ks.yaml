@@ -18,6 +18,7 @@ spec:
     - name: onepassword-connect
       namespace: security-system
   components:
+    - ../../../../components/authentik
     - ../../../../components/cnpg
   postBuild:
     substitute:

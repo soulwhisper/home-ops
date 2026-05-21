@@ -18,6 +18,7 @@ spec:
     - name: smarthome-nfs
       namespace: smarthome-apps
   components:
+    - ../../../../components/authentik
     - ../../../../components/volsync
   postBuild:
     substitute:

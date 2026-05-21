@@ -15,6 +15,7 @@ spec:
   targetNamespace: selfhosted-apps
   path: "./kubernetes/apps/selfhosted-apps/bambuddy/app"
   components:
+    - ../../../../components/authentik
     - ../../../../components/volsync
   postBuild:
     substitute:

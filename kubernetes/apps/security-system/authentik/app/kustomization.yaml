@@ -43,7 +43,6 @@ configMapGenerator:
       - ./blueprints/forward/bambuddy.yaml
       - ./blueprints/forward/code-server.yaml
       - ./blueprints/forward/convertx.yaml
-      - ./blueprints/forward/frigate-go2rtc.yaml
       - ./blueprints/forward/frigate.yaml
       - ./blueprints/forward/hermes-agent.yaml
       - ./blueprints/forward/homepage.yaml
@@ -55,7 +54,6 @@ configMapGenerator:
       - ./blueprints/forward/rsshub.yaml
       - ./blueprints/forward/scrypted.yaml
       - ./blueprints/forward/sillytavern.yaml
-      - ./blueprints/forward/victoria-alert.yaml
       - ./blueprints/forward/victoria-logs.yaml
       - ./blueprints/forward/victoria-metrics.yaml
       - ./blueprints/forward/victoria-traces.yaml

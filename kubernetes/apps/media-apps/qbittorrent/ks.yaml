@@ -18,6 +18,7 @@ spec:
     - name: media-nfs
       namespace: media-apps
   components:
+    - ../../../../components/authentik
     - ../../../../components/volsync
   postBuild:
     substitute:

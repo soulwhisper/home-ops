@@ -9,18 +9,6 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: frigate-app
-  extAuth:
-    extensionRef:
-      name: authentik-ext-auth
-      namespace: networking-system
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/gateway.kgateway.dev/trafficpolicy_v1alpha1.json
-apiVersion: gateway.kgateway.dev/v1alpha1
-kind: TrafficPolicy
-metadata:
-  name: frigate-go2rtc-auth
-spec:
-  targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: frigate-go2rtc
@@ -28,3 +16,10 @@ spec:
     extensionRef:
       name: authentik-ext-auth
       namespace: networking-system
+  transformation:
+    request:
+      dynamicMetadata:
+        - name: kgateway.auth.username
+          value: '{{ headers["x-authentik-username"] }}'
+        - name: kgateway.auth.groups
+          value: '{{ headers["x-authentik-groups"] }}'

@@ -16,3 +16,10 @@ spec:
     extensionRef:
       name: authentik-ext-auth
       namespace: networking-system
+  transformation:
+    request:
+      dynamicMetadata:
+        - name: kgateway.auth.username
+          value: '{{ headers["x-authentik-username"] }}'
+        - name: kgateway.auth.groups
+          value: '{{ headers["x-authentik-groups"] }}'

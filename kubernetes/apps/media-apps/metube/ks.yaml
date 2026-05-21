@@ -17,3 +17,8 @@ spec:
   dependsOn:
     - name: media-nfs
       namespace: media-apps
+  components:
+    - ../../../../components/authentik
+  postBuild:
+    substitute:
+      APP: *name

@@ -53,3 +53,9 @@ spec:
       namespace: security-system
     - name: opentelemetry-collector
       namespace: monitoring-system
+  components:
+    - ../../../../components/authentik
+  postBuild:
+    substitute:
+      APP: *name
+      APP_ROUTE: agentgateway-dashboard
