@@ -1,0 +1,231 @@
+---
+# gatus.env should be alongside this file and contain:
+#   PUSHOVER_TOKEN=<application-token>
+#   PUSHOVER_USER_KEY=<user-key>
+#   EXTERNAL_TOKEN=<shared bearer for cluster-side push jobs>
+#
+# Create the data directory before first start:
+#   sudo mkdir -p /volume3/docker/gatus && sudo chown -R 1000:1000 /volume3/docker/gatus
+
+services:
+  gatus:
+    image: ghcr.io/twin/gatus:v5.36.0
+    container_name: gatus
+    restart: unless-stopped
+    ports:
+      - "9400:9400"
+    env_file:
+      - gatus.env
+    volumes:
+      - /volume3/docker/gatus:/data
+    configs:
+      - source: gatus_config
+        target: /config/config.yaml
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9400/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+configs:
+  gatus_config:
+    content: |-
+      storage:
+        type: sqlite
+        path: /data/gatus.db
+      web:
+        address: 0.0.0.0
+        port: 9400
+      ui:
+        title: "Home-Ops Status"
+        header: "Cluster + Infrastructure (observed from NAS)"
+        link: "https://github.com/soulwhisper/home-ops"
+      alerting:
+        pushover:
+          application-token: "${PUSHOVER_TOKEN}"
+          user-key: "${PUSHOVER_USER_KEY}"
+          title: "home-ops"
+          priority: 1
+          default-alert:
+            failure-threshold: 3
+            success-threshold: 2
+            send-on-resolved: true
+      # ----------------------------------------------------------------------
+      # PULL endpoints — Gatus actively probes from the NAS.
+      # ----------------------------------------------------------------------
+      endpoints:
+        # --- Cluster core ---
+        - name: api-server
+          group: cluster-core
+          url: tcp://10.10.0.101:6443
+          interval: 30s
+          conditions:
+            - "[CONNECTED] == true"
+          alerts:
+            - type: pushover
+        - name: gateway-internal
+          group: cluster-core
+          url: https://home.noirprime.com
+          interval: 1m
+          conditions:
+            - "[STATUS] == 200"
+            - "[CERTIFICATE_EXPIRATION] > 168h"
+          alerts:
+            - type: pushover
+        - name: node-exarch-01
+          group: cluster-core
+          url: icmp://10.10.0.101
+          interval: 1m
+          conditions:
+            - "[CONNECTED] == true"
+        - name: node-exarch-02
+          group: cluster-core
+          url: icmp://10.10.0.102
+          interval: 1m
+          conditions:
+            - "[CONNECTED] == true"
+        - name: node-exarch-03
+          group: cluster-core
+          url: icmp://10.10.0.103
+          interval: 1m
+          conditions:
+            - "[CONNECTED] == true"
+
+        # --- Critical apps ---
+        - name: authentik
+          group: cluster-apps
+          url: https://auth.noirprime.com/-/health/live/
+          interval: 2m
+          conditions:
+            - "[STATUS] == 200"
+          alerts:
+            - type: pushover
+        - name: jellyfin
+          group: cluster-apps
+          url: https://movie.noirprime.com/health
+          interval: 2m
+          conditions:
+            - "[STATUS] == 200"
+            - "[BODY] == Healthy"
+          alerts:
+            - type: pushover
+        - name: immich
+          group: cluster-apps
+          url: https://photo.noirprime.com/server/ping
+          interval: 2m
+          conditions:
+            - "[STATUS] == 200"
+            - "[BODY].res == pong"
+        - name: grafana
+          group: cluster-apps
+          url: https://grafana.noirprime.com/api/health
+          interval: 5m
+          conditions:
+            - "[STATUS] == 200"
+            - "[BODY].database == ok"
+
+        # --- Edge infrastructure ---
+        - name: openwrt
+          group: infra
+          url: http://10.10.0.254
+          interval: 1m
+          conditions:
+            - "[STATUS] == 200"
+          alerts:
+            - type: pushover
+        - name: adguard-dns
+          group: infra
+          url: 10.10.0.254
+          interval: 1m
+          dns:
+            query-name: "home.noirprime.com"
+            query-type: "A"
+          conditions:
+            - "[DNS_RCODE] == NOERROR"
+          alerts:
+            - type: pushover
+        - name: switch-core
+          group: infra
+          url: icmp://10.10.0.1
+          interval: 2m
+          conditions:
+            - "[CONNECTED] == true"
+        - name: synology-dockge
+          group: infra
+          url: http://10.10.0.100:5002
+          interval: 5m
+          conditions:
+            - "[STATUS] == 200"
+
+        # --- WAN reachability (so we can tell internal-vs-external outages apart) ---
+        - name: wan
+          group: infra
+          url: https://alidns.com
+          interval: 5m
+          conditions:
+            - "[STATUS] == 200"
+
+      # ----------------------------------------------------------------------
+      # PUSH (external) endpoints — cluster jobs POST heartbeats here.
+      # Push pattern from inside cluster:
+      #   curl -X POST -H "Authorization: Bearer $EXTERNAL_TOKEN" \
+      #     "https://nas.homelab.internal:9400/api/v1/endpoints/<group>_<name>/external?success=true&duration=42s"
+      # Missed-push detection is implicit: if no push within the heartbeat
+      # interval, the most recent status remains and ages out, triggering alert
+      # via failure-threshold after consecutive synthesized failures.
+      # ----------------------------------------------------------------------
+      external-endpoints:
+        - name: dr-test
+          group: cluster-jobs
+          token: "${EXTERNAL_TOKEN}"
+          heartbeat:
+            interval: 720h
+            timeout: 750h
+          alerts:
+            - type: pushover
+              failure-threshold: 1
+        - name: cnpg-barman-backup
+          group: cluster-jobs
+          token: "${EXTERNAL_TOKEN}"
+          heartbeat:
+            interval: 6h
+            timeout: 7h
+          alerts:
+            - type: pushover
+              failure-threshold: 1
+        - name: volsync-kopia-snapshot
+          group: cluster-jobs
+          token: "${EXTERNAL_TOKEN}"
+          heartbeat:
+            interval: 6h
+            timeout: 7h
+          alerts:
+            - type: pushover
+              failure-threshold: 1
+        - name: ceph-health-detail
+          group: cluster-jobs
+          token: "${EXTERNAL_TOKEN}"
+          heartbeat:
+            interval: 5m
+            timeout: 10m
+          alerts:
+            - type: pushover
+              failure-threshold: 2
+        - name: flux-reconcile
+          group: cluster-jobs
+          token: "${EXTERNAL_TOKEN}"
+          heartbeat:
+            interval: 30m
+            timeout: 45m
+          alerts:
+            - type: pushover
+              failure-threshold: 1

@@ -3,6 +3,6 @@
     "TYPE": "ADGUARDHOME",
     "username": "admin",
     "password": "$ADGUARD_PASSWORD",
-    "host": "http://10.0.0.10:9200"
+    "host": "http://10.10.0.254:9200"
   }
 }

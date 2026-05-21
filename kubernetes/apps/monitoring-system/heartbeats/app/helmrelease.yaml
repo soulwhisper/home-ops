@@ -1,0 +1,249 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/CRD-catalog/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name heartbeats
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: gitops-system
+
+  values:
+    defaultPodOptions:
+      serviceAccountName: *name
+      automountServiceAccountToken: true
+
+    configMaps:
+      scripts:
+        enabled: true
+        data:
+          # Shared push function. Sourced by every script.
+          push.sh: |
+            #!/bin/bash
+            # push <endpoint-key> <success:true|false> <duration> <error>
+            push() {
+              local endpoint="$1" success="$2" duration="$3" error="$4"
+              local error_enc
+              error_enc=$(printf '%s' "$error" | jq -sRr @uri)
+              curl -fsS --max-time 10 -X POST \
+                -H "Authorization: Bearer ${GATUS_EXTERNAL_TOKEN}" \
+                "${GATUS_URL}/api/v1/endpoints/${endpoint}/external?success=${success}&duration=${duration}&error=${error_enc}"
+            }
+
+          # Reads ceph_health_status gauge from rook-ceph-mgr Prometheus endpoint.
+          # 0=HEALTH_OK, 1=HEALTH_WARN (treated as success with note), 2=HEALTH_ERR.
+          ceph-health.sh: |
+            #!/bin/bash
+            set -eu
+            source /scripts/push.sh
+            START=$(date +%s)
+            ENDPOINT="cluster-jobs_ceph-health-detail"
+
+            HEALTH=$(curl -fsS --max-time 10 \
+              "http://rook-ceph-mgr.storage-system.svc.cluster.local:9283/metrics" 2>/dev/null \
+              | awk '/^ceph_health_status / {print $2; exit}' || true)
+
+            SUCCESS="false"; ERROR=""
+            case "${HEALTH:-}" in
+              0|0.0) SUCCESS="true" ;;
+              1|1.0) SUCCESS="true"; ERROR="HEALTH_WARN" ;;
+              2|2.0) ERROR="HEALTH_ERR" ;;
+              "")    ERROR="mgr-metrics-unreachable" ;;
+              *)     ERROR="unknown:${HEALTH}" ;;
+            esac
+            push "$ENDPOINT" "$SUCCESS" "$(( $(date +%s) - START ))s" "$ERROR"
+
+          # Lists all Flux Kustomization / HelmRelease / *Repository whose Ready
+          # condition is not True. Empty list => success.
+          flux-reconcile.sh: |
+            #!/bin/bash
+            set -eu
+            source /scripts/push.sh
+            START=$(date +%s)
+            ENDPOINT="cluster-jobs_flux-reconcile"
+
+            NOT_READY=$(kubectl get \
+              kustomizations.kustomize.toolkit.fluxcd.io,\
+            helmreleases.helm.toolkit.fluxcd.io,\
+            gitrepositories.source.toolkit.fluxcd.io,\
+            ocirepositories.source.toolkit.fluxcd.io,\
+            helmrepositories.source.toolkit.fluxcd.io \
+              -A -o json | jq -r '
+                [ .items[]
+                  | select(.status.conditions != null)
+                  | select(any(.status.conditions[]; .type=="Ready" and .status!="True"))
+                  | "\(.kind)/\(.metadata.namespace)/\(.metadata.name)"
+                ] | join(",")')
+
+            if [ -z "$NOT_READY" ]; then
+              SUCCESS="true"; ERROR=""
+            else
+              SUCCESS="false"; ERROR="$NOT_READY"
+            fi
+            push "$ENDPOINT" "$SUCCESS" "$(( $(date +%s) - START ))s" "$ERROR"
+
+          # Most recent CNPG Backup CR within the window must be phase=completed.
+          # No backup at all in the window also counts as failure.
+          cnpg-backup.sh: |
+            #!/bin/bash
+            set -eu
+            source /scripts/push.sh
+            START=$(date +%s)
+            ENDPOINT="cluster-jobs_cnpg-barman-backup"
+            WINDOW_SEC=43200
+
+            CUTOFF=$(( $(date +%s) - WINDOW_SEC ))
+            LATEST=$(kubectl get backups.postgresql.cnpg.io -A -o json | jq --argjson cutoff "$CUTOFF" '
+              [ .items[]
+                | select(.metadata.creationTimestamp != null)
+                | select((.metadata.creationTimestamp | fromdateiso8601) > $cutoff)
+              ] | sort_by(.metadata.creationTimestamp) | last // null')
+
+            if [ "$LATEST" = "null" ]; then
+              SUCCESS="false"; ERROR="no-backup-in-${WINDOW_SEC}s"
+            else
+              PHASE=$(echo "$LATEST" | jq -r '.status.phase // "unknown"')
+              NAME=$(echo "$LATEST" | jq -r '"\(.metadata.namespace)/\(.metadata.name)"')
+              if [ "$PHASE" = "completed" ]; then
+                SUCCESS="true"; ERROR=""
+              else
+                SUCCESS="false"; ERROR="${NAME}:${PHASE}"
+              fi
+            fi
+            push "$ENDPOINT" "$SUCCESS" "$(( $(date +%s) - START ))s" "$ERROR"
+
+          # Every ReplicationSource must have a lastSyncTime newer than the window.
+          # Sources never-synced are flagged separately.
+          volsync-kopia.sh: |
+            #!/bin/bash
+            set -eu
+            source /scripts/push.sh
+            START=$(date +%s)
+            ENDPOINT="cluster-jobs_volsync-kopia-snapshot"
+            WINDOW_SEC=43200
+
+            ALL=$(kubectl get replicationsources.volsync.backube -A -o json)
+            CUTOFF=$(( $(date +%s) - WINDOW_SEC ))
+
+            STALE=$(echo "$ALL" | jq -r --argjson cutoff "$CUTOFF" '
+              [ .items[]
+                | select(.status.lastSyncTime != null)
+                | select((.status.lastSyncTime | fromdateiso8601) < $cutoff)
+                | "\(.metadata.namespace)/\(.metadata.name)"
+              ] | join(",")')
+
+            NEVER=$(echo "$ALL" | jq -r '
+              [ .items[]
+                | select(.status.lastSyncTime == null)
+                | "\(.metadata.namespace)/\(.metadata.name)"
+              ] | join(",")')
+
+            if [ -z "$STALE" ] && [ -z "$NEVER" ]; then
+              SUCCESS="true"; ERROR=""
+            else
+              SUCCESS="false"; ERROR=""
+              [ -n "$STALE" ] && ERROR="stale=${STALE}"
+              [ -n "$NEVER" ] && ERROR="${ERROR}${ERROR:+;}never=${NEVER}"
+            fi
+            push "$ENDPOINT" "$SUCCESS" "$(( $(date +%s) - START ))s" "$ERROR"
+
+    persistence:
+      scripts:
+        type: configMap
+        identifier: scripts
+        defaultMode: 0555
+        globalMounts:
+          - path: /scripts
+            readOnly: true
+
+    controllers:
+      ceph-health:
+        type: cronjob
+        cronjob:
+          schedule: "*/5 * * * *"
+          timeZone: Asia/Shanghai
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 1
+          failedJobsHistory: 1
+          startingDeadlineSeconds: 60
+          backoffLimit: 0
+          activeDeadlineSeconds: 60
+          ttlSecondsAfterFinished: 600
+        containers:
+          app:
+            image: &image
+              repository: alpine/k8s
+              tag: 1.33.12
+            command: ["bash", "/scripts/ceph-health.sh"]
+            envFrom: &envFrom
+              - secretRef:
+                  name: heartbeats
+            resources:
+              requests: { cpu: 10m, memory: 32Mi }
+              limits: { cpu: 100m, memory: 128Mi }
+
+      flux-reconcile:
+        type: cronjob
+        cronjob:
+          schedule: "*/30 * * * *"
+          timeZone: Asia/Shanghai
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 1
+          failedJobsHistory: 1
+          startingDeadlineSeconds: 120
+          backoffLimit: 0
+          activeDeadlineSeconds: 120
+          ttlSecondsAfterFinished: 600
+        containers:
+          app:
+            image: *image
+            command: ["bash", "/scripts/flux-reconcile.sh"]
+            envFrom: *envFrom
+            resources:
+              requests: { cpu: 10m, memory: 64Mi }
+              limits: { cpu: 200m, memory: 256Mi }
+
+      cnpg-backup:
+        type: cronjob
+        cronjob:
+          schedule: "15 */6 * * *"
+          timeZone: Asia/Shanghai
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 1
+          failedJobsHistory: 1
+          startingDeadlineSeconds: 300
+          backoffLimit: 0
+          activeDeadlineSeconds: 120
+          ttlSecondsAfterFinished: 600
+        containers:
+          app:
+            image: *image
+            command: ["bash", "/scripts/cnpg-backup.sh"]
+            envFrom: *envFrom
+            resources:
+              requests: { cpu: 10m, memory: 64Mi }
+              limits: { cpu: 200m, memory: 256Mi }
+
+      volsync-kopia:
+        type: cronjob
+        cronjob:
+          schedule: "45 */6 * * *"
+          timeZone: Asia/Shanghai
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 1
+          failedJobsHistory: 1
+          startingDeadlineSeconds: 300
+          backoffLimit: 0
+          activeDeadlineSeconds: 120
+          ttlSecondsAfterFinished: 600
+        containers:
+          app:
+            image: *image
+            command: ["bash", "/scripts/volsync-kopia.sh"]
+            envFrom: *envFrom
+            resources:
+              requests: { cpu: 10m, memory: 64Mi }
+              limits: { cpu: 200m, memory: 256Mi }

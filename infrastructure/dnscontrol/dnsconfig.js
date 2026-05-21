@@ -31,7 +31,9 @@ D(
   "homelab.internal",
   REG_NONE,
   DnsProvider(DSP_ADGUARDHOME),
+  A("esxi", "10.0.0.10"),
   A("zigbee", "10.10.0.20"),
   A("nas", "10.10.0.100"),
+  A("unifi", "10.10.0.200"),
   ...generateClusterRecords("k8s", CLUSTER_NODES)
 );

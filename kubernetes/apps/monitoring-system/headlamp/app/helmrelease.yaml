@@ -16,9 +16,9 @@ spec:
     initContainers:
       # Generate kubeconfig file, ref:https://github.com/kubernetes-sigs/headlamp/issues/1826
       - name: create-kubeconfig
-        image: rancher/shell:v0.7.0
+        image: alpine/k8s:1.33.12
         command:
-          - /bin/sh
+          - /bin/bash
           - "-c"
           - |
             kubectl config set-cluster main --server=https://kubernetes.default.svc --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
