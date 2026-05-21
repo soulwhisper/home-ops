@@ -12,10 +12,6 @@ spec:
     namespace: gitops-system
 
   values:
-    defaultPodOptions:
-      serviceAccountName: *name
-      automountServiceAccountToken: true
-
     configMaps:
       scripts:
         enabled: true
@@ -158,6 +154,42 @@ spec:
         globalMounts:
           - path: /scripts
             readOnly: true
+
+    defaultPodOptions:
+      automountServiceAccountToken: true
+    rbac:
+      roles:
+        heartbeats:
+          type: ClusterRole
+          rules:
+            # CNPG Backup status
+            - apiGroups: ["postgresql.cnpg.io"]
+              resources: ["backups"]
+              verbs: ["get", "list"]
+            # VolSync ReplicationSource status
+            - apiGroups: ["volsync.backube"]
+              resources: ["replicationsources"]
+              verbs: ["get", "list"]
+            # Flux readiness
+            - apiGroups: ["kustomize.toolkit.fluxcd.io"]
+              resources: ["kustomizations"]
+              verbs: ["get", "list"]
+            - apiGroups: ["helm.toolkit.fluxcd.io"]
+              resources: ["helmreleases"]
+              verbs: ["get", "list"]
+            - apiGroups: ["source.toolkit.fluxcd.io"]
+              resources:
+                ["gitrepositories", "ocirepositories", "helmrepositories"]
+              verbs: ["get", "list"]
+      bindings:
+        heartbeats:
+          type: ClusterRoleBinding
+          roleRef:
+            identifier: heartbeats
+          subjects:
+            - identifier: heartbeats
+    serviceAccount:
+      heartbeats: {}
 
     controllers:
       ceph-health:

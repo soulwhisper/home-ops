@@ -52,5 +52,9 @@ nav:
       - Kubernetes: infrastructure/kubernetes.md
       - Networking: infrastructure/networking.md
       - Hardware: infrastructure/hardware.md
-  - Decisions: decisions/bgp.md
-  - Deployment: deployment/bootstrap.md
+  - Decisions:
+      - BGP: decisions/bgp.md
+      - Public: decisions/public-exposure.md
+  - Deployment:
+      - Bootstrap: deployment/bootstrap.md
+      - Authentication: deployment/authentication.md
