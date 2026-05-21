@@ -31,7 +31,12 @@ spec:
               - python3
               - main.py
             env:
-              ENABLE_DATABASE_STORAGE: true
+              ARK_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: home-assistant
+                    key: ark_api_key
+              DB_TYPE: SQLITE
               HASS_URL: home-assistant:8123
               HASS_TOKEN:
                 secretKeyRef:
