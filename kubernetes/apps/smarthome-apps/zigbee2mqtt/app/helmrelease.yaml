@@ -16,6 +16,13 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000 # node
+            runAsGroup: 1000
+            fsGroup: 2000
+            fsGroupChangePolicy: OnRootMismatch
         containers:
           app:
             image:
@@ -79,7 +86,7 @@ spec:
               ZIGBEE2MQTT_CONFIG_SERIAL_PORT: tcp://zigbee.homelab.internal:6638
               ZIGBEE2MQTT_CONFIG_SERIAL_BAUDRATE: 115200
               ZIGBEE2MQTT_CONFIG_SERIAL_DISABLE_LED: false
-            resources: &resources
+            resources:
               requests:
                 cpu: 40m
               limits:
@@ -88,23 +95,6 @@ spec:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
-          code-server:
-            image:
-              repository: ghcr.io/coder/code-server
-              tag: 4.121.0
-            args:
-              - --auth
-              - none
-              - --disable-telemetry
-              - --disable-update-check
-              - --user-data-dir
-              - /data/user-data
-              - --extensions-dir
-              - /data/extensions
-              - --port
-              - "1337"
-              - /data
-            resources: *resources
 
     service:
       app:
@@ -114,10 +104,6 @@ spec:
             port: *httpPort
           metrics:
             port: 9000
-      code-server:
-        ports:
-          http:
-            port: 1337
 
     route:
       app:
@@ -130,24 +116,6 @@ spec:
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
-        rules:
-          - backendRefs:
-              - identifier: app
-                port: http
-      code-server:
-        hostnames: ["z2m-code.noirprime.com"]
-        annotations:
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: code-server.svg
-          gethomepage.dev/name: Zigbee2MQTT-Code
-          gethomepage.dev/group: SmartHome
-        parentRefs:
-          - name: kgateway-internal
-            namespace: networking-system
-        rules:
-          - backendRefs:
-              - identifier: code-server
-                port: http
 
     persistence:
       app:
@@ -156,13 +124,5 @@ spec:
           - path: /data
       tmpfs:
         type: emptyDir
-        advancedMounts:
-          *name :
-            app:
-              - path: /tmp
-                subPath: tmp/hass
-            code-server:
-              - path: /tmp
-                subPath: tmp/code
-              - path: /nonexistent
-                subPath: nonexistent
+        globalMounts:
+          - path: /tmp

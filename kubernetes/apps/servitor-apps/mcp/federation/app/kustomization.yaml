@@ -5,3 +5,4 @@ kind: Kustomization
 resources:
   - ./agentgatewaybackend.yaml
   - ./httproute.yaml
+  - ./trafficpolicy.yaml

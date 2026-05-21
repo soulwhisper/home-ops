@@ -17,6 +17,15 @@ spec:
             - gateway.networking.k8s.io/gateway-name
             - pod-template-hash
     envoyContainer:
+      bootstrap:
+        logFormat:
+          json:
+            time: "%Y-%m-%dT%T.%eZ"
+            level: "%l"
+            logger: "%n"
+            thread: "%t"
+            source: "%g:%#"
+            message: "%v"
       resources:
         requests:
           cpu: "100m"
@@ -28,3 +37,4 @@ spec:
     podDisruptionBudget:
       spec:
         minAvailable: 1
+        unhealthyPodEvictionPolicy: AlwaysAllow

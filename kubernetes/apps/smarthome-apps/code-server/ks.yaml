@@ -3,7 +3,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: &name zigbee2mqtt
+  name: &name code-server
   annotations:
     config.home-ops.io/managed: "true"
   labels:
@@ -13,9 +13,11 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: smarthome-apps
-  path: "./kubernetes/apps/smarthome-apps/zigbee2mqtt/app"
+  path: "./kubernetes/apps/smarthome-apps/code-server/app"
   dependsOn:
-    - name: mosquitto
+    - name: home-assistant
+      namespace: smarthome-apps
+    - name: zigbee2mqtt
       namespace: smarthome-apps
   components:
     - ../../../../components/authentik
@@ -23,6 +25,3 @@ spec:
   postBuild:
     substitute:
       APP: *name
-      VOLSYNC_ACCESSMODES: ReadWriteMany
-      VOLSYNC_STORAGECLASS: ceph-filesystem
-      VOLSYNC_SNAPSHOTCLASS: ceph-filesystem-snapshot

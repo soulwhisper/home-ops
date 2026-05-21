@@ -9,4 +9,4 @@ resources:
   # utils
   - ./clusterissuer.yaml
   - ./externalsecret.yaml
-  - ./prometheusrules.yaml
+  - ./prometheusrule.yaml

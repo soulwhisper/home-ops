@@ -38,8 +38,3 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: smarthome-apps
   path: "./kubernetes/apps/smarthome-apps/home-assistant/sgcc"
-  components:
-    - ../../../../components/volsync
-  postBuild:
-    substitute:
-      APP: *name

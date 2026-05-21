@@ -7,5 +7,5 @@ resources:
   - ./helmrelease.yaml
   - ./ocirepository.yaml
   # utils
-  - ./prometheusrules.yaml
+  - ./prometheusrule.yaml
   - ./github/

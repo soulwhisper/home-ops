@@ -41,10 +41,10 @@ configMapGenerator:
       - ./blueprints/forward/agentgateway.yaml
       - ./blueprints/forward/audiomuse.yaml
       - ./blueprints/forward/bambuddy.yaml
+      - ./blueprints/forward/code-server.yaml
       - ./blueprints/forward/convertx.yaml
       - ./blueprints/forward/frigate-go2rtc.yaml
       - ./blueprints/forward/frigate.yaml
-      - ./blueprints/forward/hass-code.yaml
       - ./blueprints/forward/hermes-agent.yaml
       - ./blueprints/forward/homepage.yaml
       - ./blueprints/forward/hubble.yaml
@@ -59,5 +59,4 @@ configMapGenerator:
       - ./blueprints/forward/victoria-logs.yaml
       - ./blueprints/forward/victoria-metrics.yaml
       - ./blueprints/forward/victoria-traces.yaml
-      - ./blueprints/forward/z2m-code.yaml
       - ./blueprints/forward/z2m.yaml

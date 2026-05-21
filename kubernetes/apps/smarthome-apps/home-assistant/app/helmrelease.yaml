@@ -12,13 +12,17 @@ spec:
     namespace: gitops-system
 
   values:
-    defaultPodOptions:
-      hostUsers: false
     controllers:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
           config.home-ops.io/proxy: "https" # https_proxy needed
+        pod:
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            fsGroup: 2000
+            fsGroupChangePolicy: OnRootMismatch
         initContainers:
           hacs-installer:
             image:
@@ -54,33 +58,6 @@ spec:
                 cpu: 40m
               limits:
                 memory: 2Gi
-          code-server:
-            image:
-              repository: ghcr.io/coder/code-server
-              tag: 4.121.0
-            args:
-              - --auth
-              - none
-              - --disable-telemetry
-              - --disable-update-check
-              - --user-data-dir
-              - /data/user-data
-              - --extensions-dir
-              - /data/extensions
-              - --port
-              - "1337"
-              - /config
-            env:
-              HASS_SERVER: home-assistant:8123
-              HASS_TOKEN:
-                secretKeyRef:
-                  name: *name
-                  key: supervisor_token
-            resources:
-              requests:
-                cpu: 40m
-              limits:
-                memory: 512Mi
 
     service:
       app:
@@ -88,11 +65,6 @@ spec:
           http:
             appProtocol: kubernetes.io/ws
             port: 8123
-        primary: true
-      code-server:
-        ports:
-          http:
-            port: 1337
 
     route:
       app:
@@ -105,46 +77,16 @@ spec:
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
-        rules:
-          - backendRefs:
-              - identifier: app
-                port: http
-      code-server:
-        hostnames: ["hass-code.noirprime.com"]
-        annotations:
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: code-server.svg
-          gethomepage.dev/name: Home-Assistant-Code
-          gethomepage.dev/group: SmartHome
-        parentRefs:
-          - name: kgateway-internal
-            namespace: networking-system
-        rules:
-          - backendRefs:
-              - identifier: code-server
-                port: http
 
     persistence:
       app:
         existingClaim: *name
-        advancedMounts:
-          *name :
-            hacs-installer:
-              - path: /config
-                subPath: config
-            app:
-              - path: /config
-                subPath: config
-            code-server:
-              - path: /config
-                subPath: config
-              - path: /data
-                subPath: code-server
+        globalMounts:
+          - path: /config
+            subPath: config
       packages:
         type: configMap
         name: *name
-        advancedMounts:
-          *name :
-            app:
-              - path: /config/packages
-                readOnly: true
+        globalMounts:
+          - path: /config/packages
+            readOnly: true

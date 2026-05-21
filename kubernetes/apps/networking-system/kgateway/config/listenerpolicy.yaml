@@ -31,3 +31,16 @@ spec:
         clientSampling: 100
         randomSampling: 100
         overallSampling: 100
+        attributes:
+          - name: enduser.id
+            requestHeader:
+              name: X-Authentik-Username
+          - name: enduser.email
+            requestHeader:
+              name: X-Authentik-Email
+          - name: enduser.scope
+            requestHeader:
+              name: X-Authentik-Groups
+          - name: http.route.gateway
+            literal:
+              value: kgateway

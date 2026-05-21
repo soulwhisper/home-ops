@@ -9,6 +9,7 @@ resources:
   # storage
   - ./smarthome-nfs/ks.yaml
   # app
+  - ./code-server/ks.yaml
   - ./frigate/ks.yaml
   - ./home-assistant/ks.yaml
   - ./mosquitto/ks.yaml

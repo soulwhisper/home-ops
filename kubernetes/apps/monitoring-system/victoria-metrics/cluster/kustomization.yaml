@@ -9,5 +9,6 @@ resources:
   # utils
   - ./externalsecret.yaml
   - ./httproute.yaml
+  - ./prometheusrule.yaml
   - ./scrapeconfig.yaml
   - ./trafficpolicy.yaml

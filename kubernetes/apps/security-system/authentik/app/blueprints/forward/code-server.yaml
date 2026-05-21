@@ -4,7 +4,7 @@ version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
     identifiers:
-      name: &provider z2m-code-proxy-provider
+      name: &provider code-server-proxy-provider
     attrs:
       name: *provider
       authorization_flow:
@@ -13,12 +13,12 @@ entries:
           [slug, default-provider-authorization-implicit-consent],
         ]
       mode: forward_domain
-      external_host: &domain "https://z2m-code.noirprime.com"
+      external_host: &domain "https://code.noirprime.com"
       access_token_validity: "hours=12"
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
     identifiers:
-      slug: &name z2m-code
+      slug: &name code-server
     attrs:
       name: *name
       provider: !KeyOf *provider

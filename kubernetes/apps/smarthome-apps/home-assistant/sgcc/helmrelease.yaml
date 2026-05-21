@@ -12,12 +12,16 @@ spec:
     namespace: gitops-system
 
   values:
-    defaultPodOptions:
-      hostUsers: false
     controllers:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
+        pod:
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            fsGroup: 2000
+            fsGroupChangePolicy: OnRootMismatch
         containers:
           app:
             image:
@@ -48,16 +52,13 @@ spec:
                 cpu: 40m
               limits:
                 memory: 1Gi
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-              readOnlyRootFilesystem: true
 
     persistence:
       app:
-        existingClaim: *name
+        existingClaim: home-assistant
         globalMounts:
           - path: /data
+            subPath: sgcc
       tmpfs:
         type: emptyDir
         globalMounts:
