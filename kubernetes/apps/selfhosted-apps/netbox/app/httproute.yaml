@@ -9,9 +9,6 @@ metadata:
     gethomepage.dev/icon: netbox.svg
     gethomepage.dev/name: Netbox
     gethomepage.dev/group: Service
-    gatus.home-operations.com/endpoint: |
-      conditions:
-        - "[STATUS] == 200"
 spec:
   hostnames: ["netbox.noirprime.com"]
   parentRefs:

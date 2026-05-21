@@ -10,9 +10,6 @@ metadata:
     gethomepage.dev/name: AgentGateway
     gethomepage.dev/group: Observability
     gethomepage.dev/href: "https://ai.noirprime.com/ui/"
-    gatus.home-operations.com/endpoint: |
-      conditions:
-        - "[STATUS] == 200"
 spec:
   hostnames: ["ai.noirprime.com"]
   parentRefs:

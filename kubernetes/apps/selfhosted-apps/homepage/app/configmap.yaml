@@ -94,47 +94,34 @@ data:
                   name: Ticktick
                   url: {{HOMEPAGE_VAR_TICKTICK_ICAL}}
     - Infrastructure:
-        - Proxmox:
-            href: https://10.0.0.100:8006
-            icon: proxmox.svg
-            widget:
-              type: proxmox
-              url: https://10.0.0.100:8006
-              username: {{HOMEPAGE_VAR_PROXMOX_USERNAME}}
-              password: {{HOMEPAGE_VAR_PROXMOX_PASSWORD}}
+        - ESXi:
+            href: https://10.0.0.10
+            icon: vmware-esxi.svg
         - OpenWRT:
-            href: https://10.0.0.1
+            href: https://10.0.0.254
             icon: openwrt.svg
             widget:
               type: openwrt
-              url: https://10.0.0.1
+              url: https://10.0.0.254
               username: {{HOMEPAGE_VAR_OPENWRT_USERNAME}}
               password: {{HOMEPAGE_VAR_OPENWRT_PASSWORD}}
               interfaceName: wan
     - Networking:
         - Unifi:
-            href: https://10.0.0.200:9801
+            href: https://10.10.0.200:9801
             icon: unifi.svg
             widget:
               type: unifi
-              url: https://10.0.0.200:9801
+              url: https://10.10.0.200:9801
               username: {{HOMEPAGE_VAR_UNIFI_USERNAME}}
               password: {{HOMEPAGE_VAR_UNIFI_PASSWORD}}
-        - Cloudflare:
-            href: https://dash.cloudflare.com/
-            icon: cloudflare.svg
-            widget:
-              type: cloudflared
-              accountid: {{HOMEPAGE_VAR_CLOUDFLARE_ACCOUNTID}}
-              tunnelid: {{HOMEPAGE_VAR_CLOUDFLARE_TUNNELID}}
-              key: {{HOMEPAGE_VAR_CLOUDFLARE_API_TOKEN}}
     - Storage:
         - NAS:
-            href: https://10.0.0.10:5001
+            href: https://10.10.0.100:5001
             icon: synology.svg
             widget:
               type: diskstation
-              url: https://10.0.0.10:5001
+              url: https://10.10.0.100:5001
               username: {{HOMEPAGE_VAR_SYNOLOGY_USERNAME}}
               password: {{HOMEPAGE_VAR_SYNOLOGY_PASSWORD}}
               volume: volume_2

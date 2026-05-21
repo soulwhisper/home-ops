@@ -8,6 +8,4 @@ components:
 resources:
   - ./agentgateway/ks.yaml
   - ./kgateway/ks.yaml
-  - ./cloudflare-tunnel/ks.yaml
-  - ./externaldns-adguard/ks.yaml
-  - ./externaldns-cloudflare/ks.yaml
+  - ./externaldns/ks.yaml

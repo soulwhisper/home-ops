@@ -7,10 +7,6 @@ metadata:
   annotations:
     cert-manager.io/issuer: letsencrypt-production
     external-dns.alpha.kubernetes.io/target: &hostname gateway-ext.noirprime.com
-    gatus.home-operations.com/endpoint: |-
-      client:
-        dns-resolver: tcp://1.0.0.1:53
-      group: external
 spec:
   gatewayClassName: kgateway
   infrastructure:

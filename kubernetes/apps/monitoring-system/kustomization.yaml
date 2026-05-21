@@ -22,5 +22,4 @@ resources:
   - ./victoria-traces/ks.yaml # replace tempo
   # others
   - ./headlamp/ks.yaml
-  - ./kromgo/ks.yaml
   - ./robusta/ks.yaml
