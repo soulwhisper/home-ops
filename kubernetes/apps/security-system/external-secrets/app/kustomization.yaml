@@ -6,3 +6,5 @@ resources:
   # app
   - ./helmrelease.yaml
   - ./ocirepository.yaml
+  # utils
+  - ./prometheusrule.yaml

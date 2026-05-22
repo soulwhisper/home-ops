@@ -50,6 +50,6 @@ repos:
           - "-strict"
           - "-summary"
           - "-schema-location=default"
-          - "-schema-location=https://soulwhisper.github.io/CRD-catalog/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+          - "-schema-location=https://soulwhisper.github.io/k8s-schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
         language: system
         files: ^kubernetes/.*\.ya?ml$
