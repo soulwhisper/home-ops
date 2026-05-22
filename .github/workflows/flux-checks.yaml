@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        resource:
+        resources:
           - helmrelease
           - kustomization
     steps:
