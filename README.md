@@ -40,6 +40,8 @@ I got help from some cool repo like:
 - [onedr0p/home-ops](https://github.com/onedr0p/home-ops)
 - [mchestr/home-cluster](https://github.com/mchestr/home-cluster)
 - [rafaribe/home-ops](https://github.com/rafaribe/home-ops)
+- [buroa/k8s-gitops](https://github.com/buroa/k8s-gitops)
+- [joryirving/home-ops](https://github.com/joryirving/home-ops)
 
 ---
 
