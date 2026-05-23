@@ -72,9 +72,8 @@ jobs:
         env:
           RESOURCE: ${{ matrix.resources }}
         run: |
-          # https://github.com/home-operations/flate/issues/51
+          # https://github.com/home-operations/flate/issues/105
           # flate test "$RESOURCE" --path ./pull --path-orig ./default
-          flate test all --path ./pull
 
   diff:
     if: ${{ needs.filter.outputs.changed-files != '[]' }}
