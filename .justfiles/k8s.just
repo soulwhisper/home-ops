@@ -38,7 +38,7 @@ prune-rs:
 [doc('Render local Flux Kustomization')]
 [script]
 render-ks ns ks:
-  uvx flux-local build ks --namespace "{{ ns }}" --path "$K8S_DIR/flux/cluster" "{{ ks }}"
+  flate build ks --namespace "{{ ns }}" "{{ ks }}"
 
 [doc('Apply local Flux Kustomization')]
 [script]

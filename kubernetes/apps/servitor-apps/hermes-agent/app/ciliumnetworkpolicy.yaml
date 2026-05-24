@@ -29,23 +29,23 @@ spec:
                 pathRegex: "/mcp/.*"
 
     # Web Search
-    # - toServices:
-    #     - k8sService:
-    #         serviceName: firecrawl
-    #         namespace: servitor-apps
-    #   toPorts:
-    #     - ports:
-    #         - { port: "3002", protocol: TCP }
-    #       rules:
-    #         http:
-    #           - method: "POST"
-    #             path: "/v1/scrape"
-    #           - method: "POST"
-    #             path: "/v1/search"
-    #           - method: "POST"
-    #             path: "/v1/crawl"
-    #           - method: "GET"
-    #             pathRegex: "/v1/crawl/[a-zA-Z0-9-]+/status"
+    - toServices:
+        - k8sService:
+            serviceName: firecrawl
+            namespace: servitor-apps
+      toPorts:
+        - ports:
+            - { port: "3002", protocol: TCP }
+          rules:
+            http:
+              - method: "POST"
+                path: "/v1/scrape"
+              - method: "POST"
+                path: "/v1/search"
+              - method: "POST"
+                path: "/v1/crawl"
+              - method: "GET"
+                pathRegex: "/v1/crawl/[a-zA-Z0-9-]+/status"
 
     # Memory
     - toServices:

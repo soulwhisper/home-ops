@@ -7,8 +7,6 @@ FLUX_SYSTEM_NAMESPACE = "gitops-system"
 ROOK_OPERATOR_NAMESPACE = "storage-system"
 ROOK_CLUSTER_NAMESPACE = "storage-system"
 
-[settings]
-pipx.uvx = true
-
 [tools]
-terraform = "latest"
+prek = "latest"
+"github:home-operations/flate" = "latest"

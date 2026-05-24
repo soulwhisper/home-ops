@@ -6,6 +6,3 @@ resources:
   # app
   - ./helmrelease.yaml
   - ./ocirepository.yaml
-  # : due to issue:https://github.com/VictoriaMetrics/helm-charts/issues/2420
-  # : we use the original manifests instead of helm chart
-  # - ./patch.yaml

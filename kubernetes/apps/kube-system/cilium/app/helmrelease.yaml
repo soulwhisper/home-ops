@@ -53,8 +53,8 @@ spec:
           - drop
           - tcp
           - flow
-          # - port-distribution
-          # - icmp
+          - port-distribution
+          - icmp
           - http
         serviceMonitor:
           enabled: true
