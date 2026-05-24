@@ -1,5 +1,4 @@
 ---
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/vendir.k14s.io/config_v1alpha1.json
 apiVersion: vendir.k14s.io/v1alpha1
 kind: Config
 directories:

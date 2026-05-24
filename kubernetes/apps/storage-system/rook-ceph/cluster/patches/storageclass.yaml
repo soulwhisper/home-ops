@@ -1,5 +1,4 @@
 ---
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/storage.k8s.io/storageclass_v1.json
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
