@@ -14,8 +14,8 @@ resources:
   - ./jellyfin/ks.yaml
   - ./immich/ks.yaml
   - ./kavita/ks.yaml
-  - ./lyrion/ks.yaml
   - ./metube/ks.yaml
   - ./moviepilot/ks.yaml
+  - ./navidrome/ks.yaml
   - ./qbittorrent/ks.yaml
   - ./qbittorrent-ui/ks.yaml

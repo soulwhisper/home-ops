@@ -15,7 +15,6 @@ resources:
   # oidc blueprints
   - ./blueprints/oidc/calibre.yaml
   - ./blueprints/oidc/grafana.yaml
-  - ./blueprints/oidc/headlamp.yaml
   - ./blueprints/oidc/home-assistant.yaml
   - ./blueprints/oidc/immich.yaml
   - ./blueprints/oidc/jellyfin.yaml

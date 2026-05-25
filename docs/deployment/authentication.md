@@ -62,10 +62,6 @@ kubectl rook-ceph ceph dashboard sso status
 
 ## Other
 
-### Astrbot
-
-- use its own user system;
-
 ### Crafty-4
 
 - login via `admin` and below password;
@@ -89,6 +85,10 @@ kubectl -n gaming-apps exec crafty-controller -- cat /crafty/app/config/default-
 ### Moviepilot
 
 - use its own user system;
+
+### Navidrome
+
+- use its own user system, VPN first;
 
 ### Scrypted
 

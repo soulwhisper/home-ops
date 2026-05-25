@@ -20,7 +20,7 @@ spec:
         pod:
           securityContext:
             runAsNonRoot: true
-            runAsUser: 1001
+            runAsUser: 1001 # dify
             runAsGroup: 1001
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch

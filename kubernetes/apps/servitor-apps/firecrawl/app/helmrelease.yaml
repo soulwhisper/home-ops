@@ -13,8 +13,8 @@ spec:
 
   values:
     defaultPodOptions:
-      hostUsers: false
       terminationGracePeriodSeconds: 180
+      runtimeClassName: kata
     controllers:
       # --- HTTP API ----------------------------------------------------
       firecrawl-api:
