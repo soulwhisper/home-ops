@@ -151,23 +151,30 @@ spec:
     kubeApiServer:
       vmScrape:
         spec:
-          metricRelabelConfigs:
-            # Drop high-cardinality histogram buckets (keep _sum/_count for averages).
-            # Trade-off: K8s SLI dashboards lose P99 latency panels.
-            - action: drop
-              sourceLabels: [__name__]
-              regex: (apiserver|etcd|rest_client)_request(|_sli|_slo)_duration_seconds_bucket
-            - action: drop
-              sourceLabels: [__name__]
-              regex: (apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket)
-            # Admission control is patched out by Talos; no point in scraping.
-            - action: drop
-              sourceLabels: [__name__]
-              regex: apiserver_admission_.+
-            # Watch cache & long-running rq are platform-engineering metrics.
-            - action: drop
-              sourceLabels: [__name__]
-              regex: apiserver_(longrunning_requests|registered_watchers|init_events_total)
+          endpoints:
+            - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              port: https
+              scheme: https
+              tlsConfig:
+                caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                serverName: kubernetes
+              metricRelabelConfigs:
+                # Drop high-cardinality histogram buckets (keep _sum/_count for averages).
+                # Trade-off: K8s SLI dashboards lose P99 latency panels.
+                - action: drop
+                  sourceLabels: [__name__]
+                  regex: (apiserver|etcd|rest_client)_request(|_sli|_slo)_duration_seconds_bucket
+                - action: drop
+                  sourceLabels: [__name__]
+                  regex: (apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket)
+                # Admission control is patched out by Talos; no point in scraping.
+                - action: drop
+                  sourceLabels: [__name__]
+                  regex: apiserver_admission_.+
+                # Watch cache & long-running rq are platform-engineering metrics.
+                - action: drop
+                  sourceLabels: [__name__]
+                  regex: apiserver_(longrunning_requests|registered_watchers|init_events_total)
 
     kubelet:
       vmScrape:
