@@ -271,14 +271,14 @@ spec:
                   summary: Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }} has been OOMKilled {{ $value }} times in the last 10 minutes.
                 labels:
                   severity: critical
-      zfs-rules:
-        groups:
-          - name: zfs.rules
-            rules:
-              - alert: ZFSUnexpectedPoolState
-                expr: node_zfs_zpool_state{state!="online"} > 0
-                for: 15m
-                annotations:
-                  summary: ZFS pool {{$labels.zpool}} on {{$labels.instance}} is in a unexpected state {{$labels.state}}
-                labels:
-                  severity: critical
+      # zfs-rules:
+      #   groups:
+      #     - name: zfs.rules
+      #       rules:
+      #         - alert: ZFSUnexpectedPoolState
+      #           expr: node_zfs_zpool_state{state!="online"} > 0
+      #           for: 15m
+      #           annotations:
+      #             summary: ZFS pool {{$labels.zpool}} on {{$labels.instance}} is in a unexpected state {{$labels.state}}
+      #           labels:
+      #             severity: critical
