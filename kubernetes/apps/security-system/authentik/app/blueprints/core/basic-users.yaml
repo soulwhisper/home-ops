@@ -11,7 +11,7 @@ spec:
     name: onepassword
   dataFrom:
     - extract:
-        key: app_user
+        key: app-user
   target:
     template:
       data:

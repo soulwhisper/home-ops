@@ -28,6 +28,8 @@ spec:
             image:
               repository: ghcr.io/navidrome/navidrome
               tag: 0.61.2
+            env:
+              ND_ENABLEINSIGHTSCOLLECTOR: "false"
             resources:
               requests:
                 cpu: 40m

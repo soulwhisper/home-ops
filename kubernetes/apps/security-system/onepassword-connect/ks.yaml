@@ -19,7 +19,7 @@ spec:
   healthChecks:
     - apiVersion: external-secrets.io/v1
       kind: ClusterSecretStore
-      name: onepassword-connect
+      name: onepassword
   healthCheckExprs:
     - apiVersion: external-secrets.io/v1
       kind: ClusterSecretStore

@@ -17,8 +17,6 @@ spec:
   dependsOn:
     - name: agentgateway
       namespace: networking-system
-    - name: meilisearch
-      namespace: selfhosted-apps
   components:
     - ../../../../components/volsync
   postBuild:

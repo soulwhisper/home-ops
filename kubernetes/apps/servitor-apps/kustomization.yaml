@@ -15,7 +15,7 @@ resources:
   # mcp
   - ./mcp
   # : providers
-  # search = selfhosted-apps/searxng, selfhosted-apps/meilisearch
+  # search = selfhosted-apps/searxng
   # scraper
   - ./firecrawl/ks.yaml
   # memory

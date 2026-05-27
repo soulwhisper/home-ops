@@ -8,8 +8,8 @@ data:
   TEMP_DIR: "/app/temp_audio"
   AUTH_ENABLED: "false"
   # : backend
-  MEDIASERVER_TYPE: "lyrion"
-  LYRION_URL: "http://lyrion.media-apps.svc.cluster.local:9000"
+  MEDIASERVER_TYPE: "navidrome"
+  NAVIDROME_URL: "http://navidrome.media-apps.svc.cluster.local:4533"
   MUSIC_LIBRARIES: "/music"
   # : redis
   REDIS_URL: "redis://audiomuse-dragonfly.media-apps.svc.cluster.local:6379/0"

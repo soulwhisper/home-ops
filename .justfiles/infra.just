@@ -56,8 +56,8 @@ garage mode:
 [script]
 versity mode:
   echo "🔐 Fetching Admin Credentials..."
-  AWS_ACCESS_KEY_ID=$(just _op_get_secret "app_user" "admin_user")
-  AWS_SECRET_ACCESS_KEY=$(just _op_get_secret "app_user" "admin_pass")
+  AWS_ACCESS_KEY_ID=$(just _op_get_secret "app-user" "admin_user")
+  AWS_SECRET_ACCESS_KEY=$(just _op_get_secret "app-user" "admin_pass")
   : "${AWS_ACCESS_KEY_ID:?AWS Access Key ID is missing}"
   : "${AWS_SECRET_ACCESS_KEY:?AWS Secret Key is missing}"
   export AWS_ACCESS_KEY_ID

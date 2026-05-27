@@ -6,7 +6,7 @@ metadata:
   name: authentik-ext-auth-grant
 spec:
   from:
-    - group: gateway.envoyproxy.io
+    - group: gateway.kgateway.dev
       kind: GatewayExtension
       namespace: networking-system
   to:

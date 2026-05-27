@@ -27,3 +27,6 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: kube-system
   path: "./kubernetes/apps/kube-system/intel-device-plugins/gpu"
+  dependsOn:
+    - name: intel-device-plugins
+      namespace: kube-system
