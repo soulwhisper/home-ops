@@ -26,7 +26,7 @@ spec:
           app:
             image:
               repository: arcw/sgcc_electricity
-              tag: v1.7.3
+              tag: v1.8.0
             command:
               - python3
               - main.py
