@@ -3,7 +3,7 @@ name: obsidian-livesync
 
 services:
   obsidian-livesync:
-    image: "couchdb:3.5.1"
+    image: "couchdb:3.5.2"
     container_name: "obsidian-livesync"
     restart: "unless-stopped"
     ports:
