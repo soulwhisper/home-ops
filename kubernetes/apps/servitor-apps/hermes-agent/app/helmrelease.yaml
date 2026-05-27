@@ -11,6 +11,9 @@ spec:
     name: app-template
     namespace: gitops-system
 
+  # : Init plugins
+  # run 'rtk init --agent hermes' at first time, restart app to load plugins
+
   values:
     defaultPodOptions:
       runtimeClassName: kata
@@ -25,6 +28,18 @@ spec:
             runAsGroup: 10000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
+        initContainers:
+          hermes-plugins:
+            image:
+              repository: ghcr.io/soulwhisper/hermes-plugins
+              tag: "latest"
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                set -eu
+                mkdir -p /opt/data/.local/bin
+                cp -rf /plugins/* /opt/data/.local/bin/
+                echo "Plugins are initialized"
         containers:
           app:
             image:
@@ -32,6 +47,8 @@ spec:
               tag: 2026.5.16
             env:
               HERMES_SERVICES: "dashboard,gateway,webui"
+              # plugins
+              RTK_TELEMETRY_DISABLED: "true"
             envFrom:
               - secretRef:
                   name: *name
