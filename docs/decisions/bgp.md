@@ -53,7 +53,7 @@ spec:
                 mode: all
         prefixes:
           - "10.100.0.0/17" # Pod
-          - "10.10.0.192/27" # LoadBalancer
+          - "10.10.0.128/27" # LoadBalancer
     bfdProfiles:
       - name: default
         receiveInterval: 400

@@ -34,7 +34,10 @@ spec:
       cpu: 500m
     limits:
       memory: 6Gi
-
+  bootstrap:
+    initdb:
+      postInitSQL:
+        - CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
   managed:
     roles:
       - name: immich
@@ -46,35 +49,35 @@ spec:
         login: true
         superuser: false
 
-  bootstrap:
-    initdb:
-      postInitSQL:
-        - CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
-        # https://docs.immich.app/administration/postgres-standalone/#without-superuser-permission
-        - CREATE DATABASE immich;
-        - |
-          \c immich
-          ALTER DATABASE immich OWNER TO immich;
-          CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
-          CREATE EXTENSION IF NOT EXISTS earthdistance CASCADE;
-        - CREATE DATABASE hindsight;
-        - |
-          \c hindsight
-          ALTER DATABASE hindsight OWNER TO hindsight;
-          CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
-          CREATE EXTENSION IF NOT EXISTS pg_tokenizer CASCADE;
-          CREATE EXTENSION IF NOT EXISTS vchord_bm25 CASCADE;
-          SELECT create_tokenizer('llmlingua2', $$ model = "llmlingua2" $$);
-
-  # :: Notice: backup.barmanObjectStore is deprecated
-  # :: recover cluster, uncomment below
-  # bootstrap:
-  #   recovery:
-  #     source: postgres-v1
-  # externalClusters:
-  #   - name: postgres-v1
-  #     plugin:
-  #       name: barman-cloud.cloudnative-pg.io
-  #       parameters:
-  #         barmanObjectName: barman-cloud
-  #         serverName: postgres-v1
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/postgresql.cnpg.io/database_v1.json
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: &name immich
+spec:
+  cluster:
+    name: postgres
+  name: *name
+  owner: *name
+  extensions:
+    - name: vchord
+      ensure: present
+    - name: earthdistance
+      ensure: present
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/postgresql.cnpg.io/database_v1.json
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: &name hindsight
+spec:
+  cluster:
+    name: postgres
+  name: *name
+  owner: *name
+  extensions:
+    - name: vchord
+      ensure: present
+    - name: pgroonga
+      ensure: present

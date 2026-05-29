@@ -6,9 +6,8 @@ The Kubernetes cluster is deployed using [Talos](https://www.talos.dev), leverag
 
 - [cert-manager](https://github.com/cert-manager/cert-manager): Automates the management and issuance of TLS certificates.
 - [cilium](https://github.com/cilium/cilium): eBPF-based CNI providing networking, security, and observability with Gateway API support.
-- [cloudflared](https://github.com/cloudflare/cloudflared): Stable tunnel for secure ingress.
 - [cloudnative-pg](https://github.com/cloudnative-pg/cloudnative-pg): Kubernetes-native PostgreSQL operator with VectorChord support and S3 backup integration.
-- [external-dns](https://github.com/kubernetes-sigs/external-dns): Split-horizon DNS management syncing records to AdGuard (internal) and Cloudflare (external).
+- [external-dns](https://github.com/kubernetes-sigs/external-dns): Split-horizon DNS management syncing records to AdGuard (internal).
 - [external-secrets](https://github.com/external-secrets/external-secrets): Syncs Kubernetes secrets from [1Password Connect](https://github.com/1Password/connect).
 - [frr-k8s](https://github.com/metallb/frr-k8s): Manages BGP sessions and BFD for high-availability networking.
 - [rook-ceph](https://github.com/rook/rook): Distributed block storage for peristent storage.

@@ -35,7 +35,7 @@ spec:
               HINDSIGHT_API_OTEL_TRACES_ENABLED: "true"
               HINDSIGHT_API_OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
               HINDSIGHT_API_VECTOR_EXTENSION: "vchord"
-              HINDSIGHT_API_TEXT_SEARCH_EXTENSION: "vchord"
+              HINDSIGHT_API_TEXT_SEARCH_EXTENSION: "pgroonga"
               HINDSIGHT_API_DATABASE_URL:
                 valueFrom:
                   secretKeyRef:
