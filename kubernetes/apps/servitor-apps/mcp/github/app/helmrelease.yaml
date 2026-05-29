@@ -23,7 +23,7 @@ spec:
           app:
             image:
               repository: ghcr.io/github/github-mcp-server
-              tag: v1.1.0
+              tag: v1.1.2
             args: ["http"]
             env:
               GITHUB_READ_ONLY: "1"
