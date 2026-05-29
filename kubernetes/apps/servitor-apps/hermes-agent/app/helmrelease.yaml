@@ -29,17 +29,17 @@ spec:
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         initContainers:
-          hermes-plugins:
+          hermes-extras:
             image:
-              repository: ghcr.io/soulwhisper/hermes-plugins
+              repository: ghcr.io/soulwhisper/hermes-extras
               tag: "latest"
             command: ["/bin/sh", "-c"]
             args:
               - |
                 set -eu
                 mkdir -p /opt/data/.local/bin
-                cp -rf /plugins/* /opt/data/.local/bin/
-                echo "Plugins are initialized"
+                cp -rf /data/* /opt/data/.local/bin/
+                echo "Extra Binaries are initialized"
         containers:
           app:
             image:
