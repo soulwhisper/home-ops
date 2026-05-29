@@ -32,7 +32,7 @@ spec:
           hermes-extras:
             image:
               repository: ghcr.io/soulwhisper/hermes-extras
-              tag: "latest"
+              tag: "2026.05.29"
             command: ["/bin/sh", "-c"]
             args:
               - |
