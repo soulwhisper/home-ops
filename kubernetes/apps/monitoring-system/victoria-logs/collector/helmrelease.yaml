@@ -19,3 +19,12 @@ spec:
       enabled: true
     remoteWrite:
       - url: "http://victoria-logs-server.monitoring-system.svc.cluster.local:9428"
+        maxDiskUsagePerURL: 10GB
+    collector:
+      streamFields:
+        - kubernetes.pod_name
+        - kubernetes.pod_namespace
+        - kubernetes.container_name
+        - kubernetes.pod_labels.app.kubernetes.io/name
+    extraArgs:
+      "kubernetesCollector.decolorizeFields": _msg
