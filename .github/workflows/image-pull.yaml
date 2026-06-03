@@ -9,8 +9,6 @@ permissions:
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  push:
-    branches: ["main"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
