@@ -6,7 +6,6 @@ metadata:
   name: &name rook-ceph
 spec:
   interval: 30m
-  releaseName: rook-ceph
   chartRef:
     kind: OCIRepository
     name: rook-ceph
@@ -14,12 +13,6 @@ spec:
   values:
     crds:
       enabled: true
-    csi:
-      rookUseCsiOperator: true
-      cephFSKernelMountOptions: ms_mode=prefer-crc
-      csiDriverNamePrefix: storage-system
-    enableLiveness: true
-    enableDiscoveryDaemon: true
     monitoring:
       enabled: true
     serviceMonitor:

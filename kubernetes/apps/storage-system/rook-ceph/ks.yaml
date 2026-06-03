@@ -21,6 +21,24 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
+  name: &name rook-ceph-drivers
+  annotations:
+    config.home-ops.io/managed: "true"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: storage-system
+  path: "./kubernetes/apps/storage-system/rook-ceph/drivers"
+  wait: true
+  dependsOn:
+    - name: rook-ceph
+      namespace: storage-system
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
   name: &name rook-ceph-cluster
   annotations:
     config.home-ops.io/managed: "true"
@@ -32,7 +50,7 @@ spec:
   path: "./kubernetes/apps/storage-system/rook-ceph/cluster"
   wait: true
   dependsOn:
-    - name: rook-ceph
+    - name: rook-ceph-drivers
       namespace: *namespace
   healthChecks:
     - apiVersion: ceph.rook.io/v1
