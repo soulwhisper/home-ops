@@ -30,11 +30,6 @@ spec:
           mgr/crash/warn_recent_interval: "7200" # 2h
       cleanupPolicy:
         wipeDevicesFromOtherClusters: true
-      crashCollector:
-        disable: false
-      csi:
-        readAffinity:
-          enabled: true
       dashboard:
         enabled: true
         urlPrefix: /
@@ -43,10 +38,6 @@ spec:
       mgr:
         modules:
           - name: diskprediction_local
-            enabled: true
-          - name: insights
-            enabled: true
-          - name: pg_autoscaler
             enabled: true
           - name: rook
             enabled: true
