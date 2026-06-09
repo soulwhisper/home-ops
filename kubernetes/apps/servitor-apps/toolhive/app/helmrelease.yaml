@@ -1,0 +1,19 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name toolhive-operator
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: toolhive-operator
+
+  values:
+    operator:
+      replicaCount: 1
+      rbac:
+        scope: "namespace"
+        allowedNamespaces:
+          - "servitor-apps"

@@ -1,0 +1,24 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-github
+spec:
+  groupRef:
+    name: external
+  image: ghcr.io/github/github-mcp-server:v1.2.0
+  args: ["http"]
+  env:
+    GITHUB_READ_ONLY: "1"
+  mcpPort: 8082
+  secrets:
+    - name: *name
+      key: GITHUB_PERSONAL_ACCESS_TOKEN
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

@@ -1,0 +1,30 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-home-assistant
+spec:
+  groupRef:
+    name: internal-ro
+  image: grafana/mcp-grafana:0.15.2
+  podTemplateSpec:
+    spec:
+      containers:
+        - name: mcp
+          command: ["/app/mcp-grafana"]
+          args: ["--transport", "streamable-http", "--address", "0.0.0.0:8000"]
+  env:
+    GRAFANA_URL: "http://grafana-service.monitoring-system.svc.cluster.local:3000"
+  mcpPort: 8000
+  secrets:
+    - name: mcp-grafana-sa
+      key: token
+      targetEnvName: GRAFANA_SERVICE_ACCOUNT_TOKEN
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

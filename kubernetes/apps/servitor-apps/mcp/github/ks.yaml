@@ -6,9 +6,14 @@ metadata:
   name: &name mcp-github
   annotations:
     config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: servitor-apps
   path: "./kubernetes/apps/servitor-apps/mcp/github/app"
+  dependsOn:
+    - name: toolhive-config
+      namespace: servitor-apps

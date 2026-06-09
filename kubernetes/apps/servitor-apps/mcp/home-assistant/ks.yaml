@@ -16,5 +16,7 @@ spec:
   targetNamespace: servitor-apps
   path: "./kubernetes/apps/servitor-apps/mcp/home-assistant/app"
   dependsOn:
+    - name: toolhive-config
+      namespace: servitor-apps
     - name: home-assistant
       namespace: smarthome-apps

@@ -44,18 +44,8 @@ spec:
     # WS  : http://fast-note-sync:9000/api/user/sync
     service:
       app:
-        controller: *name
-        primary: true
         ports:
           http:
-            port: 9000
-      mcp:
-        controller: *name
-        annotations:
-          agentgateway.dev/mcp-path: "/api/mcp"
-        ports:
-          http:
-            appProtocol: agentgateway.dev/mcp
             port: 9000
     route:
       app:
@@ -68,10 +58,6 @@ spec:
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
-        rules:
-          - backendRefs:
-              - identifier: app
-                port: http
 
     persistence:
       app:

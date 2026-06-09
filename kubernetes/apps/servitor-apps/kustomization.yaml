@@ -13,6 +13,7 @@ resources:
   - ./mcp-inspector/ks.yaml
   - ./open-notebook/ks.yaml
   - ./sillytavern/ks.yaml
+  - ./toolhive/ks.yaml
   # mcp
   - ./mcp
   # : providers

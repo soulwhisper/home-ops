@@ -1,0 +1,45 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+aapiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: &name vmcp-internal-ro
+spec:
+  hostnames: ["mcp-ro.noirprime.com"]
+  parentRefs:
+    - name: kgateway-internal
+      namespace: networking-system
+  rules:
+    - backendRefs:
+        - name: *name
+          port: 4483
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+aapiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: &name vmcp-internal-rw
+spec:
+  hostnames: ["mcp-rw.noirprime.com"]
+  parentRefs:
+    - name: kgateway-internal
+      namespace: networking-system
+  rules:
+    - backendRefs:
+        - name: *name
+          port: 4483
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+aapiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: &name vmcp-external
+spec:
+  hostnames: ["mcp-ext.noirprime.com"]
+  parentRefs:
+    - name: kgateway-internal
+      namespace: networking-system
+  rules:
+    - backendRefs:
+        - name: *name
+          port: 4483

@@ -28,5 +28,4 @@ spec:
               replaceFullPath: /select/vmui/
     - backendRefs:
         - name: *name
-          namespace: monitoring-system
           port: 10428
