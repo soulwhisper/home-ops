@@ -8,6 +8,7 @@ components:
 resources:
   # app
   - ./dify/ks.yaml
+  - ./fast-note-sync/ks.yaml
   - ./hermes-agent/ks.yaml
   - ./mcp-inspector/ks.yaml
   - ./open-notebook/ks.yaml

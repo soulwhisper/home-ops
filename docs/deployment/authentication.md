@@ -78,6 +78,10 @@ kubectl -n gaming-apps exec crafty-controller -- cat /crafty/app/config/default-
 
 - use its own user system;
 
+### FastNoteSync
+
+- use its own user system;
+
 ### FoundryVTT
 
 - use its own user system;

@@ -3,6 +3,7 @@
 # yamllint disable rule:truthy
 
 name: Flux-checks
+
 permissions:
   contents: read
   pull-requests: write
@@ -33,15 +34,8 @@ jobs:
     needs: filter
     name: Flux Checks - Test
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    strategy:
-      fail-fast: false
-      matrix:
-        resources:
-          - helmrelease
-          - kustomization
+    env:
+      FLATE_PATH: ./kubernetes/flux/cluster
     steps:
       - name: Checkout Pull Request Branch
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -57,14 +51,20 @@ jobs:
 
       - name: Run flate test
         run: |
-          flate test ${{ matrix.resources }} --path ./kubernetes/flux/cluster --base ${{ github.event.repository.default_branch }}
+          flate test all --base ${{ github.event.repository.default_branch }}
 
       - name: Run flate diff
         id: diff
         run: |
+          flate diff all > /tmp/flate-diff.out || true
+          DIFF_RAW=$(head -c 60000 /tmp/flate-diff.out)
+          if [[ $(wc -c < /tmp/flate-diff.out) -gt 60000 ]]; then
+            DIFF_RAW="${DIFF_RAW%$'\n'*}"
+            DIFF_RAW="${DIFF_RAW}"$'\n... (truncated)'
+          fi
           {
             echo 'diff<<EOF'
-            flate diff ${{ matrix.resources }} --path ./kubernetes/flux/cluster
+            echo "${DIFF_RAW}"
             echo 'EOF'
           } >> $GITHUB_OUTPUT
 
