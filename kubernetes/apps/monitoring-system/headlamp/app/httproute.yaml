@@ -18,5 +18,4 @@ spec:
   rules:
     - backendRefs:
         - name: *name
-          namespace: monitoring-system
           port: 4466

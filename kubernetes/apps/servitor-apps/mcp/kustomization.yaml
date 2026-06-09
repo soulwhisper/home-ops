@@ -3,10 +3,10 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  # federation
-  - ./federation/ks.yaml
+  # These mcp servers dependsOn toolhive and original apps
   # servers
   - ./context/ks.yaml
+  - ./fast-note-sync/ks.yaml
   - ./firecrawl/ks.yaml
   - ./github/ks.yaml
   - ./grafana/ks.yaml

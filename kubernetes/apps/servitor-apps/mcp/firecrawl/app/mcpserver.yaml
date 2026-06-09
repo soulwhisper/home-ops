@@ -1,0 +1,24 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-firecrawl
+spec:
+  groupRef:
+    name: external
+  image: ghcr.io/firecrawl/firecrawl-mcp-server:latest
+  env:
+    PORT: &port 3000
+    FIRECRAWL_API_URL: "http://firecrawl.servitor-apps.svc.cluster.local:3002"
+    FIRECRAWL_RETRY_MAX_ATTEMPTS: "10"
+    FIRECRAWL_RETRY_INITIAL_DELAY: "500"
+    TTP_STREAMABLE_SERVER: "true"
+  mcpPort: *port
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

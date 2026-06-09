@@ -1,0 +1,24 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPGroup
+metadata:
+  name: internal-ro
+spec:
+  description: "In-cluster, read-only. No egress; read-only Kubernetes SA and scoped Grafana/VictoriaLogs tokens. For monitoring agents."
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPGroup
+metadata:
+  name: internal-rw
+spec:
+  description: "In-cluster, read-write. No egress; write-scoped credentials (GitHub PAT, Home Assistant token). Side-effecting tools on a separate endpoint."
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPGroup
+metadata:
+  name: external
+spec:
+  description: "External egress. Full outbound network, no upstream credentials. For crawlers (Firecrawl/Context); isolated for rate limiting and audit."

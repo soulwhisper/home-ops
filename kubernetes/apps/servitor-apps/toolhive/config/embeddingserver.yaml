@@ -1,0 +1,18 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/embeddingserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: EmbeddingServer
+metadata:
+  name: shared-embedding
+spec:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2
+      memory: 1Gi
+  modelCache:
+    enabled: true
+    size: 5Gi

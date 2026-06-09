@@ -1,0 +1,35 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-kubernetes
+spec:
+  groupRef:
+    name: internal-ro
+  image: ghcr.io/containers/kubernetes-mcp-server:v0.0.62
+  args: ["--config", "/root/config.toml"]
+  podTemplateSpec:
+    spec:
+      serviceAccountName: mcp-kubernetes-view
+      automountServiceAccountToken: true
+      volumes:
+        - name: config
+          configMap:
+            name: *name
+      containers:
+        - name: mcp
+          volumeMounts:
+            - name: config
+              mountPath: /root/config.toml
+              subPath: config.toml
+              readOnly: true
+  mcpPort: 8080
+  serviceAccount: *name
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

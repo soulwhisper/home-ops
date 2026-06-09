@@ -1,0 +1,28 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-grafana
+spec:
+  groupRef:
+    name: internal-rw
+  image: ghcr.io/homeassistant-ai/ha-mcp:7.6.0
+  podTemplateSpec:
+    spec:
+      containers:
+        - name: mcp
+          command: ["fastmcp", "run", "fastmcp-http.json"]
+  env:
+    HOMEASSISTANT_URL: "http://home-assistant.smarthome-apps.svc.cluster.local:8123"
+  mcpPort: 8086
+  secrets:
+    - name: *name
+      key: HOMEASSISTANT_TOKEN
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

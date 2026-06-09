@@ -1,0 +1,21 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-context
+spec:
+  groupRef:
+    name: external
+  image: ghcr.io/stacklok/dockyard/npx/context7:2.2.4
+  mcpPort: 3000
+  secrets:
+    - name: *name
+      key: CONTEXT7_API_KEY
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

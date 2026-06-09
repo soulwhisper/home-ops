@@ -1,0 +1,114 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: VirtualMCPServer
+metadata:
+  name: &name internal-ro
+spec:
+  incomingAuth:
+    type: anonymous
+  outgoingAuth:
+    source: inline
+  embeddingServerRef:
+    name: shared-embedding
+  groupRef:
+    name: *name
+  telemetryConfigRef:
+    name: shared-otel
+    serviceName: *name
+  config:
+    aggregation:
+      conflictResolution: prefix
+      conflictResolutionConfig:
+        prefixFormat: "{workload}_"
+    operational:
+      failureHandling:
+        partialFailureMode: best_effort
+        healthCheckInterval: 10s
+        healthCheckTimeout: 5s
+        unhealthyThreshold: 2
+        circuitBreaker:
+          enabled: true
+          failureThreshold: 3
+          timeout: 30s
+    optimizer:
+      embeddingServiceTimeout: 15s
+      maxToolsToReturn: 10
+      hybridSearchSemanticRatio: "0.6"
+      semanticDistanceThreshold: "0.8"
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: VirtualMCPServer
+metadata:
+  name: &name internal-rw
+spec:
+  incomingAuth:
+    type: anonymous
+  outgoingAuth:
+    source: inline
+  embeddingServerRef:
+    name: shared-embedding
+  groupRef:
+    name: *name
+  telemetryConfigRef:
+    name: shared-otel
+    serviceName: *name
+  config:
+    aggregation:
+      conflictResolution: prefix
+      conflictResolutionConfig:
+        prefixFormat: "{workload}_"
+    operational:
+      failureHandling:
+        partialFailureMode: best_effort
+        healthCheckInterval: 10s
+        healthCheckTimeout: 5s
+        unhealthyThreshold: 2
+        circuitBreaker:
+          enabled: true
+          failureThreshold: 3
+          timeout: 30s
+    optimizer:
+      embeddingServiceTimeout: 15s
+      maxToolsToReturn: 10
+      hybridSearchSemanticRatio: "0.6"
+      semanticDistanceThreshold: "0.8"
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: VirtualMCPServer
+metadata:
+  name: &name external
+spec:
+  incomingAuth:
+    type: anonymous
+  outgoingAuth:
+    source: inline
+  embeddingServerRef:
+    name: shared-embedding
+  groupRef:
+    name: *name
+  telemetryConfigRef:
+    name: shared-otel
+    serviceName: *name
+  config:
+    aggregation:
+      conflictResolution: prefix
+      conflictResolutionConfig:
+        prefixFormat: "{workload}_"
+    operational:
+      failureHandling:
+        partialFailureMode: best_effort
+        healthCheckInterval: 10s
+        healthCheckTimeout: 5s
+        unhealthyThreshold: 2
+        circuitBreaker:
+          enabled: true
+          failureThreshold: 3
+          timeout: 30s
+    optimizer:
+      embeddingServiceTimeout: 15s
+      maxToolsToReturn: 10
+      hybridSearchSemanticRatio: "0.6"
+      semanticDistanceThreshold: "0.8"
