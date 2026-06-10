@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-fluxcd
+spec:
+  groupRef:
+    name: internal-ro
+  image: ghcr.io/controlplaneio-fluxcd/flux-operator-mcp:v0.51.0
+  args: ["serve", "--transport=http", "--port=9090", "--read-only=true"]
+  env:
+    RUNTIME_NAMESPACE: "gitops-system"
+  mcpPort: 9090
+  serviceAccount: mcp-fluxcd-view
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

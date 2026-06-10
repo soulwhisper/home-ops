@@ -8,6 +8,7 @@ resources:
   - ./context/ks.yaml
   - ./fast-note-sync/ks.yaml
   - ./firecrawl/ks.yaml
+  - ./fluxcd/ks.yaml
   - ./github/ks.yaml
   - ./grafana/ks.yaml
   - ./home-assistant/ks.yaml

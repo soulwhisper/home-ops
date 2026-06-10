@@ -58,6 +58,7 @@ jobs:
           kubectl -n "$NS" wait --for=condition=Ready cluster/postgres-dr --timeout=30m
 
       - name: Validate
+        # add hindsight tests later
         run: |
           kubectl -n "$NS" exec postgres-dr-1 -c postgres -- \
             psql -U postgres -tAc "SELECT count(*) FROM pg_database WHERE datname='immich';" \
