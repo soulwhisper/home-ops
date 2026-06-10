@@ -11,8 +11,6 @@ spec:
   args: ["--config", "/root/config.toml"]
   podTemplateSpec:
     spec:
-      serviceAccountName: mcp-kubernetes-view
-      automountServiceAccountToken: true
       volumes:
         - name: config
           configMap:
@@ -25,7 +23,7 @@ spec:
               subPath: config.toml
               readOnly: true
   mcpPort: 8080
-  serviceAccount: *name
+  serviceAccount: mcp-kubernetes-view
   resources:
     requests:
       cpu: 100m

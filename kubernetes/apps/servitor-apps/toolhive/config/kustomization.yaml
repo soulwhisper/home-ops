@@ -7,7 +7,7 @@ resources:
   - ./embeddingserver.yaml
   - ./mcptelemetryconfig.yaml
   # groups
-  - ./httproute.yaml
+  # httproute is removed to reduce authentication and authorization complexity
   - ./mcpgroup.yaml
   - ./scrapeconfig.yaml
   - ./virtualmcpserver.yaml
