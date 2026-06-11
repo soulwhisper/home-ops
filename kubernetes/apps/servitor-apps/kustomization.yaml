@@ -13,5 +13,5 @@ resources:
   # app
   - ./dify/ks.yaml
   - ./hermes-agent/ks.yaml
-  - ./hindsight/ks.yaml
-  - ./honcho/ks.yaml
+  # * TODO
+  # - mcp PII scan/report on-halt until agentgateway mcp guardrails implemented

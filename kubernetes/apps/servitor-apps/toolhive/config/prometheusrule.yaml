@@ -44,3 +44,34 @@ spec:
             sum by (source_pod) (increase(hubble_drop_total{reason="POLICY_DENIED", source_namespace="servitor-apps"}[5m])) > 0
           labels:
             severity: critical
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ai-memory-rules
+spec:
+  groups:
+    - name: ai-memory.rules
+      rules:
+        - alert: MemoryWriteSurge
+          expr: >
+            sum by (server) (increase(toolhive_mcp_tool_calls_total{
+              tool=~"retain|add_messages_to_session"}[15m])) > 60
+          labels:
+            severity: warning
+        - alert: MemoryWriteErrors
+          expr: >
+            sum by (server, tool) (increase(toolhive_mcp_tool_calls_total{
+              tool=~"retain|add_messages_to_session|create_session", status!="success"}[30m])) > 5
+          labels:
+            severity: warning
+        - alert: MemoryBypassAttempt
+          annotations:
+            summary: "{{ $labels.source_workload }} Attempt to bypass the MCP layer was blocked."
+          expr: >
+            increase(hubble_drop_total{
+              destination_namespace="selfhosted-apps",
+              destination_workload=~"honcho|hindsight"}[15m]) > 0
+          labels:
+            severity: critical

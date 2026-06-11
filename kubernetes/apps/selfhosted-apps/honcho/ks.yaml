@@ -12,8 +12,8 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: servitor-apps
-  path: "./kubernetes/apps/servitor-apps/honcho/app"
+  targetNamespace: selfhosted-apps
+  path: "./kubernetes/apps/selfhosted-apps/honcho/app"
   wait: true
   dependsOn:
     - name: cnpg-cluster
@@ -40,8 +40,8 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: servitor-apps
-  path: "./kubernetes/apps/servitor-apps/honcho/worker"
+  targetNamespace: selfhosted-apps
+  path: "./kubernetes/apps/selfhosted-apps/honcho/worker"
   dependsOn:
     - name: honcho
-      namespace: servitor-apps
+      namespace: selfhosted-apps

@@ -1,0 +1,24 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcptoolconfig_v1alpha1.json
+apiVersion: toolhive.stacklok.dev/v1alpha1
+kind: MCPToolConfig
+metadata:
+  name: mcp-honcho
+spec:
+  toolsFilter:
+    - create_session
+    - create_peer
+    - add_peers_to_session
+    - add_messages_to_session
+    - chat
+    - get_session_context
+    - get_peer_card
+    - get_representation
+    - query_conclusions
+    - schedule_dream
+    - get_queue_status
+  toolsOverride:
+    add_messages_to_session:
+      description: >-
+        Record the turn verbatim. NEVER include raw tool outputs,
+        credentials, or file contents in message content; summarize first.

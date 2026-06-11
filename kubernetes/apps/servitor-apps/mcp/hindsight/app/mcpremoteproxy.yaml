@@ -1,0 +1,20 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpremoteproxy_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPRemoteProxy
+metadata:
+  name: &name mcp-hindsight
+spec:
+  groupRef:
+    name: internal-rw
+  toolConfigRef:
+    name: *name
+  remoteUrl: http://hindsight.selfhosted-apps.svc.cluster.local:8888/mcp/homelab
+  proxyPort: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
