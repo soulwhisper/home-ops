@@ -11,7 +11,9 @@ resources:
   - ./dispatcharr/ks.yaml
   - ./fast-note-sync/ks.yaml
   - ./firecrawl/ks.yaml
+  - ./hindsight/ks.yaml
   - ./homepage/ks.yaml
+  - ./honcho/ks.yaml
   - ./karakeep/ks.yaml
   - ./miniflux/ks.yaml
   - ./netbox/ks.yaml

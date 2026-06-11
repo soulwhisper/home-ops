@@ -11,6 +11,8 @@ resources:
   - ./fluxcd/ks.yaml
   - ./github/ks.yaml
   - ./grafana/ks.yaml
+  - ./hindsight/ks.yaml
   - ./home-assistant/ks.yaml
+  - ./honcho/ks.yaml
   - ./kubernetes/ks.yaml
   - ./victoria-logs/ks.yaml

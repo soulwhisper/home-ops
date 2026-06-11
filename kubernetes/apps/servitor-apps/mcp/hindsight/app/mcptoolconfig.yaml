@@ -1,0 +1,27 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcptoolconfig_v1alpha1.json
+apiVersion: toolhive.stacklok.dev/v1alpha1
+kind: MCPToolConfig
+metadata:
+  name: mcp-hindsight # single-bank mode
+spec:
+  toolsFilter:
+    - retain
+    - recall
+    - reflect
+    - list_mental_models
+    - get_mental_model
+    - refresh_mental_model
+    - get_operation
+    - list_tags
+    - get_bank
+  toolsOverride:
+    retain:
+      description: >-
+        Store a derived summary to long-term memory. NEVER retain raw tool
+        outputs, file contents, credentials, or verbatim API responses;
+        distill first. Tag consistently using existing tags (see list_tags).
+    recall:
+      description: >-
+        Search memories. Prefer reflect for synthesized answers; use recall
+        only when individual memory entries are needed.

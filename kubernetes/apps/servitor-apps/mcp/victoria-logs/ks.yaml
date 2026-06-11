@@ -12,7 +12,6 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-      kagent.dev/discovery: disabled
   targetNamespace: servitor-apps
   path: "./kubernetes/apps/servitor-apps/mcp/victoria-logs/app"
   dependsOn:
