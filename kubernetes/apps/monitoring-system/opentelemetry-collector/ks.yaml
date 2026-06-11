@@ -17,4 +17,4 @@ spec:
     - name: victoria-traces
       namespace: monitoring-system
     - name: langfuse-web
-      namespace: servitor-apps
+      namespace: monitoring-system

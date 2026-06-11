@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   # app
   - ./mcpserver.yaml
+  - ./mcptoolconfig.yaml
   # utils
   - ./configmap.yaml
   - ./rbac.yaml

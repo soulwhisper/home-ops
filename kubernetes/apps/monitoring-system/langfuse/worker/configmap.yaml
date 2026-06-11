@@ -29,6 +29,6 @@ data:
   LANGFUSE_S3_BATCH_EXPORT_PREFIX: "exports/"
   LANGFUSE_S3_BATCH_EXPORT_REGION: "auto"
   LANGFUSE_S3_BATCH_EXPORT_FORCE_PATH_STYLE: "true"
-  REDIS: "langfuse-dragonfly.servitor-apps.svc.cluster.local"
+  REDIS: "langfuse-dragonfly.monitoring-system.svc.cluster.local"
   REDIS_PORT: "6379"
   REDIS_TLS_ENABLED: "false"

@@ -7,6 +7,8 @@ metadata:
 spec:
   groupRef:
     name: internal-ro
+  toolConfigRef:
+    name: *name
   image: ghcr.io/containers/kubernetes-mcp-server:v0.0.62
   args: ["--config", "/root/config.toml"]
   podTemplateSpec:

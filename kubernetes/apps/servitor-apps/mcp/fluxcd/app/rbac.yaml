@@ -16,6 +16,41 @@ subjects:
   - kind: ServiceAccount
     name: mcp-fluxcd-view
     namespace: servitor-apps
-# Notes
-# add additional cluster roles if needed
-# Run: kubectl auth can-i list kustomizations.kustomize.toolkit.fluxcd.io --as=system:serviceaccount:servitor-apps:mcp-flux-view
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mcp-fluxcd-extras
+rules:
+  - apiGroups:
+      - postgresql.cnpg.io # Cluster/Database/Backup status
+      - barmancloud.cnpg.io
+      - operator.victoriametrics.com # VMRule/VMAgent/VMAlert/VLogs
+      - grafana.integreatly.org
+      - cilium.io # CNP/BGP/LBIPPool
+      - gateway.networking.k8s.io # Gateway/HTTPRoute
+      - gateway.kgateway.dev # TrafficPolicy/GatewayParameters
+      - toolhive.stacklok.dev
+      - volsync.backube
+      - ceph.rook.io
+      - objectbucket.io
+      - dragonflydb.io
+      - clickhouse.com
+      - external-secrets.io # ES/CSS status,secret value not included
+      - snapshot.storage.k8s.io
+      - frrk8s.metallb.io
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-fluxcd-extras
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mcp-fluxcd-extras
+subjects:
+  - kind: ServiceAccount
+    name: mcp-fluxcd-view
+    namespace: servitor-apps

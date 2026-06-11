@@ -12,8 +12,8 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: servitor-apps
-  path: "./kubernetes/apps/servitor-apps/firecrawl/database"
+  targetNamespace: selfhosted-apps
+  path: "./kubernetes/apps/selfhosted-apps/firecrawl/database"
   dependsOn:
     - name: dragonfly-operator
       namespace: database-system
@@ -36,10 +36,10 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: servitor-apps
-  path: "./kubernetes/apps/servitor-apps/firecrawl/app"
+  targetNamespace: selfhosted-apps
+  path: "./kubernetes/apps/selfhosted-apps/firecrawl/app"
   dependsOn:
     - name: firecrawl-database
-      namespace: servitor-apps
+      namespace: selfhosted-apps
     - name: searxng
       namespace: selfhosted-apps

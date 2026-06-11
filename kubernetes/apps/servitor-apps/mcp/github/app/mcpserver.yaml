@@ -7,6 +7,8 @@ metadata:
 spec:
   groupRef:
     name: external
+  toolConfigRef:
+    name: *name
   image: ghcr.io/github/github-mcp-server:v1.2.0
   args: ["http"]
   env:

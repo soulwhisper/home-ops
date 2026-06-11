@@ -7,12 +7,12 @@ metadata:
 spec:
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: onepassword-connect
+      "app.kubernetes.io/name": onepassword-connect
   ingress:
     - fromEndpoints:
         - matchLabels:
-            app.kubernetes.io/name: external-secrets
-            io.kubernetes.pod.namespace: security-system
+            "k8s:io.kubernetes.pod.namespace": security-system
+            "app.kubernetes.io/name": external-secrets
       toPorts:
         - ports:
             - port: "8080"

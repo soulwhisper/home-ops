@@ -70,6 +70,17 @@ spec:
           check_interval: 1s
           limit_percentage: 80
           spike_limit_percentage: 25
+        redaction/credentials:
+          allow_all_keys: true
+          blocked_values:
+            - "ghp_[A-Za-z0-9]{36}"
+            - "github_pat_[A-Za-z0-9_]{22,}"
+            - "AKIA[0-9A-Z]{16}"
+            - "eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]+" # JWT
+            - "op://[^\\s\"']+" # 1Password
+            - "-----BEGIN [A-Z ]*PRIVATE KEY-----"
+            - "(?i)bearer +[a-z0-9._\\-]{20,}"
+          summary: info
         tail_sampling:
           decision_wait: 10s
           policies:
@@ -91,7 +102,7 @@ spec:
             span:
               - 'attributes["gen_ai.system"] == nil'
       exporters:
-        otlphttp/victoria-traces:
+        otlp_http/victoria-traces:
           endpoint: "http://victoria-traces.monitoring-system.svc.cluster.local:10428/insert/opentelemetry/v1/traces"
           tls:
             insecure: true
@@ -104,8 +115,8 @@ spec:
             initial_interval: 5s
             max_interval: 30s
             max_elapsed_time: 300s
-        otlphttp/langfuse:
-          endpoint: "http://langfuse-web.servitor-apps.svc.cluster.local:3000/api/public/otel"
+        otlp_http/langfuse:
+          endpoint: "http://langfuse-web.monitoring-system.svc.cluster.local:3000/api/public/otel"
           tls:
             insecure: true
           sending_queue:
@@ -131,15 +142,16 @@ spec:
             level: warn
             encoding: json
         pipelines:
-          traces:
+          traces/app:
             receivers: [otlp]
             processors:
               - memory_limiter
               - k8sattributes
               - tail_sampling
               - batch
-            exporters: [otlphttp/victoria-traces]
-          traces/llm:
+            exporters: [otlp_http/victoria-traces]
+          traces/servitor:
             receivers: [otlp]
-            processors: [filter/gen_ai, batch]
-            exporters: [otlphttp/langfuse]
+            processors:
+              [memory_limiter, redaction/credentials, filter/gen_ai, batch]
+            exporters: [otlp_http/langfuse]
