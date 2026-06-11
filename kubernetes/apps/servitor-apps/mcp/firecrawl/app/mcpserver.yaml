@@ -10,7 +10,7 @@ spec:
   image: ghcr.io/firecrawl/firecrawl-mcp-server:latest
   env:
     PORT: &port 3000
-    FIRECRAWL_API_URL: "http://firecrawl.servitor-apps.svc.cluster.local:3002"
+    FIRECRAWL_API_URL: "http://firecrawl.selfhosted-apps.svc.cluster.local:3002"
     FIRECRAWL_RETRY_MAX_ATTEMPTS: "10"
     FIRECRAWL_RETRY_INITIAL_DELAY: "500"
     TTP_STREAMABLE_SERVER: "true"

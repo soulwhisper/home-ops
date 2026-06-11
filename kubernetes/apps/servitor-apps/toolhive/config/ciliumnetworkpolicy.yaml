@@ -1,0 +1,36 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: vmcp-ingress
+spec:
+  endpointSelector:
+    matchLabels:
+      "toolhive.stacklok.dev/component": virtualmcp
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            {
+              "k8s:io.kubernetes.pod.namespace": monitoring-system,
+              "app.kubernetes.io/name": vmagent,
+            }
+        - matchLabels:
+            {
+              "k8s:io.kubernetes.pod.namespace": servitor-apps,
+              "app.kubernetes.io/name": hermes-agent,
+            }
+        - matchLabels:
+            {
+              "k8s:io.kubernetes.pod.namespace": servitor-apps,
+              "app.kubernetes.io/name": dify-api,
+            }
+        - matchLabels:
+            {
+              "k8s:io.kubernetes.pod.namespace": servitor-apps,
+              "app.kubernetes.io/name": devbox,
+            }
+      toPorts:
+        - ports:
+            - port: "4483"
+              protocol: TCP

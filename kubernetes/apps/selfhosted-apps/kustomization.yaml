@@ -9,10 +9,14 @@ resources:
   - ./bambuddy/ks.yaml
   - ./convertx/ks.yaml
   - ./dispatcharr/ks.yaml
+  - ./fast-note-sync/ks.yaml
+  - ./firecrawl/ks.yaml
   - ./homepage/ks.yaml
   - ./karakeep/ks.yaml
   - ./miniflux/ks.yaml
   - ./netbox/ks.yaml
+  - ./open-notebook/ks.yaml
   - ./rsshub/ks.yaml
   - ./searxng/ks.yaml
+  - ./sillytavern/ks.yaml
   - ./stirling-pdf/ks.yaml

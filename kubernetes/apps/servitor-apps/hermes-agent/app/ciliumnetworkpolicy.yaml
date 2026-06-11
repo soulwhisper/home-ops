@@ -7,9 +7,9 @@ metadata:
 spec:
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: hermes-agent
+      "app.kubernetes.io/name": hermes-agent
   egress:
-    # Backend
+    # LLM
     - toServices:
         - k8sService:
             serviceName: agentgateway-proxy
@@ -20,32 +20,15 @@ spec:
           rules:
             http:
               - method: "POST"
-                path: "/chat/complex"
-              - method: "POST"
-                path: "/chat/fast"
-              - method: "POST"
-                path: "/chat/vision"
-              - method: "POST"
-                pathRegex: "/mcp/.*"
+                pathRegex: "/chat/.*"
 
-    # Web Search
-    - toServices:
-        - k8sService:
-            serviceName: firecrawl
-            namespace: servitor-apps
+    # MCP
+    - toEndpoints:
+        - matchLabels:
+            "toolhive.stacklok.dev/component": virtualmcp
       toPorts:
         - ports:
-            - { port: "3002", protocol: TCP }
-          rules:
-            http:
-              - method: "POST"
-                path: "/v1/scrape"
-              - method: "POST"
-                path: "/v1/search"
-              - method: "POST"
-                path: "/v1/crawl"
-              - method: "GET"
-                pathRegex: "/v1/crawl/[a-zA-Z0-9-]+/status"
+            - { port: "4483", protocol: TCP }
 
     # Memory
     - toServices:
@@ -66,8 +49,8 @@ spec:
     # DNS
     - toEndpoints:
         - matchLabels:
-            io.kubernetes.pod.namespace: kube-system
-            k8s-app: kube-dns
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
       toPorts:
         - ports:
             - { port: "53", protocol: TCP }
