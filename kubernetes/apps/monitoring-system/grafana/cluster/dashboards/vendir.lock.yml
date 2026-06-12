@@ -28,12 +28,13 @@ directories:
       tags:
       - cluster-v0.0.5
     path: cnpg
-  - configDigest: b99fa2b4330c9c642b03d00afe8a3b852ed66ea072377f1dc339f449f33e7298
+  - configDigest: df3126888dc9979dca0fa8a7145d16afcf1546ced61d2e18ccbd5b9be041b620
     git:
-      commitTitle: feat(operator):release version v1.5.0 (#486)...
-      sha: 2192d38824f712d203d6a490cb625a5e12526fe5
+      commitTitle: 'fix(chart): bump version to v1.6.1 with missing configmap role
+        (#543)...'
+      sha: b28637d78d828f80a3b3fd76acaa2dd6e3c28603
       tags:
-      - v1.5.0
+      - v1.6.1
     path: dragonfly
   path: _sources/database
 - contents:
