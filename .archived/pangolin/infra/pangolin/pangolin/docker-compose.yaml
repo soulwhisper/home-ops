@@ -28,7 +28,7 @@ services:
       retries: 15
 
   gerbil:
-    image: docker.io/fosrl/gerbil:1.4.1
+    image: docker.io/fosrl/gerbil:1.4.2
     container_name: gerbil
     restart: unless-stopped
     cap_add:
