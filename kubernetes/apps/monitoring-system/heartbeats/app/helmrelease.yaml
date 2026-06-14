@@ -208,7 +208,7 @@ spec:
           app:
             image: &image
               repository: alpine/k8s
-              tag: 1.36.1
+              tag: 1.36.2
             command: ["bash", "/scripts/ceph-health.sh"]
             envFrom: &envFrom
               - secretRef:

@@ -16,7 +16,7 @@ spec:
     initContainers:
       # Generate kubeconfig file, ref:https://github.com/kubernetes-sigs/headlamp/issues/1826
       - name: create-kubeconfig
-        image: alpine/k8s:1.36.1
+        image: alpine/k8s:1.36.2
         command:
           - /bin/bash
           - "-c"
