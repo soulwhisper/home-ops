@@ -30,7 +30,7 @@ spec:
           app:
             image:
               repository: ghcr.io/plastic-labs/honcho
-              tag: v3.0.9
+              tag: v3.0.10
             envFrom:
               - configMapRef:
                   name: *name
