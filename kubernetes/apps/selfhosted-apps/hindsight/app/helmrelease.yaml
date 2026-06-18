@@ -30,7 +30,7 @@ spec:
           app:
             image:
               repository: ghcr.io/vectorize-io/hindsight
-              tag: 0.8.2-slim
+              tag: 0.8.3-slim
             env:
               HINDSIGHT_API_OTEL_TRACES_ENABLED: "true"
               HINDSIGHT_API_OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
