@@ -3,18 +3,21 @@
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
-  name: guardrails
+  name: llm-guardrails
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: backend-chat-complex
+      name: llm-backend-complex
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: backend-chat-fast
+      name: llm-backend-fast
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: backend-chat-vision
+      name: llm-backend-vision
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: llm-backend-anthropic
   backend:
     ai:
       promptGuard:
