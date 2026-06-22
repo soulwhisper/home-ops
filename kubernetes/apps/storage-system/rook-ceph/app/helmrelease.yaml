@@ -13,9 +13,10 @@ spec:
   values:
     crds:
       enabled: true
+    csi:
+      serviceMonitor:
+        enabled: true
     monitoring:
-      enabled: true
-    serviceMonitor:
       enabled: true
     # default obc fields = "maxObjects,maxSize"
     obcAllowAdditionalConfigFields: "bucketOwner,bucketPolicy,bucketLifecycle"

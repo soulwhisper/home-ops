@@ -54,7 +54,7 @@ spec:
     - name: opentelemetry-collector
       namespace: monitoring-system
   components:
-    - ../../../../components/authentik
+    - ../../../../../components/authentik # deeper than usual
   postBuild:
     substitute:
       APP: *name
