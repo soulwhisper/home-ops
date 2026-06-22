@@ -83,12 +83,12 @@ directories:
     path: k8s-volumes
   path: _sources/kubernetes
 - contents:
-  - configDigest: c11a8644189e02b44aaf663059947eab5d35e74db034667f491d0c08d18931d6
+  - configDigest: 745b4f010da3d9cb5ed8ed2877a14e0cb46afdb2170612fa28ab2f297dcd0e26
     git:
-      commitTitle: 'go.mod: security update golang.org/x/crypto...'
-      sha: 3147f9c24bb95dec1d12b96f924154a549730186
+      commitTitle: 'docs/changelog: cut release v1.146.0...'
+      sha: 4d9901fbf42c518ecc6d467d65efea9c7d842bbd
       tags:
-      - v1.145.0
+      - v1.146.0
     path: metrics
   - configDigest: f9f340d02610177b691d9f4f7adba5b56dc7a6a6933985eac839eae67c5f6c41
     git:
