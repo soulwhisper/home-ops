@@ -5,8 +5,7 @@ kind: Kustomization
 resources:
   # app
   - ./agentgatewaybackend.yaml
-  - ./agentgatewaypolicy.yaml
   # utils
-  - ./externalsecret.yaml
-  - ./guardrails.yaml
+  # ! TODO, mcp guardrails server
+  # - ./guardrails.yaml
   - ./httproute.yaml
