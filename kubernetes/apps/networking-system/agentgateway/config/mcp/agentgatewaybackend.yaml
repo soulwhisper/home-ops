@@ -1,0 +1,27 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: mcp-backend
+spec:
+  mcp:
+    targets:
+      - name: vmcp-internal-ro
+        static:
+          host: vmcp-internal-ro.servitor-apps.svc.cluster.local
+          path: &path /mcp
+          port: &port 8080
+          protocol: &protocol StreamableHTTP
+      - name: vmcp-internal-rw
+        static:
+          host: vmcp-internal-rw.servitor-apps.svc.cluster.local
+          path: *path
+          port: *port
+          protocol: *protocol
+      - name: vmcp-external
+        static:
+          host: vmcp-external.servitor-apps.svc.cluster.local
+          path: *path
+          port: *port
+          protocol: *protocol

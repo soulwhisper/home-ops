@@ -3,30 +3,7 @@
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
-  name: &name agentgateway-api-auth
-spec:
-  targetRefs:
-    # fake authentication for OpenAI-compatible clients
-    # only add llm backend below
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: backend-chat-complex
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: backend-chat-fast
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: backend-chat-vision
-  traffic:
-    apiKeyAuthentication:
-      mode: Strict
-      secretRef: *name
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
-apiVersion: agentgateway.dev/v1alpha1
-kind: AgentgatewayPolicy
-metadata:
-  name: agentgateway-tracing
+  name: agentgateway-policies
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
@@ -47,3 +24,13 @@ spec:
             name: request
           - expression: "request.host"
             name: host
+  traffic:
+    phase: PreRouting
+    transformation:
+      request:
+        set:
+          # add headers
+          - name: "x-model"
+            value: "json(request.body).model"
+          - name: "x-priority"
+            value: 'coalesce(json(request.body).priority, "standard")'
