@@ -6,20 +6,9 @@ metadata:
   name: &name llm-api-auth
 spec:
   targetRefs:
-    # fake authentication for OpenAI-compatible clients
-    # only add llm backend below
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: llm-backend-complex
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: llm-backend-fast
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: llm-backend-vision
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: llm-backend-anthropic
+      name: agentgateway-llm-route
   traffic:
     apiKeyAuthentication:
       mode: Strict
