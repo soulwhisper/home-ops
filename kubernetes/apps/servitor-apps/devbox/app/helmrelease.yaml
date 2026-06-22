@@ -1,0 +1,58 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name devbox
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: gitops-system
+
+  values:
+    defaultPodOptions:
+      runtimeClassName: kata
+    controllers:
+      *name :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 2000
+            runAsGroup: 2000
+            fsGroup: 2000
+            fsGroupChangePolicy: OnRootMismatch
+        containers:
+          app:
+            image:
+              repository: ghcr.io/soulwhisper/devbox
+              tag: 2026.06.22
+            env:
+              ANTHROPIC_BASE_URL: "http://agentgateway-proxy.networking-system.svc.cluster.local:80"
+            envFrom:
+              - secretRef:
+                  name: *name
+            resources:
+              requests:
+                cpu: 200m
+                memory: 1Gi
+              limits:
+                memory: 4Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              readOnlyRootFilesystem: true
+
+    persistence:
+      app:
+        existingClaim: *name
+        globalMounts:
+          - path: /home/dev
+      tmpfs:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+            subPath: tmp
