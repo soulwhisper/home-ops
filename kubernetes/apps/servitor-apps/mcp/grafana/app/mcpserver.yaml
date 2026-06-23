@@ -7,7 +7,7 @@ metadata:
 spec:
   groupRef:
     name: internal-ro
-  image: grafana/mcp-grafana:0.16.0
+  image: grafana/mcp-grafana:0.17.0
   podTemplateSpec:
     spec:
       containers:
