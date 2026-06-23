@@ -47,22 +47,25 @@
   ],
   packageRules: [
     {
-      matchDatasources: ["python-version"],
-      enabled: false,
-    },
-    {
-      matchManagers: ["vendir"],
-      matchDatasources: ["git-refs", "git-tags", "github-tags"],
-      addLabels: ["renovate/vendir-git"],
-      groupName: "vendir-git",
-    },
-    {
       matchDatasources: ["custom.grafana-dashboards"],
       addLabels: ["renovate/grafana-dashboard"],
       semanticCommitScope: "grafana-dashboards",
       semanticCommitType: "chore",
       commitMessageTopic: "dashboard {{sourceDirectory}}",
       commitMessageExtra: "( {{currentVersion}} → {{newVersion}} )",
+    },
+    {
+      description: "Vendir Group",
+      groupName: "Vendir",
+      matchManagers: ["vendir"],
+      matchDatasources: ["git-refs", "git-tags", "github-tags"],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+    },
+    {
+      matchDatasources: ["python-version"],
+      enabled: false,
     },
   ],
   lockFileMaintenance: {

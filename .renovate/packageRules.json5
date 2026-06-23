@@ -6,21 +6,10 @@
       pinDigests: false,
     },
     {
-      matchManagers: ["git-refs", "github-tags"],
-      matchFileNames: ["**/vendir.yml", "**/vendir.lock.yml"],
-      enabled: false,
-    },
-    {
       description: "Override Helmfile Dependency Name",
       matchDatasources: ["docker"],
       matchManagers: ["helmfile"],
       overrideDepName: "{{packageName}}",
-    },
-    {
-      description: "Configure Calibre-web versioning",
-      matchDatasources: ["docker"],
-      matchPackageNames: ["ghcr.io/linuxserver/calibre-web"],
-      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-ls(?<build>\\d+)$",
     },
     {
       description: "Pin Postgres version to 18",
