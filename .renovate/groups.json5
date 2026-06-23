@@ -2,6 +2,17 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   packageRules: [
     {
+      description: "AgentGateway Group",
+      groupName: "AgentGateway",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["/agentgateway/", "/agentgateway-crds/"],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+      minimumGroupSize: 2,
+      allowedVersions: "/^1\\./",
+    },
+    {
       description: "1Password Connect Group",
       groupName: "1Password Connect",
       matchDatasources: ["docker"],
