@@ -151,7 +151,7 @@ kind: ExtensionServiceConfig
 name: nut-client
 configFiles:
   - content: |-
-      MONITOR ups@10.10.0.100 1 upsmon upsmon secondary
+      MONITOR ups@10.10.0.254 1 upsmon upsmon secondary
       SHUTDOWNCMD "/sbin/poweroff"
     mountPath: /usr/local/etc/nut/upsmon.conf
 ---
