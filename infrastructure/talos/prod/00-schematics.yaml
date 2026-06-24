@@ -1,6 +1,6 @@
 ---
 # schematic for production environment
-# 88a80a46089706032472a6cb4ecbe8e19a6774d3520869dec3a203631eadbc21
+# b7e0c94a9ed78c4d249cd4d53f177d2763d27350490ba29c2e7ac722493450a2
 customization:
   bootloader: sd-boot
   extraKernelArgs:
@@ -16,5 +16,4 @@ customization:
       - siderolabs/intel-ucode
       - siderolabs/mei
       - siderolabs/nut-client
-      - siderolabs/gvisor
       - siderolabs/kata-containers
