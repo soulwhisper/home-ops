@@ -18,6 +18,8 @@ spec:
   dependsOn:
     - name: cnpg-cluster
       namespace: database-system
+    - name: tei
+      namespace: servitor-apps
   components:
     - ../../../../components/cnpg
   postBuild:
