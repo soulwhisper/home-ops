@@ -28,7 +28,7 @@ spec:
           app:
             image:
               repository: langgenius/dify-api
-              tag: 1.14.2
+              tag: 1.15.0
             env:
               MODE: "worker"
             envFrom:
