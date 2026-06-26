@@ -59,6 +59,20 @@ spec:
           headers:
             - type: Exact
               name: x-model
+              value: "memory"
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: llm-backend-memory
+      timeouts:
+        request: 300s
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /chat
+          headers:
+            - type: Exact
+              name: x-model
               value: "vision"
       backendRefs:
         - group: agentgateway.dev

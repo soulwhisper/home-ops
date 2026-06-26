@@ -28,10 +28,10 @@ spec:
   containerTemplate:
     resources:
       requests:
-        cpu: "2000m"
+        cpu: "2"
         memory: "4Gi"
       limits:
-        cpu: "2000m"
+        cpu: "2"
         memory: "4Gi"
     volumeMounts:
       - mountPath: /docker-entrypoint-initdb.d/

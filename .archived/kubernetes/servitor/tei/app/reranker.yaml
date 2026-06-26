@@ -63,10 +63,10 @@ spec:
               readiness: *liveness
             resources:
               requests:
-                cpu: 2000m
+                cpu: "2"
                 memory: 6Gi
               limits:
-                cpu: 8000m
+                cpu: "8"
                 memory: 6Gi
             securityContext:
               allowPrivilegeEscalation: false

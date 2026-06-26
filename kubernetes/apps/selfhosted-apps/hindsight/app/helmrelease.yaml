@@ -29,8 +29,8 @@ spec:
         containers:
           app:
             image:
-              repository: ghcr.io/vectorize-io/hindsight
-              tag: 0.8.3-slim
+              repository: ghcr.io/soulwhisper/hindsight
+              tag: 0.8.3
             env:
               HINDSIGHT_API_OTEL_TRACES_ENABLED: "true"
               HINDSIGHT_API_OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
@@ -46,9 +46,11 @@ spec:
                   name: *name
             resources:
               requests:
-                cpu: 50m
+                cpu: "1"
+                cpu: 3.5Gi
               limits:
-                memory: 1Gi
+                cpu: "4" # OMP_NUM_THREADS=4
+                memory: 6Gi
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
