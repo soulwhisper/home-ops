@@ -41,6 +41,19 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
+  name: llm-backend-memory
+spec:
+  ai:
+    provider:
+      openai:
+        model: "qwen3.5-4b"
+      host: llama-qwen3.servitor-apps.svc.cluster.local
+      port: 8080
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
   name: llm-backend-vision
 spec:
   ai:

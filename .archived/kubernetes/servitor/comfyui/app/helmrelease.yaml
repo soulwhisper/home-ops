@@ -31,7 +31,7 @@ spec:
               IMAGE_PRESET_DOWNLOAD: "FLUX_DEV_BASIC,FLUX_SCHNELL_BASIC"
             resources:
               requests:
-                cpu: 4000m
+                cpu: "4"
               limits:
                 memory: 80Gi
             securityContext:
