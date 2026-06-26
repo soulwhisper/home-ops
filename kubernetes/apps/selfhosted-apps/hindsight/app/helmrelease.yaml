@@ -47,7 +47,7 @@ spec:
             resources:
               requests:
                 cpu: "1"
-                cpu: 3.5Gi
+                memory: 3.5Gi
               limits:
                 cpu: "4" # OMP_NUM_THREADS=4
                 memory: 6Gi
