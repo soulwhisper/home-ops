@@ -38,12 +38,12 @@ directories:
     path: dragonfly
   path: _sources/database
 - contents:
-  - configDigest: 628e3be2dff1fbc3751b3f2ee0f5c0c750c1eba945ddd36001f01af1898c35ea
+  - configDigest: b53057a73f8b36949b4f970e90b20fe3c09656bb3251daecb93a6a577de35c67
     git:
-      commitTitle: '[release-1.8] cherry-pick release notes and version bump (#9174)...'
-      sha: 097ab899b9d041452d02f15d738514eda10ea21b
+      commitTitle: '[release-1.8] cherry-pick for v1.8.2 (#9376)...'
+      sha: 6c2e80d5158926749b95e948d7aae36b9ae67669
       tags:
-      - v1.8.1
+      - v1.8.2
     path: gateway
   - configDigest: 2c2d52a9a6ad49c01930aed359636ab4d036c5735a863717a84fcc67c6d96e27
     http: {}
