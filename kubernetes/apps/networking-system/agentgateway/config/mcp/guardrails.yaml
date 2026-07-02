@@ -15,9 +15,16 @@ spec:
         processors:
           - remote:
               backendRef:
-                name: ext-mcp
-                port: 4445
+                name: mcp-guardrails
+                port: 9001
               failureMode: FailClosed
             methods:
-              tools/call: Request
+              # Full = Request + Response. See header: this is the
+              # single most important phase choice in the policy.
+              tools/call: Full
+              # Response-only: scan tool descriptions for poisoning.
               tools/list: Response
+              # Response-only: scan prompt content for injection.
+              prompts/get: Response
+              # Response-only: scan resource bodies for exfil/injection.
+              resources/read: Response

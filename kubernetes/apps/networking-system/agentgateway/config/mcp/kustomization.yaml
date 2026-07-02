@@ -6,6 +6,6 @@ resources:
   # app
   - ./agentgatewaybackend.yaml
   # utils
-  # ! TODO, mcp guardrails server
-  # - ./guardrails.yaml
+  - ./helmrelease.yaml
+  - ./guardrails.yaml
   - ./httproute.yaml
