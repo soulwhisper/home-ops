@@ -6,5 +6,4 @@ namespace: worker-apps
 components:
   - ../../components/namespace
 resources:
-  - ./forgejo-runner/ks.yaml
   - ./woodpecker/ks.yaml

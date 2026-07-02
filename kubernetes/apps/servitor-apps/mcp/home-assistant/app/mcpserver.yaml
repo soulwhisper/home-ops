@@ -3,7 +3,7 @@
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPServer
 metadata:
-  name: &name mcp-grafana
+  name: &name mcp-home-assistant
 spec:
   groupRef:
     name: internal-rw

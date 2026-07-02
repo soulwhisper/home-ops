@@ -6,12 +6,12 @@ metadata:
   name: kgateway-internal
   annotations:
     cert-manager.io/issuer: letsencrypt-production
-    external-dns.alpha.kubernetes.io/target: &hostname gateway-int.noirprime.com
+    external-dns.kubernetes.io/target: &hostname gateway-int.noirprime.com
 spec:
   gatewayClassName: kgateway
   infrastructure:
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: *hostname
+      external-dns.kubernetes.io/hostname: *hostname
       lbipam.cilium.io/ips: "10.10.0.131"
     parametersRef:
       name: kgateway-params

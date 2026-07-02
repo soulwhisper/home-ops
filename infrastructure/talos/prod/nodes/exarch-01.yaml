@@ -17,7 +17,7 @@ miimon: 100
 updelay: 200
 downdelay: 200
 xmitHashPolicy: layer3+4
-lacpRate: slow
+lacpRate: fast
 adActorSysPrio: 65535
 adLACPActive: on
 adSelect: stable

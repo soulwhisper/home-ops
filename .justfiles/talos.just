@@ -79,7 +79,7 @@ _bootstrap_k8s:
     echo "✅ Etcd is Running. Cluster implies bootstrapped. Skipping."
     exit 0
   fi
-  echo "🚀 Etcd is Running. Sending bootstrap command..."
+  echo "🚀 Etcd is not Running. Sending bootstrap command..."
   count=0
   until talosctl -n "{{TALOS_ENDPOINT}}" bootstrap 2>&1 | grep -E "AlreadyExists|No error"; do
     count=$((count + 1))
