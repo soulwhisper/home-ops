@@ -107,7 +107,7 @@ ip route-static 0.0.0.0 0 10.255.255.2
 bfd session init-mode active
 bgp 65000
  router-id 10.10.0.1
- timer keepalive 10 hold 30
+ timer keepalive 60 hold 180
  group k8s external
   peer k8s bfd
   peer k8s as-number 65100

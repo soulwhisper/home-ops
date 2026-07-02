@@ -4,7 +4,7 @@ kind: Service
 metadata:
   name: postgres
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: "postgres.noirprime.com"
+    external-dns.kubernetes.io/hostname: "postgres.noirprime.com"
     lbipam.cilium.io/ips: "10.10.0.133"
 spec:
   type: LoadBalancer

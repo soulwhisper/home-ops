@@ -13,8 +13,8 @@ spec:
           - address: "10.10.0.1" # Switch
             asn: 65000
             port: 179
-            holdTime: 30s
-            keepaliveTime: 10s
+            holdTime: 180s
+            keepaliveTime: 60s
             bfdProfile: default
             ebgpMultiHop: false
             enableGracefulRestart: false # bfd instead
