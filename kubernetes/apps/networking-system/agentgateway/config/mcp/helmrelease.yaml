@@ -27,7 +27,7 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/mcp-guardrails
-              tag: 0.3.0
+              tag: 0.3.1
             env:
               OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
             resources:
