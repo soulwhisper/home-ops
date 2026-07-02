@@ -21,6 +21,8 @@ spec:
             runAsNonRoot: true
             runAsUser: 65532
             runAsGroup: 65532
+            fsGroup: 65532
+            fsGroupChangePolicy: OnRootMismatch
         containers:
           app:
             image:
@@ -28,11 +30,33 @@ spec:
               tag: 0.3.0
             resources:
               requests:
-                cpu: 500m
+                cpu: 250m
                 memory: 2Gi
               limits:
                 cpu: "2"
-                memory: 2Gi
+                memory: 4Gi
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  grpc: { port: &port 9001 }
+                  periodSeconds: 30
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  grpc: { port: *port }
+                  periodSeconds: 15
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  grpc: { port: *port }
+                  periodSeconds: 10
+                  failureThreshold: 60
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
@@ -43,7 +67,7 @@ spec:
         ports:
           http:
             appProtocol: kubernetes.io/h2c
-            port: 9001
+            port: *port
 
     persistence:
       tmpfs:
