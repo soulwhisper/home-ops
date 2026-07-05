@@ -7,7 +7,7 @@ metadata:
 spec:
   groupRef:
     name: external
-  image: ghcr.io/stacklok/dockyard/npx/context7:2.2.4
+  image: ghcr.io/stacklok/dockyard/npx/context7:3.2.2
   mcpPort: 3000
   secrets:
     - name: *name
