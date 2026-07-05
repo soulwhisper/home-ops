@@ -38,7 +38,7 @@ jobs:
           retain_days: "14"
           keep_minimum_runs: "3"
           delete_run_by_conclusion_pattern: "success"
-      - name: Clenaup workflow failure runs
+      - name: Cleanup workflow failure runs
         uses: Mattraks/delete-workflow-runs@0cf693bc9909e5e867ee8f27b813224ba862939c # v2
         with:
           token: "${{ steps.app-token.outputs.token }}"
