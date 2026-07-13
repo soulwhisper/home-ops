@@ -28,7 +28,7 @@ spec:
           app:
             image:
               repository: ghcr.io/alexta69/metube
-              tag: 2026.07.12
+              tag: 2026.07.13
             envFrom:
               - configMapRef:
                   name: *name
