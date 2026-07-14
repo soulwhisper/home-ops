@@ -7,7 +7,7 @@ metadata:
 spec:
   groupRef:
     name: internal-ro
-  image: ghcr.io/controlplaneio-fluxcd/flux-operator-mcp:v0.54.1
+  image: ghcr.io/controlplaneio-fluxcd/flux-operator-mcp:v0.55.0
   args: ["serve", "--transport=http", "--port=9090", "--read-only=true"]
   env:
     RUNTIME_NAMESPACE: "gitops-system"
