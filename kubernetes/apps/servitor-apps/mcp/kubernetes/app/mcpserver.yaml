@@ -9,7 +9,7 @@ spec:
     name: internal-ro
   toolConfigRef:
     name: *name
-  image: ghcr.io/containers/kubernetes-mcp-server:v0.0.64
+  image: ghcr.io/containers/kubernetes-mcp-server:v0.0.65
   args: ["--config", "/root/config.toml"]
   podTemplateSpec:
     spec:
