@@ -27,7 +27,7 @@ spec:
           app:
             image:
               repository: ghcr.io/haierkeys/fast-note-sync-service
-              tag: 3.5.1
+              tag: 3.5.6
             resources:
               requests:
                 cpu: 100m
