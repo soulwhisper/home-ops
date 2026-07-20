@@ -83,13 +83,12 @@ directories:
     path: k8s-volumes
   path: _sources/kubernetes
 - contents:
-  - configDigest: 10d780238485fba4f6cca03a815b1ad79ab0de18462364bb499dc618f87c7b73
+  - configDigest: 74bea553748bf4254660766a315af8b805da4e0243b1a838c158aa91cdc81586
     git:
-      commitTitle: 'app/vmstorage: reduce memory allocations after 35488588437182958c1e2b758f62bbbb3b818690
-        (#11216)...'
-      sha: 3ac6505d7ff2c02b1c7878d92525e7b681e9cadc
+      commitTitle: 'docs/changelog: cut release v1.148.0...'
+      sha: d94a85a4059b22fd238a0d2516bcb3e9bfb54587
       tags:
-      - v1.147.0
+      - v1.148.0
     path: metrics
   - configDigest: f9f340d02610177b691d9f4f7adba5b56dc7a6a6933985eac839eae67c5f6c41
     git:
