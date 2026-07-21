@@ -13,5 +13,4 @@ resources:
   - ./mcp
   # app
   - ./devbox/ks.yaml
-  - ./dify/ks.yaml
   - ./hermes-agent/ks.yaml

@@ -36,16 +36,6 @@
       minimumGroupSize: 2,
     },
     {
-      description: "Dify Group",
-      groupName: "Dify",
-      matchDatasources: ["docker"],
-      matchPackageNames: ["/dify-web/", "/dify-plugin-daemon/", "/dify-api/"],
-      group: {
-        commitMessageTopic: "{{{groupName}}} group",
-      },
-      minimumGroupSize: 2,
-    },
-    {
       description: "Flux Operator Group",
       groupName: "Flux Operator",
       matchDatasources: ["docker"],

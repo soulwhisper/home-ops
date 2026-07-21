@@ -23,11 +23,6 @@ spec:
         - matchLabels:
             {
               "k8s:io.kubernetes.pod.namespace": servitor-apps,
-              "app.kubernetes.io/name": dify-api,
-            }
-        - matchLabels:
-            {
-              "k8s:io.kubernetes.pod.namespace": servitor-apps,
               "app.kubernetes.io/name": devbox,
             }
       toPorts:
