@@ -46,10 +46,10 @@
       minimumGroupSize: 2,
     },
     {
-      description: "Langfuse Group",
-      groupName: "Langfuse",
+      description: "KGateway Group",
+      groupName: "KGateway App",
       matchDatasources: ["docker"],
-      matchPackageNames: ["/langfuse/", "/langfuse-worker/"],
+      matchPackageNames: ["/kgateway-crds/", "/kgateway/"],
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
@@ -60,6 +60,16 @@
       groupName: "Immich App",
       matchDatasources: ["docker"],
       matchPackageNames: ["/immich-server/", "/immich-machine-learning/"],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+      minimumGroupSize: 2,
+    },
+    {
+      description: "Langfuse Group",
+      groupName: "Langfuse",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["/langfuse/", "/langfuse-worker/"],
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
