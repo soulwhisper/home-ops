@@ -1,0 +1,85 @@
+---
+# Host-level multi-document config (Talos v1.14).
+# Replaces deprecated v1alpha1 machine.{sysctls,files,pods}.
+# Sources: pkg/machinery/config/types/{runtime,cri,k8s} @ v1.14.0-beta.1
+# was: machine.sysctls (values are strings in SysctlConfig params)
+# source: pkg/machinery/config/types/runtime/sysctl.go
+apiVersion: v1alpha1
+kind: SysctlConfig
+params:
+  # moviepilot requires high inotify limits for media library watching (~500k files)
+  fs.inotify.max_user_watches: "1048576" # default 8192; recommended 1048576 supports large media libraries
+  fs.inotify.max_user_instances: "8192" # default 128; matches watches for consistency
+  # ARP table size for BGP+Cilium: large cluster peering table requires expanded neighbor cache
+  net.ipv4.neigh.default.gc_thresh1: "1024" # GC start threshold (default 128)
+  net.ipv4.neigh.default.gc_thresh2: "2048" # GC soft threshold (default 512)
+  net.ipv4.neigh.default.gc_thresh3: "4096" # GC hard threshold (default 1024)
+  # 10G NIC throughput tuning (Intel X710, ice driver)
+  # Reference: https://www.kernel.org/doc/Documentation/networking/scaling.txt
+  net.core.netdev_max_backlog: "16384" # packet queue depth per NIC (default 1000)
+  net.core.somaxconn: "32768" # listen() backlog (default 4096)
+  net.ipv4.tcp_max_syn_backlog: "8192" # SYN queue per socket (default 256)
+  net.core.rmem_max: "134217728" # 128MB socket recv buffer max
+  net.core.wmem_max: "134217728" # 128MB socket send buffer max
+  net.ipv4.tcp_rmem: "4096 87380 134217728" # min/default/max recv buffer
+  net.ipv4.tcp_wmem: "4096 65536 134217728" # min/default/max send buffer
+  # NFS over 10G: increase RPC slot table to avoid NFS client stalls
+  sunrpc.tcp_slot_table_entries: "128" # concurrent RPC calls (default 16)
+  sunrpc.tcp_max_slot_table_entries: "1024" # max concurrent RPC calls
+  user.max_user_namespaces: "11255" # required for rootless containers (UserNamespaces feature)
+  # Writeback tuning for 96GB RAM: reduce kernel dirty page ratio to avoid write storms
+  vm.dirty_background_ratio: "5" # start background writeback at 5% dirty (default 10%)
+  vm.dirty_ratio: "10" # block writes at 10% dirty (default 20%)
+---
+# was: machine.files entry /etc/cri/conf.d/20-customization.part (TOML content verbatim)
+# name `customization` is reserved for the legacy file-based part, hence `20-customization`
+# source: pkg/machinery/config/types/cri/customization.go
+apiVersion: v1alpha1
+kind: CRICustomizationConfig
+name: 20-customization
+content: |
+  [plugins]
+    [plugins."io.containerd.cri.v1.images"]
+      discard_unpacked_layers = false
+    [plugins."io.containerd.cri.v1.runtime"]
+      device_ownership_from_security_context = true
+    [plugins."io.containerd.grpc.v1.cri"]
+      enable_unprivileged_ports = true
+      enable_unprivileged_icmp = true
+---
+# was: machine.pods (network-irq-optimizer static pod, pod definition verbatim)
+# source: pkg/machinery/config/types/k8s/static_pod.go
+apiVersion: v1alpha1
+kind: KubeStaticPodConfig
+name: network-irq-optimizer
+pod:
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: network-irq-optimizer
+    namespace: kube-system
+  spec:
+    hostNetwork: true
+    hostPID: true
+    containers:
+      - name: irq-optimizer
+        image: alpine
+        securityContext:
+          privileged: true
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            # 13900H P-cores (HT enabled) are 0-11. E-cores are 12-19.
+            while true; do
+              for irq in $(grep 'ice' /proc/interrupts | awk '{print $1}' | tr -d ':'); do
+                echo "2-11" > /proc/irq/$irq/smp_affinity_list
+              done
+              sleep 3600
+            done
+        volumeMounts:
+          - name: proc
+            mountPath: /proc
+    volumes:
+      - name: proc
+        hostPath:
+          path: /proc

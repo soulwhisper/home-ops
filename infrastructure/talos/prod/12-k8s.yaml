@@ -1,0 +1,111 @@
+---
+# Kubernetes control-plane multi-document config (Talos v1.14).
+# Replaces deprecated v1alpha1 cluster.* fields and machine.{kubelet,nodeLabels,features.kubernetesTalosAPIAccess}.
+# Sources: pkg/machinery/config/types/{k8s,cluster} @ v1.14.0-beta.1
+# was: cluster.apiServer.admissionControl $patch: delete
+# deletes the generated default PodSecurity admission plugin config (pkg/machinery/config/types/k8s/admission_control.go);
+# with no KubeAdmissionControlConfig documents left, the apiserver runs without an admission control config file
+apiVersion: v1alpha1
+kind: KubeAdmissionControlConfig
+name: PodSecurity
+$patch: delete
+---
+# was: cluster.network.cni.name: none
+# deletes the generated default Flannel CNI; Cilium is deployed via Helm (pkg/machinery/config/types/k8s/flannel.go)
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+$patch: delete
+---
+# was: cluster.allowSchedulingOnControlPlanes: true
+# the generated KubeNodeConfig carries the node-role.kubernetes.io/control-plane:NoSchedule taint and map merges
+# cannot remove keys, so the generated document is deleted here and fully re-specified below (without taints)
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+$patch: delete
+---
+# full replacement for the generated KubeNodeConfig (pkg/machinery/config/types/k8s/node.go)
+# labels: the two generated control-plane labels (kept) + former machine.nodeLabels
+# nodeIP: former machine.kubelet.nodeIP.validSubnets
+# no taints = workloads schedule on control planes (parity with allowSchedulingOnControlPlanes: true)
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+nodeIP:
+  validSubnets:
+    - 10.10.0.0/24
+labels:
+  node-role.kubernetes.io/control-plane: ""
+  node.kubernetes.io/exclude-from-external-load-balancers: ""
+  topology.kubernetes.io/region: main
+  topology.kubernetes.io/zone: homelab
+  intel.feature.node.kubernetes.io/gpu: "true"
+---
+# was: machine.kubelet.image (merged into the generated KubeletConfig, which also sets defaultRuntimeSeccompProfileEnabled)
+# source: pkg/machinery/config/types/k8s/kubelet.go
+apiVersion: v1alpha1
+kind: KubeletConfig
+# renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
+image: ghcr.io/siderolabs/kubelet:v1.36.3
+---
+# was: cluster.coreDNS.disabled: true (merged into the generated KubeCoreDNSConfig)
+# source: pkg/machinery/config/types/k8s/coredns.go
+apiVersion: v1alpha1
+kind: KubeCoreDNSConfig
+enabled: false
+---
+# was: cluster.proxy.disabled: true (merged into the generated KubeProxyConfig; Cilium kube-proxy replacement)
+# source: pkg/machinery/config/types/k8s/proxy.go
+apiVersion: v1alpha1
+kind: KubeProxyConfig
+enabled: false
+---
+# was: cluster.scheduler.config (merged into the generated KubeSchedulerConfig, which supplies the image)
+# source: pkg/machinery/config/types/k8s/scheduler.go; apiVersion/kind are set automatically by Talos
+apiVersion: v1alpha1
+kind: KubeSchedulerConfig
+config:
+  profiles:
+    - schedulerName: default-scheduler
+      plugins:
+        score:
+          disabled:
+            - name: ImageLocality
+            - name: SelectorSpread
+      pluginConfig:
+        - name: PodTopologySpread
+          args:
+            defaultingType: List
+            defaultConstraints:
+              - maxSkew: 1
+                topologyKey: kubernetes.io/hostname
+                whenUnsatisfiable: ScheduleAnyway
+                matchLabelKeys:
+                  - pod-template-hash
+                  - controller-revision-hash
+---
+# was: cluster.network.{podSubnets,serviceSubnets} (subnets replace the generated defaults via merge:"replace")
+# source: pkg/machinery/config/types/k8s/network.go
+apiVersion: v1alpha1
+kind: KubeNetworkConfig
+podSubnets:
+  - 10.100.0.0/17
+serviceSubnets:
+  - 10.100.128.0/17
+---
+# was: machine.features.kubernetesTalosAPIAccess (no generated default; document presence enables the feature)
+# source: pkg/machinery/config/types/k8s/talos_api_access.go
+apiVersion: v1alpha1
+kind: KubeTalosAPIAccessConfig
+allowedRoles:
+  - os:admin
+  - os:etcd:backup
+allowedKubernetesNamespaces:
+  - gitops-system
+---
+# was: cluster.discovery.{enabled,registries.service.endpoint}
+# merged into the generated DiscoveryServiceConfig named "default", overriding the endpoint;
+# the Kubernetes discovery registry is always disabled in v1.14 (KubernetesDiscoveryBackendDisabled, contract.go)
+# source: pkg/machinery/config/types/cluster/discovery_service.go
+apiVersion: v1alpha1
+kind: DiscoveryServiceConfig
+name: default
+endpoint: http://10.10.0.100:9300
