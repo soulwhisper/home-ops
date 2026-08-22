@@ -1,0 +1,131 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-memory
+data:
+  # ── memory-core (gateway)
+  TDAI_GATEWAY_HOST: 0.0.0.0
+  TDAI_GATEWAY_PORT: "8420"
+  TDAI_DATA_DIR: /data/tdai-memory
+  # memory group LLM (embed/summarize/extract)
+  TDAI_LLM_MAX_TOKENS: "32000"
+  TDAI_LLM_TIMEOUT_MS: "300000"
+  # ── memory-hub (panel :8125 + knowledge :8424)
+  KNOWLEDGE_PUBLIC_BASE_URL: http://agent-memory-hub.servitor-apps.svc.cluster.local:8424/v3
+  KNOWLEDGE_LLM_BINDING_SYNC: "0"
+  REMOTE_INSTANCE_ID: default
+  REMOTE_INSTANCE_NAME: default
+  REMOTE_INSTANCE_URL: http://agent-memory-core.servitor-apps.svc.cluster.local:8420
+  REMOTE_INSTANCE_PROXY_URL: http://agent-memory-proxy.servitor-apps.svc.cluster.local:8096
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-memory-config
+data:
+  core.yaml: |
+    deployMode: standalone
+    stateBackend: local
+    server:
+      port: 8420
+      host: 0.0.0.0
+    data:
+      baseDir: /data/tdai-memory
+    llm:
+      baseUrl: "${MEMORY_LLM_BASE_URL:-}"
+      apiKey: "${MEMORY_LLM_API_KEY:-}"
+      model: "${MEMORY_LLM_MODEL:-}"
+      maxTokens: 32000
+      timeoutMs: 300000
+    memory:
+      promptMode: ${MEMORY_PROMPT_MODE:-chat}
+      capture: { enabled: true }
+      extraction:
+        enabled: true
+        enableDedup: true
+        maxMemoriesPerSession: 20
+      persona:
+        triggerEveryN: 50
+        maxScenes: 15
+      pipeline:
+        everyNConversations: 5
+        enableWarmup: true
+        l1IdleTimeoutSeconds: 600
+        l2DelayAfterL1Seconds: 90
+        l2MinIntervalSeconds: 900
+        l2MaxIntervalSeconds: 3600
+      recall:
+        enabled: true
+        maxResults: 5
+        scoreThreshold: 0.3
+        strategy: hybrid
+        timeoutMs: 5000
+      storeBackend: sqlite
+      embedding:
+        provider: none
+    skill:
+      enabled: true
+      routing:
+        mode: bm25
+        searchTopK: 20
+      extraction:
+        enabled: true
+        maxIterations: 16
+        queue:
+          backend: local
+          keyPrefix: tdai
+          resultTtlSeconds: 86400
+          lockTtlMs: 600000
+          maxRetries: 2
+          retryBackoffsMs: [5000, 15000]
+      resources:
+        maxResourceSizeBytes: 5000000
+  proxy.yaml: |
+    server:
+      host: 0.0.0.0
+      port: 8096
+      forwardTimeoutMs: 600000
+    log:
+      file: ""
+      level: info
+      backend: console
+    tdai:
+      enabled: true
+      endpoint: "http://agent-memory-core.servitor-apps.svc.cluster.local:8420"
+      apiKey: "local"
+      serviceId: default
+      memory:
+        enabled: true
+        inject: true
+        writeL0: true
+        recallL1: true
+        injectL2L3: true
+    skill:
+      endpoint: "http://agent-memory-core.servitor-apps.svc.cluster.local:8420"
+      serviceToken: "local"
+    auth:
+      enabled: true
+      url: "http://agent-memory-core.servitor-apps.svc.cluster.local:8420"
+      timeoutMs: 5000
+    sessionInit:
+      enabled: true
+      maxRetries: 3
+      injectAgentContext: true
+      injectTaskContext: true
+      headerAutoSelect:
+        enabled: true
+        teamHeader: "x-team-id"
+        agentHeader: "x-agent-id"
+        taskHeader: "x-task-id"
+        onMismatch: "form"
+    costGuard:
+      enabled: false
+    injection:
+      enabled: true
+      injectors:
+        - skill
+        - knowledge
+        - tdai-memory
+    redis:
+      enabled: false

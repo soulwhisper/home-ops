@@ -12,5 +12,6 @@ resources:
   # mcp
   - ./mcp
   # app
+  - ./agent-memory/ks.yaml
   - ./buzz/ks.yaml
   - ./hermes-agent/ks.yaml
