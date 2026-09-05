@@ -1,0 +1,15 @@
+---
+# Cluster-wide Talos/Kubernetes version pins.
+# Consumed by `just talos generate` and `just talos image`.
+
+# renovate: datasource=github-releases depName=siderolabs/talos
+talos_version: v1.14.0
+# renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
+k8s_version: v1.37.0
+# Schematic IDs are resolved live from factory.talos.dev by
+# `just talos _schema <mode>` (invoked by `generate` and `image`) and
+# refreshed here on every run, so the installer image and ISO downloads
+# always match the current 00-schematic.yaml content.
+schematic_id:
+  prod: b7e0c94a9ed78c4d249cd4d53f177d2763d27350490ba29c2e7ac722493450a2
+  test: 5bf167b739a3594940f8012df8e9659662dddd8e6e3b2a3ed5262f16bbf1d7c0

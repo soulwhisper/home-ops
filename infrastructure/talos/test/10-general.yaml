@@ -74,11 +74,6 @@ kind: KubeFlannelCNIConfig
 $patch: delete
 ---
 apiVersion: v1alpha1
-kind: KubeletConfig
-# renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
-image: ghcr.io/siderolabs/kubelet:v1.37.0
----
-apiVersion: v1alpha1
 kind: KubeNetworkConfig
 podSubnets:
   - 10.100.0.0/17
@@ -219,11 +214,10 @@ params:
 apiVersion: v1alpha1
 kind: UnattendedInstallConfig
 installer:
-  # renovate: datasource=github-releases depName=siderolabs/talos
-  image: factory.talos.dev/metal-installer/5bf167b739a3594940f8012df8e9659662dddd8e6e3b2a3ed5262f16bbf1d7c0:v1.14.0
+  # image is injected from ../version.yaml (talos_version + schematic_id) by `just talos generate`
 provisioning:
   diskSelector:
-    match: '"/dev/disk/by-id/md-name-talos:boot" in disk.symlinks'
+    match: "\"/dev/disk/by-id/md-name-talos:boot\" in disk.symlinks"
   wipe: false
 ---
 apiVersion: v1alpha1

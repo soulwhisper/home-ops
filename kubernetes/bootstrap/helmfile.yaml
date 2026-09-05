@@ -16,7 +16,7 @@ helmDefaults:
   waitForJobs: true
 
 bases:
-  - ./templates/default.yaml
+  - ./default.yaml
 
 defaultInherit: default
 

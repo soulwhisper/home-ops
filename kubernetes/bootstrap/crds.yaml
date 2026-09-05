@@ -1,0 +1,33 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/helmfile
+
+# Pre-installs CRDs for charts whose custom resources are applied by Flux
+# kustomizations. Without this stage, a fresh cluster races: Flux applies
+# manifests referencing CRDs (Certificate, ClusterIssuer, AgentgatewayPolicy,
+# VolumeSnapshot, ...) before the owning HelmRelease has created them.
+# Charts whose CRDs ship as dedicated Flux HelmReleases (agentgateway-crds,
+# kgateway-crds, rook-ceph operator) are excluded — Flux `dependsOn` already
+# sequences those.
+#
+# Rendered CRD-only (template | filter kind=CustomResourceDefinition | apply),
+# so these charts are NOT installed here — Flux still owns the releases.
+# Chart and version are derived from the same OCIRepository files Flux uses.
+
+helmDefaults:
+  args:
+    - --include-crds
+    - --no-hooks
+
+bases:
+  - ./default.yaml
+
+defaultInherit: default
+
+releases:
+  # ClusterIssuer in security-system/cert-manager, Certificate in networking-system/kgateway
+  - name: cert-manager
+    namespace: security-system
+
+  # VolumeSnapshot* consumed by kopiur and ceph-csi snapshots
+  - name: snapshot-controller
+    namespace: storage-system

@@ -1,6 +1,6 @@
 ---
 # schematic for test environment
-# 5bf167b739a3594940f8012df8e9659662dddd8e6e3b2a3ed5262f16bbf1d7c0
+# id is resolved live from factory.talos.dev and tracked in ../version.yaml
 customization:
   bootloader: sd-boot
   extraKernelArgs:

@@ -53,3 +53,5 @@ repos:
           - "-schema-location=https://soulwhisper.github.io/k8s-schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
         language: system
         files: ^kubernetes/.*\.ya?ml$
+        # bootstrap/ holds helmfile state files and templates, not k8s manifests
+        exclude: ^kubernetes/bootstrap/

@@ -18,7 +18,7 @@
         // image: <registry>/<path>:vX.Y.Z   (e.g. 10-general.yaml)
         "#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)(?:\\s+packageName=(?<packageName>[^\\s]+))?\\s+image:\\s*(?<depPart>.*?:)(?<currentValue>[v\\d\\.]+)",
         // version: vX.Y.Z                   (e.g. system-upgrade-controller plans)
-        "#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)(?:\\s+packageName=(?<packageName>[^\\s]+))?\\s+version:\\s*(?<currentValue>[v\\d\\.]+)",
+        "#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)(?:\\s+packageName=(?<packageName>[^\\s]+))?\\s+[a-z_]*version:\\s*(?<currentValue>[v\\d\\.]+)",
       ],
       datasourceTemplate: "{{{datasource}}}",
       depNameTemplate: "{{{depName}}}",

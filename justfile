@@ -49,6 +49,9 @@ bootstrap:
   just talos _bootstrap_k8s
   just talos kubeconfig
   echo "completed."
+  echo "Waiting for apiserver and node readiness..."
+  just talos _k8s_ready
+  echo "completed."
   echo "Bootstrapping Apps..."
   just _bootstrap_apps
   echo "completed."
@@ -61,6 +64,10 @@ _template file:
 [script]
 _bootstrap_apps:
   just _template "{{K8S_DIR}}/bootstrap/resources.yaml.j2" | kubectl apply --server-side -f -
+  echo "Applying base CRDs..."
+  helmfile --file "{{K8S_DIR}}/bootstrap/crds.yaml" template --quiet \
+    | yq eval-all --exit-status 'select(.kind == "CustomResourceDefinition")' \
+    | kubectl apply --server-side --force-conflicts -f -
   echo "Syncing Helm Releases..."
   count=0; until helmfile --file "{{K8S_DIR}}/bootstrap/helmfile.yaml" sync --hide-notes; do
     count=$((count + 1))

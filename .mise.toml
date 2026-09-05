@@ -8,5 +8,8 @@ ROOK_OPERATOR_NAMESPACE = "storage-system"
 ROOK_CLUSTER_NAMESPACE = "storage-system"
 
 [tools]
+# talosctl must match the cluster's Talos major.minor (see infrastructure/talos/version.yaml)
+# renovate: datasource=github-releases depName=siderolabs/talos
+talosctl = "1.14.0"
 prek = "latest"
 "github:home-operations/flate" = "latest"

@@ -1,8 +1,0 @@
----
-# yaml-language-server: $schema=https://json.schemastore.org/helmfile
-templates:
-  default:
-    chart: '{{ (fromYaml (tpl (readFile "./release.yaml.gotmpl") .)).chart }}'
-    version: '{{ (fromYaml (tpl (readFile "./release.yaml.gotmpl") .)).version }}'
-    values:
-      - ./values.yaml.gotmpl

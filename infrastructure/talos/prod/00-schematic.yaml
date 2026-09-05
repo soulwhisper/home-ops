@@ -1,6 +1,6 @@
 ---
 # schematic for production environment
-# b7e0c94a9ed78c4d249cd4d53f177d2763d27350490ba29c2e7ac722493450a2
+# id is resolved live from factory.talos.dev and tracked in ../version.yaml
 customization:
   bootloader: sd-boot
   extraKernelArgs:
@@ -14,6 +14,6 @@ customization:
     officialExtensions:
       - siderolabs/i915
       - siderolabs/intel-ucode
+      - siderolabs/kata-containers
       - siderolabs/mei
       - siderolabs/nut-client
-      - siderolabs/kata-containers

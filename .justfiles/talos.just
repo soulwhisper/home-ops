@@ -26,7 +26,9 @@ image mode:
 [doc('Get schema ID for specific environment')]
 [script]
 _schema mode:
-  curl --silent --noproxy '*' -X POST --data-binary @"${TALOS_DIR}/{{mode}}/00-schematic.yaml" https://factory.talos.dev/schematics | jq --raw-output '.id'
+  SCHEMATIC_ID=$(curl --silent --noproxy '*' -X POST --data-binary @"${TALOS_DIR}/{{mode}}/00-schematic.yaml" https://factory.talos.dev/schematics | jq --raw-output '.id')
+  yq --inplace '.schematic_id.{{mode}} = "'"${SCHEMATIC_ID}"'"' "${TALOS_DIR}/version.yaml"
+  echo "${SCHEMATIC_ID}"
 
 [doc('Generate talos configuration')]
 [script]
@@ -36,10 +38,15 @@ generate mode:
     test) CLUSTER_NAME="test"; CLUSTER_ENDPOINT="https://172.19.82.101:6443" ;;
     *) echo "❌ Unknown mode: {{mode}} (expected: prod|test)"; exit 1 ;;
   esac
+  TALOS_VERSION=$(yq -r '.talos_version' "${TALOS_DIR}/version.yaml")
+  K8S_VERSION=$(yq -r '.k8s_version' "${TALOS_DIR}/version.yaml")
+  SCHEMATIC_ID=$(just talos _schema {{mode}})
   op inject -i "${TALOS_DIR}/secret.yaml" | talosctl gen config \
     "${CLUSTER_NAME}" "${CLUSTER_ENDPOINT}" \
     --with-docs=false --with-examples=false --force \
     --with-secrets /dev/stdin \
+    --talos-version "${TALOS_VERSION}" \
+    --kubernetes-version "${K8S_VERSION}" \
     --output "${TALOS_DIR}/clusterconfig"
   for FILE in $(ls ${TALOS_DIR}/{{mode}}/nodes/*.yaml); do
     NODE=$(basename "$FILE" .yaml)
@@ -52,6 +59,9 @@ generate mode:
       --output "${TALOS_DIR}/clusterconfig/main-$NODE.yaml" \
       "${PATCH_ARGS[@]}" \
       --patch "@${FILE}"
+    # inject installer image pinned by version.yaml (talos_version + live schematic id)
+    yq --inplace '(select(.kind == "UnattendedInstallConfig")).installer.image = "factory.talos.dev/metal-installer/'"${SCHEMATIC_ID}"':'"${TALOS_VERSION}"'"' \
+      "${TALOS_DIR}/clusterconfig/main-$NODE.yaml"
   done
   mkdir -p ~/.talos && cp "${TALOSCONFIG}" ~/.talos/config
 
@@ -68,15 +78,23 @@ _bootstrap_talos:
     NODE=$(basename "$FILE" .yaml | sed 's/^main-//')
     echo "🚀 Bootstrapping Talos Node: $NODE"
     count=0
-    until talosctl apply-config --nodes "$NODE" --file "$FILE" --insecure 2>/dev/null; do
-      exit_code=$?
-      count=$((count + 1))
-      if [ $count -ge 5 ]; then
-          echo "⚠️ Failed to apply config to $NODE after 5 attempts. Assuming node might be rebooting or already ready. Continuing..."
-          break
+    while true; do
+      if OUT=$(talosctl apply-config --nodes "$NODE" --file "$FILE" --insecure 2>&1); then
+        echo "✅ $NODE accepted configuration."
+        break
       fi
-      echo "⏳ Waiting for $NODE to accept config (Attempt $count/5)..."
-      sleep 3
+      if [[ "$OUT" == *"certificate required"* ]]; then
+        echo "ℹ️ $NODE is already configured, skipping."
+        break
+      fi
+      count=$((count + 1))
+      if [ $count -ge 12 ]; then
+        echo "❌ Failed to apply config to $NODE after 12 attempts:"
+        echo "$OUT"
+        exit 1
+      fi
+      echo "⏳ Waiting for $NODE to accept config (attempt $count/12)..."
+      sleep 5
     done
   done
 
@@ -111,6 +129,28 @@ _bootstrap_k8s:
     sleep 5
   done
   echo "✅ Bootstrap successful (etcd is running)."
+[doc('Wait for apiservers to answer /readyz and nodes to register')]
+[script]
+_k8s_ready:
+  # Helm and kubectl calls after this gate are not retried, so every apiserver
+  # must answer first. Nodes come from talosconfig; fall back to an endpoint.
+  NODES=$(talosctl config info --output json 2>/dev/null | jq --raw-output '.nodes[]?' || true)
+  if [ -z "${NODES}" ]; then NODES="{{TALOS_ENDPOINT}}"; fi
+  for NODE in ${NODES}; do
+    until [ "$(curl -ks -o /dev/null -w '%{http_code}' --connect-timeout 2 "https://${NODE}:6443/readyz")" == "200" ]; do
+      echo "⏳ Waiting for kube-apiserver on ${NODE}..."
+      sleep 5
+    done
+  done
+  echo "✅ All apiservers ready."
+  # Nodes register as Ready=False until the CNI is healthy — registration is enough here.
+  if ! kubectl wait nodes --for=condition=Ready=True --all --timeout=10s &>/dev/null; then
+    until kubectl wait nodes --for=condition=Ready=False --all --timeout=10s &>/dev/null; do
+      echo "⏳ Waiting for nodes to register..."
+      sleep 5
+    done
+  fi
+  echo "✅ All nodes registered."
 
 [doc('Fetch kubeconfig')]
 [script]
