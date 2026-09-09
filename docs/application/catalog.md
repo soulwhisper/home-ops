@@ -130,7 +130,7 @@
 
 | App          | Purpose                                                                 |
 | ------------ | ----------------------------------------------------------------------- |
-| Hermes Agent | AI agent suite (Kata VM, WeChat, cron/automation)                       |
+| Hermes Agent | AI agent suite (Kata VM, Feishu, cron/automation)                       |
 | ToolHive     | MCP gateway (3 VirtualMCP tiers, semantic search)                       |
 | Onyx         | Enterprise chat + RAG (CNPG + Dragonfly + Ceph S3 + OpenSearch)         |
 | MCP Servers  | kubernetes/HA/hindsight/honcho/github/firecrawl/grafana/flux/vlogs/obsidian/forgejo/trendradar |

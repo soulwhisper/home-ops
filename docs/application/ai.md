@@ -116,11 +116,11 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 
 - **Runtime**: Kata Containers (VM isolation)
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
-- **Integrations**: WeChat, Firecrawl (internal), ToolHive MCP, Agent Gateway LLM
-- **Egress**: CiliumNetworkPolicy — only agentgateway-proxy, virtualmcp, kube-dns
+- **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP, Agent Gateway LLM
+- **Egress**: CiliumNetworkPolicy — agentgateway-proxy, virtualmcp, kube-dns, open.feishu.cn:443
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
-  - `ops` — the batching brain: existing cron/WeChat/automation workload migrates here via the dashboard (runtime state move; read-only-first posture, ToolHive tiers as today)
+  - `ops` — the batching brain: cron/Feishu/automation workload lives here (read-only-first posture, ToolHive tiers as today); Feishu home channel for cron results
   - `chat` — chat-like frontends (Onyx and similar): isolated memory + config, own `API_SERVER_KEY` (scoped secret, 1Password `chat_api_server_key`); multiplexed gateway serves it at `:8642/p/chat/v1` with served model id `chat` (per-profile model names are NOT supported under multiplexing — the id is the profile name); no `API_SERVER_KEY` is seeded for `ops`, so `/p/ops/` fails closed
   - `default` — left untouched as fallback/scratch
   Model/provider config (`model.provider: custom` → agent gateway, `model.default: complex`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression` → `omni`, `title_generation` → `micro`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. Requires new 1Password `hermes-agent` fields: `api_server_key`, `chat_api_server_key` (both >=16 chars)
@@ -238,8 +238,8 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 ### TrendRadar 6.10.0
 
-- AI news digest pipeline (selfhosted-apps): watch list = custom RSS only (aiera.com.cn, expreview.com + GitHub Atom feeds; hot lists disabled), `report.mode: incremental` (zero-duplicate push), keyword grouping via `frequency_words.txt`, AI analysis via gateway (`openai/omni`, fallback `micro`)
-- Delivery: none configured by default — add `DINGTALK_WEBHOOK_URL`/`FEISHU_WEBHOOK_URL`/`NTFY_*` env when a channel is chosen (direct push to hermes is not possible: hermes webhooks require HMAC signatures TrendRadar can't emit; agents query news via the `trendradar` MCP instead). HTML report at `news.noirprime.com` (SSO)
+- AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`, fallback `micro`)
+- Delivery: Feishu custom group robot (`FEISHU_WEBHOOK_URL` from 1Password `feishu.webhook_url`); HTML report at `news.noirprime.com` (SSO)
 - MCP server (:3333) registered as `trendradar` in internal-ro — hermes/agents can query stored news
 - Config fully in ConfigMap (`config.yaml` + `frequency_words.txt` + `ai_interests.txt`); output on 1Gi ceph-block PVC
 

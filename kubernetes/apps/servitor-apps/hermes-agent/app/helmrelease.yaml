@@ -63,6 +63,11 @@ spec:
               HERMES_SERVICES: "dashboard,gateway,webui"
               # plugins
               RTK_TELEMETRY_DISABLED: "true"
+              # Feishu plugin (websocket mode; credentials via envFrom secret)
+              FEISHU_DOMAIN: "feishu"
+              FEISHU_CONNECTION_MODE: "websocket"
+              FEISHU_ALLOW_BOTS: "mentions"
+              FEISHU_GROUP_POLICY: "allowlist"
             envFrom:
               - secretRef:
                   name: *name
