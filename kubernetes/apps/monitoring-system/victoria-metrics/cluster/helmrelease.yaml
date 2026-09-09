@@ -106,7 +106,7 @@ spec:
           - name: "default"
             webhookConfigs:
               # webhook-relay: feishu primary, pushover fallback
-              - url: "http://webhook-relay.monitoring-system.svc.cluster.local:9000/hooks/alertmanager"
+              - url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/alertmanager"
                 sendResolved: true
 
     kubeApiServer:

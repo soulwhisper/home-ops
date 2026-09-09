@@ -12,9 +12,9 @@ spec:
     namespace: gitops-system
 
   # Central inbound webhook collector: receives cluster webhooks and relays
-  # to notification channels. Hooks live in the config ConfigMap; add a new
-  # hook id + script there to onboard a new webhook source.
-  # ref:https://github.com/adnanh/webhook
+  # to notification targets. Routes/targets live in the config ConfigMap;
+  # add a new route there to onboard a new webhook source.
+  # ref:https://github.com/home-operations/chaski
 
   values:
     defaultPodOptions:
@@ -26,13 +26,23 @@ spec:
         containers:
           app:
             image:
-              repository: ghcr.io/home-operations/webhook
-              tag: 2.8.2
+              repository: ghcr.io/home-operations/chaski
+              tag: 0.5.1
             env:
-              WEBHOOK__PORT: &port 9000
+              CHASKI_CONFIG: /config/chaski.yaml
+              CHASKI_PORT: &port 8080
             envFrom:
               - secretRef:
                   name: *name
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: *port
+              readiness: *probes
             resources:
               requests:
                 cpu: 10m
@@ -42,7 +52,6 @@ spec:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
-
     service:
       app:
         ports:
