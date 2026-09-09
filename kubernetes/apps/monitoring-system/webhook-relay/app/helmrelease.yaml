@@ -17,75 +17,6 @@ spec:
   # ref:https://github.com/adnanh/webhook
 
   values:
-    configMaps:
-      config:
-        enabled: true
-        data:
-          hooks.yaml: |
-            - id: alertmanager
-              execute-command: /config/alertmanager.sh
-              command-working-directory: /config
-              pass-arguments-to-command:
-                - source: entire-payload
-          # Alertmanager -> feishu custom bot (primary) + pushover (fallback)
-          # ref:https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot
-          # ref:https://pushover.net/api
-          alertmanager.sh: |
-            #!/usr/bin/env bash
-            set -Eeuo pipefail
-
-            PAYLOAD=${1:?}
-
-            function _jq() {
-                jq --raw-output "${1:?}" <<<"${PAYLOAD}"
-            }
-
-            function notify() {
-                local status firing_count alertname title body priority
-
-                status=$(_jq '.status | ascii_upcase')
-                firing_count=$(_jq '[.alerts[] | select(.status == "firing")] | length')
-                alertname=$(_jq '.commonLabels.alertname // "Alertmanager"')
-
-                if [[ "${status}" == "FIRING" ]]; then
-                    title="[FIRING:${firing_count}] ${alertname}"
-                else
-                    title="[${status}] ${alertname}"
-                fi
-
-                body=$(_jq '[.alerts[] |
-                    (.annotations.description // .annotations.summary // .annotations.message // "Alert description not available")
-                    + "\n" + ([.labels | to_entries[] | "\(.key): \(.value)"] | join(", "))
-                ] | join("\n---\n")')
-
-                # feishu custom bot, plain text; failure must not block the pushover fallback
-                jq --null-input --arg text "${title}"$'\n'"${body}" \
-                    '{msg_type: "text", content: {text: $text}}' \
-                | curl -fsS --max-time 15 -X POST \
-                    --header "Content-Type: application/json" \
-                    --data-binary @- \
-                    "${FEISHU_WEBHOOK_URL:?}" \
-                || echo "[WARN] feishu delivery failed"
-
-                # pushover API caps title at 250 and message at 1024 chars
-                if [[ "${status}" == "FIRING" ]]; then priority=1; else priority=0; fi
-                curl -fsS --max-time 15 -X POST \
-                    --form "token=${PUSHOVER_TOKEN:?}" \
-                    --form "user=${PUSHOVER_USER_KEY:?}" \
-                    --form "title=${title:0:250}" \
-                    --form "message=${body:0:1024}" \
-                    --form "priority=${priority}" \
-                    --form "sound=gamelan" \
-                    "https://api.pushover.net/1/messages.json" \
-                || echo "[WARN] pushover delivery failed"
-            }
-
-            function main() {
-              notify
-            }
-
-            main "$@"
-
     defaultPodOptions:
       hostUsers: false
     controllers:
@@ -122,7 +53,7 @@ spec:
     persistence:
       config:
         type: configMap
-        identifier: config
+        name: *name
         defaultMode: 0775
         globalMounts:
           - readOnly: true
