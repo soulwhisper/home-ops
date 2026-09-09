@@ -20,16 +20,17 @@ spec:
         enabled: true
         data:
           hooks.yaml: |
+            # adnanh/webhook Go templates; braces escaped for app-template's configMap tpl pass
             - id: alertmanager
               execute-command: /config/alertmanager.sh
               command-working-directory: /config
               pass-arguments-to-command:
                 - envname: HTTPS_PROXY
                   source: string
-                  name: '{{ getenv "HTTPS_PROXY" }}'
+                  name: '{{ `{{` }} getenv "HTTPS_PROXY" {{ `}}` }}'
                 - envname: NO_PROXY
                   source: string
-                  name: '{{ getenv "NO_PROXY" }}'
+                  name: '{{ `{{` }} getenv "NO_PROXY" {{ `}}` }}'
                 - source: entire-payload
           # Alertmanager webhook -> Apprise API (stateless /notify)
           # -> feishu (primary) + pushover (fallback)
