@@ -3,13 +3,13 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: &name apprise-webhook
+  name: &name apprise
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: monitoring-system
-  path: "./kubernetes/apps/monitoring-system/apprise-webhook/app"
+  path: "./kubernetes/apps/monitoring-system/apprise/app"
   sourceRef:
     kind: GitRepository
     name: gitops-system
