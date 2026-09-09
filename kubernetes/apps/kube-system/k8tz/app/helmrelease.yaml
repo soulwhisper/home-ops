@@ -37,8 +37,8 @@ spec:
               version: v1
               kind: Namespace
             patch: |-
-              $patch: delete
               apiVersion: v1
               kind: Namespace
               metadata:
                 name: _
+              $patch: delete

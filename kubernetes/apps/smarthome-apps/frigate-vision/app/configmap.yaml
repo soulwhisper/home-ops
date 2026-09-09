@@ -1,5 +1,4 @@
 ---
-# yaml-language-server: $schema=https://json.schemastore.org/configmap
 # Frigate event -> omni-lane VLM description -> HA notify + hermes (ops profile)
 # webhook. Secrets arrive via env (ExternalSecret); nothing sensitive in here.
 apiVersion: v1

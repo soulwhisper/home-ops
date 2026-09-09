@@ -1,6 +1,6 @@
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: document
   namespace: media-apps
@@ -12,8 +12,8 @@ spec:
       storage: 100Gi
   storageClassName: synology-volume1
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: music
   namespace: media-apps
@@ -25,8 +25,8 @@ spec:
       storage: 100Gi
   storageClassName: synology-volume1
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: photo
   namespace: media-apps
@@ -38,8 +38,8 @@ spec:
       storage: 100Gi
   storageClassName: synology-volume1
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: video
   namespace: media-apps
@@ -51,8 +51,8 @@ spec:
       storage: 300Gi
   storageClassName: synology-volume1
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: downloads
   namespace: media-apps

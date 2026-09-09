@@ -1,5 +1,4 @@
 ---
-# yaml-language-server: $schema=https://json.schemastore.org/configmap
 # Declarative hermes-agent config, seeded onto the PVC by the seed-config
 # initContainer at every pod start (dashboard edits to these files revert on
 # restart — edit here instead). ${VAR} refs resolve against each profile's

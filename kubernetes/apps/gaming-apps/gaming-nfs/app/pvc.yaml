@@ -1,6 +1,6 @@
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: backup
 spec:
@@ -11,8 +11,8 @@ spec:
       storage: 100Gi
   storageClassName: synology-volume1
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: trpg
 spec:

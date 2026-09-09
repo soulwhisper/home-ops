@@ -1,5 +1,4 @@
 ---
-# yaml-language-server: $schema=https://json.schemastore.org/configmap
 # TrendRadar config: minimal watch list (RSS only, hot lists off), incremental
 # push, keyword grouping, AI analysis via the agent gateway.
 apiVersion: v1
