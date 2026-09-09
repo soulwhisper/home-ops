@@ -6,6 +6,7 @@ resources:
   # app
   - ./helmrelease.yaml
   # utils
+  - ./configmap.yaml
   - ./ciliumnetworkpolicy.yaml
   - ./externalsecret.yaml
   - ./httproute.yaml

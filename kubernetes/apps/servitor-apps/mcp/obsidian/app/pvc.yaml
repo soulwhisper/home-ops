@@ -1,0 +1,35 @@
+---
+# Static NFS volume for the Synology-pulled Obsidian vault copy
+# (CloudSync: Dropbox -> /volume1/backup). Read-only facts source; writes go
+# to the draftbox git repo via mcp-forgejo, never back into this copy.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: obsidian-vault
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: synology-volume1
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: nas.homelab.internal/volume1/backup/dropbox/Obsidian/noirprime
+    volumeAttributes:
+      server: nas.homelab.internal
+      share: /volume1
+      subDir: backup/dropbox/Obsidian/noirprime
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: obsidian-vault
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: synology-volume1
+  volumeName: obsidian-vault

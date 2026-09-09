@@ -22,14 +22,13 @@ spec:
               - method: "POST"
                 path: "/chat/.*"
 
-    # Buzz relay (in-namespace; WS + poll + buzz CLI JSON)
-    - toServices:
-        - k8sService:
-            serviceName: buzz-relay
-            namespace: servitor-apps
+
+    # Feishu open platform (lark-oapi WebSocket, outbound-only)
+    - toFQDNs:
+        - matchName: open.feishu.cn
       toPorts:
         - ports:
-            - { port: "3000", protocol: TCP }
+            - { port: "443", protocol: TCP }
     # MCP
     - toEndpoints:
         - matchLabels:

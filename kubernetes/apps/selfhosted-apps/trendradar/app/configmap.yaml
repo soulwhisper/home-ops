@@ -1,0 +1,125 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/configmap
+# TrendRadar config: minimal watch list (RSS only, hot lists off), incremental
+# push, keyword grouping, AI analysis via the agent gateway.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trendradar
+data:
+  config.yaml: |
+    schedule:
+      enabled: true
+    platforms:
+      enabled: true   # community-curated list (TrendRadar issue #95, 2026-05 update)
+      api_url: ""     # default newsnow API; self-host newsnow and set api_url if the public instance flakes
+      sources:
+        # === 综合新闻媒体类 ===
+        - { id: "toutiao", name: "今日头条" }
+        - { id: "baidu", name: "百度热搜" }
+        - { id: "thepaper", name: "澎湃新闻" }
+        - { id: "ifeng", name: "凤凰网" }
+        - { id: "cankaoxiaoxi", name: "参考消息" }
+        - { id: "sputniknewscn", name: "卫星通讯社" }
+        - { id: "zaobao", name: "联合早报" }
+        - { id: "mktnews-flash", name: "MKTNews" }
+        - { id: "kaopu", name: "靠谱新闻" }
+        - { id: "tencent-hot", name: "腾讯新闻 综合早报" }
+        # === 财经投资类 ===
+        - { id: "wallstreetcn-hot", name: "华尔街见闻 最热" }
+        - { id: "wallstreetcn-quick", name: "华尔街见闻 快讯" }
+        - { id: "wallstreetcn-news", name: "华尔街见闻 最新" }
+        - { id: "cls-telegraph", name: "财联社 电报" }
+        - { id: "cls-hot", name: "财联社 热门" }
+        - { id: "cls-depth", name: "财联社 深度" }
+        - { id: "fastbull-express", name: "法布财经 快讯" }
+        - { id: "fastbull-news", name: "法布财经 头条" }
+        - { id: "gelonghui", name: "格隆汇" }
+        - { id: "xueqiu", name: "雪球" }
+        - { id: "jin10", name: "金十数据" }
+        # === 社交/短视频/娱乐类 ===
+        - { id: "weibo", name: "微博" }
+        - { id: "douyin", name: "抖音" }
+        - { id: "bilibili-hot-search", name: "哔哩哔哩热搜" }
+        - { id: "tieba", name: "百度贴吧" }
+        - { id: "zhihu", name: "知乎" }
+        - { id: "hupu", name: "虎扑" }
+        - { id: "douban", name: "豆瓣" }
+        - { id: "qqvideo-tv-hotsearch", name: "腾讯视频热搜榜" }
+        - { id: "iqiyi-hot-ranklist", name: "爱奇艺热播榜" }
+        # === 科技类平台 ===
+        - { id: "ithome", name: "IT之家" }
+        - { id: "juejin", name: "稀土掘金" }
+        - { id: "github", name: "GitHub" }
+        - { id: "hackernews", name: "Hacker News" }
+        - { id: "solidot", name: "Solidot" }
+        - { id: "v2ex", name: "V2EX" }
+        - { id: "nowcoder", name: "牛客网" }
+        - { id: "pcbeta", name: "远景论坛" }
+        - { id: "sspai", name: "少数派" }
+        - { id: "producthunt", name: "ProductHunt" }
+        - { id: "36kr-quick", name: "36氪快讯" }
+        - { id: "36kr-renqi", name: "36氪人气榜" }
+        - { id: "coolapk", name: "酷安" }
+        # === 其他/工具类 ===
+        - { id: "chongbuluo-hot", name: "虫部落最热" }
+        - { id: "chongbuluo-latest", name: "虫部落最新" }
+        - { id: "freebuf", name: "freebuf网络安全" }
+        - { id: "steam", name: "steam" }
+    rss:
+      enabled: true
+      freshness_filter:
+        enabled: true
+        max_age_days: 1
+      feeds:
+        # tech topic portals (grouped via the 科技 keyword group below)
+        - id: "aiera"
+          name: "AI时代"
+          url: "https://aiera.com.cn/feed"
+        - id: "expreview"
+          name: "超能网"
+          url: "https://www.expreview.com/feed"
+        # GitHub repos: add release/commit Atom feeds, e.g.
+        # - id: "gh-<repo>"
+        #   name: "<repo> releases"
+        #   url: "https://github.com/<owner>/<repo>/releases.atom"
+        #   max_age_days: 3
+    report:
+      mode: "incremental"     # 增量监控，零重复
+      display_mode: "keyword" # 按关键词分组
+      rank_threshold: 5
+      max_news_per_keyword: 0
+    filter:
+      method: "keyword"       # frequency_words.txt; switch to "ai" for interest scoring
+      priority_sort_enabled: true
+    ai_filter:
+      min_score: 0.7
+    ai_analysis:
+      mode: "follow_report"
+    notification:
+      push_window: {}         # 推送时间窗留空 = 不限制
+  frequency_words.txt: |
+    # 词组 = 主题分组；空行分隔；行首 + = 必须包含，! = 过滤词
+    # 科技 — aiera/expreview 及科技平台内容归入此组
+    科技
+    AI
+    大模型
+    LLM
+    人工智能
+    显卡
+    GPU
+    硬件
+    评测
+    装机
+    苹果
+    Apple
+    iPhone
+    Mac
+    芯片
+    半导体
+
+    !广告
+    !推广
+  ai_interests.txt: |
+    AI/大模型进展、新硬件发布与评测、苹果生态、家庭自动化与自托管。
+    忽略：营销软文、娱乐八卦、体育。

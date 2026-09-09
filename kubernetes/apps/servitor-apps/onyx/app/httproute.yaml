@@ -1,0 +1,37 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: &name onyx
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/icon: si-googledocs
+    gethomepage.dev/name: Onyx
+    gethomepage.dev/group: Service
+spec:
+  hostnames: ["onyx.noirprime.com"]
+  parentRefs:
+    - name: kgateway-internal
+      namespace: networking-system
+  rules:
+    # backend API (mirrors the upstream nginx path map; 900s for chat streaming)
+    - matches:
+        - path:
+            type: RegularExpression
+            value: ^/(api|openapi\.json)(/.*)?$
+      backendRefs:
+        - name: onyx-api-service
+          port: 8080
+      timeouts:
+        request: 900s
+    # Next.js web frontend
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: onyx-webserver
+          port: 3000
+      timeouts:
+        request: 900s

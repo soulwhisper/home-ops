@@ -1,0 +1,35 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+# goern/forgejo-mcp — Forgejo-native MCP (github-mcp-server can't serve Forgejo:
+# it hardcodes /api/v3 + GraphQL). Streamable-HTTP with server-side token.
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-forgejo
+spec:
+  groupRef:
+    name: internal-rw
+  # renovate: datasource=docker depName=git.b4mad.industries/agentic-forges/forgejo-mcp
+  image: git.b4mad.industries/agentic-forges/forgejo-mcp:v3.0.0
+  transport: streamable-http
+  mcpPort: 8080
+  args:
+    - --transport
+    - http
+    - --url
+    - http://nas.homelab.internal:9003
+    - --host
+    - 0.0.0.0
+    - --token
+    - $(FORGEJO_ACCESS_TOKEN)
+  # secrets inject FORGEJO_ACCESS_TOKEN as env; args reference it via $(...)
+  secrets:
+    - name: *name
+      key: FORGEJO_ACCESS_TOKEN
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

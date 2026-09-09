@@ -38,6 +38,22 @@ spec:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
+          # Seeds config.yaml + chat/ops profiles onto the PVC at every boot
+          # (authoritative; dashboard edits to these files revert on restart).
+          # .env files are rendered from pod env because profile ${VAR} refs
+          # resolve against the profile's own .env, not the process env.
+          seed-config:
+            image:
+              repository: docker.io/library/busybox
+              # renovate: datasource=docker depName=docker.io/library/busybox
+              tag: "1.37"
+            command: ["/bin/sh", "/seed/seed.sh"]
+            envFrom:
+              - secretRef:
+                  name: *name
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
         containers:
           app:
             image:
@@ -47,6 +63,11 @@ spec:
               HERMES_SERVICES: "dashboard,gateway,webui"
               # plugins
               RTK_TELEMETRY_DISABLED: "true"
+              # Feishu plugin (websocket mode; credentials via envFrom secret)
+              FEISHU_DOMAIN: "feishu"
+              FEISHU_CONNECTION_MODE: "websocket"
+              FEISHU_ALLOW_BOTS: "mentions"
+              FEISHU_GROUP_POLICY: "allowlist"
             envFrom:
               - secretRef:
                   name: *name
@@ -92,6 +113,8 @@ spec:
             port: 9119
           web:
             port: 8787
+          webhook:
+            port: 8644
 
     persistence:
       app:
@@ -101,6 +124,12 @@ spec:
             subPath: hermes
           - path: /workspace
             subPath: workspace
+      seed:
+        type: configMap
+        name: hermes-agent-config
+        globalMounts:
+          - path: /seed
+            readOnly: true
       cache:
         type: emptyDir
         medium: Memory

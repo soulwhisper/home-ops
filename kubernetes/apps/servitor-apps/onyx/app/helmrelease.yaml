@@ -1,0 +1,129 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name onyx
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: *name
+
+  values:
+    global:
+      # renovate: datasource=docker depName=onyxdotapp/onyx-backend
+      version: v4.7.1
+
+    # --- External cluster-managed dependencies ---
+    postgresql:
+      enabled: false
+      installCRDs: false
+    postgresqlOperator:
+      enabled: false
+    redis:
+      enabled: false
+    redisOperator:
+      enabled: false
+    minio:
+      enabled: false
+
+    # --- Bundled, kept in-cluster ---
+    opensearch:
+      extraEnvs:
+        - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: *name
+              key: opensearch_admin_password
+      resources:
+        requests:
+          cpu: 500m
+          memory: 2Gi
+        limits:
+          cpu: 2000m
+          memory: 4Gi
+      opensearchJavaOpts: "-Xmx2g -Xms2g"
+      persistence:
+        size: 30Gi
+        storageClass: ceph-block
+
+    # --- Disabled bundled extras ---
+    # (Craft sandboxes intentionally off: no code-execution pods)
+    nginx:
+      enabled: false # kgateway HTTPRoute instead
+    slackbot:
+      enabled: false
+    codeInterpreter:
+      enabled: false
+
+    # --- Right-sized model servers (CPU, nomic-embed + reranker) ---
+    inferenceCapability:
+      resources:
+        requests:
+          cpu: 250m
+          memory: 1500Mi
+        limits:
+          cpu: 2000m
+          memory: 4Gi
+    indexCapability:
+      resources:
+        requests:
+          cpu: 250m
+          memory: 1500Mi
+        limits:
+          cpu: 2000m
+          memory: 4Gi
+
+    # --- Right-sized workers ---
+    celery_worker_docprocessing:
+      resources:
+        requests: { cpu: 250m, memory: 1Gi }
+        limits: { cpu: 1000m, memory: 4Gi }
+    celery_worker_docfetching:
+      resources:
+        requests: { cpu: 250m, memory: 1Gi }
+        limits: { cpu: 1000m, memory: 4Gi }
+
+    # --- Auth secrets (ExternalSecret/1Password + components) ---
+    auth:
+      postgresql:
+        existingSecret: onyx-pguser
+        secretKeys:
+          POSTGRES_USER: username
+          POSTGRES_PASSWORD: password
+      redis:
+        enabled: false # Dragonfly has no auth
+      objectstorage:
+        existingSecret: ceph-bucket-onyx
+        secretKeys:
+          S3_AWS_ACCESS_KEY_ID: AWS_ACCESS_KEY_ID
+          S3_AWS_SECRET_ACCESS_KEY: AWS_SECRET_ACCESS_KEY
+      opensearch:
+        existingSecret: *name
+      userauth:
+        enabled: true
+        existingSecret: *name
+        secretKeys:
+          USER_AUTH_SECRET: USER_AUTH_SECRET
+    # inject LANGFUSE_* (and the rest of the onyx secret) into backend pods
+    extraEnvFromSecret: *name
+
+    configMap:
+      AUTH_TYPE: "basic"
+      WEB_DOMAIN: "https://onyx.noirprime.com"
+
+      REQUIRE_EMAIL_VERIFICATION: "false"
+      DISABLE_METRICS_AUTH: "true"
+      # Langfuse tracing (self-hosted; keys injected via extraEnvFromSecret)
+      LANGFUSE_HOST: "http://langfuse-web.monitoring-system.svc.cluster.local:3000"
+      # external CNPG
+      POSTGRES_HOST: "postgres-rw.database-system.svc.cluster.local"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: *name
+      # external Dragonfly
+      REDIS_HOST: "onyx-dragonfly"
+      REDIS_PORT: "6379"
+      # external Ceph RGW
+      S3_ENDPOINT_URL: "http://rook-ceph-rgw-ceph-objectstore.storage-system.svc.cluster.local"
+      S3_FILE_STORE_BUCKET_NAME: *name

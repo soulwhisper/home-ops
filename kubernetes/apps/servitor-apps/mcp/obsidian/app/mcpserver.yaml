@@ -1,0 +1,36 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+# Official filesystem MCP over the read-only NFS vault copy.
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-obsidian
+spec:
+  groupRef:
+    name: internal-ro
+  # renovate: datasource=docker depName=mcp/filesystem
+  image: mcp/filesystem:latest
+  transport: stdio
+  mcpPort: 8080
+  args:
+    - /vault
+  podTemplateSpec:
+    spec:
+      volumes:
+        - name: vault
+          persistentVolumeClaim:
+            claimName: obsidian-vault
+            readOnly: true
+      containers:
+        - name: mcp
+          volumeMounts:
+            - name: vault
+              mountPath: /vault
+              readOnly: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi

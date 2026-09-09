@@ -1,0 +1,154 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/configmap
+# Frigate event -> omni-lane VLM description -> HA notify + hermes (ops profile)
+# webhook. Secrets arrive via env (ExternalSecret); nothing sensitive in here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frigate-vision
+data:
+  bridge.py: |
+    import base64
+    import hashlib
+    import hmac
+    import json
+    import logging
+    import os
+    import time
+
+    import httpx
+    import paho.mqtt.client as mqtt
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    log = logging.getLogger("frigate-vision")
+
+    MQTT_HOST = os.environ.get("MQTT_HOST", "mosquitto.smarthome-apps.svc.cluster.local")
+    MQTT_PORT = int(os.environ.get("MQTT_PORT", "1883"))
+    FRIGATE_URL = os.environ.get("FRIGATE_URL", "http://frigate.smarthome-apps.svc.cluster.local:5000")
+    GATEWAY_URL = os.environ.get("GATEWAY_URL", "http://agentgateway-proxy.networking-system.svc.cluster.local:80/chat/v1/chat/completions")
+    GATEWAY_KEY = os.environ["GATEWAY_API_KEY"]
+    HA_URL = os.environ.get("HA_URL", "http://home-assistant.smarthome-apps.svc.cluster.local:8123")
+    HA_TOKEN = os.environ["HA_TOKEN"]
+    HA_NOTIFY_SERVICE = os.environ.get("HA_NOTIFY_SERVICE", "persistent_notification.create")
+    HERMES_WEBHOOK_URL = os.environ.get(
+        "HERMES_WEBHOOK_URL",
+        "http://hermes-agent.servitor-apps.svc.cluster.local:8644/p/ops/webhooks/frigate-alert",
+    )
+    HERMES_WEBHOOK_SECRET = os.environ["HERMES_WEBHOOK_SECRET"]
+    MIN_SEVERITY = os.environ.get("MIN_SEVERITY", "medium")  # low|medium|high
+    LABELS = set(os.environ.get("LABEL_FILTER", "person,car,cat,dog").split(","))
+
+    SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2}
+
+    PROMPT = (
+        "You are a home-security camera analyst. Describe this camera event image concisely "
+        "and judge its severity. Reply with ONLY JSON: "
+        '{"description": "<one sentence, what/who/where/action>", '
+        '"severity": "low|medium|high"}. '
+        "high = immediate danger or intrusion; medium = unusual/noteworthy activity; "
+        "low = normal/routine. If the image is unusable, severity=low."
+    )
+
+    http = httpx.Client(timeout=httpx.Timeout(120.0, connect=10.0))
+
+
+    def describe(snapshot: bytes) -> dict:
+        resp = http.post(
+            GATEWAY_URL,
+            headers={"Authorization": f"Bearer {GATEWAY_KEY}"},
+            json={
+                "model": "omni",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": PROMPT},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": "data:image/jpeg;base64," + base64.b64encode(snapshot).decode()
+                                },
+                            },
+                        ],
+                    }
+                ],
+                "temperature": 0.2,
+                "max_tokens": 256,
+            },
+        )
+        resp.raise_for_status()
+        text = resp.json()["choices"][0]["message"]["content"]
+        text = text.strip().removeprefix("```json").removesuffix("```").strip()
+        try:
+            out = json.loads(text)
+            return {"description": str(out.get("description", ""))[:500],
+                    "severity": out.get("severity", "low")}
+        except json.JSONDecodeError:
+            log.warning("VLM returned non-JSON: %r", text[:200])
+            return {"description": text[:500], "severity": "low"}
+
+
+    def notify_ha(title: str, message: str) -> None:
+        domain, _, service = HA_NOTIFY_SERVICE.partition(".")
+        http.post(
+            f"{HA_URL}/api/services/{domain}/{service}",
+            headers={"Authorization": f"Bearer {HA_TOKEN}"},
+            json={"title": title, "message": message, "notification_id": "frigate-vision"},
+        ).raise_for_status()
+
+
+    def notify_hermes(payload: dict) -> None:
+        body = json.dumps(payload).encode()
+        ts = str(int(time.time()))
+        sig = hmac.new(
+            HERMES_WEBHOOK_SECRET.encode(), f"{ts}.".encode() + body, hashlib.sha256
+        ).hexdigest()
+        http.post(
+            HERMES_WEBHOOK_URL,
+            content=body,
+            headers={
+                "Content-Type": "application/json",
+                "X-Webhook-Signature-V2": sig,
+                "X-Webhook-Timestamp": ts,
+            },
+        ).raise_for_status()
+
+
+    def on_message(client, userdata, msg):
+        try:
+            event = json.loads(msg.payload)
+            if event.get("type") != "end":  # 'end' has final severity + snapshot ready
+                return
+            after = event.get("after", {})
+            if after.get("label") not in LABELS or not after.get("has_snapshot"):
+                return
+            event_id, camera = after["id"], after["camera"]
+            snap = http.get(f"{FRIGATE_URL}/api/events/{event_id}/snapshot.jpg")
+            snap.raise_for_status()
+            result = describe(snap.content)
+            log.info("event=%s camera=%s -> %s [%s]", event_id, camera, result["description"], result["severity"])
+            if SEVERITY_RANK.get(result["severity"], 0) < SEVERITY_RANK[MIN_SEVERITY]:
+                return
+            payload = {
+                "event_type": "frigate.alert",
+                "event_id": event_id,
+                "camera": camera,
+                "label": after.get("label"),
+                "zones": after.get("zones", []),
+                "severity": result["severity"],
+                "description": result["description"],
+                "timestamp": int(after.get("end_time") or time.time()),
+            }
+            notify_ha(f"Frigate: {camera} ({result['severity']})", result["description"])
+            notify_hermes(payload)
+        except Exception:
+            log.exception("failed processing message")
+
+
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    client.username_pw_set(os.environ["MQTT_USERNAME"], os.environ["MQTT_PASSWORD"])
+    client.on_message = on_message
+    client.connect(MQTT_HOST, MQTT_PORT)
+    client.subscribe("frigate/events")
+    log.info("listening on %s:%s frigate/events", MQTT_HOST, MQTT_PORT)
+    client.loop_forever()

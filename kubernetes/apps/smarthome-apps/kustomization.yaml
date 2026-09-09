@@ -11,6 +11,7 @@ resources:
   - ./smarthome-nfs/ks.yaml
   # app
   - ./frigate/ks.yaml
+  - ./frigate-vision/ks.yaml
   - ./home-assistant/ks.yaml
   - ./home-assistant-sgcc/ks.yaml
   - ./mosquitto/ks.yaml

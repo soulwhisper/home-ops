@@ -1,0 +1,23 @@
+---
+# Media lanes on the MacStudio inference host, plain HTTP passthrough.
+# Ports are host-side assignments:
+#   8000 oMLX (embeddings /v1/embeddings, rerank /v1/rerank)
+#   8001 vmlx (image generation /v1/images/*)
+#   8002 mlx_audio.server (TTS /v1/audio/speech, ASR /v1/audio/transcriptions)
+apiVersion: v1
+kind: Service
+metadata:
+  name: studio-media
+spec:
+  type: ExternalName
+  externalName: studio.homelab.internal
+  ports:
+    - name: llm
+      port: 8000
+      protocol: TCP
+    - name: image
+      port: 8001
+      protocol: TCP
+    - name: audio
+      port: 8002
+      protocol: TCP

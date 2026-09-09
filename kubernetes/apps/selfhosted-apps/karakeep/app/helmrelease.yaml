@@ -38,10 +38,9 @@ spec:
               OAUTH_PROVIDER_NAME: authentik
               OAUTH_ALLOW_DANGEROUS_EMAIL_ACCOUNT_LINKING: true
               OAUTH_WELLKNOWN_URL: https://auth.noirprime.com/application/o/karakeep/.well-known/openid-configuration
-              # semantic/hybrid search + auto-tagging via the MacStudio
-              # OpenAI-compatible endpoint (same as hindsight)
-              EMBEDDING_OPENAI_BASE_URL: http://studio.homelab.internal:8000/v1
-              EMBEDDING_OPENAI_API_KEY: unused-local
+              # semantic/hybrid search + auto-tagging via the gateway media
+              # route (Qwen3-Embedding-4B on MacStudio); key from envFrom secret
+              EMBEDDING_OPENAI_BASE_URL: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
               EMBEDDING_TEXT_MODEL: qwen3-embedding-4b
               EMBEDDING_DIMENSIONS: 2560
               EMBEDDING_ENABLE_AUTO_INDEXING: true

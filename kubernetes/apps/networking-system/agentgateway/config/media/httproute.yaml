@@ -1,0 +1,52 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: agentgateway-media-route
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-proxy
+  rules:
+    # image generation (vmlx / mflux, Z-Image-Turbo)
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1/images
+      backendRefs:
+        - name: studio-media
+          port: 8001
+      timeouts:
+        request: 300s
+    # audio: TTS + ASR (mlx_audio.server, VoxCPM2 + Qwen3-ASR)
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1/audio
+      backendRefs:
+        - name: studio-media
+          port: 8002
+      timeouts:
+        request: 300s
+    # embeddings (oMLX, Qwen3-Embedding-4B)
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1/embeddings
+      backendRefs:
+        - name: studio-media
+          port: 8000
+      timeouts:
+        request: 120s
+    # rerank (oMLX, Qwen3-Reranker-0.6B, Cohere-compatible)
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1/rerank
+      backendRefs:
+        - name: studio-media
+          port: 8000
+      timeouts:
+        request: 120s

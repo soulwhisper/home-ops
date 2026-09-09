@@ -1,0 +1,20 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name webhook-relay
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: monitoring-system
+  path: "./kubernetes/apps/monitoring-system/webhook-relay/app"
+  sourceRef:
+    kind: GitRepository
+    name: gitops-system
+    namespace: gitops-system
+  interval: 1h
+  timeout: 5m
+  prune: true
+  wait: false

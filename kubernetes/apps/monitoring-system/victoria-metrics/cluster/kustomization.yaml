@@ -7,7 +7,6 @@ resources:
   - ./helmrelease.yaml
   - ./ocirepository.yaml
   # utils
-  - ./externalsecret.yaml
   - ./httproute.yaml
   - ./prometheusrule.yaml
   - ./scrapeconfig.yaml

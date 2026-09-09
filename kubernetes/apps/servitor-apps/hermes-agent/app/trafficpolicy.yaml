@@ -9,9 +9,6 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: hermes-agent-dashboard
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: hermes-agent-webui
   extAuth:
     extensionRef:
       name: authentik-ext-auth
@@ -19,7 +16,11 @@ spec:
   transformation:
     request:
       dynamicMetadata:
-        - name: kgateway.auth.username
-          value: '{{ headers["x-authentik-username"] }}'
-        - name: kgateway.auth.groups
-          value: '{{ headers["x-authentik-groups"] }}'
+        - namespace: kgateway.auth
+          key: username
+          value:
+            stringValue: '{{ headers["x-authentik-username"] }}'
+        - namespace: kgateway.auth
+          key: groups
+          value:
+            stringValue: '{{ headers["x-authentik-groups"] }}'

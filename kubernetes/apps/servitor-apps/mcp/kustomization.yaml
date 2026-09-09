@@ -6,8 +6,8 @@ resources:
   # These mcp servers dependsOn toolhive and original apps
   # servers
   - ./context/ks.yaml
-  - ./fast-note-sync/ks.yaml
   - ./firecrawl/ks.yaml
+  - ./forgejo/ks.yaml
   - ./fluxcd/ks.yaml
   - ./github/ks.yaml
   - ./grafana/ks.yaml
@@ -15,4 +15,6 @@ resources:
   - ./home-assistant/ks.yaml
   - ./honcho/ks.yaml
   - ./kubernetes/ks.yaml
+  - ./obsidian/ks.yaml
+  - ./trendradar/ks.yaml
   - ./victoria-logs/ks.yaml

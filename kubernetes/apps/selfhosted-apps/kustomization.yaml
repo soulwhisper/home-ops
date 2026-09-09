@@ -9,7 +9,6 @@ components:
 resources:
   - ./bambuddy/ks.yaml
   - ./dispatcharr/ks.yaml
-  - ./fast-note-sync/ks.yaml
   - ./firecrawl/ks.yaml
   - ./hindsight/ks.yaml
   - ./homepage/ks.yaml
@@ -21,3 +20,4 @@ resources:
   - ./searxng/ks.yaml
   - ./sillytavern/ks.yaml
   - ./stirling-pdf/ks.yaml
+  - ./trendradar/ks.yaml

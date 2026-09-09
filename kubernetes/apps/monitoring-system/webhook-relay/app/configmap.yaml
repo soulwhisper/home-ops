@@ -1,0 +1,36 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/v1/configmap.json
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webhook-relay
+data:
+  # Central inbound webhook collector: add a target + route here to onboard a
+  # new webhook source. Validate offline: chaski validate -c chaski.yaml
+  # ref:https://github.com/home-operations/chaski
+  chaski.yaml: |
+    targets:
+      feishu:
+        apprise:
+          url: 'feishu://{{ env "FEISHU_TOKEN" }}'
+      pushover:
+        apprise:
+          url: 'pover://{{ env "PUSHOVER_USER_KEY" }}@{{ env "PUSHOVER_TOKEN" }}'
+
+    routes:
+      # Alertmanager -> feishu (primary) + pushover (fallback, fanned out)
+      alertmanager:
+        target:
+          - feishu
+          - pushover
+        title: '[{{ .payload.status | toUpper }}{{ if eq .payload.status "firing" }}:{{ len .payload.alerts }}{{ end }}] {{ .payload.commonLabels.alertname | default "Alertmanager" }}'
+        message: |-
+          {{- range $i, $a := .payload.alerts }}{{ if $i }}
+          ---
+          {{ end }}{{ $a.annotations.description | default ($a.annotations.summary | default ($a.annotations.message | default "Alert description not available")) }}
+          {{ range $k, $v := $a.labels }}{{ $k }}: {{ $v }}
+          {{ end }}{{- end }}
+        params:
+          # pushover reads priority/sound; feishu ignores unknown query keys
+          priority: '{{ ternary "1" "0" (eq .payload.status "firing") }}'
+          sound: gamelan
