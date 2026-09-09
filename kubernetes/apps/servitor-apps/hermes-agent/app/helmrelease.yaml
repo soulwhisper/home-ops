@@ -46,7 +46,7 @@ spec:
             image:
               repository: docker.io/library/busybox
               # renovate: datasource=docker depName=docker.io/library/busybox
-              tag: "1.37"
+              tag: "1.38"
             command: ["/bin/sh", "/seed/seed.sh"]
             envFrom:
               - secretRef:
