@@ -20,17 +20,10 @@ spec:
         enabled: true
         data:
           hooks.yaml: |
-            # adnanh/webhook Go templates; braces escaped for app-template's configMap tpl pass
             - id: alertmanager
               execute-command: /config/alertmanager.sh
               command-working-directory: /config
               pass-arguments-to-command:
-                - envname: HTTPS_PROXY
-                  source: string
-                  name: '{{ `{{` }} getenv "HTTPS_PROXY" {{ `}}` }}'
-                - envname: NO_PROXY
-                  source: string
-                  name: '{{ `{{` }} getenv "NO_PROXY" {{ `}}` }}'
                 - source: entire-payload
           # Alertmanager webhook -> Apprise API (stateless /notify)
           # -> feishu (primary) + pushover (fallback)
@@ -40,12 +33,7 @@ spec:
             #!/usr/bin/env bash
             set -Eeuo pipefail
 
-            HTTPS_PROXY=${1:-""}
-            NO_PROXY=${2:-""}
-            PAYLOAD=${3:?}
-
-            export HTTPS_PROXY="${HTTPS_PROXY}"
-            export NO_PROXY="${NO_PROXY}"
+            PAYLOAD=${1:?}
 
             function _jq() {
                 jq --raw-output "${1:?}" <<<"${PAYLOAD}"
@@ -100,7 +88,6 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
-          config.home-ops.io/proxy: "https" # https_proxy needed
         containers:
           app:
             image:
