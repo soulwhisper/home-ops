@@ -105,8 +105,8 @@ spec:
           - name: "blackhole"
           - name: "default"
             webhookConfigs:
-              # apprise relay: feishu primary, pushover fallback
-              - url: "http://apprise.monitoring-system.svc.cluster.local:9000/hooks/alertmanager"
+              # webhook-relay: feishu primary, pushover fallback
+              - url: "http://webhook-relay.monitoring-system.svc.cluster.local:9000/hooks/alertmanager"
                 sendResolved: true
 
     kubeApiServer:

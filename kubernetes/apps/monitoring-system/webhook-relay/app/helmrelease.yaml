@@ -3,7 +3,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &name apprise
+  name: &name webhook-relay
 spec:
   interval: 30m
   chartRef:
@@ -11,8 +11,10 @@ spec:
     name: app-template
     namespace: gitops-system
 
+  # Central inbound webhook collector: receives cluster webhooks and relays
+  # to notification channels. Hooks live in the config ConfigMap; add a new
+  # hook id + script there to onboard a new webhook source.
   # ref:https://github.com/adnanh/webhook
-  # ref:https://github.com/caronc/apprise-api
 
   values:
     configMaps:
@@ -25,10 +27,9 @@ spec:
               command-working-directory: /config
               pass-arguments-to-command:
                 - source: entire-payload
-          # Alertmanager webhook -> Apprise API (stateless /notify)
-          # -> feishu (primary) + pushover (fallback)
-          # ref:https://appriseit.com/services/feishu/
-          # ref:https://appriseit.com/services/pushover/
+          # Alertmanager -> feishu custom bot (primary) + pushover (fallback)
+          # ref:https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot
+          # ref:https://pushover.net/api
           alertmanager.sh: |
             #!/usr/bin/env bash
             set -Eeuo pipefail
@@ -40,7 +41,7 @@ spec:
             }
 
             function notify() {
-                local status firing_count alertname title body urls
+                local status firing_count alertname title body priority
 
                 status=$(_jq '.status | ascii_upcase')
                 firing_count=$(_jq '[.alerts[] | select(.status == "firing")] | length')
@@ -57,23 +58,26 @@ spec:
                     + "\n" + ([.labels | to_entries[] | "\(.key): \(.value)"] | join(", "))
                 ] | join("\n---\n")')
 
-                # pover body limit is 512/1024 chars, so truncate instead of passing upstream
-                urls="feishu://${FEISHU_TOKEN:?}"
-                if [[ "${status}" == "FIRING" ]]; then
-                    urls="${urls} pover://${PUSHOVER_USER_KEY:?}@${PUSHOVER_TOKEN:?}?priority=1&sound=gamelan&overflow=truncate"
-                else
-                    urls="${urls} pover://${PUSHOVER_USER_KEY:?}@${PUSHOVER_TOKEN:?}?priority=0&overflow=truncate"
-                fi
-
-                jq --null-input \
-                    --arg urls "${urls}" \
-                    --arg title "${title}" \
-                    --arg body "${body}" \
-                    '{urls: $urls, title: $title, body: $body, type: "info", format: "text"}' \
+                # feishu custom bot, plain text; failure must not block the pushover fallback
+                jq --null-input --arg text "${title}"$'\n'"${body}" \
+                    '{msg_type: "text", content: {text: $text}}' \
                 | curl -fsS --max-time 15 -X POST \
                     --header "Content-Type: application/json" \
                     --data-binary @- \
-                    "http://localhost:8000/notify/"
+                    "${FEISHU_WEBHOOK_URL:?}" \
+                || echo "[WARN] feishu delivery failed"
+
+                # pushover API caps title at 250 and message at 1024 chars
+                if [[ "${status}" == "FIRING" ]]; then priority=1; else priority=0; fi
+                curl -fsS --max-time 15 -X POST \
+                    --form "token=${PUSHOVER_TOKEN:?}" \
+                    --form "user=${PUSHOVER_USER_KEY:?}" \
+                    --form "title=${title:0:250}" \
+                    --form "message=${body:0:1024}" \
+                    --form "priority=${priority}" \
+                    --form "sound=gamelan" \
+                    "https://api.pushover.net/1/messages.json" \
+                || echo "[WARN] pushover delivery failed"
             }
 
             function main() {
@@ -98,39 +102,15 @@ spec:
             envFrom:
               - secretRef:
                   name: *name
-            resources: &resources
-              requests:
-                cpu: 10m
-              limits:
-                memory: 128Mi
-            securityContext: &securityContext
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-              readOnlyRootFilesystem: true
-          apprise:
-            image:
-              repository: ghcr.io/caronc/apprise
-              tag: v1.5.4
-            env:
-              APPRISE_STATEFUL_MODE: disabled
-              APPRISE_CONFIG_LOCK: "y"
-              APPRISE_ATTACH_SIZE: "0"
-              APPRISE_WORKER_COUNT: "1"
-            probes:
-              liveness: &probes
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /status
-                    port: 8000
-              readiness: *probes
             resources:
               requests:
                 cpu: 10m
               limits:
-                memory: 512Mi
-            securityContext: *securityContext
+                memory: 128Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              readOnlyRootFilesystem: true
 
     service:
       app:
@@ -146,7 +126,3 @@ spec:
         defaultMode: 0775
         globalMounts:
           - readOnly: true
-      tmp:
-        type: emptyDir
-        globalMounts:
-          - path: /tmp
