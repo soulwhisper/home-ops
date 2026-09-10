@@ -13,6 +13,10 @@ pnpm run lint
 
 dnscontrol write-types
 
+# required: creds.json references $ADGUARD_PASSWORD (1Password item
+# `app-user`, field `admin_pass` — same credentials external-dns uses)
+export ADGUARD_PASSWORD="$(op read 'op://DevOps/app-user/admin_pass')"
+
 dnscontrol check
 dnscontrol preview
 dnscontrol push
