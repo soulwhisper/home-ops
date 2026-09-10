@@ -4,24 +4,6 @@ kind: FilesystemScrubConfig
 interval: 168h0m0s
 ---
 apiVersion: v1alpha1
-kind: UserVolumeConfig
-name: local-hostpath
-provisioning:
-  diskSelector:
-    match: system_disk
-  maxSize: 140GiB
----
-apiVersion: v1alpha1
-kind: VolumeConfig
-name: EPHEMERAL
-mount:
-  secure: true
-provisioning:
-  diskSelector:
-    match: system_disk
-  maxSize: 80GiB
----
-apiVersion: v1alpha1
 kind: DiscoveryServiceConfig
 name: default
 endpoint: http://10.10.0.100:9300
@@ -144,7 +126,7 @@ pod:
           - |
             # 13900H P-cores (HT enabled) are 0-11. E-cores are 12-19.
             while true; do
-              for irq in $(grep 'ice' /proc/interrupts | awk '{print $1}' | tr -d ':'); do
+              for irq in $(grep 'i40e' /proc/interrupts | awk '{print $1}' | tr -d ':'); do
                 echo "2-11" > /proc/irq/$irq/smp_affinity_list
               done
               sleep 3600
@@ -215,7 +197,7 @@ params:
   net.ipv4.neigh.default.gc_thresh1: "1024" # GC start threshold (default 128)
   net.ipv4.neigh.default.gc_thresh2: "2048" # GC soft threshold (default 512)
   net.ipv4.neigh.default.gc_thresh3: "4096" # GC hard threshold (default 1024)
-  # 10G NIC throughput tuning (Intel X710, ice driver)
+  # 10G NIC throughput tuning (Intel X710/X722, i40e driver)
   # Reference: https://www.kernel.org/doc/Documentation/networking/scaling.txt
   net.core.netdev_max_backlog: "16384" # packet queue depth per NIC (default 1000)
   net.core.somaxconn: "32768" # listen() backlog (default 4096)
