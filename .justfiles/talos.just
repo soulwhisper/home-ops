@@ -63,6 +63,16 @@ generate mode:
     yq --inplace '(select(.kind == "UnattendedInstallConfig")).installer.image = "factory.talos.dev/metal-installer/'"${SCHEMATIC_ID}"':'"${TALOS_VERSION}"'"' \
       "${TALOS_DIR}/clusterconfig/main-$NODE.yaml"
   done
+  # gen config leaves endpoints/nodes empty; recipes rely on TALOS_ENDPOINT from talosconfig
+  ENDPOINT_HOST="${CLUSTER_ENDPOINT#https://}"
+  talosctl --talosconfig "${TALOSCONFIG}" config endpoint "${ENDPOINT_HOST%%:*}"
+  NODES=()
+  for FILE in $(ls ${TALOS_DIR}/{{mode}}/nodes/*.yaml); do
+    NODE=$(basename "$FILE" .yaml)
+    if [ "{{mode}}" = "prod" ]; then NODE="${NODE}.homelab.internal"; fi
+    NODES+=("${NODE}")
+  done
+  if [ ${#NODES[@]} -gt 0 ]; then talosctl --talosconfig "${TALOSCONFIG}" config node "${NODES[@]}"; fi
   mkdir -p ~/.talos && cp "${TALOSCONFIG}" ~/.talos/config
 
 [doc('Apply talos configuration to node')]
@@ -71,15 +81,22 @@ apply node *args:
   echo "Applying talos configuration to {{node}}"
   talosctl apply-config --nodes {{node}} --file ${TALOS_DIR}/clusterconfig/main-{{node}}.yaml {{args}}
 
+# BRING-UP REQUIREMENT (bond): DHCP must be OFF on the node subnet and each
+# node needs a static nic0 pre-config from the Talos maintenance dashboard
+# (via AMT) before applying. A live DHCP client on any NIC that gets enslaved
+# breaks the bond (stale routes shadow bond0, all IP traffic dies).
 [doc('Bootstrap talos cluster, INSECURE')]
 [script]
 _bootstrap_talos:
-  for FILE in $(ls ${TALOS_DIR}/clusterconfig/*.yaml); do
+  for FILE in $(ls ${TALOS_DIR}/clusterconfig/main-*.yaml); do
     NODE=$(basename "$FILE" .yaml | sed 's/^main-//')
+    # bare hostnames get hijacked by fake-ip proxies (198.18.0.0/16); resolve the FQDN
+    TARGET=$(getent ahostsv4 "${NODE}.homelab.internal" 2>/dev/null | awk 'NR==1 {print $1}')
+    TARGET=${TARGET:-$NODE}
     echo "🚀 Bootstrapping Talos Node: $NODE"
     count=0
     while true; do
-      if OUT=$(talosctl apply-config --nodes "$NODE" --file "$FILE" --insecure 2>&1); then
+      if OUT=$(talosctl apply-config --nodes "$TARGET" --file "$FILE" --insecure 2>&1); then
         echo "✅ $NODE accepted configuration."
         break
       fi
