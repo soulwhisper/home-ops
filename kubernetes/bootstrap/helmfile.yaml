@@ -24,9 +24,7 @@ releases:
   - name: prometheus-crds
     namespace: monitoring-system
 
-  # coredns must exist before cilium's --wait reaches hubble-relay, which
-  # resolves its peer service via cluster DNS. wait:false lets coredns pods
-  # stay Pending until the CNI is up; first bootstrap converges in one pass.
+  # coredns must exist before cilium render hubble-relay
   - name: coredns
     namespace: kube-system
     wait: false
@@ -38,31 +36,28 @@ releases:
 
   - name: spegel
     namespace: kube-system
-    needs: ["kube-system/coredns"]
+    needs: ["kube-system/cilium"]
 
-  # for gateway-api crds
   - name: gateway-api-crds
     namespace: kube-system
     needs: ["kube-system/spegel"]
 
-  # component deps (e.g. authentik TrafficPolicy) resolve against these CRDs
+  # component crds
   - name: kgateway-crds
     namespace: networking-system
     needs: ["kube-system/gateway-api-crds"]
 
-  # for component crds
+  # component crds
   - name: external-secrets
     namespace: security-system
     needs: ["kube-system/gateway-api-crds"]
 
-  # wide-but-light deps: gate most of the app stack (Certificates, 1Password
-  # secrets). Heavy deps (rook-ceph) stay with Flux.
+  # widely used deps
   - name: cert-manager
     namespace: security-system
-    needs: ["kube-system/spegel"]
+    needs: ["kube-system/gateway-api-crds"]
 
-  # ClusterSecretStore in this release is validated by the external-secrets
-  # admission webhook, so external-secrets must be up first.
+  # widely used deps
   - name: onepassword-connect
     namespace: security-system
     needs: ["security-system/external-secrets"]
