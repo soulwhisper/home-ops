@@ -14,6 +14,11 @@ spec:
     spegel:
       containerdSock: /run/containerd/containerd.sock
       containerdRegistryConfigPath: /etc/cri/conf.d/hosts
+      # Let clients resolve tag→digest against the upstream registry directly.
+      # Spegel's DHT only resolves tags for content already in the cluster, so
+      # first-time tag pulls 404 without an upstream fallback in hosts.toml.
+      # Layer pulls still flow through Spegel P2P.
+      resolveTags: false
     service:
       registry:
         hostPort: 29999
