@@ -63,16 +63,18 @@ generate mode:
     yq --inplace '(select(.kind == "UnattendedInstallConfig")).installer.image = "factory.talos.dev/metal-installer/'"${SCHEMATIC_ID}"':'"${TALOS_VERSION}"'"' \
       "${TALOS_DIR}/clusterconfig/main-$NODE.yaml"
   done
-  # gen config leaves endpoints/nodes empty; recipes rely on TALOS_ENDPOINT from talosconfig
-  ENDPOINT_HOST="${CLUSTER_ENDPOINT#https://}"
-  talosctl --talosconfig "${TALOSCONFIG}" config endpoint "${ENDPOINT_HOST%%:*}"
+  # gen config leaves endpoints/nodes empty; recipes rely on TALOS_ENDPOINT from talosconfig.
+  # Use node IPs: apid certs carry IP SANs, while k8s.homelab.internal is only
+  # the kube-apiserver DNS endpoint (its cert SAN comes from gen config).
   NODES=()
   for FILE in $(ls ${TALOS_DIR}/{{mode}}/nodes/*.yaml); do
-    NODE=$(basename "$FILE" .yaml)
-    if [ "{{mode}}" = "prod" ]; then NODE="${NODE}.homelab.internal"; fi
-    NODES+=("${NODE}")
+    IP=$(yq -r 'select(.kind == "BondConfig" or .kind == "LinkConfig") | .addresses[0].address' "$FILE" | cut -d/ -f1)
+    NODES+=("${IP}")
   done
-  if [ ${#NODES[@]} -gt 0 ]; then talosctl --talosconfig "${TALOSCONFIG}" config node "${NODES[@]}"; fi
+  if [ ${#NODES[@]} -gt 0 ]; then
+    talosctl --talosconfig "${TALOSCONFIG}" config endpoint "${NODES[@]}"
+    talosctl --talosconfig "${TALOSCONFIG}" config node "${NODES[@]}"
+  fi
   mkdir -p ~/.talos && cp "${TALOSCONFIG}" ~/.talos/config
 
 [doc('Apply talos configuration to node')]

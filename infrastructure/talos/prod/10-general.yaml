@@ -224,11 +224,6 @@ provisioning:
   wipe: false
 ---
 machine:
-  certSANs:
-    - k8s.homelab.internal
-    - exarch-01.homelab.internal
-    - exarch-02.homelab.internal
-    - exarch-03.homelab.internal
   features:
     nodeAddressSortAlgorithm: v2
 cluster:
