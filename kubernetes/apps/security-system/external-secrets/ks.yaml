@@ -25,7 +25,9 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: security-system
+  # RBAC for the kubernetes ClusterSecretStore must live where the store reads:
+  # monitoring-system (remoteNamespace). SA+Role+RoleBinding all follow.
+  targetNamespace: monitoring-system
   path: "./kubernetes/apps/security-system/external-secrets/cluster"
   wait: true
   dependsOn:
