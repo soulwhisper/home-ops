@@ -50,6 +50,18 @@ releases:
     namespace: security-system
     needs: ["kube-system/gateway-api-crds"]
 
+  # wide-but-light deps: gate most of the app stack (Certificates, 1Password
+  # secrets). Heavy deps (rook-ceph) stay with Flux.
+  - name: cert-manager
+    namespace: security-system
+    needs: ["kube-system/spegel"]
+
+  # ClusterSecretStore in this release is validated by the external-secrets
+  # admission webhook, so external-secrets must be up first.
+  - name: onepassword-connect
+    namespace: security-system
+    needs: ["security-system/external-secrets"]
+
   - name: flux-operator
     namespace: gitops-system
     needs: ["security-system/external-secrets"]
