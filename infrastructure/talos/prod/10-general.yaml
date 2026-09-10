@@ -4,12 +4,6 @@ kind: FilesystemScrubConfig
 interval: 168h0m0s
 ---
 apiVersion: v1alpha1
-kind: VolumeConfig
-name: EPHEMERAL
-mount:
-  secure: true
----
-apiVersion: v1alpha1
 kind: DiscoveryServiceConfig
 name: default
 endpoint: http://10.10.0.100:9300
