@@ -33,7 +33,7 @@ spec:
         relabelings:
           - action: drop
             regex: /var/lib/kubelet/pods.+
-            source_labels: [mountpoint]
+            sourceLabels: [mountpoint]
           - action: replace
             regex: (.*)
             replacement: $1
