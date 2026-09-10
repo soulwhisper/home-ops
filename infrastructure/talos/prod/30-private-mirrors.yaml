@@ -9,6 +9,14 @@ skipFallback: true
 ---
 apiVersion: v1alpha1
 kind: RegistryMirrorConfig
+name: factory.talos.dev
+endpoints:
+  - url: http://nas.homelab.internal:9002/v2/factory.talos.dev
+    overridePath: true
+skipFallback: true
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
 name: gcr.io
 endpoints:
   - url: http://nas.homelab.internal:9002/v2/gcr.io
