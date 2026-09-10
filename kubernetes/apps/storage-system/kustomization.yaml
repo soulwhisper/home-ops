@@ -8,7 +8,6 @@ components:
   - ../../components/kopiur/secret
 resources:
   - ./csi-driver-nfs/ks.yaml
-  - ./openebs-localpv/ks.yaml
   - ./rook-ceph/ks.yaml
   - ./snapshot-controller/ks.yaml
   - ./kopiur/ks.yaml
