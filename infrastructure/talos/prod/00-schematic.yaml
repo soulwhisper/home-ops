@@ -5,16 +5,16 @@ customization:
   bootloader: sd-boot
   extraKernelArgs:
     # stability
-    # bring-up network: bond0 (LACP) + DHCP from first boot, so maintenance is
-    # reachable without dashboard/META pre-config. Full machine config overrides
-    # on install (same-device bond0 -> bond0). Requires DHCP on the node subnet.
-    - bond=bond0:enp2s0f0np0,enp2s0f1np1:mode=802.3ad,lacp_rate=fast,xmit_hash_policy=layer3+4:9000
-    - ip=bond0:dhcp
     - pcie_aspm=off
     - nvme_core.default_ps_max_latency_us=0
     # hardware
     - i915.enable_guc=3
     - module_blacklist=igc
+    # bring-up network: bond0 (LACP) + DHCP from first boot, so maintenance is
+    # reachable without dashboard/META pre-config. Full machine config overrides
+    # on install (same-device bond0 -> bond0). Requires DHCP on the node subnet.
+    - bond=bond0:enp2s0f0np0,enp2s0f1np1:mode=802.3ad,lacp_rate=fast,xmit_hash_policy=layer3+4:9000
+    - ip=bond0:dhcp
   systemExtensions:
     officialExtensions:
       - siderolabs/i915
