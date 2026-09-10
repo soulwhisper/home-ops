@@ -120,11 +120,16 @@ Management connectivity uses a dedicated access port (Ten-GE 1/0/19, VLAN 1) wit
 
 #### Bond Bring-Up Caveats (learned 2026-09-10)
 
-Three failure modes cost a full day during the first prod bootstrap; all are node/network-side, not switch-side:
+The first prod bootstrap hit three failure modes. All were node-side; the switch and LACP were healthy the entire time — check `talosctl get routes` and node ARP **before** touching network infrastructure.
 
-1. **DHCP must be disabled on the node subnet during bring-up.** A live `dhcp4` client on any NIC that later gets enslaved installs high-priority routes on the physical link, which shadow `bond0`'s routes and blackhole all IP traffic (LACP still negotiates cleanly — links look perfect while nothing flows). Use static network pre-config instead: the Talos maintenance dashboard (via AMT) writes it to the `META` partition, which persists across `talosctl reset` (it survives STATE/EPHEMERAL wipes). Longer term, per-node factory schematics with `embeddedMachineConfiguration` (DHCP-on-bond) remove the manual step.
-2. **Nodes cannot route fake-ip (`198.18.0.0/16`).** The router's tproxy (mihomo) answers proxied domains with fake-ip; only transit clients the tproxy intercepts can use them. Infra domains must either be fake-ip exceptions (`+.homelab.internal`, `+.noirprime.com`, `+.talos.dev`) or pulled via the zot mirrors (`30-private-mirrors.yaml`, which includes `factory.talos.dev` for installer images). Symptom: `dial tcp 198.18.x.x:443: connect: no route to host`.
-3. **Stale routes from live `apply-config` only clear via reboot.** Applying a config on top of an already-configured network (maintenance DHCP, META platform config, or a previous install) leaves the old routes in place (`priority 0` on the physical NIC vs `1024` on bond0). There is no runtime cleanup — reboot the node. Suspect this whenever DNS/NTP work in maintenance but die right after apply.
+1. **DHCP must be disabled on the node subnet during ISO bring-up.** A live `dhcp4` client on any NIC that later gets enslaved installs high-priority routes on the physical link, shadowing `bond0` and blackholing all IP traffic while LACP looks perfect. Use static network pre-config (maintenance dashboard → `META` partition, survives `talosctl reset`) or factory-embedded machine config.
+2. **Nodes cannot route fake-ip (`198.18.0.0/16`) reliably.** Infra domains need tproxy exceptions. Whitelist each registry **and its blob CDN** (`ghcr.io` + `pkg-containers.githubusercontent.com`, `registry.k8s.io` + `cdn.registry.k8s.io`, `quay.io` + `*.cloudfront.net`, `docker.io` + `*.docker.com`, `factory.talos.dev`, `github.com` + `codeload.github.com` + `objects.githubusercontent.com`) or pulls die at the blob stage. Symptom: `dial tcp 198.18.x.x:443: connect: no route to host`.
+3. **Stale platform-layer routes duplicate onto the physical NIC.** The dashboard/META pre-config installs `priority 0` routes via `enp2s0f0np0`, shadowing `bond0` (`metric 1024`); off-subnet breaks while on-subnet keeps working. **Targeted fix: `talosctl meta delete 0xa`** — removes the platform layer live, no reboot. A **reboot** is the equally valid quick fix and additionally flushes the Talos DNS resolve-cache, which can hold stale fake-ip answers from before an exception was added. After cleanup the route table must show only `bond0` entries — verify.
+
+Diagnostic traps that cost time, do not repeat:
+
+- **Do not trust busybox `wget` as an egress probe** through the tproxy — it failed (TLS/SNI handling) while real clients (containerd, curl) succeeded on the same path. Test with the actual workload.
+- `dns-resolve-cache` / NTP errors on the Talos console during install are usually a *routing* symptom, not a DNS/NTP service problem — both were verified healthy on `10.10.0.254` while nodes reported them down.
 
 ### BGP Design
 
