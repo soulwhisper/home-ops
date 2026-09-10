@@ -11,7 +11,8 @@ spec:
     name: cilium
 
   values:
-    # BIGTCP, xdp, for Intel-x710(ice);
+    # Intel X710/X722 (i40e driver): native XDP supported; NO BIG TCP —
+    # i40e never opted into gro_max_size (mlx5/ice only).
     # Recommendation:netkit, host-routing, bbr, ebpf-backend-memory, ebpf-clock-probe, preallocate-maps, maglev-hashing;
     # :: features
     # hubble:enabled, hostLegacyRouting:disabled, ipam:kubernetes;
@@ -37,7 +38,7 @@ spec:
     cni:
       exclusive: false
     devices: bond+
-    enableIPv4BIGTCP: true
+    enableIPv4BIGTCP: false # i40e lacks BIG TCP support; enable only on ice/mlx5 NICs
     endpointRoutes:
       enabled: true
     envoy:

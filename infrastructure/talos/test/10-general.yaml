@@ -194,7 +194,7 @@ params:
   net.ipv4.neigh.default.gc_thresh1: "1024" # GC start threshold (default 128)
   net.ipv4.neigh.default.gc_thresh2: "2048" # GC soft threshold (default 512)
   net.ipv4.neigh.default.gc_thresh3: "4096" # GC hard threshold (default 1024)
-  # 10G NIC throughput tuning (Intel X710, ice driver)
+  # 10G NIC throughput tuning (mirrors prod; test nodes are virtio)
   # Reference: https://www.kernel.org/doc/Documentation/networking/scaling.txt
   net.core.netdev_max_backlog: "16384" # packet queue depth per NIC (default 1000)
   net.core.somaxconn: "32768" # listen() backlog (default 4096)

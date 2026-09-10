@@ -30,11 +30,13 @@ spec:
       # policy instead of a cold emptyDir each run (~96 mover runs/day)
       mode: Persistent
       storageClassName: ceph-block
-      capacity: 20Gi
-      # The metadata budget applies twice:
-      # kopia caps the index-blobs cache at the same size.
-      metadataCacheSizeMb: 10240
-      contentCacheSizeMb: 2048
+      capacity: 10Gi
+      # Ceiling = metadata 4096x2 (index-blobs cap) + content 1024
+      # = 9Gi <= ~9.5Gi usable (ext4 5% reserve). Sized per-policy:
+      # each mover needs the full shared repo index (~1-3Gi at
+      # current repo size), not the sum of all app data.
+      metadataCacheSizeMb: 4096
+      contentCacheSizeMb: 1024
   maintenance:
     schedule:
       quick:
