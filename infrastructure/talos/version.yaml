@@ -11,5 +11,5 @@ k8s_version: v1.37.0
 # refreshed here on every run, so the installer image and ISO downloads
 # always match the current 00-schematic.yaml content.
 schematic_id:
-  prod: 5e8849a51c475e0c18977c0c5691aa19cacf0dd3f239fb380a698cf1cb4a7ac0
+  prod: 6a834865164d509fe1e1e651a114be61e5b68ce9a6cfd6052b7bbda52e8b8d1c
   test: 5bf167b739a3594940f8012df8e9659662dddd8e6e3b2a3ed5262f16bbf1d7c0
