@@ -118,6 +118,14 @@ Ports are configured as **STP edge ports** on all access bonds, and the switch o
 
 Management connectivity uses a dedicated access port (Ten-GE 1/0/19, VLAN 1) with broadcast/multicast/unicast suppression at 5% for OOB control of the MS-01 nodes via AMT.
 
+#### Bond Bring-Up Caveats (learned 2026-09-10)
+
+Three failure modes cost a full day during the first prod bootstrap; all are node/network-side, not switch-side:
+
+1. **DHCP must be disabled on the node subnet during bring-up.** A live `dhcp4` client on any NIC that later gets enslaved installs high-priority routes on the physical link, which shadow `bond0`'s routes and blackhole all IP traffic (LACP still negotiates cleanly — links look perfect while nothing flows). Use static network pre-config instead: the Talos maintenance dashboard (via AMT) writes it to the `META` partition, which persists across `talosctl reset` (it survives STATE/EPHEMERAL wipes). Longer term, per-node factory schematics with `embeddedMachineConfiguration` (DHCP-on-bond) remove the manual step.
+2. **Nodes cannot route fake-ip (`198.18.0.0/16`).** The router's tproxy (mihomo) answers proxied domains with fake-ip; only transit clients the tproxy intercepts can use them. Infra domains must either be fake-ip exceptions (`+.homelab.internal`, `+.noirprime.com`, `+.talos.dev`) or pulled via the zot mirrors (`30-private-mirrors.yaml`, which includes `factory.talos.dev` for installer images). Symptom: `dial tcp 198.18.x.x:443: connect: no route to host`.
+3. **Stale routes from live `apply-config` only clear via reboot.** Applying a config on top of an already-configured network (maintenance DHCP, META platform config, or a previous install) leaves the old routes in place (`priority 0` on the physical NIC vs `1024` on bond0). There is no runtime cleanup — reboot the node. Suspect this whenever DNS/NTP work in maintenance but die right after apply.
+
 ### BGP Design
 
 The core switch and each Kubernetes node run eBGP to advertise pod and LoadBalancer CIDRs.

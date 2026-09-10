@@ -185,6 +185,8 @@ configs:
                 ],
                 "onDemand": true,
                 "tlsVerify": true,
+                "maxRetries": 5,
+                "retryDelay": "30s",
                 "preserveDigest": true
               },
               {
@@ -197,7 +199,9 @@ configs:
                   }
                 ],
                 "onDemand": true,
-                "tlsVerify": true
+                "tlsVerify": true,
+                "maxRetries": 5,
+                "retryDelay": "30s"
               },
               {
                 "urls": ["https://gcr.io"],
@@ -209,7 +213,9 @@ configs:
                   }
                 ],
                 "onDemand": true,
-                "tlsVerify": true
+                "tlsVerify": true,
+                "maxRetries": 5,
+                "retryDelay": "30s"
               },
               {
                 "urls": ["https://ghcr.io"],
@@ -221,7 +227,9 @@ configs:
                   }
                 ],
                 "onDemand": true,
-                "tlsVerify": true
+                "tlsVerify": true,
+                "maxRetries": 5,
+                "retryDelay": "30s"
               },
               {
                 "urls": ["https://quay.io"],
@@ -233,7 +241,9 @@ configs:
                   }
                 ],
                 "onDemand": true,
-                "tlsVerify": true
+                "tlsVerify": true,
+                "maxRetries": 5,
+                "retryDelay": "30s"
               },
               {
                 "urls": ["https://registry.k8s.io"],
@@ -245,7 +255,9 @@ configs:
                   }
                 ],
                 "onDemand": true,
-                "tlsVerify": true
+                "tlsVerify": true,
+                "maxRetries": 5,
+                "retryDelay": "30s"
               },
               {
                 "urls": ["https://public.ecr.aws"],
@@ -257,7 +269,9 @@ configs:
                   }
                 ],
                 "onDemand": true,
-                "tlsVerify": true
+                "tlsVerify": true,
+                "maxRetries": 5,
+                "retryDelay": "30s"
               }
             ]
           }

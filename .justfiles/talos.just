@@ -77,6 +77,15 @@ generate mode:
   fi
   mkdir -p ~/.talos && cp "${TALOSCONFIG}" ~/.talos/config
 
+[doc('Restore talosconfig and kubeconfig from 1Password secrets')]
+# Local clusterconfig/, ~/.talos/config and ~/.kube/config are derived artifacts;
+# the only backup is the `talos` item in the DevOps vault (all CA material).
+# Requires `op` signed in and a reachable control-plane node for the kubeconfig.
+[script]
+restore:
+  just talos generate prod
+  just talos kubeconfig
+
 [doc('Apply talos configuration to node')]
 [script]
 apply node *args:
