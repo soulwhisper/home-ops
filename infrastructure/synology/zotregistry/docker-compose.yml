@@ -187,7 +187,6 @@ configs:
                 "tlsVerify": true,
                 "maxRetries": 5,
                 "retryDelay": "30s",
-                "preserveDigest": true,
                 "preserveDigest": true
               },
               {
