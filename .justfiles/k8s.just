@@ -88,15 +88,16 @@ sync-all-es:
     just sync-es "$ns" "$name"
   done
 
-[doc('Snapshot VolSync ReplicationSource')]
+[doc('Snapshot app via kopiur SnapshotPolicy')]
 [script]
 snapshot ns name:
-  kubectl -n "{{ ns }}" patch replicationsources "{{ name }}" --type merge -p '{"spec":{"trigger":{"manual":"$(date +%s)"}}}'
+  printf '{"apiVersion":"kopiur.home-operations.com/v1alpha1","kind":"Snapshot","metadata":{"name":"%s-manual-%s","namespace":"%s"},"spec":{"policyRef":{"name":"%s","namespace":"%s"}}}' \
+    "{{name}}" "$(date +%s)" "{{ns}}" "{{name}}" "{{ns}}" | kubectl apply -f -
 
-[doc('Snapshot all VolSync ReplicationSources')]
+[doc('Snapshot all kopiur SnapshotPolicies')]
 [script]
 snapshot-all:
-  kubectl get replicationsources --no-headers -A | while read -r ns name _; do
+  kubectl get snapshotpolicies.kopiur.home-operations.com --no-headers -A | while read -r ns name _; do
     just snapshot "$ns" "$name"
   done
 
