@@ -24,13 +24,17 @@ releases:
   - name: prometheus-crds
     namespace: monitoring-system
 
-  - name: cilium
-    namespace: kube-system
-    needs: ["monitoring-system/prometheus-crds"]
-
+  # coredns must exist before cilium's --wait reaches hubble-relay, which
+  # resolves its peer service via cluster DNS. wait:false lets coredns pods
+  # stay Pending until the CNI is up; first bootstrap converges in one pass.
   - name: coredns
     namespace: kube-system
-    needs: ["kube-system/cilium"]
+    wait: false
+    needs: ["monitoring-system/prometheus-crds"]
+
+  - name: cilium
+    namespace: kube-system
+    needs: ["kube-system/coredns"]
 
   - name: spegel
     namespace: kube-system
