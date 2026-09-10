@@ -10,7 +10,7 @@ spec:
   groupRef:
     name: internal-rw
   # renovate: datasource=docker depName=git.b4mad.industries/agentic-forges/forgejo-mcp
-  image: git.b4mad.industries/agentic-forges/forgejo-mcp:v3.0.0
+  image: git.b4mad.industries/agentic-forges/forgejo-mcp:v3.0.1
   transport: streamable-http
   mcpPort: 8080
   args:
