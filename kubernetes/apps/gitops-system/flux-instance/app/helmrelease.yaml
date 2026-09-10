@@ -12,8 +12,6 @@ spec:
 
   values:
     instance:
-      distribution:
-        artifact: "" # https://github.com/controlplaneio-fluxcd/flux-operator/issues/164#issuecomment-2652950564
       cluster:
         networkPolicy: false
       components:
