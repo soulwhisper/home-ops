@@ -187,6 +187,7 @@ configs:
                 "tlsVerify": true,
                 "maxRetries": 5,
                 "retryDelay": "30s",
+                "preserveDigest": true,
                 "preserveDigest": true
               },
               {
@@ -201,7 +202,8 @@ configs:
                 "onDemand": true,
                 "tlsVerify": true,
                 "maxRetries": 5,
-                "retryDelay": "30s"
+                "retryDelay": "30s",
+                "preserveDigest": true
               },
               {
                 "urls": ["https://gcr.io"],
@@ -215,7 +217,8 @@ configs:
                 "onDemand": true,
                 "tlsVerify": true,
                 "maxRetries": 5,
-                "retryDelay": "30s"
+                "retryDelay": "30s",
+                "preserveDigest": true
               },
               {
                 "urls": ["https://ghcr.io"],
@@ -229,7 +232,8 @@ configs:
                 "onDemand": true,
                 "tlsVerify": true,
                 "maxRetries": 5,
-                "retryDelay": "30s"
+                "retryDelay": "30s",
+                "preserveDigest": true
               },
               {
                 "urls": ["https://quay.io"],
@@ -243,7 +247,8 @@ configs:
                 "onDemand": true,
                 "tlsVerify": true,
                 "maxRetries": 5,
-                "retryDelay": "30s"
+                "retryDelay": "30s",
+                "preserveDigest": true
               },
               {
                 "urls": ["https://registry.k8s.io"],
@@ -257,7 +262,8 @@ configs:
                 "onDemand": true,
                 "tlsVerify": true,
                 "maxRetries": 5,
-                "retryDelay": "30s"
+                "retryDelay": "30s",
+                "preserveDigest": true
               },
               {
                 "urls": ["https://public.ecr.aws"],
@@ -271,7 +277,8 @@ configs:
                 "onDemand": true,
                 "tlsVerify": true,
                 "maxRetries": 5,
-                "retryDelay": "30s"
+                "retryDelay": "30s",
+                "preserveDigest": true
               }
             ]
           }
