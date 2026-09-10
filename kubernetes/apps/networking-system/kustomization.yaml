@@ -7,5 +7,6 @@ components:
   - ../../components/namespace
 resources:
   - ./agentgateway/ks.yaml
+  - ./kgateway-crds/ks.yaml
   - ./kgateway/ks.yaml
   - ./externaldns/ks.yaml

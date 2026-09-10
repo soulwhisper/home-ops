@@ -25,7 +25,7 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
-  targetNamespace: security-system
+  # targetNamespace removed for rbac remote injection
   path: "./kubernetes/apps/security-system/external-secrets/cluster"
   wait: true
   dependsOn:

@@ -63,7 +63,10 @@ _template file:
 
 [script]
 _bootstrap_apps:
-  just _template "{{K8S_DIR}}/bootstrap/resources.yaml.j2" | kubectl apply --server-side -f -
+  # the 1Password item stores credentials.json base64url-encoded; decode before apply
+  just _template "{{K8S_DIR}}/bootstrap/resources.yaml.j2" \
+    | yq '(select(.kind == "Secret" and .metadata.name == "onepassword-connect")).stringData."1password-credentials.json" |= @base64d' \
+    | kubectl apply --server-side -f -
   echo "Syncing Helm Releases..."
   count=0; until helmfile --file "{{K8S_DIR}}/bootstrap/helmfile.yaml" sync --hide-notes; do
     count=$((count + 1))

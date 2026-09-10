@@ -11,11 +11,6 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: kube-system
-  # components/authentik renders a TrafficPolicy (gateway.kgateway.dev); its
-  # CRD comes from networking-system/kgateway-crds.
-  dependsOn:
-    - name: kgateway-crds
-      namespace: networking-system
   path: "./kubernetes/apps/kube-system/cilium/app"
   wait: true
   components:
