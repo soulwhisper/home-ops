@@ -17,6 +17,8 @@ spec:
     request:
       dynamicMetadata:
         - key: kgateway.auth.username
-          value: '{{ headers["x-authentik-username"] }}'
+          value:
+            stringValue: '{{ headers["x-authentik-username"] }}'
         - key: kgateway.auth.groups
-          value: '{{ headers["x-authentik-groups"] }}'
+          value:
+            stringValue: '{{ headers["x-authentik-groups"] }}'
