@@ -16,9 +16,11 @@ spec:
   transformation:
     request:
       dynamicMetadata:
-        - key: kgateway.auth.username
+        - namespace: kgateway.auth
+          key: username
           value:
             stringValue: '{{ headers["x-authentik-username"] }}'
-        - key: kgateway.auth.groups
+        - namespace: kgateway.auth
+          key: groups
           value:
             stringValue: '{{ headers["x-authentik-groups"] }}'
