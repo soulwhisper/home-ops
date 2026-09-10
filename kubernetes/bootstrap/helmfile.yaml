@@ -45,6 +45,11 @@ releases:
     namespace: kube-system
     needs: ["kube-system/spegel"]
 
+  # component deps (e.g. authentik TrafficPolicy) resolve against these CRDs
+  - name: kgateway-crds
+    namespace: networking-system
+    needs: ["kube-system/gateway-api-crds"]
+
   # for component crds
   - name: external-secrets
     namespace: security-system
