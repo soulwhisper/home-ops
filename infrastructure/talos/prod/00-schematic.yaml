@@ -3,6 +3,34 @@
 # id is resolved live from factory.talos.dev and tracked in ../version.yaml
 customization:
   bootloader: sd-boot
+  # Embedded machine config: brings bond0 up with DHCP from first boot, so
+  # maintenance mode is reachable without dashboard/META pre-config. Bond
+  # params mirror prod/nodes/*.yaml; the full machine config overrides this
+  # on install (same-device bond0 -> bond0 transition, proven safe).
+  # Requires DHCP enabled on the node subnet (static leases by nic0 MAC).
+  embeddedMachineConfiguration: |
+    apiVersion: v1alpha1
+    kind: BondConfig
+    name: bond0
+    links:
+      - enp2s0f0np0
+      - enp2s0f1np1
+    bondMode: 802.3ad
+    miimon: 100
+    updelay: 200
+    downdelay: 200
+    xmitHashPolicy: layer3+4
+    lacpRate: fast
+    adActorSysPrio: 65535
+    adLACPActive: on
+    adSelect: stable
+    resendIGMP: 5
+    mtu: 9000
+    ---
+    apiVersion: v1alpha1
+    kind: DHCPv4Config
+    name: bond0
+    routeMetric: 1024
   extraKernelArgs:
     # stability
     - pcie_aspm=off
