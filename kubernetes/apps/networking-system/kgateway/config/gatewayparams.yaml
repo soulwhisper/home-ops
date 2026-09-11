@@ -13,8 +13,15 @@ spec:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: DoNotSchedule
+          # k8s 1.34 forbids matchLabelKeys without a labelSelector; Exists
+          # spans both internal/external gateway proxies. matchLabelKeys may
+          # not duplicate a selector key, so only pod-template-hash stays —
+          # spreading is scoped to each gateway's own replicaset
+          labelSelector:
+            matchExpressions:
+              - key: gateway.networking.k8s.io/gateway-name
+                operator: Exists
           matchLabelKeys:
-            - gateway.networking.k8s.io/gateway-name
             - pod-template-hash
     envoyContainer:
       bootstrap:
@@ -25,7 +32,8 @@ spec:
             logger: "%n"
             thread: "%t"
             source: "%g:%#"
-            message: "%v"
+            # no "message": envoy JSON logs always include the message field
+            # automatically and reject %v explicitly
       resources:
         requests:
           cpu: "100m"
