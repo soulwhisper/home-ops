@@ -50,7 +50,9 @@ spec:
                 memory: 4Gi
             securityContext:
               allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
+              # entrypoint chowns /app/data + /app/logs then su-execs to 1000;
+              # needs CHOWN/SETUID/SETGID back
+              capabilities: { drop: ["ALL"], add: ["CHOWN", "SETUID", "SETGID"] }
               readOnlyRootFilesystem: true
 
     service:

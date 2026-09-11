@@ -65,3 +65,8 @@ spec:
         existingClaim: *name
         globalMounts:
           - path: /app/data
+      # rootfs is read-only; python needs a writable tmpdir
+      tmpfs:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp

@@ -40,8 +40,10 @@ spec:
                 restartPolicy: NotRequired
             securityContext:
               allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-              readOnlyRootFilesystem: true
+              # entrypoint chowns /tmp/stirling-pdf and su-execs to the app user
+              capabilities: { drop: ["ALL"], add: ["CHOWN", "SETUID", "SETGID"] }
+              # entrypoint symlinks into /usr/local/bin -> rootfs must be writable
+              readOnlyRootFilesystem: false
 
     service:
       app:
