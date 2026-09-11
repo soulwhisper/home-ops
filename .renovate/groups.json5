@@ -9,7 +9,7 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 2,
+      minimumGroupSize: 1,
       allowedVersions: "/^1\\./",
     },
     {
@@ -20,7 +20,7 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 2,
+      minimumGroupSize: 1,
     },
     {
       description: "Flux Operator Group",
@@ -30,7 +30,7 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 2,
+      minimumGroupSize: 1,
     },
     {
       description: "KGateway Group",
@@ -40,7 +40,7 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 2,
+      minimumGroupSize: 1,
     },
     {
       description: "Immich Group",
@@ -50,7 +50,7 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 2,
+      minimumGroupSize: 1,
     },
     {
       description: "Langfuse Group",
@@ -60,7 +60,7 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 2,
+      minimumGroupSize: 1,
     },
     {
       description: "Rook Ceph Group",
@@ -70,7 +70,7 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 2,
+      minimumGroupSize: 1,
     },
     {
       description: "Victoria Metrics Group",
@@ -84,7 +84,7 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 2,
+      minimumGroupSize: 1,
     },
   ],
 }
