@@ -58,7 +58,8 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
 | Cilium datapath | `netkit` (L3) — kept |
 | kata | **removed** (RuntimeClass + Talos sysext; sysext drops at next node image upgrade) |
 | `hostUsers: false` | All app-template workloads **except** NFS consumers |
-| Egress CNP | **AI workloads only** (LLM-gateway callers / agent pipelines): firecrawl, hermes-agent, karakeep, trendradar, open-notebook, toolhive (+onepassword-connect). Traditional apps (searxng, qbittorrent, media) deliberately not covered |
+| Egress CNP | **AI workloads only** (LLM-gateway callers / agent pipelines): firecrawl, hermes-agent, karakeep, trendradar, open-notebook. Contains where a compromised agent can *go* — lateral-movement block. Traditional apps (searxng, qbittorrent, media) deliberately not covered |
+| Ingress CNP | Different angle — constrains who may *call* a sensitive endpoint: `onepassword-connect-ingress` (only external-secrets reaches the Connect API) and `vmcp-ingress` (only vmagent + hermes-agent reach the virtual-MCP tool plane) |
 | `automountServiceAccountToken: false` | All app-template workloads except `heartbeats`, `homepage`. Audited live: no other app SA holds RoleBindings; `netbox` (official chart, untouched by the sweep) keeps its token for `netbox_prometheus_sd` |
 | `enableServiceLinks: false` | app-template v5 chart default — no action needed |
 | Pod Security Admission | **privileged cluster-wide — open decision, see below** |
