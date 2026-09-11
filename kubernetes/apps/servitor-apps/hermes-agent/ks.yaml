@@ -18,7 +18,9 @@ spec:
     - name: agentgateway
       namespace: networking-system
   components:
+    - ../../../../components/authentik
     - ../../../../components/kopiur/backup
   postBuild:
     substitute:
       APP: *name
+      APP_ROUTE: hermes-agent-dashboard

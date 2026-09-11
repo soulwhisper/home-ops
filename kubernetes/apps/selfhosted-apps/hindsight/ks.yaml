@@ -18,8 +18,6 @@ spec:
   dependsOn:
     - name: cnpg-cluster
       namespace: database-system
-    - name: llama
-      namespace: servitor-apps
   components:
     - ../../../../components/authentik
     - ../../../../components/cnpg
