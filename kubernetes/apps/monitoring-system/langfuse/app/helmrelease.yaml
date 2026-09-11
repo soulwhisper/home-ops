@@ -23,7 +23,7 @@ spec:
           app:
             image:
               repository: ghcr.io/langfuse/langfuse
-              tag: 4.33.0
+              tag: 4.35.0
             env:
               DATABASE_URL:
                 valueFrom:
