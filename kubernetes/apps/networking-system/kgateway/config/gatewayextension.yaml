@@ -10,7 +10,6 @@ spec:
       backendRef:
         name: authentik-server
         namespace: security-system
-        # Service port (80), not the container targetPort (9000)
         port: 80
       pathPrefix: "/outpost.goauthentik.io/auth/envoy"
       authorizationRequest:
