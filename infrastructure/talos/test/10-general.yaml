@@ -229,6 +229,11 @@ provisioning:
   volumeSelector:
     match: disk.dev_path == "/dev/sda" || disk.dev_path == "/dev/sdb"
 ---
+# see prod 10-general.yaml / ADR-03: pin RuntimeDefault seccomp default
+apiVersion: v1alpha1
+kind: KubeletConfig
+defaultRuntimeSeccompProfileEnabled: true
+---
 machine:
   features:
     nodeAddressSortAlgorithm: v2

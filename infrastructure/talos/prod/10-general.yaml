@@ -223,6 +223,13 @@ provisioning:
     match: disk.model == "SQF-C3AV1-256GDEDM"
   wipe: false
 ---
+# pin the Talos default explicitly (ADR-03): pods without an explicit
+# seccompProfile run with RuntimeDefault — guards against a future Talos
+# default flip silently widening the syscall surface
+apiVersion: v1alpha1
+kind: KubeletConfig
+defaultRuntimeSeccompProfileEnabled: true
+---
 machine:
   features:
     nodeAddressSortAlgorithm: v2
