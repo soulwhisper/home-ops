@@ -26,6 +26,9 @@ spec:
             env:
               POSTGRES_DB: postgres
               POSTGRES_USER: postgres
+              # PVC mounts directly at /var/lib/postgresql/data (lost+found);
+              # initdb refuses a bare mount point -> use a subdirectory
+              PGDATA: /var/lib/postgresql/data/pgdata
               POSTGRES_PASSWORD:
                 valueFrom:
                   secretKeyRef:

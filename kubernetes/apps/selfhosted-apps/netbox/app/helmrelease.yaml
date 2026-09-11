@@ -79,6 +79,16 @@ spec:
       host: *redis
     persistence:
       existingClaim: *name
+    # web + worker share the RWO media PVC (ceph-block); RWO only multi-attaches
+    # on the same node -> co-locate all components or the worker holds the
+    # attach hostage and the web pod can never mount
+    affinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/instance: netbox
+            topologyKey: kubernetes.io/hostname
     metrics:
       enabled: true
       serviceMonitor:

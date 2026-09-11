@@ -4,6 +4,16 @@ kind: ServiceAccount
 metadata:
   name: headlamp-admin
 ---
+# long-lived SA token mounted into the pod (kubeconfig for the UI login);
+# the token controller populates data.token — no secret material in git
+apiVersion: v1
+kind: Secret
+metadata:
+  name: headlamp-admin
+  annotations:
+    kubernetes.io/service-account.name: headlamp-admin
+type: kubernetes.io/service-account-token
+---
 # read-only cluster access via the built-in aggregated `view` ClusterRole (excludes secrets)
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
