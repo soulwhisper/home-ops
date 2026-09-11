@@ -15,8 +15,6 @@ spec:
   # run 'rtk init --agent hermes' at first time, restart app to load plugins
 
   values:
-    defaultPodOptions:
-      runtimeClassName: kata
     controllers:
       *name :
         annotations:
