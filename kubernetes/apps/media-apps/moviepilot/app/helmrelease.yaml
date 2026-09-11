@@ -24,7 +24,7 @@ spec:
               tag: "18"
             envFrom:
               - secretRef:
-                  name: moviepilot-initdb
+                  name: moviepilot-pguser
         containers: # this container has to start as host root
           app:
             image:
@@ -34,7 +34,14 @@ spec:
               NGINX_PORT: &port 3000
               PORT: &apiPort 3001
               CACHE_BACKEND_TYPE: "redis"
-              CACHE_BACKEND_URL: redis://moviepilot-dragonfly.media-apps.svc.cluster.local:6379/0
+              CACHE_BACKEND_PASS:
+                valueFrom:
+                  secretKeyRef:
+                    name: moviepilot-dragonfly-secret
+                    key: password
+              # CACHE_BACKEND_PASS sorts/renders before CACHE_BACKEND_URL so
+              # kubelet $(...) expansion resolves
+              CACHE_BACKEND_URL: redis://:$(CACHE_BACKEND_PASS)@moviepilot-dragonfly.media-apps.svc.cluster.local:6379/0
               CACHE_REDIS_MAXMEMORY: "1024mb"
               DB_TYPE: "postgresql"
               DB_POSTGRESQL_HOST:

@@ -6,6 +6,10 @@ metadata:
   name: ${APP}-dragonfly
 spec:
   replicas: 1
+  authentication:
+    passwordFromSecret:
+      name: ${APP}-dragonfly-secret
+      key: password
   image: ghcr.io/dragonflydb/dragonfly:v1.40.2
   args:
     - --maxmemory=$(MAX_MEMORY)Mi

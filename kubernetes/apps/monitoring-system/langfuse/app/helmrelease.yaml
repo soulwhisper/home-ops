@@ -29,6 +29,11 @@ spec:
                   secretKeyRef:
                     name: langfuse-pguser
                     key: uri
+              REDIS_AUTH:
+                valueFrom:
+                  secretKeyRef:
+                    name: langfuse-dragonfly-secret
+                    key: password
               LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: &bucket_endpoint
                 valueFrom:
                   configMapKeyRef:

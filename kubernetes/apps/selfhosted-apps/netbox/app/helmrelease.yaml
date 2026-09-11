@@ -70,13 +70,17 @@ spec:
         image: ghcr.io/home-operations/postgres-init:18
         envFrom:
           - secretRef:
-              name: netbox-initdb
+              name: netbox-pguser
     valkey:
       enabled: false
     tasksDatabase:
       host: &redis netbox-dragonfly.selfhosted-apps.svc.cluster.local
+      existingSecretName: netbox-dragonfly-secret
+      existingSecretKey: password
     cachingDatabase:
       host: *redis
+      existingSecretName: netbox-dragonfly-secret
+      existingSecretKey: password
     persistence:
       existingClaim: *name
     # web + worker share the RWO media PVC (ceph-block); RWO only multi-attaches
