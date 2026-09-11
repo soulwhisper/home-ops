@@ -37,10 +37,8 @@ spec:
               CACHE_BACKEND_PASS:
                 valueFrom:
                   secretKeyRef:
-                    name: moviepilot-dragonfly-secret
+                    name: moviepilot-dragonfly
                     key: password
-              # CACHE_BACKEND_PASS sorts/renders before CACHE_BACKEND_URL so
-              # kubelet $(...) expansion resolves
               CACHE_BACKEND_URL: redis://:$(CACHE_BACKEND_PASS)@moviepilot-dragonfly.media-apps.svc.cluster.local:6379/0
               CACHE_REDIS_MAXMEMORY: "1024mb"
               DB_TYPE: "postgresql"

@@ -37,12 +37,10 @@ spec:
                   secretKeyRef:
                     name: firecrawl-database
                     key: NUQ_DATABASE_URL
-              # REDIS_PASSWORD sorts/renders before the URLs so kubelet
-              # $(...) expansion resolves
               REDIS_PASSWORD:
                 valueFrom:
                   secretKeyRef:
-                    name: firecrawl-database-dragonfly-secret
+                    name: firecrawl-database-dragonfly
                     key: password
               REDIS_RATE_LIMIT_URL: "redis://:$(REDIS_PASSWORD)@firecrawl-database-dragonfly.selfhosted-apps.svc.cluster.local:6379"
               REDIS_URL: "redis://:$(REDIS_PASSWORD)@firecrawl-database-dragonfly.selfhosted-apps.svc.cluster.local:6379"
@@ -130,7 +128,7 @@ spec:
               REDIS_PASSWORD:
                 valueFrom:
                   secretKeyRef:
-                    name: firecrawl-database-dragonfly-secret
+                    name: firecrawl-database-dragonfly
                     key: password
               REDIS_URL: "redis://:$(REDIS_PASSWORD)@firecrawl-database-dragonfly.selfhosted-apps.svc.cluster.local:6379"
             envFrom: *envFrom

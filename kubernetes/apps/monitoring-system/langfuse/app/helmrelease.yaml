@@ -32,7 +32,7 @@ spec:
               REDIS_AUTH:
                 valueFrom:
                   secretKeyRef:
-                    name: langfuse-dragonfly-secret
+                    name: langfuse-dragonfly
                     key: password
               LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: &bucket_endpoint
                 valueFrom:

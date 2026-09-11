@@ -75,11 +75,11 @@ spec:
       enabled: false
     tasksDatabase:
       host: &redis netbox-dragonfly.selfhosted-apps.svc.cluster.local
-      existingSecretName: netbox-dragonfly-secret
+      existingSecretName: netbox-dragonfly
       existingSecretKey: password
     cachingDatabase:
       host: *redis
-      existingSecretName: netbox-dragonfly-secret
+      existingSecretName: netbox-dragonfly
       existingSecretKey: password
     persistence:
       existingClaim: *name

@@ -67,7 +67,7 @@ spec:
               REDIS_PASSWORD:
                 valueFrom:
                   secretKeyRef:
-                    name: immich-dragonfly-secret
+                    name: immich-dragonfly
                     key: password
             envFrom: &envFrom
               - configMapRef:

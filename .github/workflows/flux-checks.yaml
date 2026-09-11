@@ -127,9 +127,9 @@ jobs:
           mapfile -t FILES < <(echo "${CHANGED_FILES}" | jq --raw-output '.[]' \
             | grep --extended-regexp '\.ya?ml$' \
             | grep --invert-match --regexp='_sources/' \
-            | grep --invert-match --regexp='/dragonfly.yaml$' \
-            | grep --invert-match --regexp='/ks\.yaml$' \
-            | grep --invert-match --regexp='/helmfile\.yaml$' \
+            | grep --invert-match --regexp='ks\.yaml$' \
+            | grep --invert-match --regexp='helmfile\.yaml$' \
+            | grep --invert-match --regexp='components/[^/]*\.yaml$' \
             | grep --invert-match --regexp='bootstrap/[^/]*\.yaml$' \
             | grep --invert-match --regexp='bootstrap/templates/' \
             | grep --invert-match --regexp='authentik/app/blueprints/' || true)

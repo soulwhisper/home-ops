@@ -35,7 +35,7 @@ spec:
               REDIS_AUTH:
                 valueFrom:
                   secretKeyRef:
-                    name: langfuse-dragonfly-secret
+                    name: langfuse-dragonfly
                     key: password
               DATABASE_URL:
                 valueFrom:
