@@ -64,7 +64,11 @@ spec:
   name: *name
   owner: *name
   extensions:
+    - name: vector
+      ensure: present
     - name: vchord
+      ensure: present
+    - name: cube
       ensure: present
     - name: earthdistance
       ensure: present
@@ -80,6 +84,8 @@ spec:
   name: *name
   owner: *name
   extensions:
+    - name: vector
+      ensure: present
     - name: vchord
       ensure: present
     - name: pgroonga
