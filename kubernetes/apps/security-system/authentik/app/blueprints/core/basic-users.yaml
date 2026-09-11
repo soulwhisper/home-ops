@@ -29,7 +29,6 @@ spec:
                 password: "{{ .admin_pass }}"
                 is_active: true
                 groups:
-                  # groups live in scope-groups.yaml — !KeyOf is file-scoped, use !Find
                   - !Find [authentik_core.group, [name, homelab-admin]]
             - model: authentik_core.user
               identifiers:
