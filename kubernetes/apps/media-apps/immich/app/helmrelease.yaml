@@ -14,7 +14,6 @@ spec:
   values:
     defaultPodOptions:
       automountServiceAccountToken: false
-      enableServiceLinks: false
     controllers:
       *name :
         annotations:
