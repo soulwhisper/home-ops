@@ -19,6 +19,5 @@ customization:
     officialExtensions:
       - siderolabs/i915
       - siderolabs/intel-ucode
-      - siderolabs/kata-containers
       - siderolabs/mei
       - siderolabs/nut-client

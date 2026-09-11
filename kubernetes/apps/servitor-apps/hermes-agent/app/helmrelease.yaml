@@ -16,7 +16,8 @@ spec:
 
   values:
     defaultPodOptions:
-      runtimeClassName: kata
+      automountServiceAccountToken: false
+      hostUsers: false
     controllers:
       *name :
         annotations:
@@ -40,7 +41,7 @@ spec:
               readOnlyRootFilesystem: true
           # Seeds config.yaml + chat/ops profiles onto the PVC at every boot
           # (authoritative; dashboard edits to these files revert on restart).
-          # .env files are rendered from pod env because profile ${VAR} refs
+          # .env files are rendered from pod env because profile $${VAR} refs
           # resolve against the profile's own .env, not the process env.
           seed-config:
             image:

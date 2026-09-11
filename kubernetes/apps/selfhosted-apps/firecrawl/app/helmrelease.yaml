@@ -13,8 +13,9 @@ spec:
 
   values:
     defaultPodOptions:
+      automountServiceAccountToken: false
       terminationGracePeriodSeconds: 180
-      runtimeClassName: kata
+      hostUsers: false
     controllers:
       # --- HTTP API ----------------------------------------------------
       firecrawl-api:

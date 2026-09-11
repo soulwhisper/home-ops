@@ -53,6 +53,10 @@ kind: KubeFlannelCNIConfig
 $patch: delete
 ---
 apiVersion: v1alpha1
+kind: KubeletConfig
+defaultRuntimeSeccompProfileEnabled: true # hardening pin
+---
+apiVersion: v1alpha1
 kind: KubeNetworkConfig
 podSubnets:
   - 10.100.0.0/17

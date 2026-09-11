@@ -17,6 +17,10 @@ spec:
         - name: config
           configMap:
             name: *name
+        # server stats $HOME/conf.d at boot and hard-fails on EACCES; /root is
+        # 0700 root in the image while the pod runs unprivileged
+        - name: confd
+          emptyDir: {}
       containers:
         - name: mcp
           volumeMounts:
@@ -24,6 +28,8 @@ spec:
               mountPath: /root/config.toml
               subPath: config.toml
               readOnly: true
+            - name: confd
+              mountPath: /root/conf.d
   mcpPort: 8080
   serviceAccount: mcp-kubernetes-view
   resources:

@@ -14,11 +14,11 @@ spec:
     - action: replace
       targetLabel: job
       replacement: *name
-    - source_labels: [__address__]
-      target_label: __param_target
-    - source_labels: [__param_target]
-      target_label: instance
-    - target_label: __address__
+    - sourceLabels: [__address__]
+      targetLabel: __param_target
+    - sourceLabels: [__param_target]
+      targetLabel: instance
+    - targetLabel: __address__
       replacement: nas.homelab.internal:9116
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/scrapeconfig_v1alpha1.json

@@ -20,8 +20,8 @@ spec:
     auth.generic_oauth:
       enabled: "true"
       name: "Authentik"
-      client_id: "${GF_OAUTH_CLIENT_ID}"
-      client_secret: "${GF_OAUTH_CLIENT_SECRET}"
+      client_id: "$__env{GF_OAUTH_CLIENT_ID}"
+      client_secret: "$__env{GF_OAUTH_CLIENT_SECRET}"
       scopes: "openid profile email"
       auth_url: "https://auth.noirprime.com/application/o/authorize/"
       token_url: "https://auth.noirprime.com/application/o/token/"

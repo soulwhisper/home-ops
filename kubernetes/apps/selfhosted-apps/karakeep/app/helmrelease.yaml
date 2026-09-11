@@ -13,7 +13,8 @@ spec:
 
   values:
     defaultPodOptions:
-      runtimeClassName: kata
+      automountServiceAccountToken: false
+      hostUsers: false
     controllers:
       *name :
         annotations:

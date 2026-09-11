@@ -10,9 +10,17 @@ spec:
   image: ghcr.io/homeassistant-ai/ha-mcp:8.4.3
   podTemplateSpec:
     spec:
+      volumes:
+        # toolhive runs the pod with a read-only rootfs; python needs a usable
+        # tmpdir (FileNotFoundError: no usable temporary directory otherwise)
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: mcp
           command: ["fastmcp", "run", "fastmcp-http.json"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
   env:
     - name: "HOMEASSISTANT_URL"
       value: "http://home-assistant.smarthome-apps.svc.cluster.local:8123"

@@ -13,6 +13,7 @@ spec:
 
   values:
     defaultPodOptions:
+      automountServiceAccountToken: false
       hostUsers: false
     controllers:
       *name :
@@ -49,9 +50,10 @@ spec:
               limits:
                 memory: 4Gi
             securityContext:
-              allowPrivilegeEscalation: false
-              # entrypoint chowns /app/data + /app/logs then su-execs to 1000;
-              # needs CHOWN/SETUID/SETGID back
+              # image setcaps cap_net_bind_service=+ep on python3 — execve of a
+              # file-cap binary under no_new_privs fails EPERM, so privesc must
+              # stay allowed; entrypoint gosu-drops to 1000 (CHOWN/SETUID/SETGID)
+              allowPrivilegeEscalation: true
               capabilities: { drop: ["ALL"], add: ["CHOWN", "SETUID", "SETGID"] }
               readOnlyRootFilesystem: true
 

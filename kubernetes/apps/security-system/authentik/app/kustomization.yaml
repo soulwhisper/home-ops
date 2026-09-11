@@ -26,7 +26,9 @@ resources:
 generatorOptions:
   annotations:
     kustomize.toolkit.fluxcd.io/substitute: "disabled"
-  disableNameSuffixHash: false
+  # helmrelease mounts these by fixed name (blueprints.configMaps) — a hashed
+  # suffix leaves the worker's volume pointing at a name that never exists
+  disableNameSuffixHash: true
 configMapGenerator:
   - name: authentik-blueprints-core
     files:

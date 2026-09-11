@@ -12,6 +12,8 @@ spec:
     namespace: gitops-system
 
   values:
+    defaultPodOptions:
+      automountServiceAccountToken: false
     controllers:
       *name :
         annotations:

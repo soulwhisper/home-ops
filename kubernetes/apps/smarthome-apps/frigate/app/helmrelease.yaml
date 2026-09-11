@@ -12,15 +12,16 @@ spec:
     namespace: gitops-system
 
   values:
+    defaultPodOptions:
+      automountServiceAccountToken: false
     controllers:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
         pod:
           securityContext:
-            runAsNonRoot: true
-            runAsUser: 2000
-            runAsGroup: 2000
+            # s6-overlay image: must run as root (preinit fixes /run ownership,
+            # services spawn via s6 suexec); fsGroup keeps volume data readable
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         containers:
@@ -55,9 +56,9 @@ spec:
                 memory: 8Gi
                 gpu.intel.com/i915: 1
             securityContext:
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-              readOnlyRootFilesystem: true
+              # s6-overlay needs writable /run and privesc for suexec
+              allowPrivilegeEscalation: true
+              readOnlyRootFilesystem: false
 
     service:
       app:
