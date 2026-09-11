@@ -15,6 +15,9 @@ spec:
   # run 'rtk init --agent hermes' at first time, restart app to load plugins
 
   values:
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      hostUsers: false
     controllers:
       *name :
         annotations:

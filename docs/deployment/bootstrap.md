@@ -40,7 +40,6 @@ the latest stable Talos version, then downloads the matching
 | `siderolabs/intel-ucode` | Intel CPU microcode updates |
 | `siderolabs/mei` | Intel Management Engine interface |
 | `siderolabs/nut-client` | UPS monitoring via NUT |
-| `siderolabs/kata-containers` | Secure container runtime sandbox |
 
 **Kernel arguments**: `pcie_aspm=off`, `nvme_core.default_ps_max_latency_us=0`,
 `i915.enable_guc=3`, `module_blacklist=igc`.
@@ -291,8 +290,7 @@ just talos apply exarch-01    # uses test configs
 | Bond mode | 802.3ad (LACP, 2× physical links) | active-backup (single virtual link) |
 | MTU | 9000 (jumbo frames, 10G fabric) | 1500 (standard) |
 | Disk | NVMe model selector | `/dev/sda` (virtual disk) |
-| Installer image | `factory.talos.dev/…/v*` (kata-containers) | `factory.talos.dev/…/v*` (no kata) |
-| Kata containers | Included | Excluded |
+| Installer image | `factory.talos.dev/…/v*` | `factory.talos.dev/…/v*` |
 | Kernel args | `pcie_aspm=off`, `i915.enable_guc=3`, `module_blacklist=igc` | `console=ttyS0`, `lockdown=integrity` (Secure Boot) |
 | Registry mirrors | Private NAS cache (5 registries) | `mirror.gcr.io` (docker.io only, fallback allowed) |
 | HTTP proxy | None | `http://172.19.82.10:1080` (transparent proxy on edge router) |
@@ -303,6 +301,6 @@ just talos apply exarch-01    # uses test configs
 | local-cache volume | Secondary NVMe via `pci-0000:59:00.0-nvme-1` | Not provisioned |
 
 The test cluster is designed to validate configuration changes before they
-reach production. The smaller schematic (no kata-containers) and simpler
-networking (active-backup bond, no private mirrors) keep VM overhead low
-while still exercising the full GitOps pipeline.
+reach production. The simpler networking (active-backup bond, no private
+mirrors) keeps VM overhead low while still exercising the full GitOps
+pipeline.

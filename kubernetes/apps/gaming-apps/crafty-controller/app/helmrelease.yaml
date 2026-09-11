@@ -14,6 +14,8 @@ spec:
   # check init password: kubectl -n gaming-apps exec crafty-controller-xxxx -- cat /crafty/app/config/default-creds.txt
 
   values:
+    defaultPodOptions:
+      automountServiceAccountToken: false
     controllers:
       *name :
         annotations:
