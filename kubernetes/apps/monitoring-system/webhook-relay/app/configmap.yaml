@@ -37,6 +37,5 @@ data:
       authentik:
         target:
           - feishu
-          - pushover
         title: '[authentik:{{ .payload.severity | toUpper }}]'
         message: '{{ .payload.body }}'
