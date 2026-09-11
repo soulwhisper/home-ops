@@ -63,7 +63,7 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
 | `automountServiceAccountToken: false` | All app-template workloads except `heartbeats`, `homepage`. Audited live: no other app SA holds RoleBindings; `netbox` (official chart, untouched by the sweep) keeps its token for `netbox_prometheus_sd` |
 | `enableServiceLinks: false` | app-template v5 chart default — no action needed |
 | Pod Security Admission | **privileged cluster-wide — open decision, see below** |
-| seccomp | not explicitly set on most workloads — open sweep |
+| seccomp | **RuntimeDefault globally** — Talos kubelet default (`defaultRuntimeSeccompEnabled: true`, verified: unannotated pods run with an active filter). Only cilium-agent runs Unconfined (deliberate: needs bpf/mount) |
 
 ## Conflicts & removals record
 
@@ -91,8 +91,10 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
    `restricted` per-namespace where compatible, plus explicit exemptions for
    the four apps above. Check: `infrastructure/talos/prod/10-general.yaml`
    (`KubeAdmissionControlConfig`).
-2. **seccomp sweep** — set `seccompProfile: RuntimeDefault` explicitly
-   (containerd does not guarantee it without `SeccompDefault`).
+2. **seccomp drift pin** — RuntimeDefault comes from a Talos *default*, not
+   from git. Pin `machine.kubelet.defaultRuntimeSeccompEnabled: true`
+   explicitly in `infrastructure/talos/prod/10-general.yaml` so a future
+   Talos default flip can't silently widen the syscall surface.
 3. **CNP coverage** — scoped to AI workloads (LLM-gateway callers and agent
    pipelines); current set complete. Do not extend to traditional apps
    (searxng, qbittorrent, media) — policy churn without threat-model value.
