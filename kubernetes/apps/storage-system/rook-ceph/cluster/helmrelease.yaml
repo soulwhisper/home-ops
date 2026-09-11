@@ -20,6 +20,23 @@ spec:
     toolbox:
       enabled: false
     cephClusterSpec:
+      # Rotate cephx keys (Tentacle AUTH_INSECURE_CLIENT_KEY_TYPE warning:
+      # CSI keys use the old cipher). CSI stays aes because node kernels
+      # (6.18) don't support aes256k mounts yet.
+      security:
+        cephx:
+          daemon:
+            keyRotationPolicy: KeyGeneration
+            keyGeneration: 2
+          csi:
+            keyRotationPolicy: KeyGeneration
+            keyGeneration: 2
+            keepPriorKeyCountMax: 1
+            keyType: aes
+          rbdMirrorPeer:
+            keyRotationPolicy: KeyGeneration
+            keyGeneration: 2
+            keyType: aes
       cephConfig:
         global:
           bdev_enable_discard: "true"
