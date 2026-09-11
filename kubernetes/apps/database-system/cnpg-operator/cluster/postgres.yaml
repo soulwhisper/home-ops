@@ -6,8 +6,8 @@ metadata:
   name: postgres
 spec:
   instances: 3
-  # cloudnative-vectorchord:18 lacks vchord_bm25 (bm25 image tops out at pg17)
-  imageName: ghcr.io/tensorchord/cloudnative-vectorchord-bm25:17.11
+  # note: cloudnative-vectorchord-bm25 (pg17-only) is not publicly pullable (ghcr 403)
+  imageName: ghcr.io/tensorchord/cloudnative-vectorchord:18
   primaryUpdateStrategy: unsupervised
   primaryUpdateMethod: switchover
   plugins:
@@ -25,7 +25,6 @@ spec:
   postgresql:
     shared_preload_libraries:
       - vchord
-      - vchord_bm25
     parameters:
       effective_io_concurrency: "200"
       max_connections: "400"
