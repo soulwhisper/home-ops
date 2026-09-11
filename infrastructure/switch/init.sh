@@ -122,7 +122,6 @@ bgp 65000
  peer 10.10.0.103 group k8s
  address-family ipv4
   peer k8s enable
-  import-route direct
 
 # LACP to K8S
 interface bridge-aggregation 10
