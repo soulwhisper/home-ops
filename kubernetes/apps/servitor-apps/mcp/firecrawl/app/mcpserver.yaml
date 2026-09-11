@@ -8,6 +8,18 @@ spec:
   groupRef:
     name: external
   image: ghcr.io/firecrawl/firecrawl-mcp-server:latest
+  podTemplateSpec:
+    spec:
+      volumes:
+        # toolhive runs the pod with a read-only rootfs; the entrypoint renders
+        # /tmp/nginx.conf at boot and fails without a writable scratch dir
+        - name: tmp
+          emptyDir: {}
+      containers:
+        - name: mcp
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
   env:
     - name: PORT
       value: "3000"

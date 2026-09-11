@@ -34,6 +34,9 @@ spec:
             env:
               RUN_MIGRATIONS: "true"
               DISABLE_LOCAL_AUTH: "true"
+              # behind authentik forward-auth (blueprint forward/miniflux.yaml)
+              AUTH_PROXY_HEADER: X-authentik-username
+              AUTH_PROXY_USER_CREATION: "true"
               DATABASE_URL:
                 valueFrom:
                   secretKeyRef:

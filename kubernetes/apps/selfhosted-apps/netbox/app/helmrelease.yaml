@@ -108,7 +108,8 @@ spec:
         type: Recreate
     # below is the reason using official chart
     image:
-      repository: ghcr.io/soulwhisper/netbox
+      # chart prepends image.registry (default ghcr.io) — keep repository registry-less
+      repository: soulwhisper/netbox
       tag: 4.7.0
     plugins:
       - netbox_attachments

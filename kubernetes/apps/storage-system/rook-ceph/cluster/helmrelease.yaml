@@ -190,6 +190,7 @@ spec:
                 memory: 1Gi
             instances: 1
         storageClass:
+          enabled: true
           name: ceph-bucket
         ingress:
           enabled: false

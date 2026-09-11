@@ -39,9 +39,12 @@ spec:
               - resourceName: memory
                 restartPolicy: NotRequired
             securityContext:
-              allowPrivilegeEscalation: false
-              # entrypoint chowns /tmp/stirling-pdf and su-execs to the app user
-              capabilities: { drop: ["ALL"], add: ["CHOWN", "SETUID", "SETGID"] }
+              # fat-image entrypoint runs as root and chmods/chowns dirs it does
+              # not own (FOWNER/DAC_OVERRIDE), then su-execs to the app user
+              # (SETUID/SETGID) — no_new_privs breaks the su-exec chain, so
+              # privesc must stay allowed
+              allowPrivilegeEscalation: true
+              capabilities: { drop: ["ALL"], add: ["CHOWN", "FOWNER", "DAC_OVERRIDE", "SETUID", "SETGID"] }
               # entrypoint symlinks into /usr/local/bin -> rootfs must be writable
               readOnlyRootFilesystem: false
 

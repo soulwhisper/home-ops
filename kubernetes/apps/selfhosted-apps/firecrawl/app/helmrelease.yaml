@@ -14,7 +14,8 @@ spec:
   values:
     defaultPodOptions:
       terminationGracePeriodSeconds: 180
-      runtimeClassName: kata
+      # kata removed: kata shim cannot handle cilium netkit datapath devices
+      # (kata-containers/kata-containers#12159) — pods fail sandbox creation
     controllers:
       # --- HTTP API ----------------------------------------------------
       firecrawl-api:

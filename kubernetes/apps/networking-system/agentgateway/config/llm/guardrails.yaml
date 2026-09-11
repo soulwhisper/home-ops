@@ -134,7 +134,8 @@ spec:
             response:
               message: "Response blocked: remote code execution or reverse shell pattern detected."
               statusCode: 403
-          # 3. reject cluster and container plane destructive actions
+          # 3. reject cluster, container plane, and database destructive actions
+          # (merged: CRD caps promptGuard.response at 8 rules)
           - regex:
               action: Reject
               matches:
@@ -147,13 +148,6 @@ spec:
                 - "(?i)\\bcrictl\\s+(rmp|rm|rmi|stop)"
                 - "(?i)\\bceph\\s+(osd\\s+(out|down|destroy|purge|rm)|mon\\s+(remove|rm)|fs\\s+(rm|reset)|pool\\s+(delete|rm))"
                 - "(?i)\\bargocd\\s+(app\\s+delete|cluster\\s+rm|repo\\s+rm)"
-            response:
-              message: "Response blocked: destructive cluster or container plane command detected."
-              statusCode: 403
-          # 4. reject database and storage destructive actions
-          - regex:
-              action: Reject
-              matches:
                 - "(?i)\\bdrop\\s+(database|schema|table|index|user|role)\\s+"
                 - "(?i)\\btruncate\\s+(table\\s+)?[a-z_][a-z0-9_]*"
                 - "(?i)\\bdelete\\s+from\\s+[a-z_][a-z0-9_.]*\\s*(;|--|\\bwhere\\s+(1\\s*=\\s*1|true)\\b|$)"
@@ -163,9 +157,9 @@ spec:
                 - "(?i)\\baws\\s+s3(api)?\\s+(rb|delete-bucket|delete-objects).*?--force"
                 - "(?i)\\brados\\s+(rmpool|purge)"
             response:
-              message: "Response blocked: destructive database or storage command detected."
+              message: "Response blocked: destructive cluster, container, or database command detected."
               statusCode: 403
-          # 5. reject credential and sensitive path access
+          # 4. reject credential and sensitive path access
           - regex:
               action: Reject
               matches:
@@ -179,7 +173,7 @@ spec:
             response:
               message: "Response blocked: attempted access to credential stores or sensitive paths."
               statusCode: 403
-          # 6. reject data exfiltration patterns
+          # 5. reject data exfiltration patterns
           - regex:
               action: Reject
               matches:
@@ -197,33 +191,7 @@ spec:
             response:
               message: "Response blocked: data exfiltration pattern detected in tool arguments."
               statusCode: 403
-          # 7. reject persistence and privilege escalation
-          - regex:
-              action: Reject
-              matches:
-                - "(?i)\\becho\\s+.*?>>?\\s*(~/\\.|/root/\\.|/home/[^/]+/\\.)?(bashrc|zshrc|profile|bash_profile|zprofile|bash_logout)"
-                - "(?i)\\becho\\s+.*?>>?\\s*~/\\.ssh/authorized_keys"
-                - "(?i)\\b(crontab\\s+-e|crontab\\s+-l|systemctl\\s+enable|systemctl\\s+--user\\s+enable)"
-                - "(?i)>\\s*/etc/cron\\.(d|daily|hourly|weekly|monthly)/"
-                - "(?i)>\\s*/etc/systemd/system/.*\\.service"
-                - "(?i)\\bsetcap\\s+.*?\\s+/"
-                - "(?i)\\b(useradd|adduser|usermod\\s+.*?-aG\\s+(sudo|wheel|docker|root))"
-            response:
-              message: "Response blocked: persistence or privilege escalation pattern detected."
-              statusCode: 403
-          # 8. reject malicious agent self-modification
-          - regex:
-              action: Reject
-              matches:
-                - "(?i)>\\s*.*?\\.hermes/skills/.*?\\.(md|py|js|sh)"
-                - "(?i)\\b(echo|cat|tee|printf)\\s+.*?>\\s*.*?(SOUL|AGENTS|TOOLS|IDENTITY|HEARTBEAT)\\.md"
-                - "(?i)\\b(curl|wget|git\\s+clone)\\s+.*?\\s+.*?\\.hermes/skills/"
-                - "(?i)\\bpip\\s+install\\s+[^\\n]*?(--index-url|--extra-index-url|-i)\\s+http"
-                - "(?i)\\bnpm\\s+install\\s+[^\\n]*?(--registry|--reg)\\s+http"
-            response:
-              message: "Response blocked: attempted agent self-modification or untrusted package source."
-              statusCode: 403
-          # 9. reject classic SQL injection / SSRF / SSTI patterns reaching tools
+          # 6. reject classic SQL injection / SSRF / SSTI patterns reaching tools
           - regex:
               action: Reject
               matches:
@@ -236,18 +204,34 @@ spec:
             response:
               message: "Response blocked: injection or SSRF pattern targeting internal services detected."
               statusCode: 403
-          # 10. mask PII leaking back from model
+          # 7. reject persistence, privilege escalation, and agent self-modification
+          # (merged: CRD caps promptGuard.response at 8 rules)
+          - regex:
+              action: Reject
+              matches:
+                - "(?i)\\becho\\s+.*?>>?\\s*(~/\\.|/root/\\.|/home/[^/]+/\\.)?(bashrc|zshrc|profile|bash_profile|zprofile|bash_logout)"
+                - "(?i)\\becho\\s+.*?>>?\\s*~/\\.ssh/authorized_keys"
+                - "(?i)\\b(crontab\\s+-e|crontab\\s+-l|systemctl\\s+enable|systemctl\\s+--user\\s+enable)"
+                - "(?i)>\\s*/etc/cron\\.(d|daily|hourly|weekly|monthly)/"
+                - "(?i)>\\s*/etc/systemd/system/.*\\.service"
+                - "(?i)\\bsetcap\\s+.*?\\s+/"
+                - "(?i)\\b(useradd|adduser|usermod\\s+.*?-aG\\s+(sudo|wheel|docker|root))"
+                - "(?i)>\\s*.*?\\.hermes/skills/.*?\\.(md|py|js|sh)"
+                - "(?i)\\b(echo|cat|tee|printf)\\s+.*?>\\s*.*?(SOUL|AGENTS|TOOLS|IDENTITY|HEARTBEAT)\\.md"
+                - "(?i)\\b(curl|wget|git\\s+clone)\\s+.*?\\s+.*?\\.hermes/skills/"
+                - "(?i)\\bpip\\s+install\\s+[^\\n]*?(--index-url|--extra-index-url|-i)\\s+http"
+                - "(?i)\\bnpm\\s+install\\s+[^\\n]*?(--registry|--reg)\\s+http"
+            response:
+              message: "Response blocked: persistence, privilege escalation, or agent self-modification pattern detected."
+              statusCode: 403
+          # 8. mask PII and secrets leaking back from model
+          # (merged: CRD caps promptGuard.response at 8 rules)
           - regex:
               action: Mask
               builtins:
                 - Ssn
                 - CreditCard
                 - Email
-            response:
-              message: "Response filtered: PII redacted from model output."
-          # 11. mask secrets leaking back from model
-          - regex:
-              action: Mask
               matches:
                 - "\\bAKIA[0-9A-Z]{16}\\b"
                 - "\\bASIA[0-9A-Z]{16}\\b"
@@ -263,4 +247,4 @@ spec:
                 - "(?i)(mongodb|mongodb\\+srv|postgres|postgresql|mysql|redis|amqp|amqps)://[^\\s\"'<>]{10,}"
                 - "\\b1[3-9]\\d{9}\\b" # chinese telephone
             response:
-              message: "Response filtered: credentials redacted from model output."
+              message: "Response filtered: PII or credentials redacted from model output."

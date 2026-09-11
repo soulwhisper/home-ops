@@ -35,10 +35,10 @@ spec:
               - -c
               - |
                 wget -O /tmp/hacs.zip \
-                  "https://github.com/hacs/integration/releases/download/${HACS_VERSION}/hacs.zip"
+                  "https://github.com/hacs/integration/releases/download/$${HACS_VERSION}/hacs.zip"
                 mkdir -p /config/custom_components/hacs
                 unzip -o /tmp/hacs.zip -d /config/custom_components/hacs
-                echo "HACS ${HACS_VERSION} installed."
+                echo "HACS $${HACS_VERSION} installed."
         containers:
           app:
             image:
