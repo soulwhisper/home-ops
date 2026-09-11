@@ -5,9 +5,8 @@ kind: Cluster
 metadata:
   name: postgres
 spec:
-  instances: 3
-  # note: cloudnative-vectorchord-bm25 (pg17-only) is not publicly pullable (ghcr 403)
-  imageName: ghcr.io/tensorchord/cloudnative-vectorchord:18
+  # ghcr.io/soulwhisper/postgresql — custom suite (vchord + vchord_bm25 + pg_tokenizer + pgroonga + cnpg baseline)
+  imageName: ghcr.io/soulwhisper/postgresql:18.6
   primaryUpdateStrategy: unsupervised
   primaryUpdateMethod: switchover
   plugins:
@@ -25,6 +24,7 @@ spec:
   postgresql:
     shared_preload_libraries:
       - vchord
+      - pgroonga
     parameters:
       effective_io_concurrency: "200"
       max_connections: "400"
