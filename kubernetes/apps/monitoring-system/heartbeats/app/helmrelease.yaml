@@ -157,6 +157,7 @@ spec:
 
     defaultPodOptions:
       automountServiceAccountToken: true
+      hostUsers: false
     rbac:
       roles:
         heartbeats:
