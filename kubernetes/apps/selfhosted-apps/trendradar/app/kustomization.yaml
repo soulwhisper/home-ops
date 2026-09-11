@@ -10,3 +10,4 @@ resources:
   - ./externalsecret.yaml
   - ./httproute.yaml
   - ./trafficpolicy.yaml
+  - ./ciliumnetworkpolicy.yaml
