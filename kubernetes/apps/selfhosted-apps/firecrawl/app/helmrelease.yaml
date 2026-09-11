@@ -14,6 +14,7 @@ spec:
   values:
     defaultPodOptions:
       terminationGracePeriodSeconds: 180
+      hostUsers: false
     controllers:
       # --- HTTP API ----------------------------------------------------
       firecrawl-api:

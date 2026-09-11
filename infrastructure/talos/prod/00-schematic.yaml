@@ -19,6 +19,7 @@ customization:
     officialExtensions:
       - siderolabs/i915
       - siderolabs/intel-ucode
-      - siderolabs/kata-containers
+      # kata-containers removed: incompatible with cilium netkit (kata-containers#12159);
+      # sandboxing moved to user namespaces. Applies at next node image upgrade.
       - siderolabs/mei
       - siderolabs/nut-client
