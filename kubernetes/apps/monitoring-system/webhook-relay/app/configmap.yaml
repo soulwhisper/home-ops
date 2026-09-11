@@ -33,3 +33,10 @@ data:
           # pushover reads priority/sound; feishu ignores unknown query keys
           priority: '{{ ternary "1" "0" (eq .payload.status "firing") }}'
           sound: gamelan
+      # authentik system notifications (blueprints/core/notifications.yaml)
+      authentik:
+        target:
+          - feishu
+          - pushover
+        title: '[authentik:{{ .payload.severity | toUpper }}]'
+        message: '{{ .payload.body }}'
