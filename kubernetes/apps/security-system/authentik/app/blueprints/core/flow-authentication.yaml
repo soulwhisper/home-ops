@@ -129,7 +129,7 @@ entries:
   # Policy binding: gate MFA validate stage on homelab-admin membership.
   # Policy returning False causes the stage to be skipped for that user.
   # ---------------------------------------------------------------------------
-  - model: authentik_policies_binding.policybinding
+  - model: authentik_policies.policybinding
     identifiers:
       target: !KeyOf fsb-mfa-validate
       policy: !KeyOf policy-mfa-admin

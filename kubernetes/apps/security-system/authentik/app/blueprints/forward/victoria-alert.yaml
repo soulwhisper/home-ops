@@ -3,9 +3,9 @@
 version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
-    id: victoria-logs-proxy-provider
+    id: victoria-alert-proxy-provider
     identifiers:
-      name: &provider victoria-logs-proxy-provider
+      name: &provider victoria-alert-proxy-provider
     attrs:
       name: *provider
       authorization_flow:
@@ -19,22 +19,22 @@ entries:
           [slug, default-invalidation-flow],
         ]
       mode: forward_domain
-      external_host: &domain "https://logs.noirprime.com"
+      external_host: &domain "https://alert.noirprime.com"
       access_token_validity: "hours=12"
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
-    id: victoria-logs
+    id: victoria-alert
     identifiers:
-      slug: &name victoria-logs
+      slug: &name victoria-alert
     attrs:
       name: *name
-      provider: !KeyOf victoria-logs-proxy-provider
+      provider: !KeyOf victoria-alert-proxy-provider
       meta_launch_url: *domain
       group: "Observability"
       policy_engine_mode: all
   - model: authentik_policies.policybinding
     identifiers:
-      target: !KeyOf victoria-logs
+      target: !KeyOf victoria-alert
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }

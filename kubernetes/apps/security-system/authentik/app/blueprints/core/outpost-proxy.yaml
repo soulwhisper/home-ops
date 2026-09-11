@@ -2,13 +2,36 @@
 # yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
 version: 1
 entries:
+  # Bind every forward-auth proxy provider to the *managed* embedded outpost
+  # (the one that actually serves /outpost.goauthentik.io). Replaces the full
+  # provider list on each apply; keep in sync with blueprints/forward/*.
+  # `!Find` resolves against the live DB, so on a fresh install this blueprint
+  # fails until the forward blueprints have created the providers; discovery
+  # retries it automatically (failed blueprints keep a stale last_applied_hash).
   - model: authentik_outposts.outpost
     identifiers:
-      name: &name authentik-embedded-outpost
+      name: authentik Embedded Outpost
     attrs:
-      name: *name
-      type: proxy
+      # embedded outpost builds login redirects from this; empty -> localhost
       config:
         authentik_host: "https://auth.noirprime.com"
         authentik_host_insecure: false
-        cookie_domain: "noirprime.com"
+      providers:
+        - !Find [authentik_providers_proxy.proxyprovider, [name, agentgateway-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, bambuddy-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, frigate-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, frigate-go2rtc-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, hermes-agent-dashboard-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, hindsight-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, homepage-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, hubble-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, metube-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, onyx-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, scrypted-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, sillytavern-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, trendradar-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, victoria-logs-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, victoria-metrics-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, victoria-alert-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, victoria-traces-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, z2m-proxy-provider]]

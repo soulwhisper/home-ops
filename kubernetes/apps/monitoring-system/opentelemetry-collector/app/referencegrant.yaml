@@ -1,0 +1,16 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/referencegrant_v1beta1.json
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: kgateway-otel-tracing
+spec:
+  # kgateway default-listener-policy (networking-system) ships OTel traces here
+  from:
+    - group: gateway.kgateway.dev
+      kind: ListenerPolicy
+      namespace: networking-system
+  to:
+    - group: ""
+      kind: Service
+      name: opentelemetry-collector
