@@ -11,9 +11,6 @@ data:
   ENV: "production"
   LOGGING_LEVEL: "INFO"
   IS_KUBERNETES: "true"
-  # Database
-  REDIS_URL: "redis://firecrawl-database-dragonfly.selfhosted-apps.svc.cluster.local:6379"
-  REDIS_RATE_LIMIT_URL: "redis://firecrawl-database-dragonfly.selfhosted-apps.svc.cluster.local:6379"
   # Service
   PLAYWRIGHT_MICROSERVICE_URL: "http://firecrawl-playwright.selfhosted-apps.svc.cluster.local:3000"
   MAX_CONCURRENT_JOBS: "2"

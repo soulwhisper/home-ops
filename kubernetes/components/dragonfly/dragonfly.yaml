@@ -3,9 +3,13 @@
 apiVersion: dragonflydb.io/v1alpha1
 kind: Dragonfly
 metadata:
-  name: ${APP}-dragonfly
+  name: "${APP}-dragonfly"
 spec:
   replicas: 1
+  authentication:
+    passwordFromSecret:
+      name: "${APP}-dragonfly"
+      key: password
   image: ghcr.io/dragonflydb/dragonfly:v1.40.2
   args:
     - --maxmemory=$(MAX_MEMORY)Mi

@@ -30,7 +30,12 @@ spec:
               CACHE_TYPE: "redis"
               CACHE_EXPIRE: "300"
               CACHE_CONTENT_EXPIRE: "3600"
-              REDIS_URL: "redis://rsshub-dragonfly.selfhosted-apps.svc.cluster.local:6379/0"
+              REDIS_URL: "redis://:$(REDIS_PASSWORD)@rsshub-dragonfly.selfhosted-apps.svc.cluster.local:6379/0"
+              REDIS_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: rsshub-dragonfly
+                    key: password
             probes:
               liveness: &probes
                 enabled: true

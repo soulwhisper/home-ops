@@ -13,10 +13,8 @@
 | Jellyfin             |   Authentik   | Install `jellyfin-plugin-sso` first, then web UI config               |
 | Karakeep             |   Authentik   | SSO-protected                                                         |
 | Kavita               |   Authentik   | Configure via Admin Settings                                          |
-| Miniflux             |   Authentik   | SSO-protected                                                         |
 | NetBox               |   Authentik   | SSO-protected                                                         |
 | Qbittorrent-UI (QUI) |   Authentik   | SSO-protected web UI                                                  |
-| RSSHub               |   Authentik   | SSO-protected                                                         |
 | Stirling-PDF         |   Authentik   | SSO-protected                                                         |
 
 New OIDC apps are added by creating a Blueprint Secret (`authentik-blueprints-oidc-<name>`) and referencing it in the Authentik HelmRelease.

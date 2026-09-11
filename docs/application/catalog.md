@@ -20,11 +20,11 @@
 
 ## gitops-system — GitOps Engine (3)
 
-| App                       | Purpose                               |
-| ------------------------- | ------------------------------------- |
-| Flux Operator             | Flux Instance lifecycle management    |
-| Flux Instance             | GitOps controller                     |
-| System Upgrade Controller | Talos/K8s version upgrades (tuppr)    |
+| App                       | Purpose                            |
+| ------------------------- | ---------------------------------- |
+| Flux Operator             | Flux Instance lifecycle management |
+| Flux Instance             | GitOps controller                  |
+| System Upgrade Controller | Talos/K8s version upgrades (tuppr) |
 
 ## security-system — Security (4)
 
@@ -37,11 +37,11 @@
 
 ## networking-system — Network Services (3)
 
-| App           | Purpose                                                      |
-| ------------- | ------------------------------------------------------------ |
-| Kgateway      | Envoy Gateway API (internal + external)                      |
-| Agent Gateway | AI LLM routing (complex/omni/micro) + MCP gateway    |
-| External DNS  | AdGuardHome DNS automation                                   |
+| App           | Purpose                                           |
+| ------------- | ------------------------------------------------- |
+| Kgateway      | Envoy Gateway API (internal + external)           |
+| Agent Gateway | AI LLM routing (complex/omni/micro) + MCP gateway |
+| External DNS  | AdGuardHome DNS automation                        |
 
 ## storage-system — Storage (5)
 
@@ -55,11 +55,11 @@
 
 ## database-system — Database Operators (3)
 
-| App                 | Purpose                                      |
-| ------------------- | -------------------------------------------- |
-| CloudNativePG       | PostgreSQL operator (PGVector, Barman)       |
-| Dragonfly Operator  | Redis-compatible cache operator              |
-| ClickHouse Operator | Analytical database operator (Langfuse)      |
+| App                 | Purpose                                 |
+| ------------------- | --------------------------------------- |
+| CloudNativePG       | PostgreSQL operator (PGVector, Barman)  |
+| Dragonfly Operator  | Redis-compatible cache operator         |
+| ClickHouse Operator | Analytical database operator (Langfuse) |
 
 ## monitoring-system — Observability (14)
 
@@ -82,16 +82,16 @@
 
 ## smarthome-apps — Smart Home (8)
 
-| App                 | Purpose                        |
-| ------------------- | ------------------------------ |
-| Home Assistant      | Home automation hub (OIDC, HACS) |
-| Home Assistant SGCC | State Grid power integration   |
-| Mosquitto           | MQTT broker (LoadBalancer IP)  |
-| Zigbee2MQTT         | Zigbee → MQTT bridge           |
-| Frigate             | AI NVR (Coral TPU)             |
+| App                 | Purpose                               |
+| ------------------- | ------------------------------------- |
+| Home Assistant      | Home automation hub (OIDC, HACS)      |
+| Home Assistant SGCC | State Grid power integration          |
+| Mosquitto           | MQTT broker (LoadBalancer IP)         |
+| Zigbee2MQTT         | Zigbee → MQTT bridge                  |
+| Frigate             | AI NVR (Coral TPU)                    |
 | Frigate Vision      | Event → omni VLM → HA + hermes alerts |
-| Scrypted            | Video streaming (iGPU QSV)     |
-| Smarthome-NFS       | Shared NFS storage (500Gi)     |
+| Scrypted            | Video streaming (iGPU QSV)            |
+| Smarthome-NFS       | Shared NFS storage (500Gi)            |
 
 ## media-apps — Media (9)
 
@@ -109,30 +109,28 @@
 
 ## selfhosted-apps — Self-Hosted Services (14)
 
-| App            | Purpose                                                      |
-| -------------- | ------------------------------------------------------------ |
-| Stirling-PDF   | PDF toolkit (50+ operations)                                 |
-| TrendRadar     | AI news digest (RSS watch list, CronJob, omni lane)    |
-| NetBox         | DCIM/IPAM (9 plugins, CNPG + Dragonfly)                      |
-| Miniflux       | RSS reader (CNPG, OIDC)                                      |
-| RSSHub         | RSS feed generator (Dragonfly, OIDC)                         |
-| SearXNG        | Privacy meta-search (Dragonfly, bot detection)               |
-| Homepage       | App dashboard                                                |
-| Karakeep       | Bookmark manager (Kata VM, Chrome + Meilisearch, omni lane) |
-| Hindsight      | AI memory (slim image; LLM + embeddings + rerank on MacStudio) |
-| Open-Notebook  | AI research notebook (SurrealDB)                             |
-| Firecrawl      | Web scraping pipeline (Kata, 3 containers, MCP)              |
-| SillyTavern    | AI character chat (AgentGateway)                             |
-| Bambuddy       | 3D printer monitor (Bambu Lab)                               |
-| Dispatcharr    | IPTV dispatch (iGPU transcode)                               |
+| App           | Purpose                                                        |
+| ------------- | -------------------------------------------------------------- |
+| Stirling-PDF  | PDF toolkit (50+ operations)                                   |
+| TrendRadar    | AI news digest (RSS watch list, CronJob, omni lane)            |
+| NetBox        | DCIM/IPAM (9 plugins, CNPG + Dragonfly)                        |
+| SearXNG       | Privacy meta-search (Dragonfly, bot detection)                 |
+| Homepage      | App dashboard                                                  |
+| Karakeep      | Bookmark manager (Kata VM, Chrome + Meilisearch, omni lane)    |
+| Hindsight     | AI memory (slim image; LLM + embeddings + rerank on MacStudio) |
+| Open-Notebook | AI research notebook (SurrealDB)                               |
+| Firecrawl     | Web scraping pipeline (Kata, 3 containers, MCP)                |
+| SillyTavern   | AI character chat (AgentGateway)                               |
+| Bambuddy      | 3D printer monitor (Bambu Lab)                                 |
+| Dispatcharr   | IPTV dispatch (iGPU transcode)                                 |
 
 ## servitor-apps — AI Infrastructure (4 + 11 MCP servers)
 
-| App          | Purpose                                                                 |
-| ------------ | ----------------------------------------------------------------------- |
-| Hermes Agent | AI agent suite (Kata VM, Feishu, cron/automation)                       |
-| ToolHive     | MCP gateway (3 VirtualMCP tiers, semantic search)                       |
-| Onyx         | Enterprise chat + RAG (CNPG + Dragonfly + Ceph S3 + OpenSearch)         |
+| App          | Purpose                                                                                        |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| Hermes Agent | AI agent suite (Kata VM, Feishu, cron/automation)                                              |
+| ToolHive     | MCP gateway (3 VirtualMCP tiers, semantic search)                                              |
+| Onyx         | Enterprise chat + RAG (CNPG + Dragonfly + Ceph S3 + OpenSearch)                                |
 | MCP Servers  | kubernetes/HA/hindsight/honcho/github/firecrawl/grafana/flux/vlogs/obsidian/forgejo/trendradar |
 
 ## gaming-apps — Gaming (3)

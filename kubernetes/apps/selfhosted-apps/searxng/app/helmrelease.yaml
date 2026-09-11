@@ -26,11 +26,16 @@ spec:
           app:
             image:
               repository: ghcr.io/searxng/searxng
-              tag: 2026.8.1-8892414dc
+              tag: 2026.9.11-ffe96f8a6
             env:
               SEARXNG_PORT: &port 8080
               SEARXNG_BASE_URL: https://search.noirprime.com
-              SEARXNG_VALKEY_URL: "redis://searxng-dragonfly.selfhosted-apps.svc.cluster.local:6379"
+              SEARXNG_VALKEY_URL: "redis://:$(SEARXNG_VALKEY_PASSWORD)@searxng-dragonfly.selfhosted-apps.svc.cluster.local:6379"
+              SEARXNG_VALKEY_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: searxng-dragonfly
+                    key: password
             envFrom:
               - secretRef:
                   name: *name

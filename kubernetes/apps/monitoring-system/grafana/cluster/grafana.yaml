@@ -77,7 +77,7 @@ spec:
               image: ghcr.io/home-operations/postgres-init:18
               envFrom:
                 - secretRef:
-                    name: grafana-initdb
+                    name: grafana-pguser
           containers:
             - name: grafana
               env:

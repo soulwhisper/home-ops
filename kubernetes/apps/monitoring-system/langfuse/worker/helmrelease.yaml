@@ -25,13 +25,18 @@ spec:
               tag: "18"
             envFrom:
               - secretRef:
-                  name: langfuse-initdb
+                  name: langfuse-pguser
         containers:
           app:
             image:
               repository: ghcr.io/langfuse/langfuse-worker
               tag: 4.33.0
             env:
+              REDIS_AUTH:
+                valueFrom:
+                  secretKeyRef:
+                    name: langfuse-dragonfly
+                    key: password
               DATABASE_URL:
                 valueFrom:
                   secretKeyRef:

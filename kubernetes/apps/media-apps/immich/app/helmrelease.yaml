@@ -32,7 +32,7 @@ spec:
               tag: "18"
             envFrom:
               - secretRef:
-                  name: immich-initdb
+                  name: immich-pguser
         containers:
           app:
             image:
@@ -64,6 +64,11 @@ spec:
                   secretKeyRef:
                     name: *pguser
                     key: port
+              REDIS_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-dragonfly
+                    key: password
             envFrom: &envFrom
               - configMapRef:
                   name: *name

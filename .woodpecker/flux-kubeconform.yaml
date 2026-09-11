@@ -1,19 +1,5 @@
 ---
 # Woodpecker port of .github/workflows/flux-checks.yaml (job: kubeconform).
-# Kept alongside the GitHub workflow for the forgejo+woodpecker migration.
-# Extends the kubeconform hook in .pre-commit-config.yaml (-strict, custom
-# soulwhisper/k8s-schemas) with exclusions for file categories that are
-# structurally un-validatable in this repo (verified failing on main):
-# - **/ks.yaml: flux Kustomizations rely on cluster.yaml global patches for
-#   interval/prune/sourceRef, so the strict schema always rejects them;
-#   they are validated by the flate test workflow instead
-# - authentik blueprints: custom !Find/!KeyOf YAML tags break YAML->JSON
-# - kopiur Repository/SnapshotPolicy/SnapshotSchedule/Restore: schemas exist
-#   in the registry, but the component manifests are ${VAR}-templated by
-#   flux postBuild, so strict validation cannot run on them
-# - kustomize kustomization.yaml: no published schema exists
-# - bootstrap/*.yaml: helmfile configs (default.yaml base),
-#   not Kubernetes manifests
 # Runner image: ghcr.io/soulwhisper/woodpecker-runner has kubeconform baked.
 when:
   - event: pull_request
@@ -29,11 +15,9 @@ steps:
         FILES=$(git diff --name-only "FETCH_HEAD...HEAD" \
           | grep --extended-regexp '\.ya?ml$' \
           | grep --invert-match --regexp='_sources/' \
-          | grep --invert-match --regexp='/dragonfly.yaml$' \
-          | grep --invert-match --regexp='/ks\.yaml$' \
-          | grep --invert-match --regexp='/helmfile\.yaml$' \
-          | grep --invert-match --regexp='bootstrap/[^/]*\.yaml$' \
-          | grep --invert-match --regexp='bootstrap/templates/' \
+          | grep --invert-match --regexp='ks\.yaml$' \
+          | grep --invert-match --regexp='kubernetes/bootstrap/' \
+          | grep --invert-match --regexp='kubernetes/components/' \
           | grep --invert-match --regexp='authentik/app/blueprints/' || true)
         MANIFESTS=""
         for FILE in ${FILES}; do

@@ -16,7 +16,7 @@ spec:
           image: ghcr.io/home-operations/postgres-init:18
           envFrom:
             - secretRef:
-                name: onyx-initdb
+                name: onyx-pguser
           securityContext:
             allowPrivilegeEscalation: false
             capabilities: { drop: ["ALL"] }

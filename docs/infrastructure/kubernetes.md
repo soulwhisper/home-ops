@@ -211,7 +211,7 @@ Each non-trivial application defines its own `OCIRepository` resource in its `ap
 | ----------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | kube-system       | 11    | cilium, coredns, spegel, frr-k8s, descheduler, reloader, metrics-server, k8tz, gateway-api-crds, intel-device-plugins (operator + GPU)                                                                                                                |
 | security-system   | 4     | authentik, cert-manager, external-secrets, onepassword-connect                                                                                                                                                                                        |
-| storage-system    | 7     | rook-ceph (app + cluster + drivers), kopiur, snapshot-controller, openebs-localpv, csi-driver-nfs                                                                                                                                                              |
+| storage-system    | 7     | rook-ceph (app + cluster + drivers), kopiur, snapshot-controller, openebs-localpv, csi-driver-nfs                                                                                                                                                     |
 | database-system   | 4     | cloudnative-pg, plugin-barman-cloud, dragonfly-operator, clickhouse-operator                                                                                                                                                                          |
 | networking-system | 5     | kgateway (app + CRDs), agentgateway (app + CRDs), externaldns                                                                                                                                                                                         |
 | monitoring-system | 15    | victoria-metrics (operator + cluster + app), victoria-logs (app + collector), victoria-traces, grafana, kube-state-metrics, node-exporter, prometheus-crds, blackbox-exporter, smartctl-exporter, opentelemetry-collector, silence-operator, headlamp |
@@ -250,18 +250,18 @@ spec:
     namespace: gitops-system
 ```
 
-This cross-namespace reference is used by 37 HelmReleases across 8 namespaces:
+This cross-namespace reference is used by 35 HelmReleases across 8 namespaces:
 
-| Namespace                   | Count | Example Apps                                                                                                    |
-| --------------------------- | ----- | --------------------------------------------------------------------------------------------------------------- |
-| media-apps                  | 8     | jellyfin, kavita, navidrome, qbittorrent, immich, moviepilot, metube, qbittorrent-ui                            |
-| selfhosted-apps             | 15    | miniflux, rsshub, searxng, sillytavern, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, fast-note-sync, hindsight, open-notebook (app + database), firecrawl (app + database) |
-| smarthome-apps              | 6     | home-assistant (app + sgcc), frigate, zigbee2mqtt, mosquitto, scrypted                             |
-| servitor-apps               | 1     | hermes-agent                                                                                       |
-| gaming-apps                 | 2     | crafty-controller, foundryvtt                                                                                   |
-| monitoring-system           | 3     | langfuse (app + worker), heartbeats                                                                             |
-| networking-system           | 1     | agentgateway MCP config                                                                                         |
-| database-system             | 1     | cnpg maintenance (dr-test cronjob)                                                                              |
+| Namespace         | Count | Example Apps                                                                                                                                                         |
+| ----------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| media-apps        | 8     | jellyfin, kavita, navidrome, qbittorrent, immich, moviepilot, metube, qbittorrent-ui                                                                                 |
+| selfhosted-apps   | 13    | searxng, sillytavern, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, fast-note-sync, hindsight, open-notebook (app + database), firecrawl (app + database) |
+| smarthome-apps    | 6     | home-assistant (app + sgcc), frigate, zigbee2mqtt, mosquitto, scrypted                                                                                               |
+| servitor-apps     | 1     | hermes-agent                                                                                                                                                         |
+| gaming-apps       | 2     | crafty-controller, foundryvtt                                                                                                                                        |
+| monitoring-system | 3     | langfuse (app + worker), heartbeats                                                                                                                                  |
+| networking-system | 1     | agentgateway MCP config                                                                                                                                              |
+| database-system   | 1     | cnpg maintenance (dr-test cronjob)                                                                                                                                   |
 
 The `flux-repositories` Kustomization is reconciled before `cluster-apps` (via `dependsOn`), ensuring the `app-template` `OCIRepository` is always available before any application HelmRelease references it.
 
@@ -296,14 +296,14 @@ The `name: _` is a Kustomize placeholder — postBuild substitution in each name
 
 The most heavily used component. It provisions a complete backup-and-recovery pipeline for stateful applications:
 
-| Resource           | Purpose                                                                              |
-| ------------------ | ------------------------------------------------------------------------------------ |
+| Resource                | Purpose                                                                                 |
+| ----------------------- | --------------------------------------------------------------------------------------- |
 | `PersistentVolumeClaim` | Creates the application's data PVC (claims the `Restore` populator via `dataSourceRef`) |
-| `ExternalSecret`   | Pulls the kopia repo password and S3 access keys from 1Password into a Secret         |
-| `Repository`       | First-class kopia repository: S3 backend (NAS VersityGW), encryption, maintenance     |
-| `SnapshotPolicy`   | The backup recipe: CSI snapshot copy method, zstd-fastest, keep-daily 14              |
-| `SnapshotSchedule` | Cron invocation of the policy (every 6h, `KOPIUR_SCHEDULE` overridable)               |
-| `Restore`          | Passive volume populator: first boot restores the latest snapshot                     |
+| `ExternalSecret`        | Pulls the kopia repo password and S3 access keys from 1Password into a Secret           |
+| `Repository`            | First-class kopia repository: S3 backend (NAS VersityGW), encryption, maintenance       |
+| `SnapshotPolicy`        | The backup recipe: CSI snapshot copy method, zstd-fastest, keep-daily 14                |
+| `SnapshotSchedule`      | Cron invocation of the policy (every 6h, `KOPIUR_SCHEDULE` overridable)                 |
+| `Restore`               | Passive volume populator: first boot restores the latest snapshot                       |
 
 Applications that need persistent data backed up to S3 include this component. The PVC template is parameterized through `postBuild` substitution with the `APP` variable.
 
@@ -367,16 +367,16 @@ The cluster uses 13 namespaces, ordered by dependency from foundational infrastr
 | --- | ------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | `kube-system`       | Cluster networking and node services | Cilium CNI, CoreDNS, Spegel mirror, FRR-K8s BGP, Intel GPU plugins, Reloader, Descheduler, k8tz, Gateway API CRDs, Metrics Server, Runtime Classes                                                                                         |
 | 2   | `security-system`   | Identity, certificates, secrets      | Authentik SSO, cert-manager, External Secrets Operator, 1Password Connect                                                                                                                                                                  |
-| 3   | `storage-system`    | Persistent storage and backups       | Rook-Ceph (block + object), OpenEBS LocalPV, CSI NFS driver, kopiur, Snapshot Controller                                                                                                                                                  |
+| 3   | `storage-system`    | Persistent storage and backups       | Rook-Ceph (block + object), OpenEBS LocalPV, CSI NFS driver, kopiur, Snapshot Controller                                                                                                                                                   |
 | 4   | `database-system`   | Database operators                   | CloudNativePG, Dragonfly Operator, ClickHouse Operator                                                                                                                                                                                     |
 | 5   | `networking-system` | Ingress, DNS, API gateway            | kgateway (Envoy Gateway), Agent Gateway (AI agent routing), ExternalDNS                                                                                                                                                                    |
 | 6   | `monitoring-system` | Observability                        | Victoria Metrics (operator + cluster), Victoria Logs, Victoria Traces, Grafana, Prometheus CRDs, kube-state-metrics, node-exporter, blackbox-exporter, Smartctl exporter, OTel Collector, Silence Operator, Langfuse, Heartbeats, Headlamp |
-| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, Toolhive, MCP servers                                                                                                                                                                                       |
-| 8   | `smarthome-apps`    | Home automation                      | Home Assistant (app + SGCC), Frigate NVR, Zigbee2MQTT, Mosquitto MQTT, Scrypted                                                                                                                                           |
+| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, Toolhive, MCP servers                                                                                                                                                                                                        |
+| 8   | `smarthome-apps`    | Home automation                      | Home Assistant (app + SGCC), Frigate NVR, Zigbee2MQTT, Mosquitto MQTT, Scrypted                                                                                                                                                            |
 | 9   | `media-apps`        | Media serving and management         | Jellyfin, Kavita, Navidrome, qBittorrent, Immich, MoviePilot, MeTube                                                                                                                                                                       |
 | 10  | `selfhosted-apps`   | Self-hosted web services             | Miniflux, RSSHub, SearXNG, NetBox, Stirling PDF, SillyTavern, Karakeep, Homepage, Hindsight, Dispatcharr, BambuBuddy, Fast Note Sync, Open Notebook, Firecrawl                                                                             |
 | 11  | `gaming-apps`       | Game servers                         | Crafty Controller (Minecraft), Foundry VTT                                                                                                                                                                                                 |
-| 12  | `worker-apps`       | CI/CD and automation                 | Woodpecker CI                                                                                                                                                                                                                      |
+| 12  | `worker-apps`       | CI/CD and automation                 | Woodpecker CI                                                                                                                                                                                                                              |
 | 13  | `gitops-system`     | Flux itself                          | Flux Operator, Flux Instance, System Upgrade Controller                                                                                                                                                                                    |
 
 ### Dependency Order

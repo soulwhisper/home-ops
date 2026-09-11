@@ -25,7 +25,7 @@ spec:
               tag: "18"
             envFrom:
               - secretRef:
-                  name: hindsight-initdb
+                  name: hindsight-pguser
         containers:
           app:
             image:
