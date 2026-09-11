@@ -91,6 +91,10 @@ interface vlan-interface 100
  bfd min-transmit-interval 400
  bfd min-receive-interval 400
  bfd detect-multiplier 5
+ # MetalLB/frr-k8s advertises 10.10.0.128/27 (inside this /24) via BGP;
+ # same-subnet clients ARP for VIPs instead of routing — answer for them
+ proxy-arp enable
+ local-proxy-arp enable
 
 interface vlan-interface 200
  ip address 10.20.0.1 24
@@ -118,7 +122,6 @@ bgp 65000
  peer 10.10.0.103 group k8s
  address-family ipv4
   peer k8s enable
-  import-route direct
 
 # LACP to K8S
 interface bridge-aggregation 10

@@ -29,7 +29,7 @@ spec:
                 password: "{{ .admin_pass }}"
                 is_active: true
                 groups:
-                  - !KeyOf homelab-admin
+                  - !Find [authentik_core.group, [name, homelab-admin]]
             - model: authentik_core.user
               identifiers:
                 username: family
@@ -40,4 +40,4 @@ spec:
                 password: "{{ .family_pass }}"
                 is_active: true
                 groups:
-                  - !KeyOf homelab-internal
+                  - !Find [authentik_core.group, [name, homelab-internal]]

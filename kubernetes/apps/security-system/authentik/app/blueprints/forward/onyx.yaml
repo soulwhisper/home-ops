@@ -3,6 +3,7 @@
 version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
+    id: onyx-proxy-provider
     identifiers:
       name: &provider onyx-proxy-provider
     attrs:
@@ -12,28 +13,28 @@ entries:
           authentik_flows.flow,
           [slug, default-provider-authorization-implicit-consent],
         ]
+      invalidation_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-invalidation-flow],
+        ]
       mode: forward_domain
       external_host: &domain "https://onyx.noirprime.com"
       access_token_validity: "hours=12"
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
+    id: onyx
     identifiers:
       slug: &name onyx
     attrs:
       name: *name
-      provider: !KeyOf *provider
+      provider: !KeyOf onyx-proxy-provider
       meta_launch_url: *domain
       group: "Service"
       policy_engine_mode: all
-  - model: authentik_policies_binding.policybinding
+  - model: authentik_policies.policybinding
     identifiers:
-      target: !KeyOf *name
+      target: !KeyOf onyx
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }
-  - model: authentik_outposts.outpost
-    identifiers:
-      name: authentik-embedded-outpost
-    attrs:
-      providers:
-        - !Append [!KeyOf *provider]

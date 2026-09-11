@@ -37,11 +37,13 @@ configMapGenerator:
       - ./blueprints/core/policy-reputation.yaml
       - ./blueprints/core/scope-groups-mapping.yaml
       - ./blueprints/core/scope-groups.yaml
+      - ./blueprints/core/notifications.yaml
   - name: authentik-blueprints-forward
     files:
       - ./blueprints/forward/agentgateway.yaml
       - ./blueprints/forward/bambuddy.yaml
       - ./blueprints/forward/frigate.yaml
+      - ./blueprints/forward/frigate-go2rtc.yaml
       - ./blueprints/forward/hermes-agent.yaml
       - ./blueprints/forward/hindsight.yaml
       - ./blueprints/forward/homepage.yaml
@@ -53,6 +55,7 @@ configMapGenerator:
       - ./blueprints/forward/sillytavern.yaml
       - ./blueprints/forward/victoria-logs.yaml
       - ./blueprints/forward/victoria-metrics.yaml
+      - ./blueprints/forward/victoria-alert.yaml
       - ./blueprints/forward/victoria-traces.yaml
       - ./blueprints/forward/z2m.yaml
       - ./blueprints/forward/trendradar.yaml

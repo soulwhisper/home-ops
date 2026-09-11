@@ -33,8 +33,9 @@ entries:
         - totp
         - webauthn
       not_configured_action: configure
-      configure_flow:
-        !Find [authentik_flows.flow, [slug, default-authenticator-totp-setup]]
+      # configure_flow removed upstream; 2026.8 requires configuration_stages
+      configuration_stages:
+        - !Find [authentik_stages_authenticator_totp.authenticatortotpstage, [name, default-authenticator-totp-setup]]
       # last_auth_threshold intentionally omitted (ak default = always prompt).
       # Set to e.g. "hours=12" here if re-prompting within a session is disruptive.
 
@@ -129,7 +130,7 @@ entries:
   # Policy binding: gate MFA validate stage on homelab-admin membership.
   # Policy returning False causes the stage to be skipped for that user.
   # ---------------------------------------------------------------------------
-  - model: authentik_policies_binding.policybinding
+  - model: authentik_policies.policybinding
     identifiers:
       target: !KeyOf fsb-mfa-validate
       policy: !KeyOf policy-mfa-admin

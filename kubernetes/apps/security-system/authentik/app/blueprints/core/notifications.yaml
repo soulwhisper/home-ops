@@ -1,0 +1,50 @@
+---
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+#
+# Notifications: route authentik system events to webhook-relay (chaski →
+# feishu + pushover) instead of email. Local (UI) notifications are kept.
+# Rules are rebound before the email transport is removed (order matters).
+entries:
+  - model: authentik_events.notificationtransport
+    id: transport-webhook-relay
+    identifiers:
+      name: webhook-relay
+    attrs:
+      name: webhook-relay
+      mode: webhook
+      webhook_url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/authentik"
+      send_once: false
+  - model: authentik_events.notificationrule
+    identifiers:
+      name: default-notify-configuration-error
+    attrs:
+      transports:
+        - !KeyOf transport-webhook-relay
+        - !Find [authentik_events.notificationtransport, [name, default-local-transport]]
+  - model: authentik_events.notificationrule
+    identifiers:
+      name: default-notify-configuration-warning
+    attrs:
+      transports:
+        - !KeyOf transport-webhook-relay
+        - !Find [authentik_events.notificationtransport, [name, default-local-transport]]
+  - model: authentik_events.notificationrule
+    identifiers:
+      name: default-notify-update
+    attrs:
+      transports:
+        - !KeyOf transport-webhook-relay
+        - !Find [authentik_events.notificationtransport, [name, default-local-transport]]
+  - model: authentik_events.notificationrule
+    identifiers:
+      name: default-notify-exception
+    attrs:
+      transports:
+        - !KeyOf transport-webhook-relay
+        - !Find [authentik_events.notificationtransport, [name, default-local-transport]]
+  # disable email: no rule references it anymore, remove the default transport
+  - model: authentik_events.notificationtransport
+    state: absent
+    identifiers:
+      name: default-email-transport
