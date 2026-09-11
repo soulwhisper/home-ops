@@ -9,10 +9,10 @@
 | Grafana              |   Authentik   | SSO-protected                                                         |
 | Headlamp             |   Authentik   | K8s dashboard with read-only SA                                       |
 | Home Assistant       |   Authentik   | Requires `hass-openid` plugin + `/config/configuration.yaml` packages |
-| Immich               |   Authentik   | SSO-protected                                                         |
+| Immich               |   Authentik   | Configure via Admin Settings                                          |
 | Jellyfin             |   Authentik   | Install `jellyfin-plugin-sso` first, then web UI config               |
 | Karakeep             |   Authentik   | SSO-protected                                                         |
-| Kavita               |   Authentik   | Configure via Admin Settings → OpenID Connect                         |
+| Kavita               |   Authentik   | Configure via Admin Settings                                          |
 | Miniflux             |   Authentik   | SSO-protected                                                         |
 | NetBox               |   Authentik   | SSO-protected                                                         |
 | Qbittorrent-UI (QUI) |   Authentik   | SSO-protected web UI                                                  |
