@@ -7,7 +7,9 @@ metadata:
 spec:
   instances: 3
   # ghcr.io/soulwhisper/postgresql — custom suite (vchord + vchord_bm25 + pg_tokenizer + pgroonga + cnpg baseline)
-  imageName: ghcr.io/soulwhisper/postgresql:18.6
+  # digest-pinned: tag 18.6 was rebuilt (postgres user 999→26); mutable tag + IfNotPresent
+  # left stale content cached on some nodes → peer auth FATAL (local user ID 26 does not exist)
+  imageName: ghcr.io/soulwhisper/postgresql:18.6@sha256:9cd922e37569121e115c3dbdb026162dd99b0423ebd553f84dee377526d5eb1d
   primaryUpdateStrategy: unsupervised
   primaryUpdateMethod: switchover
   plugins:
