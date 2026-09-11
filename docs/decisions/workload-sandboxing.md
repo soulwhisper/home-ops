@@ -58,7 +58,7 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
 | Cilium datapath | `netkit` (L3) — kept |
 | kata | **removed** (RuntimeClass + Talos sysext; sysext drops at next node image upgrade) |
 | `hostUsers: false` | All app-template workloads **except** NFS consumers |
-| Egress CNP | firecrawl, hermes-agent, karakeep, searxng, trendradar, open-notebook, qbittorrent, onepassword-connect, toolhive |
+| Egress CNP | **AI workloads only** (LLM-gateway callers / agent pipelines): firecrawl, hermes-agent, karakeep, trendradar, open-notebook, toolhive (+onepassword-connect). Traditional apps (searxng, qbittorrent, media) deliberately not covered |
 | `automountServiceAccountToken: false` | All app-template workloads except `heartbeats`, `homepage`. Audited live: no other app SA holds RoleBindings; `netbox` (official chart, untouched by the sweep) keeps its token for `netbox_prometheus_sd` |
 | `enableServiceLinks: false` | app-template v5 chart default — no action needed |
 | Pod Security Admission | **privileged cluster-wide — open decision, see below** |
@@ -92,9 +92,8 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
    (`KubeAdmissionControlConfig`).
 2. **seccomp sweep** — set `seccompProfile: RuntimeDefault` explicitly
    (containerd does not guarantee it without `SeccompDefault`).
-3. **CNP coverage** — internet-content processors done (searxng,
-   trendradar, open-notebook, qbittorrent added). Remaining candidates:
-   home-assistant (cloud integrations), immich (outbound ML/map fetches),
-   mcp servers behind toolhive — evaluate per-app egress before enforcing,
-   every CNP is default-deny for its endpoints.
+3. **CNP coverage** — scoped to AI workloads (LLM-gateway callers and agent
+   pipelines); current set complete. Do not extend to traditional apps
+   (searxng, qbittorrent, media) — policy churn without threat-model value.
+   Revisit only for new agent/LLM-calling workloads.
 4. **Kernel watch** — NFS idmapped mounts; kata netkit support (#12159).
