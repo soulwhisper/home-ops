@@ -21,5 +21,11 @@
       separateMajorMinor: true,
       separateMinorPatch: true,
     },
+    {
+      description: "ghcr tag-list rate limits (44k+ tags): look up immich versions via GitHub releases",
+      matchPackageNames: ["/immich-(server|machine-learning)/"],
+      datasource: "github-releases",
+      packageName: "immich-app/immich",
+    },
   ],
 }
