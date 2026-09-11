@@ -91,10 +91,11 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
    `restricted` per-namespace where compatible, plus explicit exemptions for
    the four apps above. Check: `infrastructure/talos/prod/10-general.yaml`
    (`KubeAdmissionControlConfig`).
-2. **seccomp drift pin** — RuntimeDefault comes from a Talos *default*, not
-   from git. Pin `machine.kubelet.defaultRuntimeSeccompEnabled: true`
-   explicitly in `infrastructure/talos/prod/10-general.yaml` so a future
-   Talos default flip can't silently widen the syscall surface.
+2. **seccomp drift pin** — done: `KubeletConfig` doc with
+   `defaultRuntimeSeccompProfileEnabled: true` pinned in prod + test
+   `10-general.yaml` (Talos multi-doc config; not yet applied to nodes —
+   takes effect on next config apply). Guards against a future Talos
+   default flip silently widening the syscall surface.
 3. **CNP coverage** — scoped to AI workloads (LLM-gateway callers and agent
    pipelines); current set complete. Do not extend to traditional apps
    (searxng, qbittorrent, media) — policy churn without threat-model value.
