@@ -6,7 +6,8 @@ metadata:
   name: postgres
 spec:
   instances: 3
-  imageName: ghcr.io/tensorchord/cloudnative-vectorchord:18
+  # cloudnative-vectorchord:18 lacks vchord_bm25 (bm25 image tops out at pg17)
+  imageName: ghcr.io/tensorchord/cloudnative-vectorchord-bm25:17.11
   primaryUpdateStrategy: unsupervised
   primaryUpdateMethod: switchover
   plugins:
