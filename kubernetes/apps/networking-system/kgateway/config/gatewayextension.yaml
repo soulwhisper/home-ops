@@ -25,6 +25,10 @@ spec:
           - "x-authentik-uid"
           - "set-cookie"
         # kgateway 2.4: forward the 302 Location to the client on denial so
-        # browsers reach the authentik login page (redirect-based flows)
+        # browsers reach the authentik login page (redirect-based flows);
+        # set-cookie must pass too or the outpost session/state cookie never
+        # reaches the browser and the OAuth callback 400s with
+        # "auth callback without a valid session cookie"
         headersToClient:
           - "location"
+          - "set-cookie"
