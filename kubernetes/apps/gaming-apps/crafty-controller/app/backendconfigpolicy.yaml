@@ -1,0 +1,15 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.kgateway.dev/backendconfigpolicy_v1alpha1.json
+# crafty serves HTTPS (self-signed) on 8443; plain-HTTP upstream gets its
+# connection reset ("upstream connect error / connection termination")
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: BackendConfigPolicy
+metadata:
+  name: crafty-controller
+spec:
+  targetRefs:
+    - group: ""
+      kind: Service
+      name: crafty-controller
+  tls:
+    insecureSkipVerify: true

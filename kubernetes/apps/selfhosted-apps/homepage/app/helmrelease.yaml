@@ -30,6 +30,10 @@ spec:
               tag: v2.3.0
             env:
               HOMEPAGE_ALLOWED_HOSTS: "home.noirprime.com"
+              # 19 authentik forward-auth providers all set Domain=noirprime.com
+              # cookies; the accumulated Cookie header overflows Node's stock
+              # 16KiB cap and homepage answers 400 right after SSO login
+              NODE_OPTIONS: "--max-http-header-size=65536"
             envFrom:
               - secretRef:
                   name: *name

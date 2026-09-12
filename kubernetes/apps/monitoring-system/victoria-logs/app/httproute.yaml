@@ -21,11 +21,13 @@ spec:
             type: Exact
             value: /
       filters:
-        - type: URLRewrite
-          urlRewrite:
+        # SPA router expects its real base path; rewrite-at-/ renders blank
+        - type: RequestRedirect
+          requestRedirect:
             path:
               type: ReplaceFullPath
               replaceFullPath: /select/vmui/
+            statusCode: 301
     - backendRefs:
         - name: *name
           port: 9428

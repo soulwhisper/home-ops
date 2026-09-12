@@ -22,8 +22,8 @@ spec:
         - namespace: kgateway.auth
           key: username
           value:
-            stringValue: '{{ headers["x-authentik-username"] }}'
+            stringValue: '{{ header("x-authentik-username") }}'
         - namespace: kgateway.auth
           key: groups
           value:
-            stringValue: '{{ headers["x-authentik-groups"] }}'
+            stringValue: '{{ header("x-authentik-groups") }}'

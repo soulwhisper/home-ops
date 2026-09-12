@@ -39,9 +39,9 @@ spec:
         - alert: AgentEgressDenied
           annotations:
             summary: >-
-              CNP denied egress from {{ $labels.source_pod }} (intent/behaviour divergence).
+              CNP denied egress from {{ $labels.source_workload }} (intent/behaviour divergence).
           expr: |
-            sum by (source_pod) (increase(hubble_drop_total{reason="POLICY_DENIED", source_namespace="servitor-apps"}[5m])) > 0
+            sum by (source_workload, destination_namespace) (increase(hubble_drop_total{reason="POLICY_DENIED", source_namespace="servitor-apps"}[5m])) > 0
           labels:
             severity: critical
 ---

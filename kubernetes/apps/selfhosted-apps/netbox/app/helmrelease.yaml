@@ -21,7 +21,9 @@ spec:
           REMOTE_AUTH_BACKEND: "social_core.backends.open_id_connect.OpenIdConnectAuth"
           REMOTE_AUTH_AUTO_CREATE_USER: "True"
           SOCIAL_AUTH_OIDC_ENDPOINT: "https://auth.noirprime.com/application/o/netbox/"
-          SOCIAL_AUTH_OIDC_SCOPE: "openid profile email roles"
+          # social-core get_scope() does scope + list — must be a list, a plain
+          # string crashes OIDC login with TypeError: str + list
+          SOCIAL_AUTH_OIDC_SCOPE: ["openid", "profile", "email", "roles"]
           LOGOUT_REDIRECT_URL: "https://auth.noirprime.com/application/o/netbox/end-session/"
           SOCIAL_AUTH_PIPELINE:
             [
@@ -37,17 +39,13 @@ spec:
               "social_core.pipeline.user.user_details",
               "netbox.sso_pipeline_roles.set_roles",
             ]
-    extraEnvs:
-      - name: SOCIAL_AUTH_OIDC_KEY
-        valueFrom:
-          secretKeyRef:
-            name: *name
-            key: oidc_client_id
-      - name: SOCIAL_AUTH_OIDC_SECRET
-        valueFrom:
-          secretKeyRef:
-            name: *name
-            key: oidc_client_secret
+      # the chart config loader never maps SOCIAL_AUTH_OIDC_* env into settings;
+      # mount them as a YAML fragment the loader does read
+      - secret:
+          secretName: *name
+          items:
+            - key: oidc-auth.yaml
+              path: oidc-auth.yaml
     extraVolumes:
       - name: sso-pipeline-roles
         configMap:

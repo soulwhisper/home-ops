@@ -104,7 +104,7 @@ spec:
           gethomepage.dev/name: qBittorrent
           gethomepage.dev/group: Download
           gethomepage.dev/widget.type: qbittorrent
-          gethomepage.dev/widget.url: http://qbittorrent.media-apps.svc.cluster.local:8080
+          gethomepage.dev/widget.url: http://qbittorrent-app.media-apps.svc.cluster.local:8080
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

@@ -18,6 +18,12 @@ data:
       api_key: \$${OPENAI_API_KEY}
     gateway:
       multiplex_profiles: true
+    # gateway enforces authentik; this gate only satisfies hermes' refusal to
+    # bind non-loopback without an auth provider
+    dashboard:
+      basic_auth:
+        username: "admin"
+        password_hash: "scrypt$16384$8$1$iqGHQwhoTPMwkiMDI7SV3w==$V45cYiP24KiQ6tllPk3FN7XBM2fenuVWyvPtcMUvDko="
     platforms:
       webhook:
         enabled: true

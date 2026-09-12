@@ -18,3 +18,14 @@ resources:
   - ./navidrome/ks.yaml
   - ./qbittorrent/ks.yaml
   - ./qbittorrent-ui/ks.yaml
+patches:
+  # kopiur movers run uid 0 + DAC_OVERRIDE by default; webhook requires opt-in
+  - patch: |-
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: _
+        annotations:
+          kopiur.home-operations.com/privileged-movers: "true"
+    target:
+      kind: Namespace

@@ -24,7 +24,7 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
 **1. Why user namespaces (selected):**
 
 - Already enabled cluster-wide (GA since k8s 1.30; Talos 1.14 / k8s 1.37
-  here — proven live by rsshub, langfuse, dispatcharr running with it).
+  here — proven live by langfuse and dispatcharr running with it).
 - Container root maps to an unmapped high UID on the host; all capabilities
   are scoped to the pod's userns. The classic privileged-escape class
   (CAP_SYS_ADMIN/DAC_OVERRIDE/ptrace abuse against the host) is structurally

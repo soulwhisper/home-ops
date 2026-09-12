@@ -20,8 +20,16 @@ spec:
   upload:
     maxParallelFileReads: 2
   mover:
+    # app files have arbitrary ownership (root-run apps, 0600 owner-only files);
+    # only uid 0 + DAC_OVERRIDE reads every file reliably, and only root
+    # restores preserve original ownership. Namespace must opt in via
+    # kopiur.home-operations.com/privileged-movers=true (webhook-enforced).
     securityContext:
-      runAsUser: "${APP_UID:-2000}"
-      runAsGroup: "${APP_GID:-2000}"
+      runAsNonRoot: false
+      runAsUser: 0
+      runAsGroup: 0
+      capabilities:
+        drop: ["ALL"]
+        add: ["DAC_OVERRIDE", "DAC_READ_SEARCH"]
     podSecurityContext:
-      fsGroup: "${APP_GID:-2000}"
+      fsGroup: 0

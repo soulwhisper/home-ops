@@ -24,8 +24,18 @@ spec:
 
 
     # Feishu open platform (lark-oapi WebSocket, outbound-only)
-    - toFQDNs:
-        - matchName: open.feishu.cn
+    # toFQDNs loses: upstream DNS TTL is 5s and ndots search-expansion records
+    # the name as open.feishu.cn.servitor-apps.svc.cluster.local, so the
+    # ipcache identity mapping never sticks for the WebSocket's reconnect
+    # cycle. Same world-except-private convention as firecrawl/karakeep.
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+            - 169.254.0.0/16
+            - 100.64.0.0/10
       toPorts:
         - ports:
             - { port: "443", protocol: TCP }
@@ -46,3 +56,8 @@ spec:
         - ports:
             - { port: "53", protocol: TCP }
             - { port: "53", protocol: UDP }
+          # toFQDNs needs DNS proxy visibility to learn open.feishu.cn -> IP;
+          # without rules.dns the mapping never populates and 443 egress is dropped
+          rules:
+            dns:
+              - matchPattern: "*"

@@ -28,6 +28,20 @@ subjects:
     name: headlamp-admin
     namespace: monitoring-system
 ---
+# headlamp OIDC sign-in: apiserver trusts authentik (talos apiServer extraArgs);
+# members of homelab-admin get the same read-only `view` as the SA token
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: headlamp-oidc-admins
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: Group
+    name: homelab-admin
+---
 # extends `view` (via aggregation) with read-only access to Flux CRs for the Flux plugin
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole

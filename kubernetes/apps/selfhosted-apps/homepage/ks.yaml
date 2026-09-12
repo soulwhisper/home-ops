@@ -19,3 +19,4 @@ spec:
   postBuild:
     substitute:
       APP: *name
+      APP_HOST: "home.noirprime.com"

@@ -5,3 +5,4 @@ kind: Kustomization
 resources:
   # app
   - ./helmrelease.yaml
+  - ./backendconfigpolicy.yaml

@@ -26,7 +26,9 @@ spec:
       auth_url: "https://auth.noirprime.com/application/o/authorize/"
       token_url: "https://auth.noirprime.com/application/o/token/"
       api_url: "https://auth.noirprime.com/application/o/userinfo/"
-      allow_sign_up: "false"
+      # fresh DB post-rebuild: every OIDC user is a new account; roles are
+      # still gated by role_attribute_path below
+      allow_sign_up: "true"
       merge_existing_account: "true"
       role_attribute_path: >
         contains(groups[*], 'homelab-admin') && 'GrafanaAdmin' ||

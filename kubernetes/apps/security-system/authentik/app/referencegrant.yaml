@@ -13,3 +13,37 @@ spec:
     - group: ""
       kind: Service
       name: authentik-server
+---
+# forward-auth app routes: /outpost.goauthentik.io/* must reach the embedded
+# outpost directly (OAuth callback etc.), bypassing ext-authz
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: authentik-outpost-route-grant
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: kube-system
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: media-apps
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: monitoring-system
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: networking-system
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: selfhosted-apps
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: servitor-apps
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: smarthome-apps
+  to:
+    - group: ""
+      kind: Service
+      name: authentik-server
