@@ -10,26 +10,27 @@ spec:
   toolConfigRef:
     name: *name
   image: ghcr.io/containers/kubernetes-mcp-server:v0.0.66
-  args: ["--config", "/root/config.toml"]
+  args: ["--config", "/etc/mcp/config.toml"]
   podTemplateSpec:
     spec:
       volumes:
         - name: config
           configMap:
             name: *name
-        # server stats $HOME/conf.d at boot and hard-fails on EACCES; /root is
-        # 0700 root in the image while the pod runs unprivileged
+        # server stats <configDir>/conf.d at boot and hard-fails on EACCES;
+        # /root is 0700 root in the image while the pod runs unprivileged, so
+        # both mounts live under /etc/mcp instead
         - name: confd
           emptyDir: {}
       containers:
         - name: mcp
           volumeMounts:
             - name: config
-              mountPath: /root/config.toml
+              mountPath: /etc/mcp/config.toml
               subPath: config.toml
               readOnly: true
             - name: confd
-              mountPath: /root/conf.d
+              mountPath: /etc/mcp/conf.d
   mcpPort: 8080
   serviceAccount: mcp-kubernetes-view
   resources:

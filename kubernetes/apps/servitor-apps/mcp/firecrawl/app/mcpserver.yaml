@@ -15,11 +15,16 @@ spec:
         # /tmp/nginx.conf at boot and fails without a writable scratch dir
         - name: tmp
           emptyDir: {}
+        # entrypoint also rewrites /etc/nginx/nginx.conf (mv fails on RO rootfs)
+        - name: nginx
+          emptyDir: {}
       containers:
         - name: mcp
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            - name: nginx
+              mountPath: /etc/nginx
   env:
     - name: PORT
       value: "3000"
