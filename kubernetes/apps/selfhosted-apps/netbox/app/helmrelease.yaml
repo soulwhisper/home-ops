@@ -110,6 +110,7 @@ spec:
     image:
       # chart prepends image.registry (default ghcr.io) — keep repository registry-less
       repository: soulwhisper/netbox
+      # renovate: datasource=docker depName=ghcr.io/soulwhisper/netbox
       tag: 4.7.0
     plugins:
       - netbox_attachments

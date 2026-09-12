@@ -34,6 +34,10 @@ spec:
               - /bin/sh
               - -ec
               - pip install --no-cache-dir --quiet paho-mqtt httpx && exec python /app/bridge.py
+            env:
+              # pip falls back to the user site ($HOME/.local) since site-packages
+              # is RO; HOME=/ in the slim image, so point it at the tmp emptyDir
+              HOME: /tmp
             envFrom:
               - secretRef:
                   name: *name

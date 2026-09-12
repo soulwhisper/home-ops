@@ -4,13 +4,15 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   name: kgateway-internal
-  annotations:
-    external-dns.kubernetes.io/target: &hostname gateway-int.noirprime.com
+  # NOTE: no external-dns target annotation — it makes route records CNAMEs to
+  # the gateway hostname, and AdGuard answers those CNAMEs without chasing the
+  # target, which breaks glibc stub resolvers. A records from the gateway LB
+  # address work everywhere.
 spec:
   gatewayClassName: kgateway
   infrastructure:
     annotations:
-      external-dns.kubernetes.io/hostname: *hostname
+      external-dns.kubernetes.io/hostname: gateway-int.noirprime.com
       lbipam.cilium.io/ips: "10.10.0.131"
     parametersRef:
       name: kgateway-params
