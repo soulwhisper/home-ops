@@ -95,19 +95,19 @@ spec:
             - receiver: "default"
               matchers:
                 - severity =~ "warning|critical"
-        inhibitRules:
+        inhibit_rules:
           - equal: ["alertname", "namespace"]
-            sourceMatch:
+            source_matchers:
               - severity = "critical"
-            targetMatch:
+            target_matchers:
               - severity = "warning"
         receivers:
           - name: "blackhole"
           - name: "default"
-            webhookConfigs:
+            webhook_configs:
               # webhook-relay: feishu primary, pushover fallback
               - url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/alertmanager"
-                sendResolved: true
+                send_resolved: true
 
     kubeApiServer:
       vmScrape:

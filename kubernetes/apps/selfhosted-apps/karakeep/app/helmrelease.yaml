@@ -78,7 +78,10 @@ spec:
             image:
               repository: getmeili/meilisearch
               tag: v1.53.2
+            # image entrypoint is tini; args replace CMD so the binary name
+            # must be included
             args:
+              - meilisearch
               - --upgrade-db
             env:
               MEILI_NO_ANALYTICS: true

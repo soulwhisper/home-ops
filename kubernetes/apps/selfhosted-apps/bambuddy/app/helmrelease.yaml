@@ -51,10 +51,11 @@ spec:
                 memory: 4Gi
             securityContext:
               # image setcaps cap_net_bind_service=+ep on python3 — execve of a
-              # file-cap binary under no_new_privs fails EPERM, so privesc must
-              # stay allowed; entrypoint gosu-drops to 1000 (CHOWN/SETUID/SETGID)
+              # file-cap binary fails EPERM unless the cap is in the bounding
+              # set, so NET_BIND_SERVICE must be added and privesc must stay
+              # allowed; entrypoint gosu-drops to 1000 (CHOWN/SETUID/SETGID)
               allowPrivilegeEscalation: true
-              capabilities: { drop: ["ALL"], add: ["CHOWN", "SETUID", "SETGID"] }
+              capabilities: { drop: ["ALL"], add: ["CHOWN", "SETUID", "SETGID", "NET_BIND_SERVICE"] }
               readOnlyRootFilesystem: true
 
     service:

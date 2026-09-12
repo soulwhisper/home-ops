@@ -56,7 +56,7 @@ spec:
       host: "postgres-rw.database-system.svc.cluster.local:5432"
       name: *name
       user: *name
-      password: *name
+      password: "$__env{GF_DATABASE_PASSWORD}"
   deployment:
     spec:
       replicas: 2
@@ -103,6 +103,11 @@ spec:
                     secretKeyRef:
                       name: *name
                       key: oidc_client_secret
+                - name: GF_DATABASE_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: grafana-pguser
+                      key: password
               resources:
                 requests:
                   cpu: 50m
