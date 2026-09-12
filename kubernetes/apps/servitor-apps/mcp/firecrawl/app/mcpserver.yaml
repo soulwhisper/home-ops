@@ -15,9 +15,18 @@ spec:
         # /tmp/nginx.conf at boot and fails without a writable scratch dir
         - name: tmp
           emptyDir: {}
-        # entrypoint also rewrites /etc/nginx/nginx.conf (mv fails on RO rootfs)
+        # entrypoint sed+mv's /etc/nginx/nginx.conf, impossible on the RO
+        # rootfs; the init container seeds the stock config into an emptyDir
+        # (a bare emptyDir shadow-mounts the dir empty and sed fails)
         - name: nginx
           emptyDir: {}
+      initContainers:
+        - name: nginx-config
+          image: ghcr.io/firecrawl/firecrawl-mcp-server:latest
+          command: ["sh", "-c", "cp -a /etc/nginx/. /nginx/"]
+          volumeMounts:
+            - name: nginx
+              mountPath: /nginx
       containers:
         - name: mcp
           volumeMounts:
