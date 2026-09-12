@@ -96,8 +96,6 @@ spec:
       userauth:
         enabled: true
         existingSecret: *name
-        secretKeys:
-          USER_AUTH_SECRET: USER_AUTH_SECRET
     extraEnvFromSecret: *name
     configMap:
       AUTH_TYPE: "basic"
