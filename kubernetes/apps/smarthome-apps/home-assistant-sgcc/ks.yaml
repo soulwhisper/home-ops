@@ -17,9 +17,6 @@ spec:
   dependsOn:
     - name: mosquitto
       namespace: smarthome-apps
-  # no kopiur/backup: this app mounts the shared `home-assistant` PVC, which
-  # home-assistant's own policy already backs up; the component's APP-named
-  # PVC has no consumer, stays unbound, and every snapshot fails
   postBuild:
     substitute:
       APP: *name
