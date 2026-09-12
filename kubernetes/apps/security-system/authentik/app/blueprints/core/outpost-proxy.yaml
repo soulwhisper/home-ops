@@ -27,6 +27,7 @@ entries:
         - !Find [authentik_providers_proxy.proxyprovider, [name, hubble-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, metube-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, onyx-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, qbittorrent-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, scrypted-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, sillytavern-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, trendradar-proxy-provider]]

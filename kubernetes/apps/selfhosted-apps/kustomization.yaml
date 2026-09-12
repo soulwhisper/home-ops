@@ -19,3 +19,15 @@ resources:
   - ./sillytavern/ks.yaml
   - ./stirling-pdf/ks.yaml
   - ./trendradar/ks.yaml
+patches:
+  # kopiur webhook requires an explicit namespace opt-in for uid-0 movers
+  # (home-assistant, karakeep write root-owned 0600 state files)
+  - patch: |-
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: _
+        annotations:
+          kopiur.home-operations.com/privileged-movers: "true"
+    target:
+      kind: Namespace

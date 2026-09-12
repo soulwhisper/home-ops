@@ -24,3 +24,4 @@ spec:
   postBuild:
     substitute:
       APP: *name
+      APP_HOST: "memory.noirprime.com"

@@ -6,6 +6,14 @@ metadata:
   name: authentik-ext-auth
 spec:
   extAuth:
+    # HTTP ext-authz forwards only Host/Method/Path/Content-Length/Authorization
+    # by default — without cookie the outpost never sees the state/session
+    # cookie and every OAuth callback fails with 400
+    headersToForward:
+      - "cookie"
+      - "authorization"
+      - "x-forwarded-for"
+      - "user-agent"
     httpService:
       backendRef:
         name: authentik-server
@@ -32,3 +40,11 @@ spec:
         headersToClient:
           - "location"
           - "set-cookie"
+        # authentik envoy-mode contract: on allow, the outpost returns the
+        # session via a `cookie` header meant for the downstream client;
+        # without it the callback completes server-side but the browser never
+        # receives the session and loops back to login
+        headersToClientOnSuccess:
+          - "cookie"
+          - "set-cookie"
+          - "location"

@@ -14,9 +14,15 @@ spec:
     drivers:
       rbd:
         name: storage-system.rbd.csi.ceph.com
+        # chart default "none" omits the csi-snapshotter sidecar from the
+        # ctrlplugin -> VolumeSnapshots stall forever and every kopiur backup fails
+        snapshotPolicy: volumeSnapshot
       nvmeof:
         name: storage-system.nvmeof.csi.ceph.com
       cephfs:
         name: storage-system.cephfs.csi.ceph.com
+        # only rbd needs snapshots; chart default enables the snapshotter here
+        snapshotPolicy: none
       nfs:
         name: storage-system.nfs.csi.ceph.com
+        snapshotPolicy: none

@@ -48,12 +48,10 @@ spec:
             resources: *resources
 
     persistence:
-      app:
-        existingClaim: home-assistant
-        globalMounts:
-          - path: /data
-            subPath: sgcc
       tmpfs:
         type: emptyDir
         globalMounts:
+          - path: /data
+            subPath: data
           - path: /tmp
+            subPath: tmp

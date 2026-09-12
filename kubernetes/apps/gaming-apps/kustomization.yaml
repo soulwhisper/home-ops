@@ -13,3 +13,14 @@ resources:
   # app
   - ./crafty-controller/ks.yaml
   - ./foundryvtt/ks.yaml
+patches:
+  # kopiur movers run uid 0 + DAC_OVERRIDE by default; webhook requires opt-in
+  - patch: |-
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: _
+        annotations:
+          kopiur.home-operations.com/privileged-movers: "true"
+    target:
+      kind: Namespace

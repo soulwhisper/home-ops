@@ -16,11 +16,14 @@ spec:
   transformation:
     request:
       dynamicMetadata:
+        # header() returns empty for absent headers; headers["x"] throws on
+        # the client request (x-authentik-* exist only post-ext-authz),
+        # crashing the kgateway dynamic module -> envoy 400 after every login
         - namespace: kgateway.auth
           key: username
           value:
-            stringValue: '{{ headers["x-authentik-username"] }}'
+            stringValue: '{{ header("x-authentik-username") }}'
         - namespace: kgateway.auth
           key: groups
           value:
-            stringValue: '{{ headers["x-authentik-groups"] }}'
+            stringValue: '{{ header("x-authentik-groups") }}'

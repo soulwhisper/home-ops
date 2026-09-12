@@ -163,11 +163,9 @@ spec:
             csi.storage.k8s.io/node-stage-secret-name: rook-csi-cephfs-node
             csi.storage.k8s.io/node-stage-secret-namespace: *cluster_namespace
             csi.storage.k8s.io/fstype: ext4
+    # only rbd volumes are snapshotted (kopiur/ceph-block); no cephfs snapshotting
     cephFileSystemVolumeSnapshotClass:
-      enabled: true
-      name: ceph-filesystem-snapshot
-      isDefault: false
-      deletionPolicy: Delete
+      enabled: false
     cephObjectStores:
       # endpoint: http://rook-ceph-rgw-ceph-objectstore.storage-system.svc.cluster.local
       - name: ceph-objectstore

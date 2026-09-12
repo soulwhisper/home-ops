@@ -1,0 +1,34 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+# authentik forward-auth needs /outpost.goauthentik.io/* reachable WITHOUT
+# ext-authz (the OAuth callback, sign_out, etc. are real outpost requests —
+# a check with a replaced path can never carry them). Same hostname as the
+# app route; Gateway API merges by hostname, longest prefix wins.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: "${APP}-outpost"
+spec:
+  hostnames: ["${APP_HOST}"]
+  parentRefs:
+    - name: kgateway-internal
+      namespace: networking-system
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /outpost.goauthentik.io
+      # the outpost maps host -> provider via x-forwarded-host; direct route
+      # requests lack it and fall through to the main authentik web app
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: x-forwarded-host
+                value: "${APP_HOST}"
+              - name: x-forwarded-proto
+                value: "https"
+      backendRefs:
+        - name: authentik-server
+          namespace: security-system
+          port: 80

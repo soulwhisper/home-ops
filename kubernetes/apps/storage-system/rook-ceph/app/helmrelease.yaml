@@ -15,7 +15,9 @@ spec:
       enabled: true
     csi:
       serviceMonitor:
-        enabled: true
+        # targets the legacy rook-managed CSI "csi-metrics" service, which does
+        # not exist under ceph-csi-operator -> ScrapePoolHasNoTargets
+        enabled: false
     monitoring:
       enabled: true
     # default obc fields = "maxObjects,maxSize"

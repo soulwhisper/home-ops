@@ -236,3 +236,28 @@ cluster:
       quota-backend-bytes: 8589934592
     advertisedSubnets:
       - 10.10.0.0/24
+---
+# headlamp SSO: apiserver trusts authentik-issued OIDC tokens
+# (structured auth; legacy oidc-* extraArgs conflict with it)
+apiVersion: v1alpha1
+kind: KubeAuthenticationConfig
+configuration:
+  anonymous:
+    enabled: true
+    conditions:
+      - path: /livez
+      - path: /readyz
+      - path: /healthz
+  jwt:
+    - issuer:
+        url: "https://auth.noirprime.com/application/o/headlamp/"
+        audiences:
+          - "headlamp-a54d74ce"
+        audienceMatchPolicy: MatchAny
+      claimMappings:
+        username:
+          claim: "email"
+          prefix: ""
+        groups:
+          claim: "groups"
+          prefix: ""

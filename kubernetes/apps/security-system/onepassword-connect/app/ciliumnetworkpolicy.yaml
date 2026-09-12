@@ -17,3 +17,12 @@ spec:
         - ports:
             - port: "8080"
               protocol: TCP
+    # vmagent scrapes connect-api /metrics on the same port
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring-system
+            "app.kubernetes.io/name": vmagent
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

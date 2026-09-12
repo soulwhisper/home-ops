@@ -41,6 +41,7 @@ spec:
                     [slug, default-invalidation-flow],
                   ]
                 client_type: confidential
+                grant_types: ["authorization_code", "refresh_token"]
                 redirect_uris:
                   - url: "https://hass.noirprime.com/auth/openid/callback"
                     matching_mode: strict

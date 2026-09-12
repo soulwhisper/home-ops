@@ -22,3 +22,4 @@ spec:
   postBuild:
     substitute:
       APP: *name
+      APP_HOST: "metube.noirprime.com"

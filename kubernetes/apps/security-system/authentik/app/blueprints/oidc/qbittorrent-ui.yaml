@@ -41,6 +41,7 @@ spec:
                     [slug, default-invalidation-flow],
                   ]
                 client_type: confidential
+                grant_types: ["authorization_code", "refresh_token"]
                 redirect_uris:
                   - url: "https://qui.noirprime.com/api/auth/oidc/callback"
                     matching_mode: strict

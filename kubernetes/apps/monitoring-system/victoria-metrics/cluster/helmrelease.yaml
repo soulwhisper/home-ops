@@ -29,6 +29,14 @@ spec:
             create: false
           kubernetesSystemScheduler:
             create: false
+      # histogram buckets are dropped at scrape time (see kubeApiServer/kubelet
+      # metricRelabelConfigs); these synced groups can never produce data and
+      # trip RecordingRulesNoData — slos consume the dead burnrate recordings
+      groups:
+        kube-apiserver-burnrate.rules: { enabled: false }
+        kube-apiserver-histogram.rules: { enabled: false }
+        kube-apiserver-slos: { enabled: false }
+        kubelet.rules: { enabled: false }
 
     # : vmsingle as prometheus
     # : http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428
@@ -56,8 +64,15 @@ spec:
     # : http://vmagent-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8429
     vmagent:
       spec:
+        # avg 0.13c/140Mi but scrape bursts throttle at the stock 200m cap
+        # (CPUThrottlingHigh); nodes are 13900H/96G so allow honest bursts
+        resources:
+          requests: { cpu: 200m, memory: 256Mi }
+          limits: { cpu: 2, memory: 512Mi }
         extraArgs:
           promscrape.dropOriginalLabels: "true"
+          # apiserver payload exceeds the stock 16MiB cap (whole scrape dropped)
+          promscrape.maxScrapeSize: 64MiB
 
     # : vmauth
     # : http://vmauth-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8427
@@ -115,9 +130,6 @@ spec:
           endpoints:
             - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
               port: https
-              # stock 16MiB cap truncates the apiserver payload (watch/storage
-              # histograms alone are ~17MiB); drops below shrink storage, not payload
-              maxScrapeSize: 64MiB
               scheme: https
               tlsConfig:
                 caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt

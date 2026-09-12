@@ -20,3 +20,4 @@ spec:
   postBuild:
     substitute:
       APP: *name
+      APP_HOST: "bambuddy.noirprime.com"

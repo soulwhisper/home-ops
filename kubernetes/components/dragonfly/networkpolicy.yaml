@@ -1,0 +1,27 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/networking.k8s.io/networkpolicy_v1.json
+# The dragonfly operator's generated NetworkPolicy only admits operator/peer
+# pods to the admin port (9999), which drops vmagent's /metrics scrapes
+# (TargetDown on every *-dragonfly job). NetworkPolicies are additive, so this
+# one composes with it to allow monitoring in.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ${APP}-dragonfly-metrics
+spec:
+  podSelector:
+    matchLabels:
+      app: ${APP}-dragonfly
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vmagent
+      ports:
+        - port: 9999
+          protocol: TCP

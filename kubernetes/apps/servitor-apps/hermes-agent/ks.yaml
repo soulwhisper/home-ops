@@ -23,4 +23,5 @@ spec:
   postBuild:
     substitute:
       APP: *name
+      APP_HOST: "hermes.noirprime.com"
       APP_ROUTE: hermes-agent-dashboard

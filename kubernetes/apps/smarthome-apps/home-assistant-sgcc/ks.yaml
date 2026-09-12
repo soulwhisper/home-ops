@@ -17,8 +17,6 @@ spec:
   dependsOn:
     - name: mosquitto
       namespace: smarthome-apps
-  components:
-    - ../../../../components/kopiur/backup
   postBuild:
     substitute:
       APP: *name
