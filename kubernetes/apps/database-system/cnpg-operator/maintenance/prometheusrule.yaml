@@ -10,9 +10,11 @@ spec:
       rules:
         - alert: PostgresBackupStale
           # No successful backup in last 36h (daily schedule + 12h grace)
+          # barman-cloud plugin metrics: cnpg_collector_*_backup_* stay 0 with
+          # plugin-based backups (method: plugin), use the plugin series instead
           expr: |
-            (time() - cnpg_collector_last_available_backup_timestamp{namespace="database-system",pod=~"postgres-.*"}) > 60 * 60 * 36
-            or absent(cnpg_collector_last_available_backup_timestamp{namespace="database-system",pod=~"postgres-.*"})
+            (time() - barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace="database-system",pod=~"postgres-.*"}) > 60 * 60 * 36
+            or absent(barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace="database-system",pod=~"postgres-.*"})
           for: 30m
           labels: { severity: critical }
           annotations:
@@ -24,8 +26,8 @@ spec:
               and the CNPG operator logs.
         - alert: PostgresBackupFailing
           expr: |
-            cnpg_collector_last_failed_backup_timestamp{namespace="database-system",pod=~"postgres-.*"}
-              > cnpg_collector_last_available_backup_timestamp{namespace="database-system",pod=~"postgres-.*"}
+            barman_cloud_cloudnative_pg_io_last_failed_backup_timestamp{namespace="database-system",pod=~"postgres-.*"}
+              > barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace="database-system",pod=~"postgres-.*"}
           for: 1h
           labels: { severity: warning }
           annotations:
@@ -37,7 +39,7 @@ spec:
           # WAL should be archived continuously; >1h gap with active DB suggests
           # archive_command is failing.
           expr: |
-            (time() - cnpg_collector_first_recoverability_point{namespace="database-system",pod=~"postgres-.*"}) > 60 * 60 * 24 * 31
+            (time() - barman_cloud_cloudnative_pg_io_first_recoverability_point{namespace="database-system",pod=~"postgres-.*"}) > 60 * 60 * 24 * 31
           for: 30m
           labels: { severity: warning }
           annotations:

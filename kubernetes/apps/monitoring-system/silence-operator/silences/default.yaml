@@ -52,28 +52,3 @@ spec:
     - name: mountpoint
       value: /var/lib/kubelet/pods
       matchType: "=~"
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/observability.giantswarm.io/silence_v1alpha2.json
-apiVersion: observability.giantswarm.io/v1alpha2
-kind: Silence
-metadata:
-  name: bond-flap-during-upgrade
-  namespace: monitoring-system
-spec:
-  matchers:
-    - name: alertname
-      value: NodeNetworkInterfaceFlapping
-    - name: device
-      value: ^(bond0|enp2s0f.+)$
-      matchType: "=~"
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/observability.giantswarm.io/silence_v1alpha2.json
-apiVersion: observability.giantswarm.io/v1alpha2
-kind: Silence
-metadata:
-  name: cilium-rolling-upgrade-churn
-  namespace: monitoring-system
-spec:
-  matchers:
-    - name: alertname
-      value: CiliumIdentitiesChurning

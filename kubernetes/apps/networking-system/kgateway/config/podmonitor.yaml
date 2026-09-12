@@ -13,6 +13,11 @@ spec:
     - port: http-monitoring
       path: /metrics
       honorLabels: true
+      # envoy per-cluster histograms dominate vmsingle cardinality (~16k series)
+      metricRelabelings:
+        - action: drop
+          sourceLabels: [__name__]
+          regex: envoy_cluster_update_duration_bucket
   selector:
     matchLabels:
       app.kubernetes.io/name: *name
@@ -31,6 +36,10 @@ spec:
     - port: http-monitoring
       path: /metrics
       honorLabels: true
+      metricRelabelings:
+        - action: drop
+          sourceLabels: [__name__]
+          regex: envoy_cluster_update_duration_bucket
   selector:
     matchLabels:
       app.kubernetes.io/name: *name
