@@ -93,11 +93,14 @@ spec:
           S3_AWS_SECRET_ACCESS_KEY: AWS_SECRET_ACCESS_KEY
       opensearch:
         existingSecret: *name
+        secretKeys:
+          OPENSEARCH_ADMIN_USERNAME: opensearch_admin_username
+          OPENSEARCH_ADMIN_PASSWORD: opensearch_admin_password
       userauth:
         enabled: true
         existingSecret: *name
         secretKeys:
-          USER_AUTH_SECRET: USER_AUTH_SECRET
+          USER_AUTH_SECRET: user_auth_secret
     extraEnvFromSecret: *name
     configMap:
       AUTH_TYPE: "basic"

@@ -20,6 +20,10 @@ spec:
     - http://nas.homelab.internal:9003
     - --host
     - 0.0.0.0
+    # v3 refuses to bind 0.0.0.0 without declared hosts; the toolhive runner
+    # reaches the pod via the headless service / pod FQDN
+    - --allowed-hosts
+    - mcp-forgejo-0.mcp-mcp-forgejo-headless,mcp-forgejo-0.mcp-mcp-forgejo-headless:8080,mcp-mcp-forgejo-headless,mcp-mcp-forgejo-headless:8080,mcp-mcp-forgejo,mcp-mcp-forgejo:8080,localhost,localhost:8080
     - --token
     - $(FORGEJO_ACCESS_TOKEN)
   # secrets inject FORGEJO_ACCESS_TOKEN as env; args reference it via $(...)
