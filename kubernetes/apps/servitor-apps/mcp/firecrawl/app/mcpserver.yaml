@@ -20,6 +20,12 @@ spec:
         # (a bare emptyDir shadow-mounts the dir empty and sed fails)
         - name: nginx
           emptyDir: {}
+        # nginx compiled defaults on the RO rootfs: logs/tmp under
+        # /var/lib/nginx, pid at /run/nginx.pid
+        - name: nginx-run
+          emptyDir: {}
+        - name: nginx-lib
+          emptyDir: {}
       initContainers:
         - name: nginx-config
           image: ghcr.io/firecrawl/firecrawl-mcp-server:latest
@@ -34,6 +40,10 @@ spec:
               mountPath: /tmp
             - name: nginx
               mountPath: /etc/nginx
+            - name: nginx-lib
+              mountPath: /var/lib/nginx
+            - name: nginx-run
+              mountPath: /run
   env:
     - name: PORT
       value: "3000"
