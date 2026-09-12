@@ -12,4 +12,7 @@ spec:
   podTargetLabels: ["app"]
   podMetricsEndpoints:
     - port: admin
+      # admin /metrics aggregates slow INFO sections; stock 10s times out
+      scrapeTimeout: 30s
+      interval: 60s
   fallbackScrapeProtocol: PrometheusText0.0.4

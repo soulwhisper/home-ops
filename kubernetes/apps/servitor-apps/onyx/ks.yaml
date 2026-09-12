@@ -23,7 +23,6 @@ spec:
     - ../../../../components/ceph-bucket
     - ../../../../components/cnpg
     - ../../../../components/dragonfly
-    - ../../../../components/kopiur/backup
   postBuild:
     substitute:
       APP: *name

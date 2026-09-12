@@ -53,9 +53,14 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /api/v2/app/version
-                    port: *port
+                  # kubelet httpGet probes arrive node-sourced and qBittorrent's
+                  # auth-subnet bypass (10/8) does not match them -> 403 forever.
+                  # Exec from inside the pod instead: pod-IP source is bypassed.
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - wget -q -O /dev/null "http://$(hostname -i):8080/api/v2/app/version"
                   periodSeconds: 10
                   timeoutSeconds: 5
                   failureThreshold: 5

@@ -29,10 +29,14 @@ spec:
       initContainers:
         - name: nginx-config
           image: ghcr.io/firecrawl/firecrawl-mcp-server:latest
-          command: ["sh", "-c", "cp -a /etc/nginx/. /nginx/"]
+          # seed /etc/nginx and pre-create nginx compiled-default runtime dirs;
+          # nginx mkdir() is not recursive and dies on the empty emptyDir
+          command: ["sh", "-c", "cp -a /etc/nginx/. /nginx/ && mkdir -p /nginx-lib/tmp/client_body /nginx-lib/tmp/proxy /nginx-lib/tmp/fastcgi /nginx-lib/tmp/uwsgi /nginx-lib/tmp/scgi /nginx-lib/logs"]
           volumeMounts:
             - name: nginx
               mountPath: /nginx
+            - name: nginx-lib
+              mountPath: /nginx-lib
       containers:
         - name: mcp
           volumeMounts:

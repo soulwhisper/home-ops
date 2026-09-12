@@ -42,8 +42,8 @@ spec:
               storage: 100Gi
         # cap series intake to protect Ceph from runaway cardinality
         extraArgs:
-          storage.maxHourlySeries: "200000"
-          storage.maxDailySeries: "500000"
+          storage.maxHourlySeries: "400000"
+          storage.maxDailySeries: "1000000"
 
     # : vmalert
     # : http://vmalert-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8080
@@ -115,6 +115,9 @@ spec:
           endpoints:
             - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
               port: https
+              # stock 16MiB cap truncates the apiserver payload (watch/storage
+              # histograms alone are ~17MiB); drops below shrink storage, not payload
+              maxScrapeSize: 64MiB
               scheme: https
               tlsConfig:
                 caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -136,6 +139,11 @@ spec:
                 - action: drop
                   sourceLabels: [__name__]
                   regex: apiserver_(longrunning_requests|registered_watchers|init_events_total)
+                # Watch/storage list histograms dominate cardinality (~37k series);
+                # keep _sum/_count, drop per-resource buckets.
+                - action: drop
+                  sourceLabels: [__name__]
+                  regex: apiserver_(watch_events_dispatch_duration_seconds|storage_list_duration_seconds|watch_list_duration_seconds|watch_cache_read_wait_seconds|watch_cache_initialization_duration_seconds)_bucket
 
     kubelet:
       vmScrape:
@@ -207,7 +215,7 @@ spec:
             interval: 5m
             rules:
               - alert: TooManyFailedRequest
-                expr: '* | extract "ip=<ip> " | extract "status_code=<code>;" | stats by (ip) count() if (code:~4.*) as failed, count() as total| math failed / total as failed_percentage| filter failed_percentage :> 0.01 | fields ip,failed_percentage'
+                expr: '* | extract "ip=<ip> " | extract "status_code=<code>;" | stats by (ip) count() if (code:~"4.*") as failed, count() as total| math failed / total as failed_percentage| filter failed_percentage :> 0.01 | fields ip,failed_percentage'
                 annotations:
                   description: "Connection from address {{$labels.ip}} has {{$value}}% failed requests in last 5 minutes"
                 labels:
