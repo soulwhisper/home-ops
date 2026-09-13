@@ -36,4 +36,4 @@ graph TD
 - `Vlan-interface100` runs NO `proxy-arp`/`local-proxy-arp`: cilium
   L2 announcements answer VIP ARPs (`10.10.0.128/27`) from the leader node's
   `bond0`; other VLANs/VPN route via eBGP. Switch-side proxy ARP answered for
-  node IPs as well and poisoned cross-node traffic (2026-09-13 incident).
+  node IPs as well and poisoned cross-node traffic.
