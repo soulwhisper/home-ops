@@ -55,9 +55,10 @@ spec:
           annotations:
             summary: Postgres WAL archive verification job failed
             description: |
-              The weekly barman-cloud-check-wal-archive job has reported
-              a failure. The S3 backup chain may be broken — recent backups
-              might not be restorable. Investigate before next backup window.
+              The weekly backup-chain verification job has reported a failure.
+              The S3 backup chain may be broken — recent backups might not be
+              restorable. Check the job logs for the failing condition
+              (no backups, WAL gaps, or missing begin_wal for latest backup).
         - alert: PostgresBackupVerifyMissing
           expr: |
             (time() - max(kube_job_status_completion_time{namespace="database-system",job_name=~"postgres-backup-verify-.*"})) > 60 * 60 * 24 * 10

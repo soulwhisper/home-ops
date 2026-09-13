@@ -140,6 +140,8 @@ spec:
           gethomepage.dev/widget.type: immich
           gethomepage.dev/widget.url: http://immich.media-apps.svc.cluster.local:2283
           gethomepage.dev/widget.key: '{{ "{{HOMEPAGE_VAR_IMMICH_API_KEY}}" }}' # yamllint disable-line rule:quoted-strings
+          # immich >= v1.118 moved /api/server-info/* to /api/server/*; v2 mappings use the new paths
+          gethomepage.dev/widget.version: "2"
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

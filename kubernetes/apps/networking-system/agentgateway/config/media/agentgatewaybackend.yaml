@@ -1,0 +1,35 @@
+---
+# Media lanes on the MacStudio inference host, plain HTTP passthrough.
+# ExternalName Service backends are not resolved by the agentgateway
+# dataplane ("service not found" on every request) — use static
+# AgentgatewayBackends with DNS host instead.
+# Ports are host-side assignments:
+#   8000 oMLX (embeddings /v1/embeddings, rerank /v1/rerank)
+#   8001 vmlx (image generation /v1/images/*)
+#   8002 mlx_audio.server (TTS /v1/audio/speech, ASR /v1/audio/transcriptions)
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: studio-media-llm
+spec:
+  static:
+    host: studio.homelab.internal
+    port: 8000
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: studio-media-image
+spec:
+  static:
+    host: studio.homelab.internal
+    port: 8001
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: studio-media-audio
+spec:
+  static:
+    host: studio.homelab.internal
+    port: 8002

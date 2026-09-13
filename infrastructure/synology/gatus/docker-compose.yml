@@ -12,8 +12,10 @@ services:
     image: ghcr.io/twin/gatus:v5.36.0
     container_name: gatus
     restart: unless-stopped
+    # host port moved 9400 -> 9410: a NAS-local MoviePilot container took 9400
+    # after the NAS redeploy and Gatus could not bind it (heartbeats got 405).
     ports:
-      - "9400:9400"
+      - "9410:9400"
     env_file:
       - gatus.env
     volumes:
@@ -178,7 +180,7 @@ configs:
       # PUSH (external) endpoints — cluster jobs POST heartbeats here.
       # Push pattern from inside cluster:
       #   curl -X POST -H "Authorization: Bearer $EXTERNAL_TOKEN" \
-      #     "https://nas.homelab.internal:9400/api/v1/endpoints/<group>_<name>/external?success=true&duration=42s"
+      #     "https://nas.homelab.internal:9410/api/v1/endpoints/<group>_<name>/external?success=true&duration=42s"
       # Missed-push detection is implicit: if no push within the heartbeat
       # interval, the most recent status remains and ages out, triggering alert
       # via failure-threshold after consecutive synthesized failures.
