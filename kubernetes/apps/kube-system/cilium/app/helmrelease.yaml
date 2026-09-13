@@ -16,7 +16,7 @@ spec:
     # Recommendation:netkit, host-routing, bbr, ebpf-backend-memory, ebpf-clock-probe, preallocate-maps, maglev-hashing;
     # :: features
     # hubble:enabled, hostLegacyRouting:disabled, ipam:kubernetes;
-    # envoy:disabled, gatewayAPI:disabled, bgpControlPlane:disabled, l2announcements:disabled;
+    # envoy:disabled, gatewayAPI:disabled, bgpControlPlane:disabled
     autoDirectNodeRoutes: true
     bandwidthManager:
       enabled: true
@@ -77,7 +77,9 @@ spec:
     kubeProxyReplacement: "true"
     kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
     l2announcements:
-      enabled: false
+      # leader node answers ARP for LB VIPs on bond0 — replaces the switch's
+      # proxy-arp for the in-/24 pool (2026-09-13 ARP poisoning incident)
+      enabled: true
     loadBalancer:
       acceleration: native
       algorithm: maglev

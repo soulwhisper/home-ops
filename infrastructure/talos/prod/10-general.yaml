@@ -234,6 +234,8 @@ cluster:
   etcd:
     extraArgs:
       quota-backend-bytes: 8589934592
+      # expose metrics for vmagent scrape (etcd mixin rules); internal VLAN only
+      listen-metrics-urls: http://0.0.0.0:2381
     advertisedSubnets:
       - 10.10.0.0/24
 ---

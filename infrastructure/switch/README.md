@@ -33,10 +33,7 @@ graph TD
 
 - All LACP devices using `layer 3+4` for better compatibility;
 - Enable jumbo frame for `K8S`, `NAS`, `Router`;
-- `Vlan-interface100` runs `proxy-arp enable` + `local-proxy-arp enable`: the
-  MetalLB pool `10.10.0.128/27` sits *inside* the LAB `/24`, so same-subnet
-  clients (workstation, nodes, router VLAN100 leg) ARP for service VIPs
-  instead of routing via the switch. Without proxy ARP those ARPs go
-  unanswered (BGP mode holds no L2 address) and clients see
-  `EHOSTUNREACH`/`No route to host`. Clients on other VLANs and VPN guests
-  already route via their gateway, which resolves the `/27` over eBGP.
+- `Vlan-interface100` runs NO `proxy-arp`/`local-proxy-arp`: cilium
+  L2 announcements answer VIP ARPs (`10.10.0.128/27`) from the leader node's
+  `bond0`; other VLANs/VPN route via eBGP. Switch-side proxy ARP answered for
+  node IPs as well and poisoned cross-node traffic.
