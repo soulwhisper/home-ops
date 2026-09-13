@@ -17,14 +17,6 @@ Each MS-01 node runs Talos Linux with:
 - **GPU**: Intel Iris Xe (i915) — exposed via Intel GPU Plugin for media transcoding
 - **Boot**: sd-boot, Talos factory image with custom schematic (Kata Containers, i915, NUT, Intel microcode)
 
-
-### Watch Points
-
-- **MS-01 system SSD write stalls (observed 2026-09-13)**: etcd on exarch-02 logged `slow fdatasync` up to 15.4s (5 events within ~1.5h; exarch-01/03 had 1–2 isolated events). One episode stalled raft agreement long enough to trip cluster-wide leader-election loss — 9 controllers (incl. kube-controller-manager, kube-scheduler) exited and recovered within seconds. etcd WAL lives on the EPHEMERAL partition (`/var/lib/etcd`, `nvme1n1p4`). If stalls recur, check drive health via smartctl-exporter and consider I/O isolation for etcd. Note: Talos `diskSelector` targets a 256GB-class drive (SQF-C3AV1-256GDEDM) while the table above says 512GB — reconcile on next hardware audit.
-
-### Future Plans
-
-- **UPS (NUT) monitoring**: the SANTAK TG-Box 850 is attached and Talos runs the NUT extension, but no exporter/alerting exists yet — power events are currently invisible. Not yet migrated to a real implementation; candidate: NUT exporter on the NAS or a small in-cluster daemon scraping the UPS, plus a vmalert rule for on-battery / low-charge.
 ### Network Topology
 
 ```
