@@ -37,6 +37,9 @@ spec:
         kube-apiserver-histogram.rules: { enabled: false }
         kube-apiserver-slos: { enabled: false }
         kubelet.rules: { enabled: false }
+        # count:up0/count:up1 are empty whenever all targets are up and trip
+        # RecordingRulesNoData by design
+        kube-prometheus-general.rules: { enabled: false }
 
     # : vmsingle as prometheus
     # : http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428
