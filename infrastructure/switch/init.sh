@@ -91,9 +91,6 @@ interface vlan-interface 100
  bfd min-transmit-interval 400
  bfd min-receive-interval 400
  bfd detect-multiplier 5
- # LB VIPs (10.10.0.128/27, inside this /24) are answered by the cilium
- # L2-announcement leader node directly — NO proxy-arp here: it answered ARP
- # for node IPs too and poisoned cilium neighbor entries on 2026-09-13.
 
 interface vlan-interface 200
  ip address 10.20.0.1 24
