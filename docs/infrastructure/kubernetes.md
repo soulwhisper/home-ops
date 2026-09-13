@@ -220,7 +220,7 @@ Each non-trivial application defines its own `OCIRepository` resource in its `ap
 
 The `OCIRepository` fetches only the chart layer via `layerSelector` with `operation: copy`, which extracts the Helm chart tarball from the OCI manifest without pulling unrelated layers.
 
-### App-Template Pattern (37 Cross-Namespace References)
+### App-Template Pattern (36 Cross-Namespace References)
 
 For applications that don't need a custom Helm chart, the **app-template** pattern is used. A single `OCIRepository` is defined in `kubernetes/flux/repositories/app-template.yaml`:
 
@@ -259,7 +259,7 @@ This cross-namespace reference is used by 35 HelmReleases across 8 namespaces:
 | smarthome-apps    | 6     | home-assistant (app + sgcc), frigate, zigbee2mqtt, mosquitto, scrypted                                                                                               |
 | servitor-apps     | 1     | hermes-agent                                                                                                                                                         |
 | gaming-apps       | 2     | crafty-controller, foundryvtt                                                                                                                                        |
-| monitoring-system | 3     | langfuse (app + worker), heartbeats                                                                                                                                  |
+| monitoring-system | 2     | langfuse (app + worker)                                                                                                                                              |
 | networking-system | 1     | agentgateway MCP config                                                                                                                                              |
 | database-system   | 1     | cnpg maintenance (dr-test cronjob)                                                                                                                                   |
 
