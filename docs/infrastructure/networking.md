@@ -131,6 +131,32 @@ Diagnostic traps that cost time, do not repeat:
 - **Do not trust busybox `wget` as an egress probe** through the tproxy — it failed (TLS/SNI handling) while real clients (containerd, curl) succeeded on the same path. Test with the actual workload.
 - `dns-resolve-cache` / NTP errors on the Talos console during install are usually a *routing* symptom, not a DNS/NTP service problem — both were verified healthy on `10.10.0.254` while nodes reported them down.
 
+#### ARP, proxy-ARP, and LB advertisement (learned 2026-09-13)
+
+A day-long outage traced to the LoadBalancer pool (`10.10.0.128/27`) living
+*inside* the node /24: same-subnet clients ARP for VIPs, so the switch ran
+`local-proxy-arp enable` to answer for them — but it answered for *node IPs
+too*, and after any node reboot cilium's `extern_learn` neighbor entries
+latched the switch SVI MAC as the next hop for peer nodes. All cross-node
+pod traffic then hairpinned to the switch and died (no pod-CIDR route).
+
+1. **Unscoped `local-proxy-arp enable` is a broken-recovery route, not a fix.**
+   Restoring it brought routes back because DNS/NTP/router reachability never
+   actually depended on it — the correlation was wrong (the real causes were
+   the stale META route from the single-NIC test and a shutdown-limbo node).
+   What it reliably *does* is re-poison node ARP on every re-learn. The correct
+   move is deleting the need for it, not scoping it (`ip-range` scoping was
+   tried and reverted).
+2. **LB pool sharing the node /24 forces ARP tricks — that's the conflict.**
+   Fixed by cilium `l2announcements` on `bond0`: the lease-holding node answers
+   VIP ARPs with its own MAC (verified: `10.10.0.131` resolves to the leader's
+   bond MAC from other nodes), BGP/FRR-K8s keeps serving routed clients, and
+   *both* switch ARP-proxy modes are now **off** on Vlan-interface100.
+   Mesh verified 3/3 with zero manual ARP pins.
+
+Until the LB pool moves out of the node /24, do not re-enable any `proxy-arp`
+on Vlan-interface100.
+
 ### BGP Design
 
 The core switch and each Kubernetes node run eBGP to advertise pod and LoadBalancer CIDRs.

@@ -23,8 +23,9 @@ spec:
     defaultRules:
       rules:
         groups:
-          etcd:
-            create: false
+          # etcd metrics now scraped from :2381 (talos listen-metrics-urls);
+          # controller-manager/scheduler stay off — static pods already covered
+          # by k8s.rules pod-level alerts (chicken-and-egg with the control plane)
           kubernetesSystemControllerManager:
             create: false
           kubernetesSystemScheduler:
@@ -40,6 +41,11 @@ spec:
         # count:up0/count:up1 are empty whenever all targets are up and trip
         # RecordingRulesNoData by design
         kube-prometheus-general.rules: { enabled: false }
+      # etcd mixin rules (upstream monitoring-mixins); fetched by syncJob at
+      # deploy time. kubeEtcd scraping stays off — etcd is scraped via the
+      # dedicated ScrapeConfig (talos :2381, no in-cluster etcd pods).
+      sources:
+        etcd: { enabled: true }
 
     # : vmsingle as prometheus
     # : http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428

@@ -99,11 +99,11 @@ data:
             href: https://10.0.0.10
             icon: vmware-esxi.svg
         - OpenWRT:
-            href: https://10.10.0.254
+            href: http://10.10.0.254
             icon: openwrt.svg
             widget:
               type: openwrt
-              url: https://10.10.0.254
+              url: http://10.10.0.254
               username: {{HOMEPAGE_VAR_OPENWRT_USERNAME}}
               password: {{HOMEPAGE_VAR_OPENWRT_PASSWORD}}
               interfaceName: wan

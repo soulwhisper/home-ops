@@ -1,0 +1,12 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliuml2announcementpolicy_v2alpha1.json
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: pool
+spec:
+  # answer ARP for LoadBalancer VIPs (10.10.0.128/27) from the leader node's
+  # bond0; BGP via FRR-K8s stays for routed (other-VLAN) clients
+  interfaces:
+    - bond0
+  loadBalancerIPs: true
