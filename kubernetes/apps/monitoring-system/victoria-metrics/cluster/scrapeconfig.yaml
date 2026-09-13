@@ -1,26 +1,3 @@
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/scrapeconfig_v1alpha1.json
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: ScrapeConfig
-metadata:
-  name: &name synology-snmp
-spec:
-  staticConfigs:
-    - targets: ["nas.homelab.internal"]
-  metricsPath: /snmp
-  params:
-    module: [synology]
-  relabelings:
-    - action: replace
-      targetLabel: job
-      replacement: *name
-    - sourceLabels: [__address__]
-      targetLabel: __param_target
-    - sourceLabels: [__param_target]
-      targetLabel: instance
-    - targetLabel: __address__
-      replacement: nas.homelab.internal:9116
----
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/scrapeconfig_v1alpha1.json
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig

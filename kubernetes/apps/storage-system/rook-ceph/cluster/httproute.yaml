@@ -9,6 +9,9 @@ metadata:
     gethomepage.dev/icon: rook.svg
     gethomepage.dev/name: Rook
     gethomepage.dev/group: Storage
+    # homepage k8s status looks up pods by app.kubernetes.io/name=<route name>;
+    # rook daemon pods carry operator labels instead
+    gethomepage.dev/pod-selector: app=rook-ceph-mgr
 spec:
   hostnames: ["rook.noirprime.com"]
   parentRefs:
@@ -29,6 +32,7 @@ metadata:
     gethomepage.dev/icon: ceph.svg
     gethomepage.dev/name: CephBuckets
     gethomepage.dev/group: Storage
+    gethomepage.dev/pod-selector: app=rook-ceph-rgw,rgw=ceph-objectstore
 spec:
   hostnames: ["s3.noirprime.com"]
   parentRefs:

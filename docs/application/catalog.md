@@ -61,7 +61,7 @@
 | Dragonfly Operator  | Redis-compatible cache operator         |
 | ClickHouse Operator | Analytical database operator (Langfuse) |
 
-## monitoring-system — Observability (14)
+## monitoring-system — Observability (13)
 
 | App                     | Purpose                                                |
 | ----------------------- | ------------------------------------------------------ |
@@ -74,7 +74,6 @@
 | Kube-State-Metrics      | K8s object state metrics                               |
 | Smartctl Exporter       | NVMe/SSD SMART monitoring                              |
 | Blackbox Exporter       | Endpoint probing (HTTP/TCP/ICMP)                       |
-| Heartbeats              | CronJob heartbeat monitoring                           |
 | Silence Operator        | Alert silencing for maintenance                        |
 | Headlamp                | K8s Web UI (RBAC + OIDC)                               |
 | Langfuse                | LLM observability (ClickHouse + CNPG + S3)             |

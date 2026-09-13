@@ -103,7 +103,7 @@ spec:
               - 'attributes["gen_ai.system"] == nil'
       exporters:
         otlp_http/victoria-traces:
-          endpoint: "http://victoria-traces.monitoring-system.svc.cluster.local:10428/insert/opentelemetry/v1/traces"
+          endpoint: "http://victoria-traces.monitoring-system.svc.cluster.local:10428/insert/opentelemetry"
           tls:
             insecure: true
           sending_queue:

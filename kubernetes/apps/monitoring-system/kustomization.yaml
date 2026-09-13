@@ -23,5 +23,4 @@ resources:
   - ./victoria-traces/ks.yaml # replace tempo
   # others
   - ./headlamp/ks.yaml
-  - ./heartbeats/ks.yaml
   - ./webhook-relay/ks.yaml

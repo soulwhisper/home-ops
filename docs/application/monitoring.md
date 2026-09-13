@@ -11,7 +11,6 @@ flowchart LR
     KSM[kube-state-metrics]
     SMART[smartctl-exporter]
     BB[Blackbox Exporter]
-    HEART[Heartbeats CronJobs]
   end
 
   subgraph Ingestion
@@ -41,7 +40,6 @@ flowchart LR
 
   NE & KSM & SMART --> VM
   BB --> VM
-  HEART --> GATUS[Gatus ─ Synology]
   VM --> VMS
   FB --> VL
   OTEL --> VT & Langfuse
@@ -229,21 +227,8 @@ Per-node DaemonSet exposing S.M.A.R.T. disk health metrics from NVMe and SATA dr
 
 | Probe | Module | Targets |
 |-------|--------|---------|
-| `devices` | `icmp` | esxi, nas, unifi, zigbee (all `.homelab.internal`) |
+| `devices` | `icmp` | esxi, nas, unifi (all `.homelab.internal`; zigbee commented out — device offline) |
 | `nfs` | `tcp_connect` | `nas.homelab.internal:2049` |
-
-## Heartbeats
-
-CronJob-based external heartbeat checks using the `app-template` chart. Each script pushes success/failure/duration to the Gatus API on the Synology host (`10.10.0.100:9400`). Authorization via Bearer token from 1Password.
-
-| CronJob | Schedule | Checks |
-|---------|----------|--------|
-| `ceph-health` | `*/5 * * * *` | Ceph health gauge from rook-ceph-mgr metrics |
-| `flux-reconcile` | `*/30 * * * *` | All Flux Kustomization/HelmRelease/Repository Ready conditions |
-| `cnpg-backup` | `15 */6 * * *` | Most recent CNPG Backup in 12h window = completed |
-| `kopiur-snapshot` | `45 */6 * * *` | All kopiur SnapshotSchedules succeeded within 12h window |
-
-Time zone: `Asia/Shanghai`. All jobs use `alpine/k8s:1.36.2` with minimal resources and `backoffLimit: 0` (no retries).
 
 ## Silence Operator
 
@@ -311,6 +296,4 @@ Alertmanager groups alerts by `alertname` + `job`, waits 1m before first notific
 
 ## External observation
 
-### Gatus on Synology
-
-Gatus runs on the Synology NAS (`10.10.0.100:9400`) as an external observer per the [public exposure ADR](../decisions/public-exposure.md). Heartbeat CronJobs push endpoint status to Gatus, providing an independent health check path outside the Kubernetes cluster. This validates that external services are reachable even when cluster-internal monitoring is degraded.
+Gatus on the Synology NAS and the cluster heartbeat CronJobs were archived (`.archived/infrastructure/synology/gatus`, `.archived/kubernetes/monitoring/heartbeats`) — the NAS no longer deploys the Gatus stack. Alerting is Pushover-only via Alertmanager until an external observer is re-established.

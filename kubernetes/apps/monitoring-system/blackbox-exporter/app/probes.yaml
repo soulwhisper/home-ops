@@ -14,7 +14,7 @@ spec:
         - esxi.homelab.internal
         - nas.homelab.internal
         - unifi.homelab.internal
-        - zigbee.homelab.internal
+        # - zigbee.homelab.internal  # offline (SLZB-06P10 powered down)
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
 apiVersion: monitoring.coreos.com/v1

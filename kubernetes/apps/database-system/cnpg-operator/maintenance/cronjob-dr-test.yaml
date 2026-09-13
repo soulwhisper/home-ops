@@ -12,6 +12,116 @@ spec:
     namespace: gitops-system
 
   values:
+    # Verification script. NOTE: `barman-cloud-check-wal-archive` is a
+    # *pre-flight* check for NEW servers — it fails unless the WAL archive is
+    # empty — so it can never pass against this live, archiving cluster.
+    # This script instead verifies the backup chain is restorable:
+    # a base backup exists, its begin_wal is archived, and per-timeline WAL
+    # sequences have no gaps.
+    configMaps:
+      scripts:
+        enabled: true
+        data:
+          verify-backup-chain.py: |
+            #!/usr/bin/env python3
+            import re
+            import sys
+
+            import boto3
+
+            ENDPOINT = "http://nas.homelab.internal:9000"
+            BUCKET = "postgres"
+            SERVER = "postgres-v1"
+
+            WAL_RE = re.compile(r"^([0-9A-F]{24})(\.partial)?(\.[a-z0-9]+)?$")
+            HISTORY_RE = re.compile(r"^[0-9A-F]{8}\.history(\.[a-z0-9]+)?$")
+
+            s3 = boto3.client("s3", endpoint_url=ENDPOINT)
+            errors = []
+
+
+            def list_keys(prefix):
+                keys, token = [], None
+                while True:
+                    kwargs = {"Bucket": BUCKET, "Prefix": prefix}
+                    if token:
+                        kwargs["ContinuationToken"] = token
+                    resp = s3.list_objects_v2(**kwargs)
+                    keys.extend(o["Key"] for o in resp.get("Contents", []))
+                    if not resp.get("IsTruncated"):
+                        return keys
+                    token = resp["NextContinuationToken"]
+
+
+            backup_keys = sorted(
+                k for k in list_keys(f"{SERVER}/base/") if k.endswith("/backup.info")
+            )
+            begin_tli = begin_pos = None
+            if not backup_keys:
+                errors.append(f"no base backups found under s3://{BUCKET}/{SERVER}/base/")
+            else:
+                latest = backup_keys[-1]
+                info = s3.get_object(Bucket=BUCKET, Key=latest)["Body"].read().decode()
+                fields = dict(
+                    line.split("=", 1) for line in info.splitlines() if "=" in line
+                )
+                begin_wal = fields.get("begin_wal")
+                if not begin_wal or not re.fullmatch(r"[0-9A-F]{24}", begin_wal):
+                    errors.append(f"{latest}: missing/invalid begin_wal in backup.info")
+                else:
+                    begin_tli, begin_pos = begin_wal[:8], int(begin_wal[8:], 16)
+                    print(f"latest backup: {latest.split('/')[-2]} begin_wal={begin_wal}")
+
+            timelines = {}
+            for key in list_keys(f"{SERVER}/wals/"):
+                name = key.rsplit("/", 1)[-1]
+                if HISTORY_RE.match(name):
+                    continue
+                m = WAL_RE.match(name)
+                if not m or m.group(2):  # skip .partial segments
+                    continue
+                seg = m.group(1)
+                # position within timeline: logid * 256 segments/log + segno
+                pos = int(seg[8:16], 16) * 0x100 + int(seg[16:24], 16)
+                timelines.setdefault(seg[:8], []).append(pos)
+
+            if not timelines:
+                errors.append(f"WAL archive s3://{BUCKET}/{SERVER}/wals/ is empty")
+            else:
+                for tli in sorted(timelines):
+                    positions = sorted(set(timelines[tli]))
+                    gaps = [
+                        (a, b)
+                        for a, b in zip(positions, positions[1:])
+                        if b - a != 1
+                    ]
+                    if gaps:
+                        a, b = gaps[0]
+                        errors.append(
+                            f"timeline {int(tli, 16)}: {len(gaps)} WAL gap(s), "
+                            f"first: {tli}{a:016X} -> {tli}{b:016X}"
+                        )
+                    print(
+                        f"timeline {int(tli, 16)}: {len(positions)} WAL segments "
+                        f"(continuous: {not gaps})"
+                    )
+
+            # latest backup must be recoverable: its begin WAL must be archived
+            if begin_tli is not None and timelines:
+                if begin_tli not in timelines:
+                    errors.append(
+                        f"latest backup timeline {int(begin_tli, 16)} has no archived WALs"
+                    )
+                elif min(timelines[begin_tli]) > begin_pos:
+                    errors.append(
+                        f"archive for timeline {int(begin_tli, 16)} starts after the "
+                        f"latest backup's begin_wal; PITR of that backup is impossible"
+                    )
+
+            for err in errors:
+                print(f"VERIFICATION FAILED: {err}")
+            sys.exit(1 if errors else 0)
+
     controllers:
       *name :
         type: cronjob
@@ -35,12 +145,9 @@ spec:
               repository: ghcr.io/cloudnative-pg/postgresql
               tag: 18
             command:
-              - barman-cloud-check-wal-archive
+              - python3
             args:
-              - --endpoint-url=http://nas.homelab.internal:9000
-              - --read-timeout=300
-              - s3://postgres/
-              - postgres-v1
+              - /scripts/verify-backup-chain.py
             env:
               AWS_ACCESS_KEY_ID:
                 valueFrom:
@@ -64,6 +171,13 @@ spec:
               readOnlyRootFilesystem: true
 
     persistence:
+      scripts:
+        type: configMap
+        identifier: scripts
+        defaultMode: 0555
+        globalMounts:
+          - path: /scripts
+            readOnly: true
       tmpfs:
         type: emptyDir
         globalMounts:

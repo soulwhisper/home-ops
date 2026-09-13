@@ -78,6 +78,10 @@ spec:
         existingClaim: *name
         globalMounts:
           - path: /kavita/config
+      tmpfs:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
       shared:
         existingClaim: document
         globalMounts:
