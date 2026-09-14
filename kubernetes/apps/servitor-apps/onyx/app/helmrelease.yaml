@@ -6,6 +6,7 @@ metadata:
   name: &name onyx
 spec:
   interval: 1h
+  timeout: 20m # model-server pods need ~10min (torch init throttled at 2 CPU)
   chartRef:
     kind: OCIRepository
     name: *name
@@ -59,6 +60,13 @@ spec:
         limits:
           cpu: 2000m
           memory: 4Gi
+      # no probes by default: v4.7.2 upgrade timed out waiting for these two
+      # deployments (big ML image pull through tproxy + torch init on 2 CPU).
+      # Images are pre-pulled on all nodes; probe keeps helm's window honest.
+      startupProbe:
+        httpGet: { path: /api/health, port: 9000 }
+        periodSeconds: 10
+        failureThreshold: 120
     indexCapability:
       resources:
         requests:
@@ -67,6 +75,10 @@ spec:
         limits:
           cpu: 2000m
           memory: 4Gi
+      startupProbe:
+        httpGet: { path: /api/health, port: 9000 }
+        periodSeconds: 10
+        failureThreshold: 120
     celery_worker_docprocessing:
       resources:
         requests: { cpu: 250m, memory: 1Gi }
