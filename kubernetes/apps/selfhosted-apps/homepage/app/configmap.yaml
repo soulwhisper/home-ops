@@ -30,21 +30,17 @@ data:
         header: false
         style: columns
       Download:
-        icon: progress-download
         style: columns
       Media:
-        icon: mdi-play-circle-outline
         style: row
         columns: 2
       Service:
-        icon: si-local
         style: row
         columns: 2
       Observability:
         style: row
         columns: 2
       SmartHome:
-        icon: mdi-home-automation
         style: columns
       Storage:
         style: columns
