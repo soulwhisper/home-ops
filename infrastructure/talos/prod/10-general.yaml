@@ -181,14 +181,8 @@ hostDNS:
 apiVersion: v1alpha1
 kind: TimeSyncConfig
 ntp:
-  # single-server NTP made nodes free-run at different rates whenever the
-  # router's own upstream stepped (tproxy failover) -> CephMonClockSkew
-  # episodes. Router stays first/preferred; public CN pools as fallbacks so
-  # each node disciplines against an independent source during flaps.
   servers:
     - 10.10.0.254
-    - ntp.aliyun.com
-    - ntp.tencent.com
 ---
 apiVersion: v1alpha1
 kind: OOMConfig
