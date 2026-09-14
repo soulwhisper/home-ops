@@ -36,11 +36,7 @@ spec:
               HINDSIGHT_API_OTEL_TRACES_ENABLED: "true"
               HINDSIGHT_API_OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
               HINDSIGHT_API_VECTOR_EXTENSION: "vchord"
-              # native: pgroonga grn db never initialized on the restored cluster
-              # (CNPG restore skips the initdb-time grn db create; no groonga
-              # CLI/init function in the image). Zero groonga indexes existed,
-              # nothing to migrate. Re-evaluate pgroonga once the grn db is fixed.
-              HINDSIGHT_API_TEXT_SEARCH_EXTENSION: "native"
+              HINDSIGHT_API_TEXT_SEARCH_EXTENSION: "pgroonga"
               # Embeddings via the siliconflow verification lane (/sf/*) while
               # MacStudio is offline — SAME model (Qwen/Qwen3-Embedding-4B,
               # 2560d), so existing pgvector data stays valid. Restore /v1 +
