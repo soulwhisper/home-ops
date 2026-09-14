@@ -60,6 +60,15 @@ spec:
             image:
               repository: ghcr.io/soulwhisper/hermes-suite
               tag: 2026.9.11
+            # every k8s rollout SIGTERMs the gateway and it broadcasts
+            # "Gateway shutting down — task interrupted" to feishu mid-task
+            # (10 graceful SIGTERMs/3d, zero crashes). Give in-flight tasks a
+            # grace window before the signal lands; 25s stays inside the
+            # default 30s terminationGracePeriodSeconds.
+            lifecycle:
+              preStop:
+                exec:
+                  command: ["sh", "-c", "sleep 25"]
             env:
               HERMES_SERVICES: "dashboard,gateway,webui"
               # plugins
