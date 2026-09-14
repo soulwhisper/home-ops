@@ -29,3 +29,65 @@ spec:
     staticConfig:
       static:
         - nas.homelab.internal:2049
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
+# MacStudio lanes: 8000 oMLX (embeddings/rerank/chat), 8001 vmlx (image),
+# 8002 mlx_audio (TTS/ASR). TCP-level service connectivity per port.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: studio-tcp
+spec:
+  interval: 30s
+  module: tcp_connect
+  prober:
+    url: blackbox-exporter.monitoring-system.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - studio.homelab.internal:8000
+        - studio.homelab.internal:8001
+        - studio.homelab.internal:8002
+      labels:
+        service: macstudio
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
+# per-model L7: actual qwen3-embedding-4b inference call, direct to the Mac
+# (agentgateway path is covered by pod monitoring; this catches Mac down /
+# model unloaded — the failure mode that crashlooped hindsight)
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: studio-embedding
+spec:
+  interval: 30s
+  scrapeTimeout: 15s
+  module: studio_embedding
+  prober:
+    url: blackbox-exporter.monitoring-system.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - http://studio.homelab.internal:8000/v1/embeddings
+      labels:
+        service: macstudio
+        model: qwen3-embedding-4b
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: studio-rerank
+spec:
+  interval: 30s
+  scrapeTimeout: 15s
+  module: studio_rerank
+  prober:
+    url: blackbox-exporter.monitoring-system.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - http://studio.homelab.internal:8000/v1/rerank
+      labels:
+        service: macstudio
+        model: qwen3-reranker-0.6b

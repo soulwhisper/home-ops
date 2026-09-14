@@ -9,6 +9,7 @@ metadata:
     gethomepage.dev/icon: woodpecker-ci.svg
     gethomepage.dev/name: Woodpecker
     gethomepage.dev/group: Service
+    gethomepage.dev/pod-selector: app.kubernetes.io/instance=woodpecker,app.kubernetes.io/name=server
 spec:
   hostnames: ["ci.noirprime.com"]
   parentRefs:

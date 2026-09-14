@@ -35,17 +35,62 @@ spec:
           timeout: 5s
           tcp:
             preferred_ip_protocol: ip4
+        # MacStudio (oMLX) per-model L7 probes: direct to the host, bypassing
+        # agentgateway (gateway health is covered by pod monitoring; these
+        # catch Mac down / model unloaded, the hindsight-crashloop failure mode)
+        studio_embedding:
+          prober: http
+          timeout: 15s
+          http:
+            method: POST
+            headers:
+              Content-Type: application/json
+            body: '{"model":"qwen3-embedding-4b","input":"probe"}'
+            valid_http_versions:
+              - HTTP/1.1
+            preferred_ip_protocol: ip4
+            fail_if_body_not_matches_regexp:
+              - '"embedding"'
+        studio_rerank:
+          prober: http
+          timeout: 15s
+          http:
+            method: POST
+            headers:
+              Content-Type: application/json
+            body: '{"model":"qwen3-reranker-0.6b","query":"probe","documents":["alpha","beta"]}'
+            valid_http_versions:
+              - HTTP/1.1
+            preferred_ip_protocol: ip4
+            fail_if_body_not_matches_regexp:
+              - '"results"|"relevance"'
     prometheusRule:
       enabled: true
       rules:
         - alert: BlackboxProbeFailed
-          expr: probe_success == 0
+          # $labels.target does not exist on probe metrics (host is .instance);
+          # macstudio lanes excluded: MacStudioModelServiceDown covers them
+          # faster and model-aware (fires 5m vs 15m)
+          expr: probe_success{service!="macstudio"} == 0
           for: 15m
           labels:
             severity: critical
           annotations:
             summary: |-
-              The host {{ $labels.target }} is currently unreachable
+              The host {{ $labels.instance }} is currently unreachable
+        # faster + model-specific companion to BlackboxProbeFailed (15m) for the
+        # MacStudio lanes agents depend on (vmcp optimizer, hindsight).
+        # NOTE: Prometheus annotation templates have no sprig `default` — the vm
+        # operator silently drops rules that use it during VMRule conversion.
+        - alert: MacStudioModelServiceDown
+          expr: probe_success{service="macstudio"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: |-
+              Mac Studio model service probe failing: {{ $labels.model }} {{ $labels.instance }} (5m).
+              Dependents: vmcp optimizer (find_tool), hindsight embeddings/rerank.
     securityContext:
       readOnlyRootFilesystem: true
       allowPrivilegeEscalation: false

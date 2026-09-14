@@ -5,7 +5,7 @@ kind: Kustomization
 resources:
   # shared
   - ./ciliumnetworkpolicy.yaml
-  - ./embeddingserver.yaml
+  - ./externalsecret.yaml
   - ./mcptelemetryconfig.yaml
   - ./prometheusrule.yaml
   # groups

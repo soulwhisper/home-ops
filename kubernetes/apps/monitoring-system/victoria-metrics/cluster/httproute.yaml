@@ -9,6 +9,7 @@ metadata:
     gethomepage.dev/icon: victoriametrics.svg
     gethomepage.dev/name: VictoriaMetrics
     gethomepage.dev/group: Observability
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=vmsingle
 spec:
   hostnames: ["metrics.noirprime.com"]
   parentRefs:
@@ -39,9 +40,9 @@ metadata:
   name: &name vmalertmanager-victoria-metrics-cluster
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/icon: alertmanager.svg
     gethomepage.dev/name: AlertManager
     gethomepage.dev/group: Observability
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=vmalertmanager
 spec:
   hostnames: ["alert.noirprime.com"]
   parentRefs:

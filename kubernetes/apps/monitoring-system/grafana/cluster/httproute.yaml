@@ -9,6 +9,7 @@ metadata:
     gethomepage.dev/icon: grafana.svg
     gethomepage.dev/name: Grafana
     gethomepage.dev/group: Observability
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=grafana
 spec:
   hostnames: ["grafana.noirprime.com"]
   parentRefs:

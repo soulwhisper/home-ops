@@ -28,30 +28,25 @@ data:
     layout:
       Calendar:
         header: false
-        style: row
+        style: columns
       Download:
-        icon: progress-download
-        style: row
+        style: columns
       Media:
-        icon: mdi-play-circle-outline
         style: row
-        columns: 4
+        columns: 2
       Service:
-        icon: si-local
         style: row
-        columns: 4
-      SmartHome:
-        icon: mdi-home-automation
-        style: row
-        columns: 4
+        columns: 2
       Observability:
         style: row
-        columns: 4
+        columns: 2
+      SmartHome:
+        style: columns
+      Storage:
+        style: columns
       Infrastructure:
         style: columns
       Networking:
-        style: columns
-      Storage:
         style: columns
   custom.css: ""
   custom.js: ""
