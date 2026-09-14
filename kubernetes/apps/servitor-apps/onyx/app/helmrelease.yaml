@@ -50,6 +50,7 @@ spec:
           memory: 4Gi
       opensearchJavaOpts: "-Xmx2g -Xms2g"
       persistence:
+        storageClass: ceph-block
         size: 30Gi
     inferenceCapability:
       # in-cluster model serving retired in favor of agentgateway
