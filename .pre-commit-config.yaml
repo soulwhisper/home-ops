@@ -48,6 +48,9 @@ repos:
         entry: kubeconform
         args:
           - "-strict"
+          # mirror .woodpecker/flux-kubeconform.yaml: schema gaps (e.g.
+          # kustomize Kustomization) must not fail local runs when CI passes
+          - "-ignore-missing-schemas"
           - "-summary"
           - "-schema-location=default"
           - "-schema-location=https://soulwhisper.github.io/k8s-schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
