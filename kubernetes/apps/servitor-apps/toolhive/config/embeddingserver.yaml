@@ -6,6 +6,17 @@ metadata:
   name: shared-embedding
 spec:
   replicas: 2
+  # both replicas landed on exarch-02 (soft default spread only scores);
+  # hard-spread across nodes so one node loss keeps an embedding endpoint
+  podTemplateSpec:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/instance: shared-embedding
   resources:
     requests:
       cpu: 500m

@@ -88,6 +88,7 @@ spec:
           gethomepage.dev/icon: frigate.svg
           gethomepage.dev/name: FrigateNVR
           gethomepage.dev/group: SmartHome
+          gethomepage.dev/pod-selector: app.kubernetes.io/name=frigate
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

@@ -28,17 +28,20 @@ spec:
                     - PodsWithLocalStorage
                     - SystemCriticalPods
             - name: LowNodeUtilization
+              # requests-based: real usage idles at 10-30% everywhere (homelab),
+              # so usage-based thresholds never fired while requests skewed to
+              # 78% on exarch-02 vs 55% on exarch-01. pods=100 neutralizes the
+              # pods dimension: unset defaults to 0 and no node ever qualifies
+              # as underutilized.
               args:
-                metricsUtilization:
-                  source: KubernetesMetrics
                 thresholds:
-                  cpu: 20
-                  memory: 20
-                  pods: 20
+                  cpu: 60
+                  memory: 60
+                  pods: 100
                 targetThresholds:
-                  cpu: 50
-                  memory: 50
-                  pods: 50
+                  cpu: 70
+                  memory: 70
+                  pods: 100
             - name: RemoveFailedPods
               args:
                 reasons:

@@ -9,6 +9,7 @@ metadata:
     gethomepage.dev/icon: si-hermes
     gethomepage.dev/name: HermesBoard
     gethomepage.dev/group: Service
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=hermes-agent
 spec:
   hostnames: ["hermes.noirprime.com"]
   parentRefs:

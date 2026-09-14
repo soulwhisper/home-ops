@@ -9,6 +9,7 @@ metadata:
     gethomepage.dev/icon: victoriametrics.svg
     gethomepage.dev/name: VictoriaTraces
     gethomepage.dev/group: Observability
+    gethomepage.dev/pod-selector: app.kubernetes.io/instance=victoria-traces
 spec:
   hostnames: ["traces.noirprime.com"]
   parentRefs:
