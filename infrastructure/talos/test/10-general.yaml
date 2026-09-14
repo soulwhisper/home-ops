@@ -76,6 +76,11 @@ $patch: delete
 apiVersion: v1alpha1
 kind: KubeletConfig
 defaultRuntimeSeccompProfileEnabled: true # hardening pin
+config:
+  # see prod/10-general.yaml — prune unused images by age, GC earlier
+  imageMaximumGCAge: 72h0m0s
+  imageGCHighThresholdPercent: 70
+  imageGCLowThresholdPercent: 60
 ---
 apiVersion: v1alpha1
 kind: KubeNetworkConfig

@@ -23,12 +23,32 @@ data:
           - feishu
           - pushover
         title: '[{{ .payload.status | toUpper }}{{ if eq .payload.status "firing" }}:{{ len .payload.alerts }}{{ end }}] {{ .payload.commonLabels.alertname | default "Alertmanager" }}'
+        # Per alert: description/summary plus curated context labels only —
+        # dumping .labels produced a ~20-line wall per alert in feishu
+        # (endpoint/job/oid/prometheus/exporter noise). kube-state-metrics
+        # alerts carry the resource ns in exported_namespace (namespace is the
+        # exporter's); direct-scrape alerts keep it in namespace.
         message: |-
           {{- range $i, $a := .payload.alerts }}{{ if $i }}
           ---
           {{ end }}{{ $a.annotations.description | default ($a.annotations.summary | default ($a.annotations.message | default "Alert description not available")) }}
-          {{ range $k, $v := $a.labels }}{{ $k }}: {{ $v }}
-          {{ end }}{{- end }}
+          severity: {{ $a.labels.severity | default "unknown" }}
+          {{- with ($a.labels.exported_namespace | default $a.labels.namespace) }}
+          namespace: {{ . }}
+          {{- end }}
+          {{- with $a.labels.name }}
+          resource: {{ . }}
+          {{- end }}
+          {{- with $a.labels.pod }}
+          pod: {{ . }}
+          {{- end }}
+          {{- with $a.labels.container }}
+          container: {{ . }}
+          {{- end }}
+          {{- with $a.labels.kubernetes_node }}
+          node: {{ . }}
+          {{- end }}
+          {{- end }}
         params:
           # pushover reads priority/sound; feishu ignores unknown query keys
           priority: '{{ ternary "1" "0" (eq .payload.status "firing") }}'
