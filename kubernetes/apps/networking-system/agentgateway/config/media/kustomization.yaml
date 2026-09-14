@@ -3,5 +3,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ./agentgatewaybackend.yaml
+  # MacStudio offline — studio media backends (oMLX/vmlx/mlx_audio) parked;
+  # consumers flipped to the /sf/* siliconflow lane. Restore both lines when
+  # studio returns.
+  # - ./agentgatewaybackend.yaml
   - ./httproute.yaml

@@ -4,9 +4,13 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   # app
-  - ./agentgatewaybackend.yaml
+  # MacStudio offline — studio chat backends parked (see media/kustomization.yaml)
+  # - ./agentgatewaybackend.yaml
   - ./agentgatewaypolicy.yaml
   # utils
   - ./externalsecret.yaml
   - ./guardrails.yaml
   - ./httproute.yaml
+  # pre-mac verification lane
+  - ./siliconflow.yaml
+  - ./siliconflow-externalsecret.yaml

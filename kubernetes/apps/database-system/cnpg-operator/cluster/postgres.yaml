@@ -32,9 +32,14 @@ spec:
     name: cloudnative-pg
   enableSuperuserAccess: true
   postgresql:
+    # pgroonga MUST NOT be in preload at initdb: PGroonga 4.x's bootstrap-time
+    # hook then permanently breaks per-database grn initialization
+    # ([table][create] db not initialized on every CREATE INDEX; reproduced
+    # on scratch clusters 2026-09-14). Without preload the per-db store
+    # initializes lazily at CREATE EXTENSION (verified). Runtime re-adding is
+    # harmless if WAL/crash-safe is ever needed (enable_wal=off today).
     shared_preload_libraries:
       - vchord
-      - pgroonga
       - vchord_bm25
       - pg_tokenizer
     parameters:
