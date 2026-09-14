@@ -28,10 +28,15 @@ spec:
           labels:
             severity: critical
 
+        # for: 30m, was 5m: ready flips False for the whole duration of a
+        # routine helm/kustomize upgrade (5-20m for cnpg/monitoring/immich
+        # charts), so 5m fired on every renovate merge + transient etcd/tproxy
+        # blips (342 transitions/3d). Real stuck failures (onyx, admission
+        # rejections) persist way past 30m and still alert.
         - alert: HelmReleaseReconciliationFailure
           expr: |-
             gotk_resource_info{customresource_kind="HelmRelease", ready!="True"} == 1
-          for: 5m
+          for: 30m
           annotations:
             summary: >-
               HelmRelease {{ $labels.name }} in {{ $labels.exported_namespace }} is not ready
@@ -41,7 +46,7 @@ spec:
         - alert: KustomizationReconciliationFailure
           expr: |-
             gotk_resource_info{customresource_kind="Kustomization", ready!="True"} == 1
-          for: 5m
+          for: 30m
           annotations:
             summary: >-
               Kustomization {{ $labels.name }} in {{ $labels.exported_namespace }} is not ready
