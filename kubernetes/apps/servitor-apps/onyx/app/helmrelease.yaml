@@ -51,8 +51,12 @@ spec:
       opensearchJavaOpts: "-Xmx2g -Xms2g"
       persistence:
         size: 30Gi
-        storageClass: ceph-block
     inferenceCapability:
+      # in-cluster model serving retired in favor of agentgateway
+      # (litellm provider, see README): replicaCount 0 skips the deployment,
+      # the service stays so MODEL_SERVER_HOST still resolves. Embeddings/
+      # rerank fail until the litellm provider switch lands (admin REST).
+      replicaCount: 0
       resources:
         requests:
           cpu: 250m
@@ -68,6 +72,7 @@ spec:
         periodSeconds: 10
         failureThreshold: 120
     indexCapability:
+      replicaCount: 0 # see inferenceCapability above
       resources:
         requests:
           cpu: 250m
