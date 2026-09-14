@@ -43,8 +43,8 @@ spec:
           timeout: 30s
     optimizer:
       embeddingProvider: openai
-      embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
-      embeddingModel: qwen3-embedding-4b
+      embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf
+      embeddingModel: Qwen/Qwen3-Embedding-4B
       embeddingServiceTimeout: 15s
       maxToolsToReturn: 10
       hybridSearchSemanticRatio: "0.6"
@@ -93,8 +93,8 @@ spec:
           timeout: 30s
     optimizer:
       embeddingProvider: openai
-      embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
-      embeddingModel: qwen3-embedding-4b
+      embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf
+      embeddingModel: Qwen/Qwen3-Embedding-4B
       embeddingServiceTimeout: 15s
       maxToolsToReturn: 10
       hybridSearchSemanticRatio: "0.6"
@@ -143,8 +143,8 @@ spec:
           timeout: 30s
     optimizer:
       embeddingProvider: openai
-      embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
-      embeddingModel: qwen3-embedding-4b
+      embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf
+      embeddingModel: Qwen/Qwen3-Embedding-4B
       embeddingServiceTimeout: 15s
       maxToolsToReturn: 10
       hybridSearchSemanticRatio: "0.6"
