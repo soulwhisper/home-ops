@@ -59,7 +59,7 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/hermes-suite
-              tag: 2026.9.11
+              tag: 2026.9.14
             # every k8s rollout SIGTERMs the gateway and it broadcasts
             # "Gateway shutting down — task interrupted" to feishu mid-task
             # (10 graceful SIGTERMs/3d, zero crashes). Give in-flight tasks a
