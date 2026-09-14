@@ -181,14 +181,6 @@ hostDNS:
 apiVersion: v1alpha1
 kind: TimeSyncConfig
 ntp:
-  # Deliberately single-source (owner decision 2026-09-14):
-  # - public fallbacks are unreachable exactly when the router dies (it is
-  #   the gateway), so they only cover "router up, upstream degraded"
-  # - public-down is covered by the router itself (chrony orphan stratum 10
-  #   + driftfile); nodes free-running on independent sources would skew
-  #   against each other — worse for ceph/etcd than a shared slow source
-  # - Talos timed does ordered failover (no voting), so extra entries only
-  #   matter while the router is reachable but unsynchronized
   servers:
     - 10.10.0.254
 ---
