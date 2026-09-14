@@ -55,6 +55,15 @@ $patch: delete
 apiVersion: v1alpha1
 kind: KubeletConfig
 defaultRuntimeSeccompProfileEnabled: true # hardening pin
+config:
+  # renovate-driven image churn fills EPHEMERAL long before the default
+  # 85%/80% fs thresholds trigger kubelet image GC (CephNodeDiskspaceWarning
+  # fired 3 days after bring-up at 50% usage). Prune unused images by age and
+  # trigger pressure-based GC earlier. image-warm CI re-uses images every 6h,
+  # so 72h never evicts a warmed image.
+  imageMaximumGCAge: 72h0m0s
+  imageGCHighThresholdPercent: 70
+  imageGCLowThresholdPercent: 60
 ---
 apiVersion: v1alpha1
 kind: KubeNetworkConfig
