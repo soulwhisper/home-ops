@@ -116,6 +116,10 @@ spec:
             - receiver: "blackhole"
               matchers:
                 - alertname =~ "InfoInhibitor|Watchdog"
+            # info/none are dashboard-tier (KubeletTooManyPods ~17h/3d,
+            # RecordingRulesNoData): keep them off feishu. severity=error
+            # still falls through to the default receiver (flux alerts
+            # proved their worth catching drift)
             - receiver: "default"
               matchers:
                 - severity =~ "warning|critical"

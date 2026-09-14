@@ -52,3 +52,32 @@ spec:
     - name: mountpoint
       value: /var/lib/kubelet/pods
       matchType: "=~"
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/observability.giantswarm.io/silence_v1alpha2.json
+# chart-default vm-health rule with threshold 0: any warn log in the VM
+# stack fires it (2072 firing-min/3d). Per-rule threshold override is not
+# supported by the victoria-metrics-cluster chart (group-level only), so
+# silence notifications; the rule stays visible in grafana.
+apiVersion: observability.giantswarm.io/v1alpha2
+kind: Silence
+metadata:
+  name: vm-health-too-many-logs
+  namespace: monitoring-system
+spec:
+  matchers:
+    - name: alertname
+      value: TooManyLogs
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/observability.giantswarm.io/silence_v1alpha2.json
+# same threshold-0 class: a single failed scrape in 15m fires (1169
+# firing-min/3d). Pod churn (renovate rollouts, descheduler evictions)
+# makes scrape misses routine; TargetDown (10%/10m) covers real outages.
+apiVersion: observability.giantswarm.io/v1alpha2
+kind: Silence
+metadata:
+  name: vm-health-too-many-scrape-errors
+  namespace: monitoring-system
+spec:
+  matchers:
+    - name: alertname
+      value: TooManyScrapeErrors
