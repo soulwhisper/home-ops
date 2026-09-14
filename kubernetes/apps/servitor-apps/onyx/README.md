@@ -38,18 +38,52 @@ Config is **DB-driven via admin REST** (not helm values):
 1. Smoke-test (needs `FULL_ADMIN_PANEL_ACCESS` session or PAT):
    `POST /admin/embedding/test-embedding`
    `{provider_type: "litellm", api_url: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf/embeddings", model_name: "Qwen/Qwen3-Embedding-4B", api_key: "<gateway key>"}`
-2. Register provider: `PUT /admin/embedding/provider` (same fields).
-3. Switch: `POST /search-settings/set-new-search-settings` with
+2. Switch: `POST /search-settings/set-new-search-settings` with
    `model_name: "Qwen/Qwen3-Embedding-4B"`, `provider_type: "litellm"`,
    `model_dim: 2560`, `switchover_type: "REINDEX"`.
-4. Reranker: admin UI → Search Settings → Reranking → `litellm` with
+3. Reranker: admin UI → Search Settings → Reranking → `litellm` with
    `api_url: …/sf/rerank` (prod `/docs` disabled; confirm exact API live).
-5. After the swap completes, shrink model-server resources in values.
+4. After the swap completes, shrink model-server resources in values.
 
 Cautions: full corpus **re-index** (old model serves during the swap; hours at
 the default 2-CPU indexing limit — raise `indexCapability` limits for the
 window on large corpora). Embeddings traffic becomes gateway-dependent;
 studio↔SF lanes share the same 2560d space, so either lane is safe.
+
+## Disabling in-cluster model servers (verified workable)
+
+The chart supports it surgically — `templates/*-model-deployment.yaml` is
+guarded by `{{- if gt (int .Values.*Capability.replicaCount) 0 }}`:
+
+```yaml
+inferenceCapability:
+  replicaCount: 0
+indexCapability:
+  replicaCount: 0
+```
+
+Deployments are skipped; the Services still render (no endpoints), so
+`MODEL_SERVER_HOST`/`INDEXING_MODEL_SERVER_HOST` keep resolving — connection
+refused instead of DNS errors if anything probes them.
+
+Bootstrap semantics (onyx @ main, verified in source):
+
+- `SKIP_WARM_UP` defaults to `"true"` (shared_configs/configs.py:10) — the
+  api-server does **not** call the model server at startup (warm_up_bi_encoder
+  in setup.py is skipped and, when enabled, only runs for
+  `provider_type is None` anyway).
+- `setup_document_indices` only needs opensearch; tokenizers are in-process.
+- Default search settings are seeded with `provider_type=None` (local model,
+  `DOCUMENT_ENCODER_MODEL` env only changes the model name, not the provider)
+  — so embedding calls fail until an admin switches providers via the admin
+  REST runbook above. UI/login/connector setup all work in that window; make
+  the switch part of first-boot (one-off Job with admin creds, or manual).
+- Reranker is optional and also routes to the API when
+  `RerankerProvider.LITELLM` is set — zero model-server traffic remains.
+
+Savings vs the current state: no multi-GB `onyx-model-server` image pulls on
+upgrades (the original stall cause), ~2×(250m CPU + 1.5Gi mem) freed, and
+upgrades no longer wait on ~10min torch inits.
 
 ## Suitability eval: all model serving out-of-cluster
 
