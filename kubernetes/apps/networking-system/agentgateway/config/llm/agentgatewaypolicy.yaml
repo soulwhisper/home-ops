@@ -12,6 +12,10 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: agentgateway-media-route
+    # siliconflow verification lane burns real cloud quota — same strict auth
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-siliconflow-route
   traffic:
     apiKeyAuthentication:
       mode: Strict

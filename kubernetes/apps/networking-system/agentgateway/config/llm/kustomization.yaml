@@ -10,3 +10,6 @@ resources:
   - ./externalsecret.yaml
   - ./guardrails.yaml
   - ./httproute.yaml
+  # pre-mac verification lane
+  - ./siliconflow.yaml
+  - ./siliconflow-externalsecret.yaml
