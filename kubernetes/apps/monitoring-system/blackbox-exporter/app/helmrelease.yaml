@@ -68,15 +68,20 @@ spec:
       enabled: true
       rules:
         - alert: BlackboxProbeFailed
-          expr: probe_success == 0
+          # $labels.target does not exist on probe metrics (host is .instance);
+          # macstudio lanes excluded: MacStudioModelServiceDown covers them
+          # faster and model-aware (fires 5m vs 15m)
+          expr: probe_success{service!="macstudio"} == 0
           for: 15m
           labels:
             severity: critical
           annotations:
             summary: |-
-              The host {{ $labels.target }} is currently unreachable
+              The host {{ $labels.instance }} is currently unreachable
         # faster + model-specific companion to BlackboxProbeFailed (15m) for the
-        # MacStudio lanes agents depend on (vmcp optimizer, hindsight)
+        # MacStudio lanes agents depend on (vmcp optimizer, hindsight).
+        # NOTE: Prometheus annotation templates have no sprig `default` — the vm
+        # operator silently drops rules that use it during VMRule conversion.
         - alert: MacStudioModelServiceDown
           expr: probe_success{service="macstudio"} == 0
           for: 5m
@@ -84,7 +89,7 @@ spec:
             severity: critical
           annotations:
             summary: |-
-              Mac Studio model service down: {{ $labels.model | default $labels.instance }} probe failing for 5m.
+              Mac Studio model service probe failing: {{ $labels.model }} {{ $labels.instance }} (5m).
               Dependents: vmcp optimizer (find_tool), hindsight embeddings/rerank.
     securityContext:
       readOnlyRootFilesystem: true
