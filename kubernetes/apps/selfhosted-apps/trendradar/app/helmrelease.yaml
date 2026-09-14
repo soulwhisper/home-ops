@@ -39,6 +39,16 @@ spec:
               - secretRef:
                   name: *name
             probes:
+              # first crawl of ~50 feeds takes minutes before / answers;
+              # helm's 5m upgrade window is not enough without a startup gate
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet: { path: /, port: 8080 }
+                  periodSeconds: 10
+                  failureThreshold: 60
+                  timeoutSeconds: 10
               liveness: &probe
                 enabled: true
                 custom: true
@@ -46,6 +56,10 @@ spec:
                   httpGet: { path: /, port: 8080 }
                   periodSeconds: 30
                   failureThreshold: 5
+                  # default timeoutSeconds=1 kills the app mid crawl cycle
+                  # (exitCode 137 every ~3min; readiness never passes ->
+                  # helm upgrade and rollback both timed out 2026-09-14)
+                  timeoutSeconds: 10
               readiness: *probe
             resources:
               requests:
