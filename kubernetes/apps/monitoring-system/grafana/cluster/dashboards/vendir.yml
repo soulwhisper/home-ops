@@ -157,7 +157,7 @@ directories:
         lazy: true
         git:
           url: https://github.com/VictoriaMetrics/VictoriaMetrics
-          ref: v1.151.0
+          ref: v1.152.0
         includePaths: ["dashboards/*.json"]
 
       - path: logs
