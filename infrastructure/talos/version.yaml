@@ -3,7 +3,7 @@
 # Consumed by `just talos generate` and `just talos image`.
 
 # renovate: datasource=github-releases depName=siderolabs/talos
-talos_version: v1.14.0
+talos_version: v1.14.1
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
 k8s_version: v1.37.0
 # Schematic IDs are resolved live from factory.talos.dev by
