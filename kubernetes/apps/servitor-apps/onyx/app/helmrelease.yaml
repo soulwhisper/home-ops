@@ -53,11 +53,14 @@ spec:
         storageClass: ceph-block
         size: 30Gi
     inferenceCapability:
-      # in-cluster model serving retired in favor of agentgateway
-      # (litellm provider, see README): replicaCount 0 skips the deployment,
-      # the service stays so MODEL_SERVER_HOST still resolves. Embeddings/
-      # rerank fail until the litellm provider switch lands (admin REST).
-      replicaCount: 0
+      # Model servers MUST stay deployed: v4.7.3 api-server hard-fails at
+      # startup (setup_onyx -> update_default_multipass_indexing ->
+      # gpu_status_request) when onyx-indexing-model-service has no
+      # endpoints, crash-looping the whole app. The planned agentgateway
+      # (litellm provider) migration is configured via admin REST, which
+      # requires the api-server to be up — so retire replicas only AFTER
+      # that switch lands, never before.
+      replicaCount: 1
       resources:
         requests:
           cpu: 250m
@@ -73,7 +76,7 @@ spec:
         periodSeconds: 10
         failureThreshold: 120
     indexCapability:
-      replicaCount: 0 # see inferenceCapability above
+      replicaCount: 1 # see inferenceCapability above
       resources:
         requests:
           cpu: 250m
