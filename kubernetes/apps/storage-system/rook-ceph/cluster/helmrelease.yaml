@@ -45,6 +45,14 @@ spec:
           device_failure_prediction_mode: local # requires mgr module
         mgr:
           mgr/crash/warn_recent_interval: "7200" # 2h
+        mon:
+          # default: "0.05". Raised because Talos SNTP polls at up to 34min
+          # intervals and node clocks drift between polls (exarch-03 runs
+          # +64ppm, ~130ms/poll-cycle), so inter-mon skew reaches ~70ms and
+          # flaps MON_CLOCK_SKEW / CephHealthWarning. 0.1s is harmless for a
+          # 3-mon homelab; revert by setting "0.05" explicitly (rook sets but
+          # never unsets cephConfig keys).
+          mon_clock_drift_allowed: "0.1"
       cleanupPolicy:
         wipeDevicesFromOtherClusters: true
       dashboard:
