@@ -31,6 +31,7 @@ spec:
               readOnly: true
             - name: confd
               mountPath: /etc/mcp/conf.d
+  transport: streamable-http
   mcpPort: 8080
   serviceAccount: mcp-kubernetes-view
   resources:

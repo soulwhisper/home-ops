@@ -17,6 +17,7 @@ spec:
   env:
     - name: GRAFANA_URL
       value: "http://grafana-service.monitoring-system.svc.cluster.local:3000"
+  transport: streamable-http
   mcpPort: 8000
   secrets:
     - name: mcp-grafana-sa
