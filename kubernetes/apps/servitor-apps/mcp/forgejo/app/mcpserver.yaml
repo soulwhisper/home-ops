@@ -24,12 +24,9 @@ spec:
     # reaches the pod via the headless service / pod FQDN
     - --allowed-hosts
     - mcp-forgejo-0.mcp-mcp-forgejo-headless,mcp-forgejo-0.mcp-mcp-forgejo-headless:8080,mcp-mcp-forgejo-headless,mcp-mcp-forgejo-headless:8080,mcp-mcp-forgejo,mcp-mcp-forgejo:8080,localhost,localhost:8080
-    - --token
-    - $(FORGEJO_ACCESS_TOKEN)
-  # secrets inject FORGEJO_ACCESS_TOKEN as env; args reference it via $(...)
-  secrets:
-    - name: *name
-      key: FORGEJO_ACCESS_TOKEN
+    # multi-tenant mode: no global --token; the client bearer (injected by the
+    # vMCP via MCPExternalAuthConfig) is forwarded upstream to Forgejo, so no
+    # token env lands in the workload pod
   resources:
     requests:
       cpu: 100m

@@ -1,0 +1,16 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpexternalauthconfig_v1beta1.json
+# github-mcp-server http mode requires a per-request bearer token; the vMCP
+# health check and data plane present none -> backend 401s (same shape as
+# mcp-forgejo). Referenced by VirtualMCPServer/external spec.outgoingAuth.backends.
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPExternalAuthConfig
+metadata:
+  name: &name mcp-github
+spec:
+  type: headerInjection
+  headerInjection:
+    headerName: Authorization
+    valueSecretRef:
+      name: *name
+      key: AUTHORIZATION_HEADER

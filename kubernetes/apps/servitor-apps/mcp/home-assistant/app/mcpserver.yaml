@@ -24,6 +24,7 @@ spec:
   env:
     - name: "HOMEASSISTANT_URL"
       value: "http://home-assistant.smarthome-apps.svc.cluster.local:8123"
+  transport: streamable-http
   mcpPort: 8086
   secrets:
     - name: *name
