@@ -149,12 +149,12 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 
 ### Open WebUI v0.11.3
 
-- Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui:v0.11.3`, PVC `open-webui` (kopiur/backup, 5Gi ceph-block) at `/app/backend/data` (sqlite). Lives in **servitor-apps** (with hermes/toolhive, not selfhosted-apps)
+- Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui:v0.11.3`. Lives in **servitor-apps** (with hermes/toolhive, not selfhosted-apps). Storage is externalized: shared CNPG `postgres` (app data + `VECTOR_DB=pgvector`; role/db via `postgres-init`, plain `vector` ext self-created by migrations — vchord N/A: open-webui hardcodes pgvector DDL), app `Dragonfly` (`REDIS_URL`), app ceph bucket `open-webui` (`STORAGE_PROVIDER=s3`, `STORAGE_LOCAL_CACHE=False`) — data dir is emptyDir cache, no PVC
 - **LLM providers** (`OPENAI_API_BASE_URLS` order): siliconflow chat lane (`agentgateway-proxy:80/sf/chat`, key `llm-api.agentgateway_api_auth`) for default + auxiliary models; hermes gateway chat profile (`hermes-agent:8642/p/chat/v1`, key `hermes-agent.chat_api_server_key`, served model id `chat`) — heavy/agentic only, every call runs hermes' full agent loop (MCP tools, skills, memory); never select it for title/tag generation
 - **MCP**: native MCP tool servers via `TOOL_SERVER_CONNECTIONS` = all three ToolHive VirtualMCPServer groups (`vmcp-internal-ro|vmcp-internal-rw|vmcp-external:4483/mcp`, anonymous in-cluster auth)
 - Ingress: `chat.noirprime.com` via kgateway-internal; **auth is authentik forward-auth at the gateway** (components/authentik, provider `open-webui-proxy-provider`, homelab-admin group); open-webui's own login disabled (`WEBUI_AUTH=False`)
-- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80, hermes-agent:8642, virtualmcp:4483, open-webui-terminals:3000, open-webui-oikb:8080, kube-dns, world-except-private (RAG web fetching)
-- **Sandbox suite**: `open-webui-terminals` (orchestrator, `kubernetes` backend, Role-limited to pods/services/pvcs in servitor-apps) spawns per-user `open-terminal:slim` sandboxes — cluster access MCP-only (vMCP:4483), internet minus private ranges; `open-webui-oikb` (0.4.0 daemon) syncs Knowledge Bases from external sources, config `sources: []` until KBs are defined
+- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80, hermes-agent:8642, virtualmcp:4483, open-webui-terminals:3000, open-webui-oikb:8080, postgres-rw:5432, open-webui-dragonfly:6379, ceph RGW:80, kube-dns, world-except-private (RAG web fetching)
+- **Sandbox suite**: `open-webui-terminals` (orchestrator, `kubernetes` backend, Role-limited to pods/services/pvcs in servitor-apps, state on shared CNPG via `TERMINALS_DATABASE_URL`) spawns per-user `open-terminal:slim` sandboxes — cluster access MCP-only (vMCP:4483), internet minus private ranges; `open-webui-oikb` (0.4.0 daemon) syncs Knowledge Bases from external sources, config `sources: []` until KBs are defined (stateless by design: diff state lives server-side, sync history is disposable)
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
 

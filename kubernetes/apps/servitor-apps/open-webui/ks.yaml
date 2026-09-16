@@ -21,7 +21,9 @@ spec:
       namespace: servitor-apps
   components:
     - ../../../../components/authentik
-    - ../../../../components/kopiur/backup
+    - ../../../../components/cnpg
+    - ../../../../components/dragonfly
+    - ../../../../components/ceph-bucket
   postBuild:
     substitute:
       APP: *name
@@ -67,6 +69,8 @@ spec:
   dependsOn:
     - name: open-webui
       namespace: servitor-apps
+  components:
+    - ../../../../components/cnpg
   postBuild:
     substitute:
       APP: *name

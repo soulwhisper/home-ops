@@ -21,6 +21,14 @@ spec:
     # the whole point of the SA: manage sandbox pods
     - toEntities:
         - kube-apiserver
+    # orchestrator state on the shared CNPG cluster
+    - toServices:
+        - k8sService:
+            serviceName: postgres-rw
+            namespace: database-system
+      toPorts:
+        - ports:
+            - { port: "5432", protocol: TCP }
     # proxy traffic to the per-user sandboxes
     - toEndpoints:
         - matchLabels:

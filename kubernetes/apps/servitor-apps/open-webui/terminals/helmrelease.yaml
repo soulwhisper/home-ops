@@ -23,6 +23,17 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
+        # role + database open-webui-terminals via postgres-init on the shared
+        # CNPG cluster (survives orchestrator restarts: terminal registry +
+        # per-user sandbox credentials)
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: "18"
+            envFrom:
+              - secretRef:
+                  name: open-webui-terminals-pguser
         containers:
           app:
             image:
@@ -46,6 +57,17 @@ spec:
               TERMINALS_MAX_MEMORY: "1Gi"
               TERMINALS_ENABLE_UI: "false"
               TERMINALS_LOG_LEVEL: "INFO"
+              POSTGRES_USER:
+                valueFrom:
+                  secretKeyRef: { name: open-webui-terminals-pguser, key: username }
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef: { name: open-webui-terminals-pguser, key: password }
+              POSTGRES_HOST:
+                valueFrom:
+                  secretKeyRef: { name: open-webui-terminals-pguser, key: host }
+              # async engine (sqlite+aiosqlite default) -> asyncpg driver
+              TERMINALS_DATABASE_URL: "postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/open-webui-terminals"
             envFrom:
               - secretRef:
                   name: *name
@@ -78,9 +100,3 @@ spec:
         ports:
           http:
             port: 3000
-    # orchestrator state (sqlite: terminals, per-user credentials)
-    persistence:
-      data:
-        type: emptyDir
-        globalMounts:
-          - path: /app/data

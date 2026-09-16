@@ -19,6 +19,18 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
+        # role + database open-webui are created by postgres-init against the
+        # shared CNPG cluster (no Database CR / managed role — open-webui has
+        # no special extension/ownership needs; its migrations self-create
+        # the vector extension)
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: "18"
+            envFrom:
+              - secretRef:
+                  name: open-webui-pguser
         containers:
           app:
             image:
@@ -41,6 +53,28 @@ spec:
               # top-level id (v0.11.3 middleware connect_mcp_server).
               TOOL_SERVER_CONNECTIONS: '[{"type":"mcp","url":"http://vmcp-internal-ro.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"internal-ro","name":"internal-ro","description":"ToolHive internal read-only (fluxcd, grafana, kubernetes, obsidian, victoria-logs, context, trendradar)"},"config":{"enable":true}},{"type":"mcp","url":"http://vmcp-internal-rw.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"internal-rw","name":"internal-rw","description":"ToolHive internal read-write (forgejo, github, home-assistant, hindsight)"},"config":{"enable":true}},{"type":"mcp","url":"http://vmcp-external.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"external","name":"external","description":"ToolHive external egress (firecrawl)"},"config":{"enable":true}}]'
               ENABLE_OLLAMA_API: "false"
+              # durable state is externalized — CNPG (data + pgvector), the
+              # app dragonfly (session/rate-limit state), the app ceph bucket
+              # (uploads/KB files); the on-disk data dir is cache-only
+              DATABASE_URL:
+                valueFrom:
+                  secretKeyRef: { name: open-webui-pguser, key: uri }
+              VECTOR_DB: "pgvector" # PGVECTOR_DB_URL defaults to DATABASE_URL
+              REDIS_PASSWORD:
+                valueFrom:
+                  secretKeyRef: { name: open-webui-dragonfly, key: password }
+              REDIS_URL: "redis://:$(REDIS_PASSWORD)@open-webui-dragonfly:6379/0"
+              STORAGE_PROVIDER: "s3"
+              STORAGE_LOCAL_CACHE: "False"
+              S3_BUCKET_NAME: "open-webui"
+              S3_ENDPOINT_URL: "http://rook-ceph-rgw-ceph-objectstore.storage-system.svc:80"
+              S3_ADDRESSING_STYLE: "path"
+              S3_ACCESS_KEY_ID:
+                valueFrom:
+                  secretKeyRef: { name: ceph-bucket-open-webui, key: AWS_ACCESS_KEY_ID }
+              S3_SECRET_ACCESS_KEY:
+                valueFrom:
+                  secretKeyRef: { name: ceph-bucket-open-webui, key: AWS_SECRET_ACCESS_KEY }
             envFrom:
               - secretRef:
                   name: *name
@@ -73,8 +107,9 @@ spec:
             namespace: networking-system
 
     persistence:
+      # cache only; durable state lives in CNPG / dragonfly / the ceph bucket
       app:
-        existingClaim: *name
+        type: emptyDir
         globalMounts:
           - path: /app/backend/data
       tmpfs:

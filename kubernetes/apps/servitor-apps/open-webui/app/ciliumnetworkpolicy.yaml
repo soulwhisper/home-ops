@@ -50,6 +50,28 @@ spec:
       toPorts:
         - ports:
             - { port: "8080", protocol: TCP }
+    # state: shared CNPG, app dragonfly, app ceph bucket (RGW)
+    - toServices:
+        - k8sService:
+            serviceName: postgres-rw
+            namespace: database-system
+      toPorts:
+        - ports:
+            - { port: "5432", protocol: TCP }
+    - toServices:
+        - k8sService:
+            serviceName: open-webui-dragonfly
+            namespace: servitor-apps
+      toPorts:
+        - ports:
+            - { port: "6379", protocol: TCP }
+    - toServices:
+        - k8sService:
+            serviceName: rook-ceph-rgw-ceph-objectstore
+            namespace: storage-system
+      toPorts:
+        - ports:
+            - { port: "80", protocol: TCP }
     # DNS
     - toEndpoints:
         - matchLabels:
