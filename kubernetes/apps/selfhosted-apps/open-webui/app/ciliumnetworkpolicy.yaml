@@ -1,0 +1,53 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: open-webui-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/name": open-webui
+  egress:
+    # LLM: siliconflow lane via the AI gateway
+    - toServices:
+        - k8sService:
+            serviceName: agentgateway-proxy
+            namespace: networking-system
+      toPorts:
+        - ports:
+            - { port: "80", protocol: TCP }
+    # LLM: hermes gateway chat profile (:8642/p/chat/v1)
+    - toServices:
+        - k8sService:
+            serviceName: hermes-agent
+            namespace: servitor-apps
+      toPorts:
+        - ports:
+            - { port: "8642", protocol: TCP }
+    # MCP: ToolHive VirtualMCPServer groups
+    - toEndpoints:
+        - matchLabels:
+            "toolhive.stacklok.dev/component": virtualmcp
+      toPorts:
+        - ports:
+            - { port: "4483", protocol: TCP }
+    # DNS
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - { port: "53", protocol: TCP }
+            - { port: "53", protocol: UDP }
+    # Internet: RAG web fetching, version checks (world-except-private,
+    # same convention as karakeep/firecrawl)
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+            - 169.254.0.0/16
+            - 100.64.0.0/10

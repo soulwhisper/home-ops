@@ -11,7 +11,7 @@ spec:
         static:
           host: vmcp-internal-ro.servitor-apps.svc.cluster.local
           path: &path /mcp
-          port: &port 8080
+          port: &port 4483
           protocol: &protocol StreamableHTTP
       - name: vmcp-internal-rw
         static:

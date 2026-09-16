@@ -106,7 +106,7 @@
 | MoviePilot    | Media automation (CNPG + Dragonfly + iGPU) |
 | Media-NFS     | Shared media storage                       |
 
-## selfhosted-apps — Self-Hosted Services (14)
+## selfhosted-apps — Self-Hosted Services (15)
 
 | App           | Purpose                                                        |
 | ------------- | -------------------------------------------------------------- |
@@ -118,19 +118,19 @@
 | Karakeep      | Bookmark manager (Kata VM, Chrome + Meilisearch, omni lane)    |
 | Hindsight     | AI memory (slim image; LLM + embeddings + rerank on MacStudio) |
 | Open-Notebook | AI research notebook (SurrealDB)                               |
+| Open WebUI    | AI chat frontend (native MCP via ToolHive tiers)               |
 | Firecrawl     | Web scraping pipeline (Kata, 3 containers, MCP)                |
 | SillyTavern   | AI character chat (AgentGateway)                               |
 | Bambuddy      | 3D printer monitor (Bambu Lab)                                 |
 | Dispatcharr   | IPTV dispatch (iGPU transcode)                                 |
 
-## servitor-apps — AI Infrastructure (4 + 11 MCP servers)
+## servitor-apps — AI Infrastructure (3 + 10 MCP servers)
 
 | App          | Purpose                                                                                        |
 | ------------ | ---------------------------------------------------------------------------------------------- |
 | Hermes Agent | AI agent suite (Kata VM, Feishu, cron/automation)                                              |
 | ToolHive     | MCP gateway (3 VirtualMCP tiers, semantic search)                                              |
-| Onyx         | Enterprise chat + RAG (CNPG + Dragonfly + Ceph S3 + OpenSearch)                                |
-| MCP Servers  | kubernetes/HA/hindsight/honcho/github/firecrawl/grafana/flux/vlogs/obsidian/forgejo/trendradar |
+| MCP Servers  | kubernetes/HA/hindsight/github/firecrawl/grafana/flux/vlogs/obsidian/forgejo/trendradar |
 
 ## gaming-apps — Gaming (3)
 
