@@ -16,9 +16,6 @@ spec:
       value: "1"
   transport: streamable-http
   mcpPort: 8082
-  secrets:
-    - name: *name
-      key: GITHUB_PERSONAL_ACCESS_TOKEN
   resources:
     requests:
       cpu: 100m
