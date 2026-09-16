@@ -15,6 +15,7 @@ spec:
       value: "http"
     - name: MCP_LISTEN_ADDR
       value: ":8081"
+  transport: streamable-http
   mcpPort: 8081
   resources:
     requests:

@@ -10,6 +10,8 @@ spec:
   toolConfigRef:
     name: *name
   remoteUrl: http://hindsight.selfhosted-apps.svc.cluster.local:8888/mcp/homelab
+  # in-cluster DNS suffix is blocked by toolhive's SSRF guard unless opted in
+  allowPrivateEndpoint: true
   proxyPort: 8080
   resources:
     requests:

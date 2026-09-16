@@ -1,0 +1,97 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: open-webui-terminals
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/name": open-webui-terminals
+  ingress:
+    # Open Terminal integration calls from open-webui
+    - fromEndpoints:
+        - matchLabels:
+            "app.kubernetes.io/name": open-webui
+            "k8s:io.kubernetes.pod.namespace": servitor-apps
+      toPorts:
+        - ports:
+            - { port: "3000", protocol: TCP }
+  egress:
+    # the whole point of the SA: manage sandbox pods
+    - toEntities:
+        - kube-apiserver
+    # orchestrator state on the shared CNPG cluster
+    - toServices:
+        - k8sService:
+            serviceName: postgres-rw
+            namespace: database-system
+      toPorts:
+        - ports:
+            - { port: "5432", protocol: TCP }
+    # proxy traffic to the per-user sandboxes
+    - toEndpoints:
+        - matchLabels:
+            "app.kubernetes.io/component": open-terminal-sandbox
+            "k8s:io.kubernetes.pod.namespace": servitor-apps
+      toPorts:
+        - ports:
+            - { port: "8000", protocol: TCP }
+    # DNS
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - { port: "53", protocol: TCP }
+            - { port: "53", protocol: UDP }
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+# Sandbox pods spawned by the orchestrator (selected via the fixed
+# TERMINALS_KUBERNETES_LABELS). Cluster access is MCP-only: vMCP groups on
+# 4483, nothing else internal — no API, no services. Internet stays open for
+# pip/npm fetches during temp-script runs, minus all private ranges.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: open-terminal-sandbox
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/component": open-terminal-sandbox
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "app.kubernetes.io/name": open-webui-terminals
+            "k8s:io.kubernetes.pod.namespace": servitor-apps
+      toPorts:
+        - ports:
+            - { port: "8000", protocol: TCP }
+  egress:
+    # cluster access ONLY via MCP (ToolHive VirtualMCPServer groups)
+    - toEndpoints:
+        - matchLabels:
+            "app.kubernetes.io/name": virtualmcpserver
+            "k8s:io.kubernetes.pod.namespace": servitor-apps
+      toPorts:
+        - ports:
+            - { port: "4483", protocol: TCP }
+    # DNS
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - { port: "53", protocol: TCP }
+            - { port: "53", protocol: UDP }
+    # internet for package fetches / rendering assets; never private ranges
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+            - 169.254.0.0/16
+            - 100.64.0.0/10

@@ -1,0 +1,102 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name open-webui-terminals
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: gitops-system
+
+  values:
+    defaultPodOptions:
+      # orchestrator manages sandbox pods via the API; SA is scoped by
+      # rbac.yaml to pods/services/pvcs in THIS namespace only
+      automountServiceAccountToken: true
+      hostUsers: false
+    serviceAccount:
+      *name : {}
+    controllers:
+      *name :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        # role + database open-webui-terminals via postgres-init on the shared
+        # CNPG cluster (survives orchestrator restarts: terminal registry +
+        # per-user sandbox credentials)
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: "18"
+            envFrom:
+              - secretRef:
+                  name: open-webui-terminals-pguser
+        containers:
+          app:
+            image:
+              repository: ghcr.io/open-webui/terminals
+              # renovate: datasource=docker depName=ghcr.io/open-webui/terminals
+              tag: 0.2.4@sha256:f64b943eebc4290b3f0d69849ef9e78f16c6f8e3939555265e8f488fd5d0c854
+            env:
+              # direct Pod+Service+PVC per user — no CRD/operator component
+              TERMINALS_BACKEND: "kubernetes"
+              # sandboxes stay inside this namespace (Role-scoped)
+              TERMINALS_KUBERNETES_NAMESPACE: "servitor-apps"
+              TERMINALS_IMAGE: "ghcr.io/open-webui/open-terminal:slim@sha256:dec44673c865ddde0bf908823592e7ad4063c85fe49c70faf91ceb1835cb7cea"
+              TERMINALS_KUBERNETES_RESTRICTED: "true"
+              TERMINALS_KUBERNETES_STORAGE_CLASS: "ceph-block"
+              TERMINALS_KUBERNETES_STORAGE_SIZE: "1Gi"
+              # fixed labels so the sandbox CiliumNetworkPolicy can select
+              # operator-spawned pods
+              TERMINALS_KUBERNETES_LABELS: "app.kubernetes.io/component=open-terminal-sandbox"
+              TERMINALS_IDLE_TIMEOUT_MINUTES: "30"
+              TERMINALS_MAX_CPU: "1"
+              TERMINALS_MAX_MEMORY: "1Gi"
+              TERMINALS_ENABLE_UI: "false"
+              TERMINALS_LOG_LEVEL: "INFO"
+              POSTGRES_USER:
+                valueFrom:
+                  secretKeyRef: { name: open-webui-terminals-pguser, key: username }
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef: { name: open-webui-terminals-pguser, key: password }
+              POSTGRES_HOST:
+                valueFrom:
+                  secretKeyRef: { name: open-webui-terminals-pguser, key: host }
+              # async engine (sqlite+aiosqlite default) -> asyncpg driver
+              TERMINALS_DATABASE_URL: "postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/open-webui-terminals"
+            envFrom:
+              - secretRef:
+                  name: *name
+            probes:
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket: { port: 3000 }
+                  periodSeconds: 10
+                  failureThreshold: 3
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket: { port: 3000 }
+                  periodSeconds: 30
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+    service:
+      app:
+        ports:
+          http:
+            port: 3000

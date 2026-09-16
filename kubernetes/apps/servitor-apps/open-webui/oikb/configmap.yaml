@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: &name open-webui-oikb
+data:
+  # oikb daemon config. Add sources as Knowledge Bases are created, e.g.:
+  #   - name: home-ops-docs
+  #     source: github:soulwhisper/home-ops
+  #     kb-id: <kb-uuid from Open WebUI>
+  #     filter:
+  #       include: ["docs/**/*.md"]
+  .oikb.yaml: |
+    defaults:
+      interval: 1h
+      concurrency: 2
+      filter:
+        max-size: 50mb
+    sources: []

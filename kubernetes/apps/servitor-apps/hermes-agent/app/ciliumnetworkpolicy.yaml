@@ -42,7 +42,8 @@ spec:
     # MCP
     - toEndpoints:
         - matchLabels:
-            "toolhive.stacklok.dev/component": virtualmcp
+            "app.kubernetes.io/name": virtualmcpserver
+            "k8s:io.kubernetes.pod.namespace": servitor-apps
       toPorts:
         - ports:
             - { port: "4483", protocol: TCP }
