@@ -8,3 +8,4 @@ resources:
   - ./mcptoolconfig.yaml
   # utils
   - ./externalsecret.yaml
+  - ./mcpexternalauthconfig.yaml
