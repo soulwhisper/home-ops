@@ -31,7 +31,11 @@ spec:
           image: ghcr.io/firecrawl/firecrawl-mcp-server:latest
           # seed /etc/nginx and pre-create nginx compiled-default runtime dirs;
           # nginx mkdir() is not recursive and dies on the empty emptyDir
-          command: ["sh", "-c", "cp -a /etc/nginx/. /nginx/ && mkdir -p /nginx-lib/tmp/client_body /nginx-lib/tmp/proxy /nginx-lib/tmp/fastcgi /nginx-lib/tmp/uwsgi /nginx-lib/tmp/scgi /nginx-lib/logs /nginx-run/nginx"]
+          # the stock catch-all 301s / to https://docs.firecrawl.dev — the
+          # toolhive proxy's workload ping refuses cross-host redirects
+          # (SameHostRedirectPolicy), marks the backend degraded and kills
+          # itself after 5 attempts. Serve an empty 204 instead.
+          command: ["sh", "-c", "cp -a /etc/nginx/. /nginx/ && mkdir -p /nginx-lib/tmp/client_body /nginx-lib/tmp/proxy /nginx-lib/tmp/fastcgi /nginx-lib/tmp/uwsgi /nginx-lib/tmp/scgi /nginx-lib/logs /nginx-run/nginx && sed -i 's|return 301 https://docs.firecrawl.dev/mcp-server;|return 204;|' /nginx/nginx.conf"]
           volumeMounts:
             - name: nginx
               mountPath: /nginx
