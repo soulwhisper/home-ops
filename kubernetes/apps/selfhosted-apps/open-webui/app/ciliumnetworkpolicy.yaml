@@ -29,6 +29,7 @@ spec:
     - toEndpoints:
         - matchLabels:
             "app.kubernetes.io/name": virtualmcpserver
+            "k8s:io.kubernetes.pod.namespace": servitor-apps
       toPorts:
         - ports:
             - { port: "4483", protocol: TCP }
