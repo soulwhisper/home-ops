@@ -60,6 +60,12 @@ spec:
     type: anonymous
   outgoingAuth:
     source: inline
+    backends:
+      # forgejo-mcp enforces a per-request bearer token (--token)
+      mcp-forgejo:
+        type: externalAuthConfigRef
+        externalAuthConfigRef:
+          name: mcp-forgejo
   # see internal-ro: MacStudio embeddings via agentgateway + OPENAI_API_KEY
   podTemplateSpec:
     spec:

@@ -1,0 +1,16 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpexternalauthconfig_v1beta1.json
+# forgejo-mcp requires a per-request bearer token (--token); the vMCP health
+# check and data plane present none -> backend permanently unhealthy (401).
+# Referenced by VirtualMCPServer/internal-rw spec.outgoingAuth.backends.
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPExternalAuthConfig
+metadata:
+  name: &name mcp-forgejo
+spec:
+  type: headerInjection
+  headerInjection:
+    headerName: Authorization
+    valueSecretRef:
+      name: *name
+      key: AUTHORIZATION_HEADER
