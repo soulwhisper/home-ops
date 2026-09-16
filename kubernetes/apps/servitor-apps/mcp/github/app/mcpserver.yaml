@@ -14,6 +14,7 @@ spec:
   env:
     - name: GITHUB_READ_ONLY
       value: "1"
+  transport: streamable-http
   mcpPort: 8082
   secrets:
     - name: *name
