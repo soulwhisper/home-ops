@@ -28,7 +28,7 @@ spec:
     # MCP: ToolHive VirtualMCPServer groups
     - toEndpoints:
         - matchLabels:
-            "toolhive.stacklok.dev/component": virtualmcp
+            "app.kubernetes.io/name": virtualmcpserver
       toPorts:
         - ports:
             - { port: "4483", protocol: TCP }

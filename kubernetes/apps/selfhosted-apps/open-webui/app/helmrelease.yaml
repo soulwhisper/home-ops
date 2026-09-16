@@ -36,8 +36,10 @@ spec:
               #    skills, memory). Never select it for title/tag generation.
               OPENAI_API_BASE_URLS: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf/chat;http://hermes-agent.servitor-apps.svc.cluster.local:8642/p/chat/v1"
               # ToolHive VirtualMCPServer groups as native MCP tool servers,
-              # StreamableHTTP on :4483/mcp, anonymous in-cluster auth
-              TOOL_SERVER_CONNECTIONS: '[{"id":"internal-ro","type":"mcp","url":"http://vmcp-internal-ro.servitor-apps.svc.cluster.local:4483/mcp"},{"id":"internal-rw","type":"mcp","url":"http://vmcp-internal-rw.servitor-apps.svc.cluster.local:4483/mcp"},{"id":"external","type":"mcp","url":"http://vmcp-external.servitor-apps.svc.cluster.local:4483/mcp"}]'
+              # StreamableHTTP on :4483/mcp, anonymous in-cluster auth. Shape
+              # follows what the Admin UI persists: match is on info.id, not a
+              # top-level id (v0.11.3 middleware connect_mcp_server).
+              TOOL_SERVER_CONNECTIONS: '[{"type":"mcp","url":"http://vmcp-internal-ro.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"internal-ro","name":"internal-ro","description":"ToolHive internal read-only (fluxcd, grafana, kubernetes, obsidian, victoria-logs, context, trendradar)"},"config":{"enable":true}},{"type":"mcp","url":"http://vmcp-internal-rw.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"internal-rw","name":"internal-rw","description":"ToolHive internal read-write (forgejo, github, home-assistant, hindsight)"},"config":{"enable":true}},{"type":"mcp","url":"http://vmcp-external.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"external","name":"external","description":"ToolHive external egress (firecrawl)"},"config":{"enable":true}}]'
               ENABLE_OLLAMA_API: "false"
             envFrom:
               - secretRef:
