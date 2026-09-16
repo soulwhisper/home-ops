@@ -8,6 +8,8 @@ spec:
   groupRef:
     name: internal-ro
   remoteUrl: http://trendradar.selfhosted-apps.svc.cluster.local:3333/mcp
+  # in-cluster DNS suffix is blocked by toolhive's SSRF guard unless opted in
+  allowPrivateEndpoint: true
   proxyPort: 8080
   resources:
     requests:
