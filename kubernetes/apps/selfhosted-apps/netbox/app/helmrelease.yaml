@@ -110,7 +110,7 @@ spec:
       # helm-values manager resolve the registry (it ignores comments)
       registry: ghcr.io
       repository: soulwhisper/netbox
-      tag: 4.7.0
+      tag: 4.7.1
     plugins:
       - netbox_attachments
       - netbox_bgp
