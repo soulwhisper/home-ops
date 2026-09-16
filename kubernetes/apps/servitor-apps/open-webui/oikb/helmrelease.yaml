@@ -19,6 +19,10 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
+        # `oikb daemon` exits non-zero on sources: [] ("No sync entries
+        # found") -> CrashLoopBackOff. Parked until the first Knowledge Base
+        # source is configured in configmap.yaml; set replicas: 1 then.
+        replicas: 0
         containers:
           app:
             image:
