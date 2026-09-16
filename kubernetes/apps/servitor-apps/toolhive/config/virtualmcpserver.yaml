@@ -116,6 +116,12 @@ spec:
     type: anonymous
   outgoingAuth:
     source: inline
+    backends:
+      # github-mcp-server http mode requires a per-request bearer token
+      mcp-github:
+        type: externalAuthConfigRef
+        externalAuthConfigRef:
+          name: mcp-github
   # see internal-ro: MacStudio embeddings via agentgateway + OPENAI_API_KEY
   podTemplateSpec:
     spec:
