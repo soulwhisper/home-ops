@@ -26,6 +26,9 @@ spec:
               # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
               tag: v0.11.3
             env:
+              # Auth is authentik forward-auth at the gateway (components/authentik);
+              # disable open-webui's own login so the SSO identity passes through.
+              WEBUI_AUTH: "False"
               # Provider order matches OPENAI_API_KEYS in the ExternalSecret:
               # 1. siliconflow verification lane (default + aux models)
               # 2. hermes gateway chat profile — model id "chat"; heavy/agentic
@@ -34,8 +37,6 @@ spec:
               OPENAI_API_BASE_URLS: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf/chat;http://hermes-agent.servitor-apps.svc.cluster.local:8642/p/chat/v1"
               # ToolHive VirtualMCPServer groups as native MCP tool servers,
               # StreamableHTTP on :4483/mcp, anonymous in-cluster auth
-              # (verified consumer port — agentgateway's mcp-backend targets
-              # :8080, which has no endpoints).
               TOOL_SERVER_CONNECTIONS: '[{"id":"internal-ro","type":"mcp","url":"http://vmcp-internal-ro.servitor-apps.svc.cluster.local:4483/mcp"},{"id":"internal-rw","type":"mcp","url":"http://vmcp-internal-rw.servitor-apps.svc.cluster.local:4483/mcp"},{"id":"external","type":"mcp","url":"http://vmcp-external.servitor-apps.svc.cluster.local:4483/mcp"}]'
               ENABLE_OLLAMA_API: "false"
             envFrom:

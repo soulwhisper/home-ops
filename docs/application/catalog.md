@@ -124,13 +124,13 @@
 | Bambuddy      | 3D printer monitor (Bambu Lab)                                 |
 | Dispatcharr   | IPTV dispatch (iGPU transcode)                                 |
 
-## servitor-apps — AI Infrastructure (3 + 11 MCP servers)
+## servitor-apps — AI Infrastructure (3 + 10 MCP servers)
 
 | App          | Purpose                                                                                        |
 | ------------ | ---------------------------------------------------------------------------------------------- |
 | Hermes Agent | AI agent suite (Kata VM, Feishu, cron/automation)                                              |
 | ToolHive     | MCP gateway (3 VirtualMCP tiers, semantic search)                                              |
-| MCP Servers  | kubernetes/HA/hindsight/honcho/github/firecrawl/grafana/flux/vlogs/obsidian/forgejo/trendradar |
+| MCP Servers  | kubernetes/HA/hindsight/github/firecrawl/grafana/flux/vlogs/obsidian/forgejo/trendradar |
 
 ## gaming-apps — Gaming (3)
 

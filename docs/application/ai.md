@@ -152,7 +152,7 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 - Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui:v0.11.3`, PVC `open-webui` (kopiur/backup, 5Gi ceph-block) at `/app/backend/data` (sqlite)
 - **LLM providers** (`OPENAI_API_BASE_URLS` order): siliconflow chat lane (`agentgateway-proxy:80/sf/chat`, key `llm-api.agentgateway_api_auth`) for default + auxiliary models; hermes gateway chat profile (`hermes-agent:8642/p/chat/v1`, key `hermes-agent.chat_api_server_key`, served model id `chat`) — heavy/agentic only, every call runs hermes' full agent loop (MCP tools, skills, memory); never select it for title/tag generation
 - **MCP**: native MCP tool servers via `TOOL_SERVER_CONNECTIONS` = all three ToolHive VirtualMCPServer groups (`vmcp-internal-ro|vmcp-internal-rw|vmcp-external:4483/mcp`, anonymous in-cluster auth)
-- Ingress: `chat.noirprime.com` via kgateway-internal; built-in auth (`WEBUI_SECRET_KEY` from 1Password `encryption_cipher.open_webui`), no SSO
+- Ingress: `chat.noirprime.com` via kgateway-internal; **auth is authentik forward-auth at the gateway** (components/authentik, provider `open-webui-proxy-provider`, homelab-admin group); open-webui's own login disabled (`WEBUI_AUTH=False`)
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80, hermes-agent:8642, virtualmcp:4483, kube-dns, world-except-private (RAG web fetching)
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
@@ -199,7 +199,6 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — Exter
 
 | Server         | Transport            | Connects To            |
 | -------------- | -------------------- | ---------------------- |
-| honcho         | HTTP proxy :8080     | Honcho API             |
 | home-assistant | HTTP (FastMCP) :8086 | Home Assistant         |
 | hindsight      | HTTP proxy :8080     | Hindsight MCP endpoint |
 | forgejo        | Streamable HTTP :8080 | Forgejo on nas:9003 (forgejo-mcp v3.0.0); draftbox repo read+write, repo-scoped PAT |

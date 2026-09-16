@@ -72,6 +72,6 @@ spec:
           expr: >
             increase(hubble_drop_total{
               destination_namespace="selfhosted-apps",
-              destination_workload=~"honcho|hindsight"}[15m]) > 0
+              destination_workload="hindsight"}[15m]) > 0
           labels:
             severity: critical

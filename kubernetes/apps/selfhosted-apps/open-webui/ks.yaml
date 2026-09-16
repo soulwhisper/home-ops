@@ -20,7 +20,9 @@ spec:
     - name: hermes-agent
       namespace: servitor-apps
   components:
+    - ../../../../components/authentik
     - ../../../../components/kopiur/backup
   postBuild:
     substitute:
       APP: *name
+      APP_HOST: "chat.noirprime.com"
