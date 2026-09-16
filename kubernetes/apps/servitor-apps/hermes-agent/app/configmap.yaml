@@ -51,7 +51,7 @@ data:
       session_search: { provider: main, model: omni, max_concurrency: 3 }
       compression: { provider: main, model: omni, reasoning_effort: low }
 
-  # chat profile — Onyx and similar chat frontends (served at :8642/p/chat/v1,
+  # chat profile — Open WebUI and similar chat frontends (served at :8642/p/chat/v1,
   # model id "chat" = profile name under multiplexing)
   chat-config.yaml: |
     model:
@@ -73,11 +73,11 @@ data:
     platform_toolsets:
       cli: [web, vision, skills, todo]
   chat-profile.yaml: |
-    description: "Chat frontends (Onyx etc.); isolated memory + API key"
+    description: "Chat frontends (Open WebUI etc.); isolated memory + API key"
     display_name: "Chat"
   chat-SOUL.md: |
     # Chat profile
-    Conversational frontend profile. Serve interactive chat (Onyx) with full
+    Conversational frontend profile. Serve interactive chat (Open WebUI) with full
     ToolHive MCP tools. Read-only-first: never mutate cluster/home state
     unless the user explicitly asks and the tool requires it.
   ops-config.yaml: |

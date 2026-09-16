@@ -86,11 +86,11 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | SillyTavern          | UI-configured     | Gemma4-31B lane    | Creative/RP; no repo-level config                            |
 | open-notebook        | UI-configured     | suggest `complex`  | Research synthesis; no repo-level config                     |
-| onyx                 | UI-configured     | suggest `micro`/`omni` | Chat/RAG; LLM provider set in admin UI (api_base → agentgateway) |
+| open-webui           | `sf/chat` + hermes `chat` | lane-dependent | Chat frontend; native MCP = 3 vMCP groups; hermes model id `chat` = heavy/agentic only |
 
 ### MCP Backend
 
-Routes to 3 **ToolHive VirtualMCP servers** (`StreamableHTTP` on port 8080):
+Routes to 3 **ToolHive VirtualMCP servers** (`StreamableHTTP` on port 4483, path `/mcp`):
 
 - `vmcp-internal-ro` — read-only monitoring/k8s tools
 - `vmcp-internal-rw` — read-write home/smart tools
@@ -112,7 +112,7 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 | --------- | ---- | --------------------------- |
 | Dashboard | 9119 | SSO-protected               |
 | Gateway   | 8642 | Internal, health: `/health` |
-| Web UI    | 8787 | Deployed, no ingress (chat moved to Onyx; SSO route removed 2026-09-09) |
+| Web UI    | 8787 | Deployed, no ingress (chat moved to Open WebUI; SSO route removed 2026-09-09) |
 
 - **Runtime**: Kata Containers (VM isolation)
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
@@ -121,7 +121,7 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
   - `ops` — the batching brain: cron/Feishu/automation workload lives here (read-only-first posture, ToolHive tiers as today); Feishu home channel for cron results
-  - `chat` — chat-like frontends (Onyx and similar): isolated memory + config, own `API_SERVER_KEY` (scoped secret, 1Password `chat_api_server_key`); multiplexed gateway serves it at `:8642/p/chat/v1` with served model id `chat` (per-profile model names are NOT supported under multiplexing — the id is the profile name); no `API_SERVER_KEY` is seeded for `ops`, so `/p/ops/` fails closed
+  - `chat` — chat-like frontends (Open WebUI and similar): isolated memory + config, own `API_SERVER_KEY` (scoped secret, 1Password `chat_api_server_key`); multiplexed gateway serves it at `:8642/p/chat/v1` with served model id `chat` (per-profile model names are NOT supported under multiplexing — the id is the profile name); no `API_SERVER_KEY` is seeded for `ops`, so `/p/ops/` fails closed
   - `default` — left untouched as fallback/scratch
   Model/provider config (`model.provider: custom` → agent gateway, `model.default: complex`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression` → `omni`, `title_generation` → `micro`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. Requires new 1Password `hermes-agent` fields: `api_server_key`, `chat_api_server_key` (both >=16 chars)
   Rationale: profile isolation keeps interactive-chat memory out of the automation brain (and vice versa) without a second deployment; graduate to a separate write-enabled instance only if interactive chat needs `internal-rw` tools
@@ -147,16 +147,13 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 - **Model providers**: Configured at runtime via Dify admin UI, not in manifests
 - **Depends on**: proxy → database → sandbox → api → (worker, beat, web)
 
-### Onyx v4.7.1
+### Open WebUI v0.11.3
 
-- Chat + RAG enterprise search (replaces open-webui), chart 0.8.21 from `oci://ghcr.io/onyx-dot-app/charts/onyx`
-- Components: api-server (:8080), webserver (:3000), inference + indexing model servers (CPU, nomic-embed-text-v1), 8 celery workers, bundled OpenSearch (single-node, 2Gi heap, 30Gi ceph-block)
-- **Backends**: external CNPG (`postgres-rw.database-system`, DB bootstrapped by `onyx-postgres-init` Job), external Dragonfly (no auth), Ceph RGW bucket `onyx`; bundled Postgres/Redis-operator/MinIO/nginx subcharts all disabled
-- LLM provider is DB-backed — configure once in Admin UI with `api_base` pointing at the agent gateway (`http://agentgateway-proxy.networking-system/chat`), suggested lane `micro`/`omni`; OIDC SSO likewise configured in Admin UI (forward-proxy SSO at kgateway also active)
-- Ingress: `onyx.noirprime.com` via kgateway-internal; `/api|/openapi.json` regex → `onyx-api-service:8080`, `/` → `onyx-webserver:3000`, 900s timeouts
-- **Craft sandboxes disabled** (no code-execution pods; `ENABLE_CRAFT` unset). If ever enabled, Craft runs code in dedicated pods in its own `onyx-sandboxes` namespace — never in hermes
-- **Observability**: Langfuse tracing enabled via `LANGFUSE_HOST` (in-cluster `langfuse-web:3000`) + project keys from 1Password `langfuse.onyx_*` injected to all backend pods (`extraEnvFromSecret`)
-- **Hermes as a model**: register the hermes gateway as an OpenAI-compatible provider with `api_base` = `http://hermes-agent.servitor-apps.svc.cluster.local:8642/p/chat/v1` and the profile's API key; the served model id is `chat` (profile name under multiplexing) — set Onyx **display name to `cluster`** in the provider's model configuration. Use it as the heavy/agentic chat model only — every call runs hermes' full agent loop (MCP tools, skills, memory), so it must never be selected for Onyx's auxiliary LLM calls (query rewrite, contextual RAG, summarization); those stay on `omni`/`micro`
+- Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui:v0.11.3`, PVC `open-webui` (kopiur/backup, 5Gi ceph-block) at `/app/backend/data` (sqlite)
+- **LLM providers** (`OPENAI_API_BASE_URLS` order): siliconflow chat lane (`agentgateway-proxy:80/sf/chat`, key `llm-api.agentgateway_api_auth`) for default + auxiliary models; hermes gateway chat profile (`hermes-agent:8642/p/chat/v1`, key `hermes-agent.chat_api_server_key`, served model id `chat`) — heavy/agentic only, every call runs hermes' full agent loop (MCP tools, skills, memory); never select it for title/tag generation
+- **MCP**: native MCP tool servers via `TOOL_SERVER_CONNECTIONS` = all three ToolHive VirtualMCPServer groups (`vmcp-internal-ro|vmcp-internal-rw|vmcp-external:4483/mcp`, anonymous in-cluster auth)
+- Ingress: `chat.noirprime.com` via kgateway-internal; built-in auth (`WEBUI_SECRET_KEY` from 1Password `encryption_cipher.open_webui`), no SSO
+- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80, hermes-agent:8642, virtualmcp:4483, kube-dns, world-except-private (RAG web fetching)
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
 
@@ -169,7 +166,7 @@ Non-chat modalities run as separate studio processes (oMLX has no image-gen; mlx
 | `/v1/embeddings` | 8000        | oMLX               | Qwen3-Embedding-4B              | 120s    |
 | `/v1/rerank`     | 8000        | oMLX               | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s |
 
-Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — ExternalName `studio-media` → `studio.homelab.internal` (ports 8000/8001/8002), route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with their gateway API key. Onyx consumes image/voice via admin-API provider rows (`provider: "openai"` + `api_base` + free-text model name; see Onyx section). Host-side TODO: stand up the three studio processes on the ports above.
+Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — ExternalName `studio-media` → `studio.homelab.internal` (ports 8000/8001/8002), route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with their gateway API key. Host-side TODO: stand up the three studio processes on the ports above.
 
 ---
 

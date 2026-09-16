@@ -49,7 +49,6 @@ configMapGenerator:
       - ./blueprints/forward/homepage.yaml
       - ./blueprints/forward/hubble.yaml
       - ./blueprints/forward/metube.yaml
-      - ./blueprints/forward/onyx.yaml
       - ./blueprints/forward/qbittorrent.yaml
       - ./blueprints/forward/scrypted.yaml
       - ./blueprints/forward/sillytavern.yaml

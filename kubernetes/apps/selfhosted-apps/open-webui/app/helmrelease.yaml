@@ -1,0 +1,81 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name open-webui
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: gitops-system
+
+  values:
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      hostUsers: false
+    controllers:
+      *name :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/open-webui/open-webui
+              # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
+              tag: v0.11.3
+            env:
+              # Provider order matches OPENAI_API_KEYS in the ExternalSecret:
+              # 1. siliconflow verification lane (default + aux models)
+              # 2. hermes gateway chat profile — model id "chat"; heavy/agentic
+              #    only, every call runs hermes' full agent loop (MCP tools,
+              #    skills, memory). Never select it for title/tag generation.
+              OPENAI_API_BASE_URLS: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf/chat;http://hermes-agent.servitor-apps.svc.cluster.local:8642/p/chat/v1"
+              # ToolHive VirtualMCPServer groups as native MCP tool servers,
+              # StreamableHTTP on :4483/mcp, anonymous in-cluster auth
+              # (verified consumer port — agentgateway's mcp-backend targets
+              # :8080, which has no endpoints).
+              TOOL_SERVER_CONNECTIONS: '[{"id":"internal-ro","type":"mcp","url":"http://vmcp-internal-ro.servitor-apps.svc.cluster.local:4483/mcp"},{"id":"internal-rw","type":"mcp","url":"http://vmcp-internal-rw.servitor-apps.svc.cluster.local:4483/mcp"},{"id":"external","type":"mcp","url":"http://vmcp-external.servitor-apps.svc.cluster.local:4483/mcp"}]'
+              ENABLE_OLLAMA_API: "false"
+            envFrom:
+              - secretRef:
+                  name: *name
+            resources:
+              requests:
+                cpu: 10m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              readOnlyRootFilesystem: false # upstream entrypoint chowns the data dir
+
+    service:
+      app:
+        ports:
+          http:
+            port: &port 8080
+    route:
+      app:
+        hostnames: ["chat.noirprime.com"]
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/icon: open-webui.svg
+          gethomepage.dev/name: Open WebUI
+          gethomepage.dev/group: AI
+        parentRefs:
+          - name: kgateway-internal
+            namespace: networking-system
+
+    persistence:
+      app:
+        existingClaim: *name
+        globalMounts:
+          - path: /app/backend/data
+      tmpfs:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+            subPath: tmp
