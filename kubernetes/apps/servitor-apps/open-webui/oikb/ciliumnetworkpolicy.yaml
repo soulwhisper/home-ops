@@ -1,0 +1,49 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: open-webui-oikb
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/name": open-webui-oikb
+  ingress:
+    # tool-server calls from open-webui, metrics scrape
+    - fromEndpoints:
+        - matchLabels:
+            "app.kubernetes.io/name": open-webui
+            "k8s:io.kubernetes.pod.namespace": servitor-apps
+        - matchLabels:
+            "app.kubernetes.io/name": vmagent
+            "k8s:io.kubernetes.pod.namespace": monitoring-system
+      toPorts:
+        - ports:
+            - { port: "8080", protocol: TCP }
+  egress:
+    # the KB sync target
+    - toServices:
+        - k8sService:
+            serviceName: open-webui
+            namespace: servitor-apps
+      toPorts:
+        - ports:
+            - { port: "8080", protocol: TCP }
+    # DNS
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - { port: "53", protocol: TCP }
+            - { port: "53", protocol: UDP }
+    # sync sources (github, confluence, s3, ...): internet only, never cluster
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+            - 169.254.0.0/16
+            - 100.64.0.0/10

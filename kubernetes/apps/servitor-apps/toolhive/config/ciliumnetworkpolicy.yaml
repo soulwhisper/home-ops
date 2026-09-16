@@ -22,7 +22,7 @@ spec:
             }
         - matchLabels:
             {
-              "k8s:io.kubernetes.pod.namespace": selfhosted-apps,
+              "k8s:io.kubernetes.pod.namespace": servitor-apps,
               "app.kubernetes.io/name": open-webui,
             }
         - matchLabels:

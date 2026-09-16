@@ -33,6 +33,23 @@ spec:
       toPorts:
         - ports:
             - { port: "4483", protocol: TCP }
+    # sandbox orchestrator (Open Terminal integration) + KB sync daemon
+    # (optional OpenAPI tool server); same namespace, but world-except-private
+    # below deliberately excludes cluster IPs, so name them explicitly
+    - toServices:
+        - k8sService:
+            serviceName: open-webui-terminals
+            namespace: servitor-apps
+      toPorts:
+        - ports:
+            - { port: "3000", protocol: TCP }
+    - toServices:
+        - k8sService:
+            serviceName: open-webui-oikb
+            namespace: servitor-apps
+      toPorts:
+        - ports:
+            - { port: "8080", protocol: TCP }
     # DNS
     - toEndpoints:
         - matchLabels:
