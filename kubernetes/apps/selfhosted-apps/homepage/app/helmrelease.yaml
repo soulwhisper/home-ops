@@ -27,7 +27,7 @@ spec:
           app:
             image:
               repository: ghcr.io/gethomepage/homepage
-              tag: v2.3.0
+              tag: v2.4.0
             env:
               HOMEPAGE_ALLOWED_HOSTS: "home.noirprime.com"
               # 19 authentik forward-auth providers all set Domain=noirprime.com
