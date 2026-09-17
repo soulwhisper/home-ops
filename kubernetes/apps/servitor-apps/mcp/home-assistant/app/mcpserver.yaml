@@ -17,7 +17,9 @@ spec:
           emptyDir: {}
       containers:
         - name: mcp
-          command: ["fastmcp", "run", "fastmcp-http.json"]
+          # ha-mcp 8.5.0 vendored FastMCP and dropped the `fastmcp` CLI;
+          # `ha-mcp-web` serves streamable-http on MCP_PORT (default 8086)
+          command: ["ha-mcp-web"]
           volumeMounts:
             - name: tmp
               mountPath: /tmp

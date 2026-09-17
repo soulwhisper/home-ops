@@ -14,6 +14,9 @@ spec:
   args:
     - --maxmemory=$(MAX_MEMORY)Mi
     - --proactor_threads=2
+    # Apps needing custom Lua semantics (e.g. BullMQ compatibility) set
+    # DRAGONFLY_LUA_FLAGS in their Flux postBuild substitution.
+    - --default_lua_flags=${DRAGONFLY_LUA_FLAGS:=}
   env:
     - name: MAX_MEMORY
       valueFrom:

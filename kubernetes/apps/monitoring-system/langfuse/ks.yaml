@@ -29,6 +29,9 @@ spec:
   postBuild:
     substitute:
       APP: langfuse
+      # BullMQ (langfuse queues) requires undeclared-key access and
+      # non-atomic Lua scripts; see dragonflydb bullmq compatibility docs.
+      DRAGONFLY_LUA_FLAGS: allow-undeclared-keys,disable-atomicity
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1

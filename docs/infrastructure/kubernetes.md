@@ -340,6 +340,12 @@ Injects Dragonfly database resources for applications using Dragonfly (a Redis-c
 
 Applications with caching or session storage requirements include this component.
 
+Optional Flux substitution variables:
+
+- `REDIS_MEM` — memory request/limit (default `1024Mi`)
+- `DRAGONFLY_LUA_FLAGS` — value for `--default_lua_flags` (default empty). Set
+  `allow-undeclared-keys,disable-atomicity` for BullMQ-based apps (e.g. `langfuse`).
+
 ### Component: ceph-bucket (1 consumer)
 
 **Path**: `kubernetes/components/ceph-bucket/`
