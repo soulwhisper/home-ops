@@ -83,7 +83,9 @@ spec:
                 cpu: 20m
                 memory: 128Mi
               limits:
-                memory: 512Mi
+                # OOMKilled 2026-09-17 at 512Mi after ~39h of MCP query
+                # serving over /app/output; 1Gi matches the app container.
+                memory: 1Gi
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }

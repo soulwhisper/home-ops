@@ -42,6 +42,12 @@ spec:
               CNP denied egress from {{ $labels.source_workload }} (intent/behaviour divergence).
           expr: |
             sum by (source_workload, destination_namespace) (increase(hubble_drop_total{reason="POLICY_DENIED", source_namespace="servitor-apps"}[5m])) > 0
+          # require sustained drops: backend restarts cause short reconnect
+          # storms to stale pod IPs (denied by the private-CIDR except) that
+          # self-heal on pod reschedule; a real intent/behaviour divergence
+          # persists. 2026-09-17: open-webui paged on a ~30min redis
+          # reconnect storm after the dragonfly restart, 0 drops since.
+          for: 15m
           labels:
             severity: critical
 ---
