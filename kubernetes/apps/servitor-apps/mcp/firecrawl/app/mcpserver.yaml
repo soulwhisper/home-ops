@@ -7,7 +7,7 @@ metadata:
 spec:
   groupRef:
     name: external
-  image: ghcr.io/firecrawl/firecrawl-mcp-server:latest
+  image: ghcr.io/firecrawl/firecrawl-mcp-server:latest@sha256:f5cf2a015f87abd324ea32baaa1e6cb59d29109ed2fbcbe8ab6ba92e3147fae4
   podTemplateSpec:
     spec:
       volumes:
@@ -28,7 +28,7 @@ spec:
           emptyDir: {}
       initContainers:
         - name: nginx-config
-          image: ghcr.io/firecrawl/firecrawl-mcp-server:latest
+          image: ghcr.io/firecrawl/firecrawl-mcp-server:latest@sha256:f5cf2a015f87abd324ea32baaa1e6cb59d29109ed2fbcbe8ab6ba92e3147fae4
           # seed /etc/nginx and pre-create nginx compiled-default runtime dirs;
           # nginx mkdir() is not recursive and dies on the empty emptyDir
           # the stock catch-all 301s / to https://docs.firecrawl.dev — the
