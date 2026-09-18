@@ -20,3 +20,9 @@ spec:
         scope: "namespace"
         allowedNamespaces:
           - "servitor-apps"
+      # shared session backend for vMCPs (session persistence + distributed
+      # rate limiting); dragonfly instance from the dragonfly component
+      defaultRedis:
+        addr: "toolhive-dragonfly.servitor-apps.svc.cluster.local:6379"
+        existingSecret: "toolhive-dragonfly"
+        existingSecretKey: "password"

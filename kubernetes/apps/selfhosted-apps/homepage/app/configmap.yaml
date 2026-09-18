@@ -123,7 +123,9 @@ data:
               volume: volume_2
   widgets.yaml: |
     - search:
-        provider: [google]
+        provider: custom
+        url: https://search.noirprime.com/search?q=
+        suggestionUrl: https://search.noirprime.com/autocompleter?q=
         focus: false
         target: _blank
     - kubernetes:

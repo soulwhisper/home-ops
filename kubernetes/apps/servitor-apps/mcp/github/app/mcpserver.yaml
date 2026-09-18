@@ -14,6 +14,12 @@ spec:
   env:
     - name: GITHUB_READ_ONLY
       value: "1"
+    # only the toolsets the toolsFilter below uses
+    - name: GITHUB_TOOLSETS
+      value: "repos,issues,pull_requests"
+    # only serve content from repos the token owns/collaborates on
+    - name: GITHUB_LOCKDOWN_MODE
+      value: "1"
   transport: streamable-http
   mcpPort: 8082
   resources:

@@ -12,9 +12,6 @@ spec:
     - get_issue
     - list_pull_requests
     - get_pull_request
-    - create_pull_request
   toolsOverride:
-    create_pull_request:
-      description: "Create a pull request. Merging requires human review."
     get_file_contents:
       description: "Read file contents from an allowed repository."

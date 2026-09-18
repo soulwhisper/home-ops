@@ -34,6 +34,7 @@ spec:
               ND_BASEURL: https://music.noirprime.com
               ND_ENABLEINSIGHTSCOLLECTOR: "false"
               ND_ENABLESHARING: "false"
+              ND_ENABLENATURALSORTING: "true"
               ND_ENABLESTARRATING: "false"
             resources:
               requests:
