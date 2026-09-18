@@ -18,7 +18,11 @@ spec:
     - name: media-nfs
       namespace: media-apps
   components:
+    - ../../../../components/cache
     - ../../../../components/kopiur/backup
   postBuild:
     substitute:
       APP: *name
+      # transcode scratch: sequential bursts, rewarmable; sized for several
+      # concurrent 4K transcodes with headroom
+      CACHE_CAPACITY: 32Gi

@@ -27,9 +27,10 @@ spec:
   moverDefaults:
     cache:
       # warm kopia cache across mover runs: controller-owned RWO PVC per
-      # policy instead of a cold emptyDir each run (~96 mover runs/day)
-      mode: Persistent
-      storageClassName: ceph-block
+      # policy instead of a cold emptyDir each run (~96 mover runs/day).
+      # ceph-cache (replica=1 NVMe pool): the cache is rewarmable, so the
+      # 3x replication write amplification of ceph-block buys nothing here.
+      storageClassName: ceph-cache
       capacity: 10Gi
       # Ceiling = metadata 4096x2 (index-blobs cap) + content 1024
       # = 9Gi <= ~9.5Gi usable (ext4 5% reserve). Sized per-policy:
