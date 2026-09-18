@@ -88,6 +88,12 @@ spec:
         existingClaim: video
         globalMounts:
           - path: /media
+      # transcode scratch on replica=1 NVMe ceph-cache: keeps transcode IO
+      # off the Ceph/NFS config PVC and off RAM (tmpfs). Rewarmable.
+      transcode:
+        existingClaim: jellyfin-cache
+        globalMounts:
+          - path: /config/transcodes
       tmpfs:
         type: emptyDir
         globalMounts:

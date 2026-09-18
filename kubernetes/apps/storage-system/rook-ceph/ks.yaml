@@ -62,6 +62,10 @@ spec:
       name: ceph-blockpool
       namespace: *namespace
     - apiVersion: ceph.rook.io/v1
+      kind: CephBlockPool
+      name: ceph-cachepool
+      namespace: *namespace
+    - apiVersion: ceph.rook.io/v1
       kind: CephFilesystem
       name: ceph-filesystem
       namespace: *namespace

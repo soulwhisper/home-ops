@@ -1,0 +1,15 @@
+---
+# Rewarmable cache/scratch PVC on the replica=1 ceph-cachepool (NVMe, no
+# replication amplification). Data loss on OSD failure is acceptable: caches
+# rewarm. Never use for durable data. Consumers mount via existingClaim.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "${CACHE_CLAIM:-${APP}-cache}"
+spec:
+  accessModes:
+    - "${CACHE_ACCESSMODES:-ReadWriteOnce}"
+  resources:
+    requests:
+      storage: "${CACHE_CAPACITY:-10Gi}"
+  storageClassName: ceph-cache
