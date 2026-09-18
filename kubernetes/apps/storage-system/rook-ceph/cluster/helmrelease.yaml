@@ -53,6 +53,13 @@ spec:
           # 3-mon homelab; revert by setting "0.05" explicitly (rook sets but
           # never unsets cephConfig keys).
           mon_clock_drift_allowed: "0.1"
+      healthCheck:
+        # ceph-cachepool is size=1 by design (rewarmable scratch, see the pool
+        # comment below); POOL_NO_REDUNDANCY would otherwise hold HEALTH_WARN
+        # and re-page CephHealthWarning forever.
+        muteHealthWarning:
+          POOL_NO_REDUNDANCY:
+            policy: mute
       cleanupPolicy:
         wipeDevicesFromOtherClusters: true
       dashboard:
