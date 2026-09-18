@@ -7,7 +7,8 @@ metadata:
 spec:
   groupRef:
     name: internal-ro
-  image: ghcr.io/victoriametrics-community/mcp-victorialogs:v1.9.0
+  # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victorialogs
+  image: ghcr.io/victoriametrics/mcp-victorialogs:v1.9.0
   env:
     - name: VL_INSTANCE_ENTRYPOINT
       value: "http://victoria-logs-server.monitoring-system.svc.cluster.local:9428"
