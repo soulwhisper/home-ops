@@ -30,6 +30,7 @@ spec:
       # policy instead of a cold emptyDir each run (~96 mover runs/day).
       # ceph-cache (replica=1 NVMe pool): the cache is rewarmable, so the
       # 3x replication write amplification of ceph-block buys nothing here.
+      mode: Persistent
       storageClassName: ceph-cache
       capacity: 10Gi
       # Ceiling = metadata 4096x2 (index-blobs cap) + content 1024

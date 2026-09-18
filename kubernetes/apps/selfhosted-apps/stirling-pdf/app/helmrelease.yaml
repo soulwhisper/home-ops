@@ -76,10 +76,14 @@ spec:
             subPath: tessdata
           - path: /pipeline
             subPath: pipeline
+      # processing scratch (LibreOffice/Tesseract temp files) on replica=1
+      # NVMe ceph-cache instead of the slow industrial system disk (emptyDir)
+      cache:
+        existingClaim: stirling-pdf-cache
+        globalMounts:
+          - path: /tmp
       tmpfs:
         type: emptyDir
         globalMounts:
-          - path: /tmp
-            subPath: tmp
           - path: /logs
             subPath: logs

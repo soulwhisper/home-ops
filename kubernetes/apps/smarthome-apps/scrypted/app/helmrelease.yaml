@@ -96,8 +96,10 @@ spec:
         globalMounts:
           - path: /nvr
             subPath: scrypted
-      tmpfs:
-        type: emptyDir
+      # plugin/ffmpeg/npm caches on replica=1 NVMe ceph-cache instead of
+      # the slow industrial system disk (emptyDir). Rewarmable.
+      cache:
+        existingClaim: scrypted-cache
         globalMounts:
           - path: /.cache
             subPath: cache

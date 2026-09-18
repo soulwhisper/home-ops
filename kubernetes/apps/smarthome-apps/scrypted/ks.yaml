@@ -18,6 +18,7 @@ spec:
     - name: smarthome-nfs
       namespace: smarthome-apps
   components:
+    - ../../../../components/cache
     - ../../../../components/authentik
     - ../../../../components/kopiur/backup
   postBuild:
