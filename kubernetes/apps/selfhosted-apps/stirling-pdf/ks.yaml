@@ -15,6 +15,7 @@ spec:
   targetNamespace: selfhosted-apps
   path: "./kubernetes/apps/selfhosted-apps/stirling-pdf/app"
   components:
+    - ../../../../components/cache
     - ../../../../components/kopiur/backup
   postBuild:
     substitute:
