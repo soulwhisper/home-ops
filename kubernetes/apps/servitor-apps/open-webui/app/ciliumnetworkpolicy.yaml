@@ -72,6 +72,15 @@ spec:
       toPorts:
         - ports:
             - { port: "80", protocol: TCP }
+    # telemetry: OTLP/HTTP traces -> opentelemetry-collector (traces/servitor
+    # pipeline -> langfuse); ENABLE_OTEL_TRACES in the helmrelease
+    - toServices:
+        - k8sService:
+            serviceName: opentelemetry-collector
+            namespace: monitoring-system
+      toPorts:
+        - ports:
+            - { port: "4318", protocol: TCP }
     # DNS
     - toEndpoints:
         - matchLabels:
