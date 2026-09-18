@@ -26,6 +26,12 @@ spec:
   env:
     - name: "HOMEASSISTANT_URL"
       value: "http://home-assistant.smarthome-apps.svc.cluster.local:8123"
+    # 8.5.0: cross-session admission control; cap parallel HA calls
+    - name: "HA_TOOL_CONCURRENCY"
+      value: "2"
+    # tool-search cuts idle tool-context ~46K -> ~5K tokens
+    - name: "ENABLE_TOOL_SEARCH"
+      value: "true"
   transport: streamable-http
   mcpPort: 8086
   secrets:

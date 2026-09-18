@@ -103,7 +103,10 @@ spec:
           machine-learning:
             image:
               repository: ghcr.io/immich-app/immich-machine-learning
-              tag: v3.2.2
+              # OpenVINO on the Iris Xe iGPU (13900H): accelerates Smart
+              # Search / Face Detection, offloads CPU. Docs note higher RAM
+              # use vs CPU — limit raised accordingly.
+              tag: v3.2.2-openvino
             env:
               TRANSFORMERS_CACHE: /cache
             envFrom: *envFrom
@@ -113,7 +116,8 @@ spec:
             resources:
               requests: *requests
               limits:
-                memory: 4Gi
+                gpu.intel.com/i915: 1
+                memory: 8Gi
             resizePolicy:
               - resourceName: cpu
                 restartPolicy: NotRequired

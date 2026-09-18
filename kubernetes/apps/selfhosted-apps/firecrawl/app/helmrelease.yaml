@@ -161,7 +161,7 @@ spec:
           app:
             image:
               repository: ghcr.io/firecrawl/playwright-service
-              tag: latest
+              tag: latest@sha256:df1a393ce8bfc3801570a826a9b0dcc400ae48789adb4a0ad9d6cbf0229b059b
             env:
               PORT: "3000"
               ALLOW_LOCAL_WEBHOOKS: "false"

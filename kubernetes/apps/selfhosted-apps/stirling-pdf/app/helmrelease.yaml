@@ -33,7 +33,9 @@ spec:
               requests:
                 cpu: 10m
               limits:
-                memory: 4Gi
+                # -Xmx4g + LibreOffice/Tesseract native sidecar processes
+                # need headroom above the JVM heap (upstream: limit >= 1.5x Xmx)
+                memory: 8Gi
             resizePolicy:
               - resourceName: cpu
                 restartPolicy: NotRequired

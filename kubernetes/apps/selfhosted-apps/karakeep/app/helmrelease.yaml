@@ -32,6 +32,8 @@ spec:
               CRAWLER_STORE_SCREENSHOT: true
               DATA_DIR: /data
               DISABLE_SIGNUPS: true
+              # default is debug — very chatty
+              LOG_LEVEL: notice
               MEILI_ADDR: http://localhost:7700
               NEXTAUTH_URL: https://bookmarks.noirprime.com
               DISABLE_NEW_RELEASE_CHECK: true

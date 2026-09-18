@@ -10,7 +10,7 @@ data:
     stateless = true
     port = "8080"
     list_output = "yaml"
-    toolsets = ["core", "config", "helm", "kubevirt"]
+    toolsets = ["core", "config", "helm"]
     [[denied_resources]]
     group = ""
     version = "v1"

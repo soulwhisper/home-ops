@@ -2,7 +2,7 @@
 
 | Device | Count | CPU | RAM | OS Disk | Data Disk | NIC | OS | Role |
 |--------|:-----:|-----|:---:|---------|-----------|-----|:--:|------|
-| Miniforum MS-01 | 3 | i9-13900H | 96GB | 512GB SSD | 2TB NVMe (P41, OSD) | Intel X710 2×10G SFP+ | Talos | K8s control-plane + worker |
+| Miniforum MS-01 | 3 | i9-13900H | 96GB | 256GB industrial SSD | 2TB NVMe (P41, OSD) | Intel X710 2×10G SFP+ | Talos | K8s control-plane + worker |
 | N305 IPC | 1 | N305 | 24GB | 1TB SSD | — | 2.5G RJ45 | ESXi 8 | OpenWrt edge router |
 | H3C S6520-24S-SI | 1 | — | — | — | — | 24×10G SFP+ | Comware 7 | L3 core switch |
 | SANTAK TG-Box 850 | 1 | — | — | — | — | USB | — | UPS (NUT) |
@@ -49,4 +49,3 @@ Each MS-01 node runs Talos Linux with:
               └──────────────┘ └───────┘ └──────┘ └───────────┘
               └────────── VLAN 100 (10.10.0.0/24) ──────────┘
 ```
-

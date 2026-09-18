@@ -7,7 +7,8 @@ metadata:
 spec:
   groupRef:
     name: internal-ro
-  image: ghcr.io/victoriametrics-community/mcp-victorialogs:v1.8.0
+  # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victorialogs
+  image: ghcr.io/victoriametrics/mcp-victorialogs:v1.9.0
   env:
     - name: VL_INSTANCE_ENTRYPOINT
       value: "http://victoria-logs-server.monitoring-system.svc.cluster.local:9428"
@@ -15,6 +16,10 @@ spec:
       value: "http"
     - name: MCP_LISTEN_ADDR
       value: ":8081"
+    # embedded bleve doc-search DB is the server's main resource consumer
+    # (upstream FAQ); docs are searchable upstream, drop the tool
+    - name: MCP_DISABLED_TOOLS
+      value: "documentation"
   transport: streamable-http
   mcpPort: 8081
   resources:

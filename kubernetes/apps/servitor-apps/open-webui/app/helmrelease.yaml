@@ -51,8 +51,14 @@ spec:
               # StreamableHTTP on :4483/mcp, anonymous in-cluster auth. Shape
               # follows what the Admin UI persists: match is on info.id, not a
               # top-level id (v0.11.3 middleware connect_mcp_server).
-              TOOL_SERVER_CONNECTIONS: '[{"type":"mcp","url":"http://vmcp-internal-ro.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"internal-ro","name":"internal-ro","description":"ToolHive internal read-only (fluxcd, grafana, kubernetes, obsidian, victoria-logs, context, trendradar)"},"config":{"enable":true}},{"type":"mcp","url":"http://vmcp-internal-rw.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"internal-rw","name":"internal-rw","description":"ToolHive internal read-write (forgejo, github, home-assistant, hindsight)"},"config":{"enable":true}},{"type":"mcp","url":"http://vmcp-external.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"external","name":"external","description":"ToolHive external egress (firecrawl)"},"config":{"enable":true}}]'
+              TOOL_SERVER_CONNECTIONS: '[{"type":"mcp","url":"http://vmcp-internal-ro.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"internal-ro","name":"internal-ro","description":"ToolHive internal read-only (fluxcd, grafana, kubernetes, victoria-logs, context, trendradar)"},"config":{"enable":true}},{"type":"mcp","url":"http://vmcp-internal-rw.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"internal-rw","name":"internal-rw","description":"ToolHive internal read-write (forgejo, github, home-assistant, hindsight)"},"config":{"enable":true}},{"type":"mcp","url":"http://vmcp-external.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"external","name":"external","description":"ToolHive external egress (firecrawl)"},"config":{"enable":true}}]'
               ENABLE_OLLAMA_API: "false"
+              # OTLP -> opentelemetry-collector; its traces/servitor pipeline
+              # keeps gen_ai spans and exports them to langfuse
+              ENABLE_OTEL: "true"
+              ENABLE_OTEL_TRACES: "true"
+              OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
+              OTEL_SERVICE_NAME: "open-webui"
               # durable state is externalized — CNPG (data + pgvector), the
               # app dragonfly (session/rate-limit state), the app ceph bucket
               # (uploads/KB files); the on-disk data dir is cache-only

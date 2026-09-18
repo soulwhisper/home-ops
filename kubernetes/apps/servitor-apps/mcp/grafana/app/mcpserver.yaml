@@ -16,7 +16,8 @@ spec:
           # toolhive reaches the pod via the headless service / pod FQDN;
           # mcp-grafana Host-validation rejects those without an allowlist
           # (same shape as mcp-forgejo's --allowed-hosts)
-          args: ["--transport", "streamable-http", "--address", "0.0.0.0:8000", "--allowed-hosts", "mcp-grafana-0.mcp-mcp-grafana-headless,mcp-grafana-0.mcp-mcp-grafana-headless:8000,mcp-mcp-grafana-headless,mcp-mcp-grafana-headless:8000,mcp-mcp-grafana,mcp-mcp-grafana:8000,localhost,localhost:8000"]
+          # defense-in-depth: the SA token is read-only; enforce at the server too
+          args: ["--disable-write", "--transport", "streamable-http", "--address", "0.0.0.0:8000", "--allowed-hosts", "mcp-grafana-0.mcp-mcp-grafana-headless,mcp-grafana-0.mcp-mcp-grafana-headless:8000,mcp-mcp-grafana-headless,mcp-mcp-grafana-headless:8000,mcp-mcp-grafana,mcp-mcp-grafana:8000,localhost,localhost:8000"]
   env:
     - name: GRAFANA_URL
       value: "http://grafana-service.monitoring-system.svc.cluster.local:3000"

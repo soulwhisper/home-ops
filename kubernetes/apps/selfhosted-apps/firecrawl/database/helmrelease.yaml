@@ -23,7 +23,7 @@ spec:
           app:
             image:
               repository: ghcr.io/firecrawl/nuq-postgres
-              tag: latest
+              tag: latest@sha256:aed86f62858f29bd971abddcdeb301c12888098d2cf5d33c1ba42b053bc460f6
             env:
               POSTGRES_DB: postgres
               POSTGRES_USER: postgres

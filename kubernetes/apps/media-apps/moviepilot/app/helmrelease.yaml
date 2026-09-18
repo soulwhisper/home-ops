@@ -97,7 +97,8 @@ spec:
                 cpu: 20m
                 gpu.intel.com/i915: 1
               limits:
-                memory: 1Gi
+                # BIG_MEMORY_MODE=true assumes >1Gi
+                memory: 2Gi
                 gpu.intel.com/i915: 1
 
     service:
