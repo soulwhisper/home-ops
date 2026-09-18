@@ -28,7 +28,7 @@ spec:
             image:
               repository: ghcr.io/open-webui/oikb
               # renovate: datasource=docker depName=ghcr.io/open-webui/oikb
-              tag: 0.4.0@sha256:e61c1beef9fe91d2f00ca8612e847eacc7d579e2e8e258f40fb1ef3e2891e8d4
+              tag: v0.5.0
             args: ["daemon"]
             env:
               OPEN_WEBUI_URL: "http://open-webui:8080"
