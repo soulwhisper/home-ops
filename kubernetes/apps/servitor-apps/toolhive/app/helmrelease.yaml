@@ -20,9 +20,7 @@ spec:
         scope: "namespace"
         allowedNamespaces:
           - "servitor-apps"
-      # shared session backend for vMCPs (session persistence + distributed
-      # rate limiting); dragonfly instance from the dragonfly component
-      defaultRedis:
-        addr: "toolhive-dragonfly.servitor-apps.svc.cluster.local:6379"
-        existingSecret: "toolhive-dragonfly"
-        existingSecretKey: "password"
+      # operator.defaultRedis intentionally NOT set: upstream bug
+      # stacklok/toolhive#6679 — the operator forwards the redis addr to
+      # proxyrunner pods but not the password -> NOAUTH crashloop on every
+      # MCPServer. Revisit when #6679 lands in a release.

@@ -27,12 +27,6 @@ spec:
     name: shared-otel
     serviceName: *name
   config:
-    # runaway-agent guard: 600 burst, 10 rps sustained across all callers
-    # (incomingAuth is anonymous, so perUser buckets don't apply)
-    rateLimiting:
-      shared:
-        maxTokens: 600
-        refillPeriod: 1m
     aggregation:
       conflictResolution: prefix
       conflictResolutionConfig:
@@ -103,11 +97,6 @@ spec:
           enabled: true
           failureThreshold: 3
           timeout: 30s
-    # runaway-agent guard: 600 burst, 10 rps sustained (anonymous inbound)
-    rateLimiting:
-      shared:
-        maxTokens: 600
-        refillPeriod: 1m
     optimizer:
       embeddingProvider: openai
       embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf
@@ -164,11 +153,6 @@ spec:
           enabled: true
           failureThreshold: 3
           timeout: 30s
-    # runaway-agent guard: 600 burst, 10 rps sustained (anonymous inbound)
-    rateLimiting:
-      shared:
-        maxTokens: 600
-        refillPeriod: 1m
     optimizer:
       embeddingProvider: openai
       embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf
