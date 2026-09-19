@@ -115,12 +115,12 @@ directories:
   - configDigest: 4df4c2d56d1559a5204d66f43dfce2e8a830e47af0cf56132b4b230d39e105f0
     http: {}
     path: smartctl-exporter
-  - configDigest: c1b271b8ea28da527d29780eb7817224e7a147cba7457ee91e6340e49f1cbe0d
+  - configDigest: dcbe78670bc38ff2a2bd7f90ced08d356b2b4875917f3d93d0aae391b0de3b10
     git:
-      commitTitle: 'chore(release): 0.10.8 (#440)...'
-      sha: 49addf88fddd33013383224d050066e99059e01a
+      commitTitle: 'chore(release): 0.10.9 (#454)...'
+      sha: b11ec2cd534b5a552fc5764fcde1a26ffb8934a8
       tags:
-      - 0.10.8
+      - 0.10.9
     path: kopiur
   path: _sources/default
 - contents:
