@@ -60,6 +60,11 @@ spec:
         muteHealthWarning:
           POOL_NO_REDUNDANCY:
             policy: mute
+      # Temporary: proceed with OSD updates even when `osd ok-to-stop` fails.
+      # ceph-cachepool is size=1, so stopping any OSD makes its PGs inactive
+      # and rook's OSD updater deadlocks. Revert to false once the cache pool
+      # is migrated to openebs-localpv (remove pool first, then this flag).
+      continueUpgradeAfterChecksEvenIfNotHealthy: true
       cleanupPolicy:
         wipeDevicesFromOtherClusters: true
       dashboard:
