@@ -54,7 +54,10 @@ spec:
           serviceAccountName: hindsight-restarter
           automountServiceAccountToken: true
           securityContext:
-            runAsNonRoot: true
+            # kubectl image defaults to root; pin non-root instead of
+            # runAsNonRoot, which would reject the container outright
+            runAsUser: 65534
+            runAsGroup: 65534
             seccompProfile: { type: RuntimeDefault }
           containers:
             - name: kubectl
