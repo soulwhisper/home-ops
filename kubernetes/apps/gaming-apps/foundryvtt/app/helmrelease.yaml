@@ -29,7 +29,7 @@ spec:
           app:
             image:
               repository: ghcr.io/felddy/foundryvtt
-              tag: 14.367.0
+              tag: 14.368.0
             env:
               FOUNDRY_HOSTNAME: "fvtt.noirprime.com"
               FOUNDRY_IP_DISCOVERY: "false"
