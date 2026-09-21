@@ -14,39 +14,6 @@ spec:
     fullnameOverride: *name
     replicaCount: 1
     initContainers:
-      # Generate kubeconfig file, ref:https://github.com/kubernetes-sigs/headlamp/issues/1826
-      - name: create-kubeconfig
-        image: alpine/k8s:1.37.0
-        command:
-          - /bin/bash
-          - "-c"
-          - |
-            kubectl config set-cluster main --server=https://kubernetes.default.svc --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-            kubectl config set-credentials main --token=$(cat /tmp/sa-token/token)
-            kubectl config set-context main --cluster=main --user=main
-            kubectl config use-context main
-        env:
-          - name: KUBERNETES_SERVICE_HOST
-            valueFrom:
-              fieldRef:
-                fieldPath: status.hostIP
-          - name: KUBERNETES_SERVICE_PORT
-            value: "6443"
-          - name: KUBECONFIG
-            value: /home/headlamp/.config/Headlamp/kubeconfigs/config
-        securityContext: &securityContext
-          allowPrivilegeEscalation: false
-          capabilities: { drop: ["ALL"] }
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          runAsUser: 100
-          runAsGroup: 101
-        volumeMounts:
-          - name: kubeconfig
-            mountPath: /home/headlamp/.config/Headlamp/kubeconfigs
-          - name: sa-token
-            mountPath: /tmp/sa-token
-            readOnly: true
       # Install Flux plugin
       - name: headlamp-plugins
         image: ghcr.io/headlamp-k8s/headlamp-plugin-flux:v0.7.0
@@ -54,7 +21,13 @@ spec:
           - /bin/sh
           - -c
           - mkdir -p /build/plugins && cp -r /plugins/* /build/plugins/
-        securityContext: *securityContext
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: { drop: ["ALL"] }
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 100
+          runAsGroup: 101
         volumeMounts:
           - name: headlamp-plugins
             mountPath: /build/plugins
@@ -78,15 +51,6 @@ spec:
     volumes:
       - name: headlamp-plugins
         emptyDir: {}
-      - name: kubeconfig
-        emptyDir: {}
-      - name: sa-token
-        secret:
-          secretName: headlamp-admin
-          defaultMode: 420
     volumeMounts:
       - name: headlamp-plugins
         mountPath: /build/plugins
-      - name: kubeconfig
-        mountPath: /home/headlamp/.config/Headlamp/kubeconfigs/config
-        readOnly: true

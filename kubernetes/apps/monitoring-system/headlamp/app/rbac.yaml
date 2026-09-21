@@ -1,20 +1,11 @@
 ---
+# pod SA: in-cluster bootstrap only (bound to `view`, no secrets).
+# The long-lived SA-token Secret and token login were removed — OIDC only.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: headlamp-admin
 ---
-# long-lived SA token mounted into the pod (kubeconfig for the UI login);
-# the token controller populates data.token — no secret material in git
-apiVersion: v1
-kind: Secret
-metadata:
-  name: headlamp-admin
-  annotations:
-    kubernetes.io/service-account.name: headlamp-admin
-type: kubernetes.io/service-account-token
----
-# read-only cluster access via the built-in aggregated `view` ClusterRole (excludes secrets)
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -28,95 +19,29 @@ subjects:
     name: headlamp-admin
     namespace: monitoring-system
 ---
-# headlamp OIDC sign-in: apiserver trusts authentik (talos apiServer extraArgs);
-# members of homelab-admin get the same read-only `view` as the SA token
+# Read-only wildcard for OIDC humans: covers current AND future CRDs, so new
+# installs stop surfacing as per-CRD "forbidden" errors. Includes secrets —
+# accepted: homelab-admin already holds cluster-admin via kubectl, and the
+# leak-prone path (non-expiring SA token in pod/browser localStorage) was
+# deleted instead of granting secrets to it.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: headlamp-readall
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: headlamp-oidc-admins
+  # new name: roleRef is immutable, so the old view-bound binding is replaced
+  name: headlamp-oidc-readall
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: view
+  name: headlamp-readall
 subjects:
   - kind: Group
     name: homelab-admin
----
-# extends `view` (via aggregation) with read-only access to Flux CRs for the Flux plugin
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: headlamp-flux-view
-  labels:
-    rbac.authorization.k8s.io/aggregate-to-view: "true"
-rules:
-  - apiGroups: ["kustomize.toolkit.fluxcd.io"]
-    resources: ["kustomizations"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["helm.toolkit.fluxcd.io"]
-    resources: ["helmreleases"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["source.toolkit.fluxcd.io"]
-    resources:
-      - buckets
-      - externalartifacts
-      - gitrepositories
-      - helmcharts
-      - helmrepositories
-      - ocirepositories
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["notification.toolkit.fluxcd.io"]
-    resources: ["alerts", "providers", "receivers"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["image.toolkit.fluxcd.io"]
-    resources: ["imagepolicies", "imagerepositories", "imageupdateautomations"]
-    verbs: ["get", "list", "watch"]
----
-# built-in `view` excludes cluster-scoped kinds and RBAC; the cluster overview
-# pages (and the datasource proxy tester) need read access to these
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: headlamp-cluster-view
-  labels:
-    rbac.authorization.k8s.io/aggregate-to-view: "true"
-rules:
-  - apiGroups: [""]
-    resources: ["nodes", "persistentvolumes"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["services/proxy"]
-    verbs: ["get"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["storageclasses", "volumeattributesclasses"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["networking.k8s.io"]
-    resources: ["ingressclasses"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["gateway.networking.k8s.io"]
-    resources: ["gateways", "gatewayclasses", "httproutes", "grpcroutes", "referencegrants", "backendtlspolicies"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["gateway.networking.x-k8s.io"]
-    resources: ["xbackendtrafficpolicies"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["rbac.authorization.k8s.io"]
-    resources: ["roles", "clusterroles", "rolebindings", "clusterrolebindings"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["scheduling.k8s.io"]
-    resources: ["priorityclasses"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["node.k8s.io"]
-    resources: ["runtimeclasses"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["coordination.k8s.io"]
-    resources: ["leases"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["admissionregistration.k8s.io"]
-    resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["leaderworkerset.x-k8s.io"]
-    resources: ["leaderworkersets"]
-    verbs: ["get", "list", "watch"]
