@@ -31,7 +31,10 @@ spec:
               CRAWLER_ENABLE_ADBLOCKER: true
               CRAWLER_STORE_SCREENSHOT: true
               DATA_DIR: /data
-              DISABLE_SIGNUPS: true
+              # OIDC-only provisioning: first authentik login creates the account
+              DISABLE_SIGNUPS: "false"
+              # OIDC-only login
+              DISABLE_PASSWORD_AUTH: "true"
               # default is debug — very chatty
               LOG_LEVEL: notice
               MEILI_ADDR: http://localhost:7700
@@ -80,7 +83,7 @@ spec:
           meilisearch:
             image:
               repository: getmeili/meilisearch
-              tag: v1.53.2
+              tag: v1.54.0
             # image entrypoint is tini; args replace CMD so the binary name
             # must be included
             args:

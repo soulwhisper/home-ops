@@ -11,6 +11,8 @@ spec:
     name: app-template
     namespace: gitops-system
 
+  # init: kubectl exec -it -n selfhosted-apps deploy/dispatcharr -c app -- python manage.py createsuperuser
+
   values:
     defaultPodOptions:
       automountServiceAccountToken: false
@@ -47,6 +49,9 @@ spec:
               DISPATCHARR_PORT: &port 9191
               REDIS_HOST: localhost
               CELERY_BROKER_URL: redis://localhost:6379/0
+            envFrom:
+              - secretRef:
+                  name: *name
             resources:
               requests:
                 memory: 1Gi

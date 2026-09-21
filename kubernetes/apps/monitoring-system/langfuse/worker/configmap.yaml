@@ -11,7 +11,10 @@ data:
   CLICKHOUSE_URL: "http://default-clickhouse-headless.database-system.svc.cluster.local:8123"
   CLICKHOUSE_DB: "langfuse"
   CLICKHOUSE_USER: "langfuse"
-  CLICKHOUSE_CLUSTER_ENABLED: "false"
+  # 2-replica CH: migrate/query via headless svc round-robins; without cluster
+  # mode tables land on one replica and queries fail with "Unknown table"
+  CLICKHOUSE_CLUSTER_ENABLED: "true"
+  CLICKHOUSE_CLUSTER_NAME: "default"
   LANGFUSE_USE_AZURE_BLOB: "false"
   LANGFUSE_USE_OCI_NATIVE_OBJECT_STORAGE: "false"
   LANGFUSE_OCI_AUTH_TYPE: "workload_identity"
