@@ -41,13 +41,15 @@ spec:
               # Auth is authentik forward-auth at the gateway (components/authentik);
               # disable open-webui's own login so the SSO identity passes through.
               WEBUI_AUTH: "False"
-              # Single provider: the agentgateway OPEN lane (/chat/raw). Any
-              # model id falls through to the `complex` catch-all on the
-              # studio main brain; explicit lane aliases (omni/micro) select
-              # their lanes. The former hermes chat-profile provider was
-              # removed — open-webui's only AI egress is the gateway (see
-              # ciliumnetworkpolicy). OPENAI_API_KEYS order matches.
-              OPENAI_API_BASE_URLS: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/chat/raw"
+              # Provider order matches OPENAI_API_KEYS in the ExternalSecret:
+              # 1. agentgateway OPEN lane (/chat/raw) — serves ONLY `complex`,
+              #    the uncensored main brain. Default for portal chat; any
+              #    model id falls through to the complex catch-all.
+              # 2. agentgateway GUARDED lane (/chat) — promptGuard-scanned;
+              #    hosts the omni/micro lanes for aux tasks (title
+              #    generation -> model id `micro`). Select it per-task in
+              #    Admin Settings; never for the main uncensored chat.
+              OPENAI_API_BASE_URLS: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/chat/raw;http://agentgateway-proxy.networking-system.svc.cluster.local:80/chat"
               # Gateway API key for the MCP tool servers below. Declared
               # before TOOL_SERVER_CONNECTIONS so $(GATEWAY_API_KEY) expands
               # (kubelet dependent-env expansion, same pattern as

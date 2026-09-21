@@ -32,10 +32,10 @@ spec:
               CRON_SCHEDULE: "*/30 * * * *"
               IMMEDIATE_RUN: "true"
               AI_ANALYSIS_ENABLED: "true"
-              # open lane, `omni` lane (news digest; `micro` is the documented
+              # guarded lane, `omni` lane (news digest; `micro` is the documented
               # fallback for classification-style passes)
               AI_MODEL: "openai/omni"
-              AI_API_BASE: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/chat/raw"
+              AI_API_BASE: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/chat"
               # delivery channels: add NTFY_*/DINGTALK_WEBHOOK_URL/FEISHU_WEBHOOK_URL env when chosen
             envFrom:
               - secretRef:

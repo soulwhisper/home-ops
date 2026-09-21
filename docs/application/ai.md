@@ -53,8 +53,8 @@ content only:
 
 | Route | promptGuard | Consumers |
 | ----- | ----------- | --------- |
-| `/chat` | **guarded** (request+response, `llm-guardrails`) | hermes-agent only |
-| `/chat/raw` | none (open content lane) | open-webui, machine extractors, eval |
+| `/chat` | **guarded** (request+response, `llm-guardrails`) | hermes-agent, machine extractors, open-webui aux provider |
+| `/chat/raw` | none (open content lane) | open-webui main chat, eval — **`complex` only** |
 
 | Route Header | Backend | Alias | Model | Host |
 | ------------ | ------- | ----- | ----- | ---- |
@@ -62,12 +62,15 @@ content only:
 | `x-model: omni` | `llm-backend-omni` | `omni` | MiniCPM-O-4.5 (text+vision+audio-in) | MacStudio oMLX |
 | `x-model: micro` | `llm-backend-micro` | `micro` | MiniCPM5-2B | MacStudio oMLX |
 
-The catch-all rule (last on both routes) sends unknown/absent model ids to
-`complex` — the main brain is the default. All backends speak the
-OpenAI-compatible API on `studio.homelab.internal:8000`. Auth is
-ExternalSecret-managed API keys at the gateway; no cloud fallback is
-configured — the studio is a deliberate SPOF. Tool access from the open lane
-is identical to the guarded one: MCP has no open route (see MCP Backend).
+The catch-all rule (last on the guarded route) sends unknown/absent model ids
+to `complex` — the main brain is the default. The open lane deliberately
+serves **only** `complex`: it is the single uncensored model and the only
+reason the lane exists; `omni`/`micro` are reachable exclusively through the
+guarded route. All backends speak the OpenAI-compatible API on
+`studio.homelab.internal:8000`. Auth is ExternalSecret-managed API keys at
+the gateway; no cloud fallback is configured — the studio is a deliberate
+SPOF. Tool access from the open lane is identical to the guarded one: MCP
+has no open route (see MCP Backend).
 
 
 Lane-fit guidance: `micro` fits classification, tagging, title/routing decisions, short structured extraction (MiniCPM5-2B is text-only — never a vision candidate). `omni` covers everything fidelity-sensitive: summarization, compression, session search, memory writes, OCR/vision (MiniCPM5-2B's long-context recall AA-LCR 59% and abstention bias make it unsafe for those). `complex` for agentic reasoning and hard synthesis.
@@ -101,7 +104,12 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | SillyTavern          | UI-configured     | Gemma4-31B lane    | Creative/RP; no repo-level config                            |
 | open-notebook        | UI-configured     | suggest `complex`  | Research synthesis; no repo-level config                     |
-| open-webui           | `/chat/raw`       | `complex` (catch-all default) | Chat portal; native tools via the guarded tiered `/mcp/*` (bearer key); no hermes provider |
+| open-webui           | `/chat/raw` + `/chat` | `complex` (open) / `omni`·`micro` (guarded) | Chat portal; native tools via the guarded tiered `/mcp/*` (bearer key); no hermes provider |
+
+All `omni`/`micro` consumers (extractors + hermes aux) ride the **guarded**
+`/chat` route; their prompts carry scraped web content, so a low rate of
+promptGuard false-positive rejections (403) is expected and watched — see
+the TODO table.
 
 ### MCP Backend — tiered, guarded, no open lane
 
@@ -175,7 +183,7 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 ### Open WebUI v0.11.3
 
 - Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui:v0.11.3`. Lives in **servitor-apps** (with hermes/toolhive, not selfhosted-apps). Storage is externalized: shared CNPG `postgres` (app data + `VECTOR_DB=pgvector`; role/db via `postgres-init`, plain `vector` ext self-created by migrations — vchord N/A: open-webui hardcodes pgvector DDL), app `Dragonfly` (`REDIS_URL`), app ceph bucket `open-webui` (`STORAGE_PROVIDER=s3`, `STORAGE_LOCAL_CACHE=False`) — data dir is emptyDir cache, no PVC
-- **LLM provider**: single entry — the agentgateway open lane (`agentgateway-proxy:80/chat/raw`, key `llm-api.agentgateway_api_auth`). Any model id falls through to the `complex` catch-all on the studio main brain; explicit lane aliases (`omni`/`micro`) select their lanes. The former siliconflow provider and the hermes chat-profile provider were both removed — the gateway is the only AI egress.
+- **LLM providers** (`OPENAI_API_BASE_URLS` order, keys match): 1. agentgateway open lane (`agentgateway-proxy:80/chat/raw`, key `llm-api.agentgateway_api_auth`) — serves **only** `complex`, the uncensored main brain; any model id falls through to the complex catch-all; 2. agentgateway guarded lane (`agentgateway-proxy:80/chat`, same key) — promptGuard-scanned, hosts `omni`/`micro` for aux tasks (title generation → model id `micro`); select per-task in Admin Settings. The former siliconflow and hermes chat-profile providers were removed — the gateway is the only AI egress.
 - **MCP**: native MCP tool servers via `TOOL_SERVER_CONNECTIONS` = the three tiered, sidecar-guarded gateway endpoints (`agentgateway-proxy:80/mcp/ro|rw|ext`) with `auth_type: "bearer"` and the key expanded from `$GATEWAY_API_KEY` (kubelet dependent-env expansion; bearer auth in `build_tool_server_headers` is native on v0.11.3). Same guarded endpoints hermes uses — MCP has no open lane.
 - Ingress: `chat.noirprime.com` via kgateway-internal; **auth is authentik forward-auth at the gateway** (components/authentik, provider `open-webui-proxy-provider`, homelab-admin group); open-webui's own login disabled (`WEBUI_AUTH=False`)
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (sole AI egress: LLM + MCP), open-webui-terminals:3000, open-webui-oikb:8080, postgres-rw:5432, open-webui-dragonfly:6379, ceph RGW:80, kube-dns, world-except-private (RAG web fetching)
@@ -354,6 +362,7 @@ items:
 | Item | State | Path forward |
 | ---- | ----- | ------------ |
 | open-webui MCP bearer key rollout | Implemented (`auth_type: "bearer"` + `$GATEWAY_API_KEY` expansion); smoke-verify at rollout | Round-trip a native tool call in open-webui; on failure check kubelet dependent-env expansion ordering before anything else |
+| promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc/frigate-vision) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via langfuse/logs; if painful, re-expose `omni` on the open lane (one route rule) as the designed escape hatch |
 | hermes MCP server endpoints | Runtime/PVC state, not in GitOps seeds | Point hermes at `/mcp/ro|rw|ext` at rollout; add an MCP section to the seed ConfigMap once the hermes config schema is confirmed |
 | open-terminal sandbox pods → vmcp | Egress allowed, ingress whitelist gap (effectively denies — accidentally enforces the no-open-MCP rule) | Separate PR: add sandbox pods to vmcp-ingress, or drop the egress rule and fix the comment |
 | Dify / SillyTavern / open-notebook endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
@@ -363,8 +372,8 @@ items:
 ## Model Routing Summary
 
 ```
-/chat      (guarded, promptGuard)  ── hermes only
-/chat/raw  (open content lane)     ── open-webui, extractors, eval
+/chat      (guarded, promptGuard)  ── hermes, extractors, open-webui aux
+/chat/raw  (open, complex ONLY)   ── open-webui main chat, eval
             │
             ├─ x-priority: high / x-model: complex / (catch-all) ─► complex  Qwen3.8-27B Uncensored
             ├─ x-model: omni  ───────────────────────────────────► omni     MiniCPM-O-4.5 (text+vision)
