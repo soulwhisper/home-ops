@@ -1,5 +1,8 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+# Guarded LLM lane. `llm-guardrails` (promptGuard) attaches here and nowhere
+# else; every consumer of this route is scanned request+response.
+# hermes-agent is the only consumer (its cilium policy only allows POST /chat/*).
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -64,5 +67,102 @@ spec:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
           name: llm-backend-omni
+      timeouts:
+        request: 300s
+    # Catch-all: unknown/absent model ids land on the main brain. Listed
+    # last so header rules win on implementations with ordered matching.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /chat
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: llm-backend-complex
+      timeouts:
+        request: 300s
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+# Open LLM lane — same backends and catch-all as /chat, but `llm-guardrails`
+# deliberately does NOT target this route. This is the only unguarded surface,
+# and only for LLM content: the human portal (open-webui), machine extractors,
+# and eval traffic. Tools are NOT reachable through this route — MCP goes
+# through the guarded /mcp/* endpoints regardless of lane.
+# Path note: /chat/raw is deeper than /chat, so longest-prefix matching
+# unambiguously splits the two lanes.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: agentgateway-llm-raw-route
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-proxy
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /chat/raw
+          headers:
+            - type: Exact
+              name: x-priority
+              value: "high"
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: llm-backend-complex
+      timeouts:
+        request: 300s
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /chat/raw
+          headers:
+            - type: Exact
+              name: x-model
+              value: "complex"
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: llm-backend-complex
+      timeouts:
+        request: 300s
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /chat/raw
+          headers:
+            - type: Exact
+              name: x-model
+              value: "micro"
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: llm-backend-micro
+      timeouts:
+        request: 120s
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /chat/raw
+          headers:
+            - type: Exact
+              name: x-model
+              value: "omni"
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: llm-backend-omni
+      timeouts:
+        request: 300s
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /chat/raw
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: llm-backend-complex
       timeouts:
         request: 300s

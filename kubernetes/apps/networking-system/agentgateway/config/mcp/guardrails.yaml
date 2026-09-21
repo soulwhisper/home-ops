@@ -8,7 +8,13 @@ spec:
   targetRefs:
     - group: agentgateway.dev
       kind: AgentgatewayBackend
-      name: mcp-backend
+      name: mcp-backend-ro
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-rw
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-ext
   backend:
     mcp:
       guardrails:

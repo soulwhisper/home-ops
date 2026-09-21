@@ -1,27 +1,49 @@
 ---
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+# One backend per ToolHive VirtualMCPServer group: the tiered endpoints keep
+# the ro/rw/ext network separation at the gateway instead of collapsing it
+# into a federated backend. Tool names are unchanged — the `{workload}_`
+# prefix is applied inside each vmcp during its own group aggregation, so
+# clients see byte-identical listings to the direct-connect era.
+# All three backends are guarded: mcp-guardrails (ExtMCP) targets each of
+# them. There is deliberately no unguarded MCP backend — MCP has no open lane.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: mcp-backend
+  name: mcp-backend-ro
 spec:
   mcp:
     targets:
       - name: vmcp-internal-ro
         static:
           host: vmcp-internal-ro.servitor-apps.svc.cluster.local
-          path: &path /mcp
-          port: &port 4483
-          protocol: &protocol StreamableHTTP
+          path: /mcp
+          port: 4483
+          protocol: StreamableHTTP
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: mcp-backend-rw
+spec:
+  mcp:
+    targets:
       - name: vmcp-internal-rw
         static:
           host: vmcp-internal-rw.servitor-apps.svc.cluster.local
-          path: *path
-          port: *port
-          protocol: *protocol
+          path: /mcp
+          port: 4483
+          protocol: StreamableHTTP
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: mcp-backend-ext
+spec:
+  mcp:
+    targets:
       - name: vmcp-external
         static:
           host: vmcp-external.servitor-apps.svc.cluster.local
-          path: *path
-          port: *port
-          protocol: *protocol
+          path: /mcp
+          port: 4483
+          protocol: StreamableHTTP

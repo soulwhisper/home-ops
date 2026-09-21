@@ -48,6 +48,18 @@ spec:
       # Align with the LLM route; gateway defaults would cut long streams.
       timeouts:
         request: 300s
+    # Open LLM lane — same timeout discipline; auth still terminates at
+    # agentgateway (strict API key), only promptGuard differs.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /chat/raw
+      backendRefs:
+        - name: agentgateway-proxy
+          namespace: networking-system
+          port: 80
+      timeouts:
+        request: 300s
     - matches:
         - path:
             type: PathPrefix
