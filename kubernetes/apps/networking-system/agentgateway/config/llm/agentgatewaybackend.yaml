@@ -1,9 +1,5 @@
 ---
-# Studio chat lanes on the MacStudio oMLX OpenAI-compatible endpoint.
-# Model ids ARE lane names (the gateway PreRouting transformation maps
-# request body `model` -> `x-model`): consumers address lanes by the studio
-# alias registry in docs/application/ai.md. `openai.model` below mirrors the
-# served alias; routing is by header rule, not by this value.
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
@@ -16,6 +12,7 @@ spec:
       host: studio.homelab.internal
       port: 8000
 ---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
@@ -28,6 +25,7 @@ spec:
       host: studio.homelab.internal
       port: 8000
 ---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
