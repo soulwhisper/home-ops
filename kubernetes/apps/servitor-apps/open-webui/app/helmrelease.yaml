@@ -77,10 +77,12 @@ spec:
               S3_ADDRESSING_STYLE: "path"
               S3_ACCESS_KEY_ID:
                 valueFrom:
-                  secretKeyRef: { name: ceph-bucket-open-webui, key: AWS_ACCESS_KEY_ID }
+                  secretKeyRef:
+                    { name: ceph-bucket-open-webui, key: AWS_ACCESS_KEY_ID }
               S3_SECRET_ACCESS_KEY:
                 valueFrom:
-                  secretKeyRef: { name: ceph-bucket-open-webui, key: AWS_SECRET_ACCESS_KEY }
+                  secretKeyRef:
+                    { name: ceph-bucket-open-webui, key: AWS_SECRET_ACCESS_KEY }
             envFrom:
               - secretRef:
                   name: *name
@@ -107,7 +109,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: open-webui.svg
           gethomepage.dev/name: Open WebUI
-          gethomepage.dev/group: AI
+          gethomepage.dev/group: Service
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

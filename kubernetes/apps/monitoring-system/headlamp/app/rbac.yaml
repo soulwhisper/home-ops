@@ -71,3 +71,52 @@ rules:
   - apiGroups: ["image.toolkit.fluxcd.io"]
     resources: ["imagepolicies", "imagerepositories", "imageupdateautomations"]
     verbs: ["get", "list", "watch"]
+---
+# built-in `view` excludes cluster-scoped kinds and RBAC; the cluster overview
+# pages (and the datasource proxy tester) need read access to these
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: headlamp-cluster-view
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "persistentvolumes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["services/proxy"]
+    verbs: ["get"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses", "volumeattributesclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingressclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["gateway.networking.k8s.io"]
+    resources: ["gateways", "gatewayclasses", "httproutes", "grpcroutes", "referencegrants", "backendtlspolicies"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["gateway.networking.x-k8s.io"]
+    resources: ["xbackendtrafficpolicies"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "clusterroles", "rolebindings", "clusterrolebindings"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["scheduling.k8s.io"]
+    resources: ["priorityclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["node.k8s.io"]
+    resources: ["runtimeclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["leaderworkerset.x-k8s.io"]
+    resources: ["leaderworkersets"]
+    verbs: ["get", "list", "watch"]

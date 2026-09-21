@@ -8,7 +8,8 @@ resources:
 generatorOptions:
   annotations:
     kustomize.toolkit.fluxcd.io/substitute: "disabled"
-  disableNameSuffixHash: false
+  # grafana-operator resolves configMapRef by exact name; hash suffix breaks the lookup
+  disableNameSuffixHash: true
   labels:
     app.kubernetes.io/managed-by: "grafana-operator"
 configMapGenerator:

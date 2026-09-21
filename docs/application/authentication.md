@@ -37,9 +37,10 @@ These apps use their own authentication — no OIDC needed:
 
 ## No Authentication
 
-| App    | Reason                    |
-| ------ | ------------------------- |
-| MeTube | Single-user download tool |
+| App            | Reason                                                                       |
+| -------------- | ---------------------------------------------------------------------------- |
+| MeTube         | Single-user download tool                                                    |
+| God's Eye View | No built-in auth by design; protected by authentik forward-auth at the gateway |
 
 ## Rook-Ceph SAML2 (Manual)
 
