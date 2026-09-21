@@ -9,6 +9,7 @@
 #   :8001 ComfyUI — /v1/images (alias `image`), /v1/audio/speech (alias
 #               `voice`); OpenAI-compatible workflow endpoints
 # Aliases are the contract in docs/application/ai.md (Studio Model Registry).
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
@@ -18,6 +19,7 @@ spec:
     host: studio.homelab.internal
     port: 8000
 ---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
