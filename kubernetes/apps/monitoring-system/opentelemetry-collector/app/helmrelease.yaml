@@ -100,7 +100,12 @@ spec:
         filter/gen_ai:
           traces:
             span:
-              - 'attributes["gen_ai.system"] == nil'
+              # drop-condition semantics (filter processor drops matches):
+              # keep gen_ai spans plus the mcp-guardrails decision spans so
+              # guardrail verdicts correlate with the LLM calls that triggered
+              # them (langfuse is the analysis surface; alerting stays on
+              # vmalert + vlogs LogsQL)
+              - 'attributes["gen_ai.system"] == nil and resource.attributes["service.name"] != "mcp-guardrails"'
       exporters:
         otlp_http/victoria-traces:
           endpoint: "http://victoria-traces.monitoring-system.svc.cluster.local:10428/insert/opentelemetry"

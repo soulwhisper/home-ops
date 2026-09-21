@@ -19,6 +19,9 @@ spec:
         annotations:
           reloader.stakater.com/auto: "true"
         pod:
+          # per-call stateless (invariant windows reset on any move anyway);
+          # short grace speeds eviction/restart by ~20s
+          terminationGracePeriodSeconds: 10
           securityContext:
             runAsNonRoot: true
             runAsUser: 65532
@@ -32,6 +35,9 @@ spec:
               tag: 1.0.0
             env:
               OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
+              # deterministic service.name for the collector's servitor
+              # pipeline filter (traces -> langfuse)
+              OTEL_SERVICE_NAME: "mcp-guardrails"
             resources:
               requests:
                 cpu: 250m
@@ -46,7 +52,7 @@ spec:
                 spec:
                   grpc: { port: &port 9001 }
                   periodSeconds: 30
-                  failureThreshold: 5
+                  failureThreshold: 3
               readiness:
                 enabled: true
                 custom: true
@@ -59,8 +65,8 @@ spec:
                 custom: true
                 spec:
                   grpc: { port: *port }
-                  periodSeconds: 10
-                  failureThreshold: 60
+                  periodSeconds: 2
+                  failureThreshold: 150
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
