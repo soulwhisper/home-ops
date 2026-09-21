@@ -36,7 +36,7 @@ spec:
             image:
               repository: ghcr.io/open-webui/open-webui
               # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
-              tag: v0.11.3
+              tag: v0.11.4
             env:
               # Auth is authentik forward-auth at the gateway (components/authentik);
               # disable open-webui's own login so the SSO identity passes through.
