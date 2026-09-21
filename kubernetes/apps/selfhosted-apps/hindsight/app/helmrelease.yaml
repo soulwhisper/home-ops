@@ -37,18 +37,17 @@ spec:
               HINDSIGHT_API_OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
               HINDSIGHT_API_VECTOR_EXTENSION: "vchord"
               HINDSIGHT_API_TEXT_SEARCH_EXTENSION: "pgroonga"
-              # Embeddings via the siliconflow verification lane (/sf/*) while
-              # MacStudio is offline — SAME model (Qwen/Qwen3-Embedding-4B,
-              # 2560d), so existing pgvector data stays valid. Restore /v1 +
-              # qwen3-embedding-4b when studio returns. Key from envFrom secret.
+              # Embeddings via the studio oMLX lane (alias `embedding`,
+              # Qwen3-Embedding-0.6B, 1024d). Store is empty — rebuild from
+              # scratch after rollout. Key from envFrom secret.
               HINDSIGHT_API_EMBEDDINGS_PROVIDER: "openai"
-              HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf"
-              HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL: "Qwen/Qwen3-Embedding-4B"
-              # Rerank via the same lane (Qwen/Qwen3-Reranker-0.6B,
-              # Cohere-compatible /sf/rerank).
+              HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1"
+              HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL: "embedding"
+              # Rerank via the same lane (alias `reranker`, Cohere-compatible
+              # /v1/rerank).
               HINDSIGHT_API_RERANKER_PROVIDER: "cohere"
-              HINDSIGHT_API_RERANKER_COHERE_BASE_URL: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf/rerank"
-              HINDSIGHT_API_RERANKER_COHERE_MODEL: "Qwen/Qwen3-Reranker-0.6B"
+              HINDSIGHT_API_RERANKER_COHERE_BASE_URL: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1/rerank"
+              HINDSIGHT_API_RERANKER_COHERE_MODEL: "reranker"
               HINDSIGHT_API_DATABASE_URL:
                 valueFrom:
                   secretKeyRef:

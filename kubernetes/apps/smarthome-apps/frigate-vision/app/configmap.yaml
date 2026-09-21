@@ -24,7 +24,7 @@ data:
     MQTT_HOST = os.environ.get("MQTT_HOST", "mosquitto.smarthome-apps.svc.cluster.local")
     MQTT_PORT = int(os.environ.get("MQTT_PORT", "1883"))
     FRIGATE_URL = os.environ.get("FRIGATE_URL", "http://frigate.smarthome-apps.svc.cluster.local:5000")
-    GATEWAY_URL = os.environ.get("GATEWAY_URL", "http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf/chat")
+    GATEWAY_URL = os.environ.get("GATEWAY_URL", "http://agentgateway-proxy.networking-system.svc.cluster.local:80/chat/raw")
     GATEWAY_KEY = os.environ["GATEWAY_API_KEY"]
     HA_URL = os.environ.get("HA_URL", "http://home-assistant.smarthome-apps.svc.cluster.local:8123")
     HA_TOKEN = os.environ["HA_TOKEN"]
