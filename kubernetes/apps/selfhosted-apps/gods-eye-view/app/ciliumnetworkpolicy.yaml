@@ -1,0 +1,36 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: gods-eye-view-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/name": gods-eye-view
+  egress:
+    # DNS
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - { port: "53", protocol: TCP }
+            - { port: "53", protocol: UDP }
+    # Internet: the server brokers all provider APIs same-origin under /api/*
+    # (OpenSky, Google Places, AISStream wss, Celestrak, LL2, NASA FIRMS,
+    # TomTom, Overpass, adsb.lol, adsbdb, OpenAI). Plain TLS/wss egress — no
+    # proxy env vars needed; the edge transparent proxy passes it untouched.
+    # Node undici ignores HTTP(S)_PROXY unless NODE_USE_ENV_PROXY=1 anyway.
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+            - 169.254.0.0/16
+            - 100.64.0.0/10
+      toPorts:
+        - ports:
+            - { port: "443", protocol: TCP }
