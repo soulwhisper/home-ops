@@ -8,7 +8,7 @@ spec:
   ai:
     provider:
       openai:
-        model: "qwen3.8-27b"
+        model: "complex"
       host: studio.homelab.internal
       port: 8000
 ---
@@ -21,7 +21,7 @@ spec:
   ai:
     provider:
       openai:
-        model: "minicpm5-2b"
+        model: "micro"
       host: studio.homelab.internal
       port: 8000
 ---
@@ -34,6 +34,6 @@ spec:
   ai:
     provider:
       openai:
-        model: "minicpm-o-4_5"
+        model: "omni"
       host: studio.homelab.internal
       port: 8000

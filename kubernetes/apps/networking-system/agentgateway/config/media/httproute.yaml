@@ -10,29 +10,7 @@ spec:
       kind: Gateway
       name: agentgateway-proxy
   rules:
-    # image generation (vmlx / mflux, Z-Image-Turbo)
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /v1/images
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: studio-media-image
-      timeouts:
-        request: 300s
-    # audio: TTS + ASR (mlx_audio.server, VoxCPM2 + Qwen3-ASR)
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /v1/audio
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: studio-media-audio
-      timeouts:
-        request: 300s
-    # embeddings (oMLX, Qwen3-Embedding-4B)
+    # embeddings (oMLX, alias `embedding`)
     - matches:
         - path:
             type: PathPrefix
@@ -40,10 +18,10 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: studio-media-llm
+          name: studio-server
       timeouts:
         request: 120s
-    # rerank (oMLX, Qwen3-Reranker-0.6B, Cohere-compatible)
+    # rerank (oMLX, alias `reranker`, Cohere-compatible)
     - matches:
         - path:
             type: PathPrefix
@@ -51,6 +29,6 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: studio-media-llm
+          name: studio-server
       timeouts:
         request: 120s

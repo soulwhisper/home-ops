@@ -1,35 +1,20 @@
 ---
-# Media lanes on the MacStudio inference host, plain HTTP passthrough.
+# Studio media lanes, plain HTTP passthrough (no LLM parsing).
 # ExternalName Service backends are not resolved by the agentgateway
 # dataplane ("service not found" on every request) — use static
 # AgentgatewayBackends with DNS host instead.
-# Ports are host-side assignments:
-#   8000 oMLX (embeddings /v1/embeddings, rerank /v1/rerank)
-#   8001 vmlx (image generation /v1/images/*)
-#   8002 mlx_audio.server (TTS /v1/audio/speech, ASR /v1/audio/transcriptions)
+#   :8000 oMLX — /v1/embeddings (alias `embedding`), /v1/rerank (alias
+#               `reranker`); the same process serves the chat lanes via the
+#               llm-backend-* AI providers
+# :8001 ComfyUI (`image`/`voice`) retired: not LLM-type, no in-cluster
+# consumers — plain media passthrough gains nothing from gateway policy.
+# Aliases are the contract in docs/application/ai.md (Studio Model Registry).
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: studio-media-llm
+  name: studio-server
 spec:
   static:
     host: studio.homelab.internal
     port: 8000
----
-apiVersion: agentgateway.dev/v1alpha1
-kind: AgentgatewayBackend
-metadata:
-  name: studio-media-image
-spec:
-  static:
-    host: studio.homelab.internal
-    port: 8001
----
-apiVersion: agentgateway.dev/v1alpha1
-kind: AgentgatewayBackend
-metadata:
-  name: studio-media-audio
-spec:
-  static:
-    host: studio.homelab.internal
-    port: 8002

@@ -9,7 +9,7 @@ spec:
     matchLabels:
       "app.kubernetes.io/name": hermes-agent
   egress:
-    # LLM
+    # LLM + MCP (both via the agent gateway)
     - toServices:
         - k8sService:
             serviceName: agentgateway-proxy
@@ -21,6 +21,9 @@ spec:
             http:
               - method: "POST"
                 path: "/chat/.*"
+              # tiered MCP endpoints; any method (streamable-HTTP uses
+              # POST/GET/DELETE on the same path)
+              - path: "/mcp(/.*)?"
 
 
     # Feishu open platform (lark-oapi WebSocket, outbound-only)
@@ -39,14 +42,8 @@ spec:
       toPorts:
         - ports:
             - { port: "443", protocol: TCP }
-    # MCP
-    - toEndpoints:
-        - matchLabels:
-            "app.kubernetes.io/name": virtualmcpserver
-            "k8s:io.kubernetes.pod.namespace": servitor-apps
-      toPorts:
-        - ports:
-            - { port: "4483", protocol: TCP }
+    # MCP reached via the agent gateway (/mcp/*) since the unified-gateway
+    # change — no direct vmcp access.
 
     # DNS
     - toEndpoints:

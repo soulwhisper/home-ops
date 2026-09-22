@@ -9,7 +9,8 @@ spec:
     matchLabels:
       "app.kubernetes.io/name": open-webui
   egress:
-    # LLM: siliconflow lane via the AI gateway
+    # LLM + MCP both via the AI gateway (/chat/raw, /mcp/*) — the only AI
+    # egress. No direct vmcp or hermes paths since the unified-gateway change.
     - toServices:
         - k8sService:
             serviceName: agentgateway-proxy
@@ -17,22 +18,6 @@ spec:
       toPorts:
         - ports:
             - { port: "80", protocol: TCP }
-    # LLM: hermes gateway chat profile (:8642/p/chat/v1)
-    - toServices:
-        - k8sService:
-            serviceName: hermes-agent
-            namespace: servitor-apps
-      toPorts:
-        - ports:
-            - { port: "8642", protocol: TCP }
-    # MCP: ToolHive VirtualMCPServer groups
-    - toEndpoints:
-        - matchLabels:
-            "app.kubernetes.io/name": virtualmcpserver
-            "k8s:io.kubernetes.pod.namespace": servitor-apps
-      toPorts:
-        - ports:
-            - { port: "4483", protocol: TCP }
     # sandbox orchestrator (Open Terminal integration) + KB sync daemon
     # (optional OpenAPI tool server); same namespace, but world-except-private
     # below deliberately excludes cluster IPs, so name them explicitly

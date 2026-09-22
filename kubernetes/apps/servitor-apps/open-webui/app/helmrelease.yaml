@@ -42,16 +42,29 @@ spec:
               # disable open-webui's own login so the SSO identity passes through.
               WEBUI_AUTH: "False"
               # Provider order matches OPENAI_API_KEYS in the ExternalSecret:
-              # 1. siliconflow verification lane (default + aux models)
-              # 2. hermes gateway chat profile — model id "chat"; heavy/agentic
-              #    only, every call runs hermes' full agent loop (MCP tools,
-              #    skills, memory). Never select it for title/tag generation.
-              OPENAI_API_BASE_URLS: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/sf/chat;http://hermes-agent.servitor-apps.svc.cluster.local:8642/p/chat/v1"
-              # ToolHive VirtualMCPServer groups as native MCP tool servers,
-              # StreamableHTTP on :4483/mcp, anonymous in-cluster auth. Shape
-              # follows what the Admin UI persists: match is on info.id, not a
+              # 1. agentgateway OPEN lane (/chat/raw) — serves ONLY `complex`,
+              #    the uncensored main brain. Default for portal chat; any
+              #    model id falls through to the complex catch-all.
+              # 2. agentgateway GUARDED lane (/chat) — promptGuard-scanned;
+              #    hosts the omni/micro lanes for aux tasks (title
+              #    generation -> model id `micro`). Select it per-task in
+              #    Admin Settings; never for the main uncensored chat.
+              OPENAI_API_BASE_URLS: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/chat/raw;http://agentgateway-proxy.networking-system.svc.cluster.local:80/chat"
+              # Gateway API key for the MCP tool servers below. Declared
+              # before TOOL_SERVER_CONNECTIONS so $(GATEWAY_API_KEY) expands
+              # (kubelet dependent-env expansion, same pattern as
+              # REDIS_PASSWORD above).
+              GATEWAY_API_KEY:
+                valueFrom:
+                  secretKeyRef: { name: open-webui, key: GATEWAY_API_KEY }
+              # ToolHive VirtualMCPServer groups via the agentgateway tiered,
+              # sidecar-guarded MCP endpoints (/mcp/ro|rw|ext). auth_type
+              # "bearer" + key is native on v0.11.3 (build_tool_server_headers
+              # -> Authorization: Bearer). MCP has no open lane by design —
+              # these are the same guarded endpoints hermes uses. Shape
+              # follows the Admin UI persistence: match is on info.id, not a
               # top-level id (v0.11.3 middleware connect_mcp_server).
-              TOOL_SERVER_CONNECTIONS: '[{"type":"mcp","url":"http://vmcp-internal-ro.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"internal-ro","name":"internal-ro","description":"ToolHive internal read-only (fluxcd, grafana, kubernetes, victoria-logs, context, trendradar)"},"config":{"enable":true}},{"type":"mcp","url":"http://vmcp-internal-rw.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"internal-rw","name":"internal-rw","description":"ToolHive internal read-write (forgejo, github, home-assistant, hindsight)"},"config":{"enable":true}},{"type":"mcp","url":"http://vmcp-external.servitor-apps.svc.cluster.local:4483/mcp","auth_type":"none","info":{"id":"external","name":"external","description":"ToolHive external egress (firecrawl)"},"config":{"enable":true}}]'
+              TOOL_SERVER_CONNECTIONS: '[{"type":"mcp","url":"http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/ro","auth_type":"bearer","key":"$(GATEWAY_API_KEY)","info":{"id":"internal-ro","name":"internal-ro","description":"ToolHive internal read-only (fluxcd, grafana, kubernetes, victoria-logs, context, trendradar)"},"config":{"enable":true}},{"type":"mcp","url":"http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/rw","auth_type":"bearer","key":"$(GATEWAY_API_KEY)","info":{"id":"internal-rw","name":"internal-rw","description":"ToolHive internal read-write (forgejo, github, home-assistant, hindsight)"},"config":{"enable":true}},{"type":"mcp","url":"http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/ext","auth_type":"bearer","key":"$(GATEWAY_API_KEY)","info":{"id":"external","name":"external","description":"ToolHive external egress (firecrawl)"},"config":{"enable":true}}]'
               ENABLE_OLLAMA_API: "false"
               # OTLP -> opentelemetry-collector; its traces/servitor pipeline
               # keeps gen_ai spans and exports them to langfuse
