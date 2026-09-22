@@ -48,6 +48,20 @@ Replaces the vendored kopiur 0.10.9 board, which references metric families the
 health, backup size/duration/files, controller reconcile p95 from the 35 live
 `kopiur_*` families.
 
+### Known data caveats
+
+- **API server latency panels** (in the vendored k8s-system-api-server board)
+  read `apiserver_request_sli_*` series re-exported by **metrics-server**
+  (client-side view of its own calls) — the server-side buckets are dropped at
+  vmagent for cardinality (~18k series) and the trade-off is kept deliberately.
+  Burn-rate SLOs use `apiserver_request_total{job="apiserver"}` (unaffected).
+- **Probes failing panel**: while the MacStudio is down it reads the number of
+  studio probes (3 after the 8001/8002 media-lane retirement; 5 before).
+  Post-recovery, any value > 0 is a consumed lane down and actionable.
+- **Ceph healthy-time gauge** is alert-derived (% of 30d hours with no
+  `CephHealth*` alert firing), not metric-derived: `ceph_health_status`
+  carries stale series from dead mgr pods that poison naive `avg_over_time`.
+
 ## Gaps (explicitly deferred)
 
 - **No `slo:*` recording rules yet.** The board queries raw metrics; planned rules

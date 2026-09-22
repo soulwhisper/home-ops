@@ -404,11 +404,11 @@
               },
               {
                 "color": "yellow",
-                "value": 0.999
+                "value": 0.998
               },
               {
                 "color": "green",
-                "value": 0.9995
+                "value": 0.999
               }
             ]
           },
@@ -481,11 +481,11 @@
               },
               {
                 "color": "yellow",
-                "value": 0.999
+                "value": 0.998
               },
               {
                 "color": "green",
-                "value": 0.9995
+                "value": 0.999
               }
             ]
           },
@@ -540,7 +540,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "Fraction of 30d ceph reported HEALTH_OK. Drilldown: Ceph Cluster.",
+      "description": "Share of 30d hours with no CephHealth* alert firing (alert-derived; immune to mgr pod label churn). Drilldown: Ceph Cluster.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -548,7 +548,7 @@
           },
           "mappings": [],
           "max": 1,
-          "min": 0.9,
+          "min": 0.8,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -605,7 +605,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "avg(avg_over_time((ceph_health_status == bool 0)[30d:]))",
+          "expr": "1 - count_over_time((max(ALERTS{alertname=~\"CephHealth.*\", alertstate=\"firing\"}) > 0)[30d:1h]) / count_over_time(vector(1)[30d:1h])",
           "refId": "A"
         }
       ],
@@ -625,7 +625,7 @@
           },
           "mappings": [],
           "max": 1,
-          "min": 0.8,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -730,8 +730,8 @@
       },
       "id": 9,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
+        "colorMode": "background",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
@@ -741,8 +741,6 @@
           "fields": "",
           "values": false
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
         "textMode": "auto"
       },
       "targets": [
@@ -756,7 +754,7 @@
         }
       ],
       "title": "etcd leader flips /24h",
-      "type": "gauge"
+      "type": "stat"
     },
     {
       "datasource": {
@@ -801,8 +799,8 @@
         }
       ],
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
+        "colorMode": "background",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
@@ -812,8 +810,6 @@
           "fields": "",
           "values": false
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
         "textMode": "auto"
       },
       "targets": [
@@ -827,7 +823,7 @@
         }
       ],
       "title": "VM ingest rows/s",
-      "type": "gauge"
+      "type": "stat"
     },
     {
       "collapsed": false,
