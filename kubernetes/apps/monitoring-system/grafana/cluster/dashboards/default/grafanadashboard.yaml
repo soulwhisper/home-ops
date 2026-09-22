@@ -74,3 +74,22 @@ spec:
   configMapRef:
     name: dashboard-kopiur-slo
     key: kopiur-slo.json
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanadashboard_v1beta1.json
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: basement-health
+spec:
+  folderRef: default
+  resyncPeriod: 30m
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      grafana.internal/instance: grafana
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "victoria-metrics"
+  configMapRef:
+    name: dashboard-basement-health
+    key: basement-health.json

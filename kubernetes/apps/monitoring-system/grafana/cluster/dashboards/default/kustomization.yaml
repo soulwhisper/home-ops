@@ -25,3 +25,6 @@ configMapGenerator:
   - name: dashboard-kopiur-slo
     files:
       - kopiur-slo.json=../custom/kopiur-slo.json
+  - name: dashboard-basement-health
+    files:
+      - basement-health.json=../custom/basement-health.json
