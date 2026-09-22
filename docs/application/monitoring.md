@@ -63,13 +63,10 @@ High-cardinality metric relabeling drops unnecessary histogram buckets and label
 
 Scrapes PodMonitors, ServiceMonitors, Probes, and ScrapeConfigs cluster-wide. Configured with `promscrape.dropOriginalLabels: "true"` to reduce label cardinality. Internal endpoint: `vmagent-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8429`.
 
-**Custom ScrapeConfigs** extend scraping beyond the cluster boundary:
-
-| Config | Target | Notes |
-|--------|--------|-------|
-| `synology-snmp` | `nas.homelab.internal` | SNMP exporter via SNMP generator module |
-| `synology-node` | `nas.homelab.internal:9100` | External node_exporter on Synology |
-| `synology-smart` | `nas.homelab.internal:9633` | External smartctl-exporter on Synology |
+**Custom ScrapeConfigs** extend scraping beyond the cluster boundary. The
+Synology scrape jobs (`synology-snmp`, `synology-node`, `synology-smart`)
+were removed: the NAS exporter compose stack was unmaintained and dead, and
+NAS disk health is covered by Scrutiny on the host.
 
 ### VMAuth
 
