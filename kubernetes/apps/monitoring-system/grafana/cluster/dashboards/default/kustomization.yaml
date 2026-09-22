@@ -15,10 +15,10 @@ generatorOptions:
 configMapGenerator:
   - name: dashboard-k8s-system-api-server
     files:
-      - k8s-system-api-server.json=../_sources/kubernetes/k8s-system-api-server/download
+      - k8s-system-api-server.json=../_sources/kubernetes/k8s-system-api-server/dashboard.json
   - name: dashboard-blackbox-exporter
     files:
-      - blackbox-exporter.json=../_sources/devices/blackbox-exporter/download
+      - blackbox-exporter.json=../_sources/devices/blackbox-exporter/dashboard.json
   - name: dashboard-envoy-proxy-global
     files:
       - envoy-proxy-global.json=../_sources/envoy/gateway/charts/gateway-addons-helm/dashboards/envoy-proxy-global.json

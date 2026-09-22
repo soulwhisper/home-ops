@@ -15,7 +15,7 @@ generatorOptions:
 configMapGenerator:
   - name: dashboard-node-exporter-full
     files:
-      - node-exporter-full.json=../_sources/default/node-exporter-full/download
+      - node-exporter-full.json=../_sources/default/node-exporter-full/dashboard.json
   - name: dashboard-smartctl-exporter
     files:
-      - smartctl-exporter.json=../_sources/default/smartctl-exporter/download
+      - smartctl-exporter.json=../_sources/default/smartctl-exporter/dashboard.json

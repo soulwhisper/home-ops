@@ -53,8 +53,8 @@ boards that nothing else provides:
 `custom/kopiur-slo.json` replaces the vendored kopiur 0.10.9 board, whose
 expressions reference metric families the 0.10.9 operator does not emit.
 Note: vendir saves grafana.com HTTP downloads under the literal filename
-`download` (no Content-Disposition); `configMapGenerator` paths reference it
-as-is.
+`download`; the vendir CI workflow renames them to `dashboard.json`
+post-sync — `configMapGenerator` paths reference the renamed files.
 
 ### Impact Analysis: Maintenance & Recovery
 

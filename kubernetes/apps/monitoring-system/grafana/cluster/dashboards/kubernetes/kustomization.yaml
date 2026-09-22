@@ -15,13 +15,13 @@ generatorOptions:
 configMapGenerator:
   - name: dashboard-k8s-views-global
     files:
-      - k8s-views-global.json=../_sources/kubernetes/k8s-views-global/download
+      - k8s-views-global.json=../_sources/kubernetes/k8s-views-global/dashboard.json
   - name: dashboard-k8s-views-namespaces
     files:
-      - k8s-views-namespaces.json=../_sources/kubernetes/k8s-views-namespaces/download
+      - k8s-views-namespaces.json=../_sources/kubernetes/k8s-views-namespaces/dashboard.json
   - name: dashboard-k8s-views-nodes
     files:
-      - k8s-views-nodes.json=../_sources/kubernetes/k8s-views-nodes/download
+      - k8s-views-nodes.json=../_sources/kubernetes/k8s-views-nodes/dashboard.json
   - name: dashboard-k8s-views-pods
     files:
-      - k8s-views-pods.json=../_sources/kubernetes/k8s-views-pods/download
+      - k8s-views-pods.json=../_sources/kubernetes/k8s-views-pods/dashboard.json
