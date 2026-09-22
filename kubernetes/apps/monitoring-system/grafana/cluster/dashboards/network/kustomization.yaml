@@ -13,15 +13,9 @@ generatorOptions:
   labels:
     app.kubernetes.io/managed-by: "grafana-operator"
 configMapGenerator:
-  - name: dashboard-k8s-views-global
+  - name: dashboard-kgateway
     files:
-      - k8s-views-global.json=../_sources/kubernetes/k8s-views-global/download
-  - name: dashboard-k8s-views-namespaces
+      - kgateway.json=../_sources/kgateway/install/helm/kgateway-dashboards/dashboards/kgateway.json
+  - name: dashboard-cilium-agent
     files:
-      - k8s-views-namespaces.json=../_sources/kubernetes/k8s-views-namespaces/download
-  - name: dashboard-k8s-views-nodes
-    files:
-      - k8s-views-nodes.json=../_sources/kubernetes/k8s-views-nodes/download
-  - name: dashboard-k8s-views-pods
-    files:
-      - k8s-views-pods.json=../_sources/kubernetes/k8s-views-pods/download
+      - cilium-agent.json=../_sources/cilium/install/kubernetes/cilium/files/cilium-agent/dashboards/cilium-dashboard.json

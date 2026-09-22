@@ -13,11 +13,9 @@ resources:
   - ./servicemonitor.yaml
   - ./poddisruptionbudget.yaml
   # dashboards
-  - ./dashboards/ceph
-  - ./dashboards/cilium
-  - ./dashboards/database
+  - ./dashboards/databases
   - ./dashboards/default
-  - ./dashboards/envoy
-  - ./dashboards/kgateway
   - ./dashboards/kubernetes
-  - ./dashboards/victoria-metrics
+  - ./dashboards/network
+  - ./dashboards/nodes
+  - ./dashboards/storage

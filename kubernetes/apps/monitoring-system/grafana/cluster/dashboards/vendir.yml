@@ -3,7 +3,7 @@ apiVersion: vendir.k14s.io/v1alpha1
 kind: Config
 directories:
   # ---------------------------------------------------------
-  # Folder : ceph
+  # Folder : storage
   # ---------------------------------------------------------
   - path: _sources/ceph
     contents:
@@ -27,7 +27,7 @@ directories:
           }
 
   # ---------------------------------------------------------
-  # Folder : cilium
+  # Folder : network
   # ---------------------------------------------------------
   - path: _sources/cilium
     contents:
@@ -37,12 +37,25 @@ directories:
           url: https://github.com/cilium/cilium
           ref: v1.20.2
         includePaths:
-          - install/kubernetes/cilium/files/cilium-agent/dashboards/*.json
-          - install/kubernetes/cilium/files/cilium-operator/dashboards/*.json
-          - install/kubernetes/cilium/files/hubble/dashboards/*.json
+          - install/kubernetes/cilium/files/cilium-agent/dashboards/cilium-dashboard.json
+        # dropped (hubble-ui covers flows natively; boards referenced un-emitted metrics):
+        # - install/kubernetes/cilium/files/cilium-operator/dashboards/*.json
+        # - install/kubernetes/cilium/files/hubble/dashboards/*.json
+
+  - path: _sources/kgateway
+    contents:
+      - path: .
+        lazy: true
+        git:
+          url: https://github.com/kgateway-dev/dashboards
+          ref: main
+        includePaths:
+          - install/helm/kgateway-dashboards/dashboards/kgateway.json
+        # dropped: envoy.json (duplicates envoy-mixin-overview), agentgateway.json
+        # (thin; native UI at agentgateway-proxy :15000/ui covers it)
 
   # ---------------------------------------------------------
-  # Folder : database
+  # Folder : databases
   # ---------------------------------------------------------
   - path: _sources/database
     contents:
@@ -61,7 +74,7 @@ directories:
         includePaths: ["monitoring/grafana-dashboard.json"]
 
   # ---------------------------------------------------------
-  # Folder : envoy
+  # Folder : default (envoy datapath board)
   # ---------------------------------------------------------
   - path: _sources/envoy
     contents:
@@ -72,39 +85,19 @@ directories:
           url: https://github.com/envoyproxy/gateway
           ref: v1.9.1
         includePaths:
-          - "charts/gateway-addons-helm/dashboards/envoy-*.json"
-          - "charts/gateway-addons-helm/dashboards/global-*.json"
-      # Envoy Mixin Dashboards
-      - path: envoy-mixin-overview
-        lazy: true
-        http:
-          {
-            url: "https://grafana.com/api/dashboards/24459/revisions/1/download",
-          }
-      - path: envoy-mixin-upstream
-        lazy: true
-        http:
-          {
-            url: "https://grafana.com/api/dashboards/24457/revisions/1/download",
-          }
-      - path: envoy-mixin-downstream
-        lazy: true
-        http:
-          {
-            url: "https://grafana.com/api/dashboards/24458/revisions/1/download",
-          }
+          - "charts/gateway-addons-helm/dashboards/envoy-proxy-global.json"
+        # dropped (30-43% metric overlap with proxy-global; same envoy_* families):
+        # - "charts/gateway-addons-helm/dashboards/envoy-clusters.json"
+        # - "charts/gateway-addons-helm/dashboards/envoy-gateway-global.json"  # dead: no envoy_gateway_* metrics
+        # - "charts/gateway-addons-helm/dashboards/global-ratelimit.json"      # thin: 3/20 metrics
 
-  # ---------------------------------------------------------
-  # Folder : kgateway
-  # ---------------------------------------------------------
-  - path: _sources/kgateway
-    contents:
-      - path: .
-        lazy: true
-        git:
-          url: https://github.com/kgateway-dev/dashboards
-          ref: main
-        includePaths: ["install/helm/kgateway-dashboards/dashboards/*.json"]
+      # dropped — Envoy Mixin dashboards, redundant with envoy-proxy-global:
+      # - path: envoy-mixin-overview
+      #   http: { url: "https://grafana.com/api/dashboards/24459/revisions/1/download" }
+      # - path: envoy-mixin-upstream
+      #   http: { url: "https://grafana.com/api/dashboards/24457/revisions/1/download" }
+      # - path: envoy-mixin-downstream
+      #   http: { url: "https://grafana.com/api/dashboards/24458/revisions/1/download" }
 
   # ---------------------------------------------------------
   # Folder : kubernetes
@@ -141,55 +134,16 @@ directories:
           {
             url: "https://grafana.com/api/dashboards/15760/revisions/37/download",
           }
-      - path: k8s-volumes
-        lazy: true
-        http:
-          {
-            url: "https://grafana.com/api/dashboards/11454/revisions/14/download",
-          }
+      # dropped — k8s-volumes: broken (4/22 metrics fresh), covered by
+      # KubePersistentVolume* alerts + kubectl:
+      # - path: k8s-volumes
+      #   http: { url: "https://grafana.com/api/dashboards/11454/revisions/14/download" }
 
   # ---------------------------------------------------------
-  # Folder : victoria-metrics
-  # ---------------------------------------------------------
-  - path: _sources/victoria
-    contents:
-      - path: metrics
-        lazy: true
-        git:
-          url: https://github.com/VictoriaMetrics/VictoriaMetrics
-          ref: v1.152.0
-        includePaths: ["dashboards/*.json"]
-
-      - path: logs
-        lazy: true
-        git:
-          url: https://github.com/VictoriaMetrics/VictoriaLogs
-          ref: v1.121.0
-        includePaths: ["dashboards/victorialogs*.json"]
-
-  # ---------------------------------------------------------
-  # Folder : default
+  # Folder : nodes
   # ---------------------------------------------------------
   - path: _sources/default
     contents:
-      - path: cert-manager
-        lazy: true
-        http:
-          {
-            url: "https://grafana.com/api/dashboards/20842/revisions/3/download",
-          }
-      - path: cloudflared
-        lazy: true
-        http:
-          {
-            url: "https://grafana.com/api/dashboards/17457/revisions/6/download",
-          }
-      - path: external-dns
-        lazy: true
-        http:
-          {
-            url: "https://grafana.com/api/dashboards/23969/revisions/1/download",
-          }
       - path: node-exporter-full
         lazy: true
         http:
@@ -202,34 +156,21 @@ directories:
           {
             url: "https://grafana.com/api/dashboards/22604/revisions/2/download",
           }
-
-      - path: kopiur
-        lazy: true
-        git:
-          url: https://github.com/home-operations/kopiur
-          ref: 0.10.9
-        includePaths: ["deploy/helm/kopiur/files/dashboards/kopiur.json"]
-
-  # ---------------------------------------------------------
-  # Folder : default/infrastructure
-  # ---------------------------------------------------------
-  - path: _sources/infrastructure
-    contents:
-      - path: synology
-        lazy: true
-        http:
-          {
-            url: "https://grafana.com/api/dashboards/14284/revisions/10/download",
-          }
-      - path: openwrt
-        lazy: true
-        http:
-          {
-            url: "https://grafana.com/api/dashboards/18153/revisions/4/download",
-          }
+      # dropped:
+      # - cert-manager (20842): broken board (4/17), triple-redundant with
+      #   CertManager* alerts + `kubectl get certificate -A`
+      #   http: { url: "https://grafana.com/api/dashboards/20842/revisions/3/download" }
+      # - cloudflared (17457): dead, cloudflared_* not scraped
+      #   http: { url: "https://grafana.com/api/dashboards/17457/revisions/6/download" }
+      # - external-dns (23969): no ops value
+      #   http: { url: "https://grafana.com/api/dashboards/23969/revisions/1/download" }
+      # - kopiur: vendored 0.10.9 board references metrics the 0.10.9 operator
+      #   does not emit; replaced by repo-owned custom/kopiur-slo.json
+      #   git: { url: https://github.com/home-operations/kopiur, ref: 0.10.9 }
+      #   includePaths: ["deploy/helm/kopiur/files/dashboards/kopiur.json"]
 
   # ---------------------------------------------------------
-  # Folder : default/devices
+  # Folder : default
   # ---------------------------------------------------------
   - path: _sources/devices
     contents:
@@ -239,3 +180,19 @@ directories:
           {
             url: "https://grafana.com/api/dashboards/7587/revisions/3/download",
           }
+
+  # ---------------------------------------------------------
+  # dropped entirely — VM stack boards replaced by native UIs:
+  #   metrics.noirprime.com (vmui), logs., traces., alert.noirprime.com
+  # - path: _sources/victoria/metrics
+  #   git: { url: https://github.com/VictoriaMetrics/VictoriaMetrics, ref: v1.152.0 }
+  #   includePaths: ["dashboards/*.json"]
+  # - path: _sources/victoria/logs
+  #   git: { url: https://github.com/VictoriaMetrics/VictoriaLogs, ref: v1.121.0 }
+  #   includePaths: ["dashboards/victorialogs*.json"]
+  #
+  # dropped — infrastructure boards:
+  # - synology (14284): dead, no synology_* exporter deployed
+  #   http: { url: "https://grafana.com/api/dashboards/14284/revisions/10/download" }
+  # - openwrt (18153): generic node_* duplicate of node-exporter, openwrt_* absent
+  #   http: { url: "https://grafana.com/api/dashboards/18153/revisions/4/download" }

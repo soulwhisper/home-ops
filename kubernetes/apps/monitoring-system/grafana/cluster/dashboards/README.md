@@ -25,16 +25,36 @@ Using **vendir** to fetch upstream dashboards and commit them to a local `_sourc
 
 ```text
 dashboards/
-├── vendir.yml                  # Source definitions (Versions pinned here)
+├── vendir.yml                  # Source definitions (versions pinned; dropped sources kept commented)
 ├── _sources/                   # Auto-synced JSON content (DO NOT EDIT)
-│   ├── cilium/                 # Contents from github.com/cilium/cilium
-│   └── ...
-└── cilium/
+├── custom/                     # Repo-owned boards (hand-maintained, not vendored)
+└── <folder>/                   # One dir per Grafana folder
     ├── grafanadashboard.yaml   # References the local ConfigMap
-    ├── grafanafolder.yaml      # Folder definitions
-    └── kustomization.yaml      # Maps _sources/ path to ConfigMap
-
+    ├── grafanafolder.yaml      # Folder definition
+    └── kustomization.yaml      # Maps _sources/ or custom/ path to ConfigMap
 ```
+
+#### Layout: debug-focused (2026-09)
+
+State checks live in native UIs (headlamp, ceph-mgr dashboard, hubble-ui,
+agentgateway `:15000/ui`, VM UIs at metrics/logs/traces/alert.noirprime.com);
+failures are pushed by vmalert rules. Grafana keeps only trend/correlation
+boards that nothing else provides:
+
+| Folder       | Contents |
+| ------------ | -------- |
+| `Default`    | Must-check, alert-silent domains: k8s-system-api-server, blackbox-exporter, envoy-proxy-global, kopiur-slo (custom) |
+| `Kubernetes` | k8s-views global/namespaces/nodes/pods — post-alert drilldown |
+| `Storage`    | ceph-cluster/osd/pools — trends behind ceph-mgr dashboard |
+| `Network`    | kgateway, cilium-agent — no native control-plane UI exists |
+| `Databases`  | cnpg, dragonfly — no native UIs exist |
+| `Nodes`      | node-exporter-full, smartctl-exporter — hardware drilldown |
+
+`custom/kopiur-slo.json` replaces the vendored kopiur 0.10.9 board, whose
+expressions reference metric families the 0.10.9 operator does not emit.
+Note: vendir saves grafana.com HTTP downloads under the literal filename
+`download` (no Content-Disposition); `configMapGenerator` paths reference it
+as-is.
 
 ### Impact Analysis: Maintenance & Recovery
 

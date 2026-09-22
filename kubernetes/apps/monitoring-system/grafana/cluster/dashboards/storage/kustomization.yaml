@@ -13,15 +13,12 @@ generatorOptions:
   labels:
     app.kubernetes.io/managed-by: "grafana-operator"
 configMapGenerator:
-  - name: dashboard-k8s-views-global
+  - name: dashboard-ceph-cluster
     files:
-      - k8s-views-global.json=../_sources/kubernetes/k8s-views-global/download
-  - name: dashboard-k8s-views-namespaces
+      - ceph-cluster.json=../_sources/ceph/ceph-cluster/download
+  - name: dashboard-ceph-osd
     files:
-      - k8s-views-namespaces.json=../_sources/kubernetes/k8s-views-namespaces/download
-  - name: dashboard-k8s-views-nodes
+      - ceph-osd.json=../_sources/ceph/ceph-osd/download
+  - name: dashboard-ceph-pools
     files:
-      - k8s-views-nodes.json=../_sources/kubernetes/k8s-views-nodes/download
-  - name: dashboard-k8s-views-pods
-    files:
-      - k8s-views-pods.json=../_sources/kubernetes/k8s-views-pods/download
+      - ceph-pools.json=../_sources/ceph/ceph-pools/download

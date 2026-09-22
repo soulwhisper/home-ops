@@ -3,9 +3,9 @@
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaFolder
 metadata:
-  name: default
+  name: storage
 spec:
-  title: "Default"
+  title: "Storage"
   resyncPeriod: 30m
   allowCrossNamespaceImport: true
   instanceSelector:

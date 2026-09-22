@@ -3,9 +3,9 @@
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
-  name: k8s-views-global
+  name: ceph-cluster
 spec:
-  folderRef: kubernetes
+  folderRef: storage
   resyncPeriod: 30m
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -15,16 +15,16 @@ spec:
     - inputName: "DS_PROMETHEUS"
       datasourceName: "victoria-metrics"
   configMapRef:
-    name: dashboard-k8s-views-global
-    key: k8s-views-global.json
+    name: dashboard-ceph-cluster
+    key: ceph-cluster.json
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
-  name: k8s-views-namespaces
+  name: ceph-osd
 spec:
-  folderRef: kubernetes
+  folderRef: storage
   resyncPeriod: 30m
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -34,16 +34,16 @@ spec:
     - inputName: "DS_PROMETHEUS"
       datasourceName: "victoria-metrics"
   configMapRef:
-    name: dashboard-k8s-views-namespaces
-    key: k8s-views-namespaces.json
+    name: dashboard-ceph-osd
+    key: ceph-osd.json
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
-  name: k8s-views-nodes
+  name: ceph-pools
 spec:
-  folderRef: kubernetes
+  folderRef: storage
   resyncPeriod: 30m
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -53,24 +53,5 @@ spec:
     - inputName: "DS_PROMETHEUS"
       datasourceName: "victoria-metrics"
   configMapRef:
-    name: dashboard-k8s-views-nodes
-    key: k8s-views-nodes.json
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanadashboard_v1beta1.json
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDashboard
-metadata:
-  name: k8s-views-pods
-spec:
-  folderRef: kubernetes
-  resyncPeriod: 30m
-  allowCrossNamespaceImport: true
-  instanceSelector:
-    matchLabels:
-      grafana.internal/instance: grafana
-  datasources:
-    - inputName: "DS_PROMETHEUS"
-      datasourceName: "victoria-metrics"
-  configMapRef:
-    name: dashboard-k8s-views-pods
-    key: k8s-views-pods.json
+    name: dashboard-ceph-pools
+    key: ceph-pools.json
