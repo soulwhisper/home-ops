@@ -77,7 +77,7 @@ Lane-fit guidance: `micro` fits classification, tagging, title/routing decisions
 
 `micro` uses **MiniCPM5-2B** (Apache-2.0, 2.6B dense, official 4-bit MLX port `openbmb/MiniCPM5-2B-MLX`, ~2.6 GB resident on the studio) for cheap, low-latency work: classification, extraction, tagging, short summaries, and as the classifier for semantic routing. Serve it with thinking disabled (`chat_template_kwargs: {"enable_thinking": false}`) and constrained JSON output for label safety. The studio alias must be `micro` (host-side registry, see Studio Model Registry).
 
-`omni` uses **MiniCPM-O-4.5** (Apache-2.0, 9B omni: Qwen3-8B backbone + vision/audio encoders; OpenCompass 77.6, OCRBench 876) served on the studio (alias `omni`, ~7 GB at MLX 4bit). All `fast`/`memory`/`vision` consumers (firecrawl, karakeep text+image, home-assistant-sgcc OCR, hindsight memory, trendradar digest, frigate-vision camera events, hermes aux side-tasks) use `omni`. Not on omni: `complex` (agentic main brain), `micro` (stays — a 2.6 GB classifier/router shouldn't cost a 9B call), embeddings/reranker (aliases `embedding`/`reranker`), and the ComfyUI modalities (`voice` TTS, `image` generation — MiniCPM-o has no visual decoder / audio out). ASR: no deployment — no current consumer; when one appears, pick a lane deliberately.
+`omni` uses **MiniCPM-O-4.5** (Apache-2.0, 9B omni: Qwen3-8B backbone + vision/audio encoders; OpenCompass 77.6, OCRBench 876) served on the studio (alias `omni`, ~7 GB at MLX 4bit). All `fast`/`memory`/`vision` consumers (firecrawl, karakeep text+image, home-assistant-sgcc OCR, hindsight memory, trendradar digest, frigate-vision camera events, hermes aux side-tasks) use `omni`. Not on omni: `complex` (agentic main brain), `micro` (stays — a 2.6 GB classifier/router shouldn't cost a 9B call), embeddings/reranker (aliases `embedding`/`reranker`). ASR: no deployment — no current consumer; when one appears, pick a lane deliberately.
 
 
 ### Intranet exposure
@@ -87,7 +87,7 @@ The gateway API surface is exposed to the intranet via `kgateway-internal` (10.1
 - `/chat` — guarded LLM lane (strict API key, 300s timeout, promptGuard guardrails)
 - `/chat/raw` — open LLM lane (strict API key, 300s timeout, no promptGuard; LLM content only — tools are still guarded via /mcp/*)
 - `/mcp/ro`, `/mcp/rw`, `/mcp/ext` — tiered MCP routing (strict API key, mcp-guardrails ExtMCP on every tier, FailClosed)
-- `/v1/images`, `/v1/audio`, `/v1/embeddings`, `/v1/rerank` — media passthrough to studio (strict API key, no LLM parsing)
+- `/v1/embeddings`, `/v1/rerank` — media passthrough to studio (strict API key, no LLM parsing)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)
 
 TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirprime.com`); external-dns auto-creates the AdGuardHome record. Machine clients authenticate with agentgateway API keys — no SSO extAuth on API paths. Reachable from trusted VLANs (10/100/200); IoT VLAN 210 is ACL-blocked from RFC1918.
@@ -191,16 +191,16 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
 
-Non-chat modalities run as separate studio processes (oMLX has no image-gen; mlx-audio covers both audio types) and are exposed through the agent gateway as **plain HTTP passthrough** (no LLM parsing) on `agentgateway-media-route`, guarded by the same `llm-api-auth` API keys as `/chat`:
+Non-chat vector modalities run on the same oMLX process as the chat lanes and are exposed through the agent gateway as **plain HTTP passthrough** (no LLM parsing) on `agentgateway-media-route`, guarded by the same `llm-api-auth` API keys as `/chat`:
 
 | Path             | Studio port | Server process | Alias       | Model                                   | Timeout |
 | ---------------- | ----------- | -------------- | ----------- | --------------------------------------- | ------- |
-| `/v1/images`     | 8001        | ComfyUI        | `image`     | Qwen-Image-2.1 Uncensored (GGUF 4bit)   | 300s    |
-| `/v1/audio`      | 8001        | ComfyUI        | `voice`     | VoxCPM2 (TTS)                           | 300s    |
 | `/v1/embeddings` | 8000        | oMLX           | `embedding` | Qwen3-Embedding-0.6B (1024d)            | 120s    |
 | `/v1/rerank`     | 8000        | oMLX           | `reranker`  | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
 
-Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — static `AgentgatewayBackend`s `studio-server` (oMLX, :8000) and `studio-comfyui` (:8001; presumed ComfyUI port — confirm host-side), route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with their gateway API key. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
+The ComfyUI `image`/`voice` lanes (`:8001`, `/v1/images`, `/v1/audio`) were retired: not LLM-type, no in-cluster consumers — plain media passthrough gains nothing from gateway policy. Re-add as a direct route if a consumer ever appears.
+
+Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — single static `AgentgatewayBackend` `studio-server` (oMLX, :8000), route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with their gateway API key. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
 
 ---
 
@@ -345,14 +345,11 @@ gateway, lane names, and every consumer address models by alias only
 | 1     | `complex`   | Qwen3.8-27B Uncensored         | MLX 4bit, ~30G  | oMLX :8000 |
 | 2     | `omni`      | MiniCPM-O-4.5                  | MLX 4bit, ~7G   | oMLX :8000 |
 | 3     | `micro`     | MiniCPM5-2B                    | MLX 8bit, ~2.6G | oMLX :8000 |
-| 4     | `voice`     | VoxCPM2                        | MLX 8bit, ~3.2G | ComfyUI :8001 (`/v1/audio`) |
-| 5     | `image`     | Qwen-Image-2.1 Uncensored      | GGUF 4bit, ~4.6G | ComfyUI :8001 (`/v1/images`) |
-| 6     | `embedding` | Qwen3-Embedding-0.6B (1024d)   | MLX, ~1.3G      | oMLX :8000 (`/v1/embeddings`) |
-| 7     | `reranker`  | Qwen3-Reranker-0.6B            | MLX, ~1.3G      | oMLX :8000 (`/v1/rerank`) |
+| 4     | `embedding` | Qwen3-Embedding-0.6B (1024d)   | MLX, ~1.3G      | oMLX :8000 (`/v1/embeddings`) |
+| 5     | `reranker`  | Qwen3-Reranker-0.6B            | MLX, ~1.3G      | oMLX :8000 (`/v1/rerank`) |
 
 Host prerequisites (out of band): oMLX registered with the five chat/vector
-aliases; ComfyUI on :8001 exposing OpenAI-compatible `/v1/images` and
-`/v1/audio/speech` (voice/image workflows).
+aliases above. (Retired: ComfyUI `image`/`voice` on :8001 — see Media lanes.)
 
 ## Non-unified Configuration & TODO
 

@@ -6,8 +6,8 @@
 #   :8000 oMLX — /v1/embeddings (alias `embedding`), /v1/rerank (alias
 #               `reranker`); the same process serves the chat lanes via the
 #               llm-backend-* AI providers
-#   :8001 ComfyUI — /v1/images (alias `image`), /v1/audio/speech (alias
-#               `voice`); OpenAI-compatible workflow endpoints
+# :8001 ComfyUI (`image`/`voice`) retired: not LLM-type, no in-cluster
+# consumers — plain media passthrough gains nothing from gateway policy.
 # Aliases are the contract in docs/application/ai.md (Studio Model Registry).
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
@@ -18,13 +18,3 @@ spec:
   static:
     host: studio.homelab.internal
     port: 8000
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
-apiVersion: agentgateway.dev/v1alpha1
-kind: AgentgatewayBackend
-metadata:
-  name: studio-comfyui
-spec:
-  static:
-    host: studio.homelab.internal
-    port: 8001

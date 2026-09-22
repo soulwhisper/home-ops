@@ -10,28 +10,6 @@ spec:
       kind: Gateway
       name: agentgateway-proxy
   rules:
-    # image generation (ComfyUI, Qwen-Image-2.1)
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /v1/images
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: studio-comfyui
-      timeouts:
-        request: 300s
-    # audio: TTS (ComfyUI, VoxCPM2)
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /v1/audio
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: studio-comfyui
-      timeouts:
-        request: 300s
     # embeddings (oMLX, alias `embedding`)
     - matches:
         - path:

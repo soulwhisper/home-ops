@@ -31,23 +31,23 @@ spec:
         - nas.homelab.internal:2049
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
-# MacStudio lanes: 8000 oMLX (embeddings/rerank/chat), 8001 vmlx (image),
-# 8002 mlx_audio (TTS/ASR). TCP-level service connectivity per port.
+# Studio model-plane health: GET /v1/models on oMLX — the surface every /chat
+# consumer depends on. 8001 (vmlx image) / 8002 (mlx_audio TTS/ASR) lanes are
+# retired: no in-cluster consumers, plain passthrough not worth gateway policy;
+# re-probe if they ever stand up.
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:
-  name: studio-tcp
+  name: studio-models
 spec:
   interval: 30s
-  module: tcp_connect
+  module: http_2xx
   prober:
     url: blackbox-exporter.monitoring-system.svc.cluster.local:9115
   targets:
     staticConfig:
       static:
-        - studio.homelab.internal:8000
-        - studio.homelab.internal:8001
-        - studio.homelab.internal:8002
+        - http://studio.homelab.internal:8000/v1/models
       labels:
         service: macstudio
 ---
