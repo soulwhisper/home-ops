@@ -13,30 +13,15 @@ generatorOptions:
   labels:
     app.kubernetes.io/managed-by: "grafana-operator"
 configMapGenerator:
-  - name: dashboard-cert-manager
+  - name: dashboard-k8s-system-api-server
     files:
-      - cert-manager.json=../_sources/default/cert-manager/dashboard.json
-  - name: dashboard-cloudflared
-    files:
-      - cloudflared.json=../_sources/default/cloudflared/dashboard.json
-  - name: dashboard-external-dns
-    files:
-      - external-dns.json=../_sources/default/external-dns/dashboard.json
-  - name: dashboard-node-exporter-full
-    files:
-      - node-exporter-full.json=../_sources/default/node-exporter-full/dashboard.json
-  - name: dashboard-smartctl-exporter
-    files:
-      - smartctl-exporter.json=../_sources/default/smartctl-exporter/dashboard.json
-  - name: dashboard-kopiur
-    files:
-      - kopiur.json=../_sources/default/kopiur/deploy/helm/kopiur/files/dashboards/kopiur.json
-  - name: dashboard-synology
-    files:
-      - synology.json=../_sources/infrastructure/synology/dashboard.json
-  - name: dashboard-openwrt
-    files:
-      - openwrt.json=../_sources/infrastructure/openwrt/dashboard.json
+      - k8s-system-api-server.json=../_sources/kubernetes/k8s-system-api-server/dashboard.json
   - name: dashboard-blackbox-exporter
     files:
       - blackbox-exporter.json=../_sources/devices/blackbox-exporter/dashboard.json
+  - name: dashboard-envoy-proxy-global
+    files:
+      - envoy-proxy-global.json=../_sources/envoy/gateway/charts/gateway-addons-helm/dashboards/envoy-proxy-global.json
+  - name: dashboard-kopiur-slo
+    files:
+      - kopiur-slo.json=../custom/kopiur-slo.json

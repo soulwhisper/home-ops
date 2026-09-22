@@ -13,15 +13,9 @@ generatorOptions:
   labels:
     app.kubernetes.io/managed-by: "grafana-operator"
 configMapGenerator:
-  - name: dashboard-k8s-views-global
+  - name: dashboard-node-exporter-full
     files:
-      - k8s-views-global.json=../_sources/kubernetes/k8s-views-global/dashboard.json
-  - name: dashboard-k8s-views-namespaces
+      - node-exporter-full.json=../_sources/default/node-exporter-full/dashboard.json
+  - name: dashboard-smartctl-exporter
     files:
-      - k8s-views-namespaces.json=../_sources/kubernetes/k8s-views-namespaces/dashboard.json
-  - name: dashboard-k8s-views-nodes
-    files:
-      - k8s-views-nodes.json=../_sources/kubernetes/k8s-views-nodes/dashboard.json
-  - name: dashboard-k8s-views-pods
-    files:
-      - k8s-views-pods.json=../_sources/kubernetes/k8s-views-pods/dashboard.json
+      - smartctl-exporter.json=../_sources/default/smartctl-exporter/dashboard.json
