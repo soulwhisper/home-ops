@@ -185,22 +185,20 @@ VictoriaTraces datasource includes traces-to-logs and traces-to-metrics correlat
 
 ### Dashboards
 
-Dashboards are vendir-synced from upstream sources into `_sources/` and converted to ConfigMaps via `configMapGenerator` in kustomize. The Grafana Operator picks them up via `GrafanaDashboard` CRs. Each dashboard set lives in its own `GrafanaFolder`.
+Dashboards are vendir-synced from upstream sources into `_sources/` and converted to ConfigMaps via `configMapGenerator` in kustomize. The Grafana Operator picks them up via `GrafanaDashboard` CRs. Repo-owned custom boards live in `custom/` (not vendored).
 
-| Folder | Source | Dashboards |
-|--------|--------|-----------|
-| VictoriaMetrics | `VictoriaMetrics/VictoriaMetrics` v1.148.0 | operator, VM agent, VM alert, VM auth, VM single, VM cluster |
-| VictoriaMetrics | `VictoriaMetrics/VictoriaLogs` v1.121.0 | VictoriaLogs server, cluster, alert statistics |
-| Kubernetes | Grafana.com (IDs 15757-15761, 11454) | API server, global, nodes, namespaces, pods, volumes |
-| Cilium | `cilium/cilium` v1.20 | Agent, operator, Hubble |
-| Ceph | Grafana.com (IDs 2842, 5336, 5342) | Cluster, OSD, pools |
-| Database | `cloudnative-pg/grafana-dashboards` cluster-v0.0.5 | CNPG cluster |
-| Database | `dragonflydb/dragonfly-operator` v1.6.1 | Dragonfly |
-| Envoy | `envoyproxy/gateway` v1.8.3; Grafana.com (IDs 24457-24459) | Gateway, downstream, upstream, overview |
-| Kgateway | `kgateway-dev/dashboards` main | Kgateway dashboards |
-| Default | Grafana.com | cert-manager, cloudflared, external-dns, node-exporter-full, smartctl-exporter |
-| Infrastructure | Grafana.com (IDs 14284, 18153) | Synology, OpenWrt |
-| Devices | Grafana.com (ID 7587) | Blackbox exporter |
+The set is **debug-focused** (2026-09 audit): current state belongs to native UIs (headlamp, ceph-mgr dashboard, hubble-ui, agentgateway `:15000/ui`, VM UIs at metrics/logs/traces/alert.noirprime.com) and failures are pushed by vmalert rules; Grafana keeps only trend/correlation boards nothing else provides. Dropped boards (dead datasources, duplicated by native UIs, or duplicated envoy views) stay commented in `vendir.yml` for re-import.
+
+| Folder | Boards |
+|--------|--------|
+| Default (must-check, alert-silent) | k8s-system-api-server, blackbox-exporter, envoy-proxy-global, **kopiur-slo** (custom) |
+| Kubernetes | k8s-views global / namespaces / nodes / pods |
+| Storage | ceph-cluster, ceph-osd, ceph-pools |
+| Network | kgateway, cilium-agent |
+| Databases | cnpg, dragonfly |
+| Nodes | node-exporter-full, smartctl-exporter |
+
+`custom/kopiur-slo.json` replaces the vendored kopiur board, whose queries referenced metric families the operator does not emit; it tracks backup staleness, failures, size/duration, and repository health from the live `kopiur_*` families.
 
 ## Host, cluster, and disk metrics
 
@@ -237,7 +235,6 @@ Per-node DaemonSet exposing S.M.A.R.T. disk health metrics from NVMe and SATA dr
 |---------|----------|--------|
 | `ceph-node-diskspace-warning-local` | `CephNodeDiskspaceWarning` on `/dev/sd.*` | Local drives are managed |
 | `ceph-node-diskspace-warning-nfs` | `CephNodeDiskspaceWarning` on `/etc/nfsmount.conf` | NFS mount, not disk |
-| `nas-memory-usage` | `NodeMemoryHighUtilization` on NAS | Synology always reports high memory (ZFS ARC) |
 | `talos-kubelet-ephemeral-fs` | `NodeFilesystemAlmostOutOfSpace` on `/var/lib/kubelet/pods` | Expected fullness during workloads |
 | `bond-flap-during-upgrade` | `NodeNetworkInterfaceFlapping` on bond0/enp2s0f* | Expected flapping during Talos upgrades |
 | `cilium-rolling-upgrade-churn` | `CiliumIdentitiesChurning` | Churn during rolling restarts |
