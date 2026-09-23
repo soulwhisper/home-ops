@@ -71,7 +71,7 @@ spec:
         hostnames: ["iptv.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: "dispatcharr.svg"
+          gethomepage.dev/icon: dispatcharr.svg
           gethomepage.dev/name: DispatchArr
           gethomepage.dev/group: Media
         parentRefs:
