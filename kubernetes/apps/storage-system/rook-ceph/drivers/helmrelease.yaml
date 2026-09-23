@@ -11,6 +11,13 @@ spec:
     name: ceph-csi-drivers
 
   values:
+    operatorConfig:
+      driverSpecDefaults:
+        # Use rook's image set (cephcsi v3.17.1, ceph libs >=20.2.4) instead of
+        # the operator default (v3.17.0, ceph 20.2.1). 20.2.1 librados cannot
+        # do aes256k cephx: every mount fails with `rados: ret=-22`.
+        imageSet:
+          name: rook-csi-operator-image-set-configmap
     drivers:
       rbd:
         name: storage-system.rbd.csi.ceph.com
