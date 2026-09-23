@@ -13,16 +13,19 @@ metadata:
 spec:
   groupRef:
     name: internal-ro
-  image: ghcr.io/soulwhisper/reflex:0.4.0
+  image: ghcr.io/soulwhisper/reflex:0.4.1
   transport: streamable-http
   mcpPort: 9000
   env:
     - name: REFLEX_POLICIES
       value: /etc/reflex/routes.yaml
-    # mcp v2 DNS-rebinding protection: the toolhive proxy reaches the pod via
-    # service DNS / pod FQDN — undeclared hosts get 421 (forgejo pattern)
+    # mcp v2 DNS-rebinding protection 421s the toolhive proxy otherwise.
+    # An enumerated list can't work here: the proxy dials dynamic endpoint
+    # IPs (its own redirect logs show ClusterIP/pod-IP targets). "*" disables
+    # the check at the workload — acceptable: only reachable in-cluster,
+    # behind the toolhive proxy (0.4.1 feature).
     - name: REFLEX_ALLOWED_HOSTS
-      value: mcp-reflex-0.mcp-mcp-reflex-headless,mcp-mcp-reflex-headless,mcp-mcp-reflex-headless:9000,mcp-mcp-reflex,mcp-mcp-reflex:9000,localhost,localhost:9000
+      value: "*"
     - name: OTEL_EXPORTER_OTLP_ENDPOINT
       value: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
     # SDK default (parentbased_always_on) would drop ~95% of decision spans
