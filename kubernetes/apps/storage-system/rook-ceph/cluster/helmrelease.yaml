@@ -20,9 +20,14 @@ spec:
     toolbox:
       enabled: false
     cephClusterSpec:
-      # Rotate cephx keys (Tentacle AUTH_INSECURE_CLIENT_KEY_TYPE warning:
-      # CSI keys use the old cipher). CSI stays aes because node kernels
-      # (6.18) don't support aes256k mounts yet.
+      # Rotate remaining cephx client keys to aes256k (daemon keys rotated
+      # with the Tentacle upgrade). Clears AUTH_INSECURE_CLIENT_KEY_TYPE.
+      # aes256k kernel mounts normally need Linux 7.0+, but Talos v1.14
+      # backports support onto 6.18 (siderolabs/pkgs@84c1b87; verified:
+      # ceph_crypto_key_prepare present in /proc/kallsyms on all nodes).
+      # keepPriorKeyCountMax=1 keeps gen-2 aes valid for existing mounts;
+      # drop to 0 once all CSI consumers have remounted, then set
+      # allowedCiphers: [aes256k].
       security:
         cephx:
           daemon:
@@ -30,13 +35,13 @@ spec:
             keyGeneration: 2
           csi:
             keyRotationPolicy: KeyGeneration
-            keyGeneration: 2
+            keyGeneration: 3
             keepPriorKeyCountMax: 1
-            keyType: aes
+            keyType: aes256k
           rbdMirrorPeer:
             keyRotationPolicy: KeyGeneration
-            keyGeneration: 2
-            keyType: aes
+            keyGeneration: 3
+            keyType: aes256k
       cephConfig:
         global:
           bdev_enable_discard: "true"
