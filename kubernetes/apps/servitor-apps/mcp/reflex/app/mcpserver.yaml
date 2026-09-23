@@ -1,0 +1,63 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+# soulwhisper/reflex — System-1 routing advisor (laya typed decisions, no
+# generation). Advisory member of internal-ro: agents MAY consult route_*;
+# nothing is enforced yet. Every policy decision emits one OTEL span
+# (gen_ai.system=reflex) -> traces/servitor -> langfuse; the exported spans
+# are the shadow dataset for the fine-tune path. The vMCP optimizer's
+# find_tool depends on MacStudio embeddings; reflex is the
+# MacStudio-independent routing lane.
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-reflex
+spec:
+  groupRef:
+    name: internal-ro
+  image: ghcr.io/soulwhisper/reflex:0.2.0
+  transport: streamable-http
+  mcpPort: 9000
+  env:
+    - name: REFLEX_POLICIES
+      value: /etc/reflex/routes.yaml
+    # weights are baked into the image; never touch the hub (also avoids
+    # cache lock writes on the read-only rootfs)
+    - name: HF_HUB_OFFLINE
+      value: "1"
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
+    # SDK default (parentbased_always_on) would drop ~95% of decision spans
+    # under toolhive's 5%-sampled proxy parents — silently shrinking the
+    # shadow dataset
+    - name: OTEL_TRACES_SAMPLER
+      value: "always_on"
+    - name: OTEL_SERVICE_NAME
+      value: reflex
+  telemetryConfigRef:
+    name: shared-otel
+    serviceName: *name
+  podTemplateSpec:
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: mcp
+          volumeMounts:
+            - name: policies
+              mountPath: /etc/reflex
+              readOnly: true
+            # python/ml runtime scratch on toolhive's read-only rootfs
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: policies
+          configMap:
+            name: reflex-policies
+        - name: tmp
+          emptyDir: {}
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi

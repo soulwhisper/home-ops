@@ -1,0 +1,53 @@
+---
+# Production routing policies for reflex, seeded from the live internal-ro
+# tool surface (dumped from the backend proxies 2026-09-23: grafana 66,
+# fluxcd 10, kubernetes 15, victoria-logs 12 tools). Shadow traffic recorded
+# in langfuse calibrates these before any fine-tune; schema contract is
+# upstream README/ARCHITECTURE.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reflex-policies
+data:
+  routes.yaml: |
+    mcp:
+      type: choice
+      instructions: Which MCP backend should handle this request?
+      criteria:
+        grafana: dashboards, alert rules and silences, on-call schedules, incidents, SIFT investigations, and PromQL/LogQL/TraceQL queries via grafana datasources
+        fluxcd: gitops flux instance state and documentation, plus kubernetes resource get/list, logs, events, manifest diffs and resource tracing
+        kubernetes: pod/node/namespace inventory, pod logs, events, helm releases, generic kubernetes resource get/list
+        victoria-logs: log search and analytics in victoria-logs — LogsQL query, hits, facets, streams, field names/values, stats
+
+    tool:
+      type: choice
+      instructions: Which tool should be called to fulfill this request?
+      criteria:
+        search_dashboards: find grafana dashboards by title or tag
+        get_dashboard_by_uid: fetch one dashboard definition by uid
+        query_prometheus: run an instant or range PromQL metrics query
+        query_loki_logs: run a LogQL log query via the grafana loki datasource
+        search_tempo_traces: find distributed traces by service or attribute
+        alerting_manage_rules: create, update or list grafana alert rules
+        alerting_manage_silences: manage grafana alert silences
+        get_current_oncall_users: who is on call right now
+        list_incidents: list grafana incidents
+        pods_list: list pods across or within namespaces
+        pods_log: fetch pod container logs
+        events_list: list kubernetes events
+        resources_get: get one kubernetes resource by kind and name
+        resources_list: list kubernetes resources by kind
+        get_flux_instance: flux gitops instance state and inventory
+        get_kubernetes_resources: cluster resource get/list via fluxcd diagnostics
+        search_flux_docs: search flux documentation
+        query: run a LogsQL query against victoria-logs
+        hits: log entry hit counts over time in victoria-logs
+        facets: most frequent values per log field in victoria-logs
+
+    profile:
+      type: choice
+      instructions: Which agent profile should handle this message?
+      criteria:
+        ops: scheduled jobs, automation, infrastructure operations
+        chat: interactive human conversation
+        default: uncategorized or fallback work
