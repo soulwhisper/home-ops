@@ -14,7 +14,7 @@ metadata:
 spec:
   groupRef:
     name: internal-ro
-  image: ghcr.io/soulwhisper/reflex:0.2.0
+  image: ghcr.io/soulwhisper/reflex:0.3.0
   transport: streamable-http
   mcpPort: 9000
   env:
