@@ -4,9 +4,8 @@
 # generation). Advisory member of internal-ro: agents MAY consult route_*;
 # nothing is enforced yet. Every policy decision emits one OTEL span
 # (gen_ai.system=reflex) -> traces/servitor -> langfuse; the exported spans
-# are the shadow dataset for the fine-tune path. The vMCP optimizer's
-# find_tool depends on MacStudio embeddings; reflex is the
-# MacStudio-independent routing lane.
+# are the shadow dataset for the fine-tune path. 0.4.0 = ONNX runtime
+# (English base checkpoint, no torch stack).
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPServer
 metadata:
@@ -14,16 +13,16 @@ metadata:
 spec:
   groupRef:
     name: internal-ro
-  image: ghcr.io/soulwhisper/reflex:0.3.0
+  image: ghcr.io/soulwhisper/reflex:0.4.0
   transport: streamable-http
   mcpPort: 9000
   env:
     - name: REFLEX_POLICIES
       value: /etc/reflex/routes.yaml
-    # weights are baked into the image; never touch the hub (also avoids
-    # cache lock writes on the read-only rootfs)
-    - name: HF_HUB_OFFLINE
-      value: "1"
+    # mcp v2 DNS-rebinding protection: the toolhive proxy reaches the pod via
+    # service DNS / pod FQDN — undeclared hosts get 421 (forgejo pattern)
+    - name: REFLEX_ALLOWED_HOSTS
+      value: mcp-reflex-0.mcp-mcp-reflex-headless,mcp-mcp-reflex-headless,mcp-mcp-reflex-headless:9000,mcp-mcp-reflex,mcp-mcp-reflex:9000,localhost,localhost:9000
     - name: OTEL_EXPORTER_OTLP_ENDPOINT
       value: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
     # SDK default (parentbased_always_on) would drop ~95% of decision spans
@@ -55,9 +54,10 @@ spec:
         - name: tmp
           emptyDir: {}
   resources:
+    # ONNX fp32 measured warm RSS 2.4Gi (N305); int8 variant would fit 1Gi
     requests:
       cpu: 500m
-      memory: 1Gi
+      memory: 2Gi
     limits:
       cpu: "2"
-      memory: 2Gi
+      memory: 3Gi
