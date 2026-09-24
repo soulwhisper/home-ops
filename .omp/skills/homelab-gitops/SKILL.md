@@ -50,6 +50,24 @@ same-window rolling node reboot (or drain) plan. Rook reconciles the keys
 but has no machinery to remount live volumes — "self-heal" does not cover
 this.
 
+## Heavy-impact operations — stop and ask first
+
+Before anything destructive/heavy-impact/service-breaking — node reboots,
+mass pod deletes, force-deletes of stateful workloads, etcd-affecting
+actions, storage-side deletions — STOP:
+
+1. State the risk plainly: what breaks, worst case, recovery path
+   (including whether recovery might need physical/AMT access).
+2. Ask the user to confirm or assist — use omp's `ask` tool; do not bury
+   it in prose. "Continue?" after a risk summary is the minimum.
+3. If a remote command wedges mid-execution (e.g. graceful reboot stuck on
+   wedged containerd), tell the user immediately that physical/AMT
+   intervention may become necessary — don't keep silently retrying.
+
+2026-09-24 proof: the recovery reboot hung on wedged containerd; the user
+had to AMT-cycle the nodes by hand. The agent should have flagged that
+risk BEFORE issuing the reboot, not after.
+
 ## Discover before acting — don't assume, read the repo
 
 Cluster facts, versions, and tooling change. Ground every session in the
