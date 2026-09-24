@@ -36,6 +36,20 @@ the underlying redundancy later, and move on. Reserve real weight for
 failure domains that are actually independent — e.g. node-level failures,
 where the 3 nodes genuinely are 3 domains.
 
+## cephx key rotation is node-disruptive (2026-09-24 incident)
+
+Rotating cephx keys with `keepPriorKeyCountMax: 0` instantly invalidates
+live kernel rbd sessions — mounts I/O-hang (`libceph: cephx authorization
+to osd failed: -13`), processes enter unkillable D-state, and containerd
+wedges node-wide (StopContainer DeadlineExceeded forever). Pod restarts do
+NOT fix it: kernel rbd maps persist across pod teardown, and unmount hangs
+on the dead session. Recovery required rebooting all 3 nodes.
+
+Rule: any PR that rotates cephx keys and drops prior keys MUST include a
+same-window rolling node reboot (or drain) plan. Rook reconciles the keys
+but has no machinery to remount live volumes — "self-heal" does not cover
+this.
+
 ## Discover before acting — don't assume, read the repo
 
 Cluster facts, versions, and tooling change. Ground every session in the
