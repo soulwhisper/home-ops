@@ -20,6 +20,22 @@ files as the source of truth for how the infra is INTENDED to look:
   SURFACE the discrepancy to the user explicitly. Never silently pick one
   side; the file is the intent, the drift is the story.
 
+## Blast radius proportionality
+
+When weighing blast-radius or redundancy/replica concerns, FIRST check the
+recorded physical design (`infrastructure/switch/README.md` topology,
+node count in `infrastructure/talos/`). As recorded: single WAN (PPPoE),
+single router, single core switch, single access switch, single NAS — the
+cluster's nodes share all of them.
+
+Rule: if a proposed mitigation guards a failure domain that the shared
+physical/network layer collapses anyway (a switch/router/WAN outage kills
+every replica, however spread), do NOT present it as important or give it
+weight in the risk assessment. Note it as a known gap, suggest improving
+the underlying redundancy later, and move on. Reserve real weight for
+failure domains that are actually independent — e.g. node-level failures,
+where the 3 nodes genuinely are 3 domains.
+
 ## Discover before acting — don't assume, read the repo
 
 Cluster facts, versions, and tooling change. Ground every session in the
