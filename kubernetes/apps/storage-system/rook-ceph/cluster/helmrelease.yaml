@@ -20,13 +20,8 @@ spec:
     toolbox:
       enabled: false
     cephClusterSpec:
-      # cephx: all keys aes256k (daemon rotated with the Tentacle upgrade,
-      # csi/rbdMirrorPeer in #3768). allowedCiphers restricts mons to aes256k;
-      # clears AUTH_INSECURE_CLIENT_KEY_TYPE / _KEYS_ALLOWED / _KEYS_CREATABLE.
-      # aes256k kernel mounts normally need Linux 7.0+, but Talos v1.14
-      # backports support onto 6.18 (siderolabs/pkgs@84c1b87; verified:
-      # ceph_crypto_key_prepare present in /proc/kallsyms on all nodes).
       security:
+        # Talos 1.14+ backports the kernel 7.0 aes256k support
         cephx:
           allowedCiphers: [aes256k]
           daemon:
@@ -144,10 +139,7 @@ spec:
             csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
             csi.storage.k8s.io/node-stage-secret-namespace: *cluster_namespace
             csi.storage.k8s.io/fstype: ext4
-      # Cache/scratch pool: size=1 on NVMe OSDs for rewarmable data (kopia
-      # mover caches, transcode scratch, ML model caches). No replication
-      # write amplification; data loss on OSD failure is acceptable and
-      # self-healing (caches rewarm). Do NOT point durable data at this.
+      # Cache/scratch pool: size=1 for rewarmable data
       - name: ceph-cachepool
         spec:
           failureDomain: osd
@@ -204,6 +196,12 @@ spec:
                     matchLabels:
                       app.kubernetes.io/name: ceph-mds
                       app.kubernetes.io/part-of: *cephFileSystemName
+            resources:
+              requests:
+                cpu: 100m
+                memory: 1Gi
+              limits:
+                memory: 4Gi
         storageClass:
           name: ceph-filesystem
           pool: default

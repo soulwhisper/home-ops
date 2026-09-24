@@ -13,23 +13,90 @@ spec:
   values:
     operatorConfig:
       driverSpecDefaults:
-        # Use rook's image set (cephcsi v3.17.1, ceph libs >=20.2.4) instead of
-        # the operator default (v3.17.0, ceph 20.2.1). 20.2.1 librados cannot
-        # do aes256k cephx: every mount fails with `rados: ret=-22`.
+        # Use rook's image set
         imageSet:
           name: rook-csi-operator-image-set-configmap
+        log:
+          rotation:
+            enabled: false
+        controllerPlugin:
+          priorityClassName: system-cluster-critical
+          resources:
+            attacher:
+              limits:
+                memory: 256Mi
+              requests:
+                cpu: 100m
+                memory: 128Mi
+            omapGenerator:
+              limits:
+                memory: 1Gi
+              requests:
+                cpu: 250m
+                memory: 512Mi
+            plugin:
+              limits:
+                memory: 1Gi
+              requests:
+                memory: 512Mi
+            provisioner:
+              limits:
+                memory: 256Mi
+              requests:
+                cpu: 100m
+                memory: 128Mi
+            resizer:
+              limits:
+                memory: 256Mi
+              requests:
+                cpu: 100m
+                memory: 128Mi
+            snapshotter:
+              limits:
+                memory: 256Mi
+              requests:
+                cpu: 100m
+                memory: 128Mi
+        nodePlugin:
+          priorityClassName: system-node-critical
+          resources:
+            plugin:
+              limits:
+                memory: 1Gi
+              requests:
+                cpu: 250m
+                memory: 512Mi
+            registrar:
+              limits:
+                memory: 256Mi
+              requests:
+                cpu: 50m
+                memory: 128Mi
     drivers:
       rbd:
         name: storage-system.rbd.csi.ceph.com
+        controllerPlugin:
+          replicas: 2
+        grpcTimeout: 150
+        log:
+          rotation:
+            enabled: false
         # chart default "none" omits the csi-snapshotter sidecar from the
         # ctrlplugin -> VolumeSnapshots stall forever and every kopiur backup fails
         snapshotPolicy: volumeSnapshot
-      nvmeof:
-        name: storage-system.nvmeof.csi.ceph.com
       cephfs:
         name: storage-system.cephfs.csi.ceph.com
+        controllerPlugin:
+          replicas: 2
+        grpcTimeout: 150
+        log:
+          rotation:
+            enabled: false
         # only rbd needs snapshots; chart default enables the snapshotter here
         snapshotPolicy: none
+      nvmeof:
+        enabled: false
+        name: storage-system.nvmeof.csi.ceph.com
       nfs:
+        enabled: false
         name: storage-system.nfs.csi.ceph.com
-        snapshotPolicy: none
