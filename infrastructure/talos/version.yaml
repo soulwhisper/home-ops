@@ -5,7 +5,7 @@
 # renovate: datasource=github-releases depName=siderolabs/talos
 talos_version: v1.14.1
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
-k8s_version: v1.37.0
+k8s_version: v1.37.1
 # Schematic IDs are resolved live from factory.talos.dev by
 # `just talos _schema <mode>` (invoked by `generate` and `image`) and
 # refreshed here on every run, so the installer image and ISO downloads
