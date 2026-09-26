@@ -116,6 +116,15 @@ spec:
             - receiver: "blackhole"
               matchers:
                 - alertname =~ "InfoInhibitor|Watchdog"
+            # Replaced by ceph-local-rules (storage-system/prometheusrule.yaml):
+            # the rook chart renders stock ceph-mixin rules with no per-rule
+            # exclusion, so they are silenced at the router instead. The
+            # type=ceph_default label scopes this to chart-rendered rules —
+            # our same-named replacements carry no type label and still notify.
+            - receiver: "blackhole"
+              matchers:
+                - alertname =~ "CephNodeDiskspaceWarning|CephOSDDownHigh|PrometheusJobExporterMissing|CephNodeNetworkPacketDrops|CephNodeNetworkPacketErrors"
+                - type = "ceph_default"
             # info/none are dashboard-tier (KubeletTooManyPods ~17h/3d,
             # RecordingRulesNoData): keep them off feishu. severity=error
             # still falls through to the default receiver (flux alerts
