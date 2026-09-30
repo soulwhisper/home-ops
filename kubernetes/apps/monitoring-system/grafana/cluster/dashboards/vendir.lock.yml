@@ -35,23 +35,22 @@ directories:
       tags:
       - cluster-v0.0.5
     path: cnpg
-  - configDigest: df3126888dc9979dca0fa8a7145d16afcf1546ced61d2e18ccbd5b9be041b620
+  - configDigest: c3b37278eaa33a9b0fe54ad961fb0694628291c4e9dc8165f47e5874b0cf8d7a
     git:
-      commitTitle: 'fix(chart): bump version to v1.6.1 with missing configmap role
-        (#543)...'
-      sha: b28637d78d828f80a3b3fd76acaa2dd6e3c28603
+      commitTitle: 'feat(release): update manifest files and bump operator version
+        (#597)...'
+      sha: 9a5522426e6ddabb914d167ee82a192c9f682c79
       tags:
-      - v1.6.1
+      - v1.7.0
     path: dragonfly
   path: _sources/database
 - contents:
-  - configDigest: 14b9dc635b69b244a1c1939be170e8a3f0f2484d6d16857dc0cf0448910d9156
+  - configDigest: 07f37f648c289ac55d8aed1fb2f59d885cd85ae57ae7d1e355133d04e92dc120
     git:
-      commitTitle: '[release-1.9] cherry pick v1.9.1 release notes and chore commits
-        (#9885)...'
-      sha: 0260554fd4f33b787aad77a129fc0ffeb00c1f29
+      commitTitle: '[release-1.9] Bump ratelimit version (#10136)...'
+      sha: f9f92a112a4033abed5c8d43a5f7e37da257403c
       tags:
-      - v1.9.1
+      - v1.9.2
     path: gateway
   path: _sources/envoy
 - contents:
