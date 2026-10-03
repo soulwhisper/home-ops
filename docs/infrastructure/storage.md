@@ -136,6 +136,10 @@ retention:
 
 Snapshots run every 6 hours; daily snapshots are kept for 14 days.
 
+#### Offsite Replication
+
+A `RepositoryReplication` (`nas-to-offsite`, nightly 05:30) mirrors the repository's blobs to a second VersityGW endpoint on `nix-dev` (corp VM, `http://172.19.82.10:9000`, same-named `kopiur` bucket) using `kopia repository sync-to` — a hash-verified incremental copy. The offsite repo inherits format and encryption password verbatim, so only ciphertext crosses the easytier mesh. nix-dev is the corp-side backup target (Debian-class NixOS VM on the office HCI); HCI-level weekly VM snapshots cover point-in-time rollback of the copy itself. CNPG backups follow separately (see the offsite sync cronjob under CNPG maintenance).
+
 #### S3 Destination
 
 All backups target the Synology-hosted **VersityGW** S3 gateway at `http://nas.homelab.internal:9000`, in the dedicated `s3://kopiur` bucket (provisioned by `just versity init`). S3 credentials are sourced from 1Password via the `secret/` component — an `ExternalSecret` per consumer namespace materializing `kopiur-repository-secret`, which backup movers read in their own namespace:
@@ -180,6 +184,8 @@ plugins:
 ```
 
 S3 credentials live in the `cloudnative-pg` Kubernetes Secret (populated via ExternalSecret from 1Password). A `ScheduledBackup` resource triggers periodic full backups through the barman-cloud plugin, and a weekly `CronJob` runs `barman-cloud-check-wal-archive` to verify the backup chain integrity. Prometheus alerts fire if the last backup is older than 36 hours or the WAL archive check fails.
+
+An offsite copy runs as the `postgres-backup-offsite-sync` CronJob (nightly 06:30): rclone mirrors `s3://postgres` to the same-named bucket on nix-dev's VersityGW (`http://172.19.82.10:9000`) through an rclone `crypt` remote, so barman's plaintext archives never rest unencrypted offsite. Restore from offsite: `rclone copy` the crypt remote back into a staging bucket (decrypting), then point barman-cloud at the staging bucket.
 
 ### Synology NAS Services
 
