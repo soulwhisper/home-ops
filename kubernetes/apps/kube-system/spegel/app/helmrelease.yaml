@@ -19,6 +19,25 @@ spec:
       # first-time tag pulls 404 without an upstream fallback in hosts.toml.
       # Layer pulls still flow through Spegel P2P.
       resolveTags: false
+      # _default keeps P2P for all unlisted registries; the five named ones are
+      # required so prependExisting merges spegel in front of their Talos-written
+      # mirrors (zot) — the merge loop only runs over mirroredRegistries.
+      mirroredRegistries:
+        - _default
+        - https://docker.io
+        - https://ghcr.io
+        - https://quay.io
+        - https://registry.k8s.io
+        - https://factory.talos.dev
+      # Keep existing (Talos-written) hosts.toml and prepend spegel's targets:
+      # chain becomes containerd -> spegel P2P -> zot -> upstream. Without this,
+      # every spegel pod restart wipes the zot mirrors written by
+      # infrastructure/talos/prod/30-private-mirrors.yaml. Merge source is the
+      # pristine _backup/ snapshot (taken once), so restarts do not accumulate
+      # duplicate endpoint blocks. Note the other wipe direction remains: a Talos
+      # registry-config apply regenerates the hosts dir and deletes spegel's
+      # _default until the next spegel pod start (self-heals, DS restarts often).
+      prependExisting: true
     service:
       registry:
         hostPort: 29999
