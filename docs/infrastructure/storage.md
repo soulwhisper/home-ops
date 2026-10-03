@@ -10,12 +10,12 @@ The operator ships with the [ceph-csi-drivers](https://github.com/ceph/ceph-csi-
 
 Ceph-level tuning:
 
-| Setting | Value | Rationale |
-|---------|-------|-----------|
-| `bdev_enable_discard` | `true` | TRIM passthrough to NVMe |
-| `bdev_async_discard_threads` | `1` | Offload discard from OSD worker |
-| `requireMsgr2` | `true` | Encrypted on-wire messenger v2 |
-| `network.provider` | `host` | Direct host network for OSD replication |
+| Setting                      | Value  | Rationale                               |
+| ---------------------------- | ------ | --------------------------------------- |
+| `bdev_enable_discard`        | `true` | TRIM passthrough to NVMe                |
+| `bdev_async_discard_threads` | `1`    | Offload discard from OSD worker         |
+| `requireMsgr2`               | `true` | Encrypted on-wire messenger v2          |
+| `network.provider`           | `host` | Direct host network for OSD replication |
 
 The Ceph dashboard is exposed internally with TLS termination via kgateway `BackendConfigPolicy` and its admin password sourced from 1Password through an `ExternalSecret`.
 
@@ -24,13 +24,13 @@ The Ceph dashboard is exposed internally with TLS termination via kgateway `Back
 The default block pool backs RWO (`ReadWriteOnce`) PVCs across all namespaces. It is the cluster's **default StorageClass**.
 
 ```yaml
-StorageClass:  ceph-block (default)
-Provisioner:   storage-system.rbd.csi.ceph.com
-FS type:       ext4
-Binding:       WaitForFirstConsumer
-Expansion:     enabled
+StorageClass: ceph-block (default)
+Provisioner: storage-system.rbd.csi.ceph.com
+FS type: ext4
+Binding: WaitForFirstConsumer
+Expansion: enabled
 Mount options: discard
-Image format:  2
+Image format: 2
 Image features: layering, fast-diff, object-map, deep-flatten, exclusive-lock
 ```
 
@@ -41,12 +41,12 @@ CSI secrets (`rook-csi-rbd-provisioner`, `rook-csi-rbd-node`) are auto-generated
 The CephFS pool provides **RWX** (`ReadWriteMany`) access for workloads that require concurrent mounting across pods — for example, shared media library ingestion or configuration directories.
 
 ```yaml
-StorageClass:  ceph-filesystem
-Provisioner:   storage-system.cephfs.csi.ceph.com
-FS type:       ext4
-Binding:       WaitForFirstConsumer
-Expansion:     enabled
-MDS:           1 active + 1 standby (host anti-affinity via topologySpreadConstraints)
+StorageClass: ceph-filesystem
+Provisioner: storage-system.cephfs.csi.ceph.com
+FS type: ext4
+Binding: WaitForFirstConsumer
+Expansion: enabled
+MDS: 1 active + 1 standby (host anti-affinity via topologySpreadConstraints)
 ```
 
 The metadata server placement uses a `DoNotSchedule` topology spread across `kubernetes.io/hostname`, ensuring the active and standby MDS land on separate nodes.
@@ -68,10 +68,10 @@ A companion `StorageClass` named `ceph-bucket` is registered for OBC (`ObjectBuc
 
 The snapshot-controller operator is deployed with `installCRDs: true` and provides the cluster-wide snapshot infrastructure. Two `VolumeSnapshotClass` resources are created by the Rook cluster chart:
 
-| SnapshotClass | Default | Driver | Deletion Policy |
-|---------------|:-------:|--------|:---------------:|
-| `ceph-block-snapshot` | yes | `storage-system.rbd.csi.ceph.com` | Delete |
-| `ceph-filesystem-snapshot` | no | `storage-system.cephfs.csi.ceph.com` | Delete |
+| SnapshotClass              | Default | Driver                               | Deletion Policy |
+| -------------------------- | :-----: | ------------------------------------ | :-------------: |
+| `ceph-block-snapshot`      |   yes   | `storage-system.rbd.csi.ceph.com`    |     Delete      |
+| `ceph-filesystem-snapshot` |   no    | `storage-system.cephfs.csi.ceph.com` |     Delete      |
 
 Snapshots are used by kopiur's `copyMethod: Snapshot` to create consistent, instant point-in-time copies before backup.
 
@@ -80,10 +80,10 @@ Snapshots are used by kopiur's `copyMethod: Snapshot` to create consistent, inst
 For workloads that need the raw performance of a local NVMe without replication overhead, [OpenEBS LocalPV](https://openebs.io) provides a `hostpath`-based StorageClass backed by the Talos `local-hostpath` user volume (140 GiB on the system disk).
 
 ```yaml
-StorageClass:  openebs-hostpath
-Provisioner:   local-hostpath (OpenEBS)
-Base path:     /var/mnt/local-hostpath
-Replicas:      2 (controller)
+StorageClass: openebs-hostpath
+Provisioner: local-hostpath (OpenEBS)
+Base path: /var/mnt/local-hostpath
+Replicas: 2 (controller)
 ```
 
 OpenEBS LocalPV also keeps temporary snapshot caches on fast local storage rather than consuming Ceph capacity (kopiur mover cache defaults).
@@ -92,8 +92,8 @@ OpenEBS LocalPV also keeps temporary snapshot caches on fast local storage rathe
 
 The [CSI NFS Driver](https://github.com/kubernetes-csi/csi-driver-nfs) mounts Synology NAS exports directly into pods, providing RWX access to bulk data that lives on spinning disk rather than cluster-local NVMe. Two StorageClasses correspond to the NAS's two volumes:
 
-| StorageClass | NFS Export | Mount Options |
-|-------------|-----------|---------------|
+| StorageClass       | NFS Export                      | Mount Options                                     |
+| ------------------ | ------------------------------- | ------------------------------------------------- |
 | `synology-volume1` | `nas.homelab.internal:/volume1` | `nfsvers=4.1`, `softerr`, `noatime`, `nconnect=4` |
 | `synology-volume2` | `nas.homelab.internal:/volume2` | `nfsvers=4.1`, `softerr`, `noatime`, `nconnect=4` |
 
@@ -136,6 +136,10 @@ retention:
 
 Snapshots run every 6 hours; daily snapshots are kept for 14 days.
 
+#### Offsite Replication
+
+A `RepositoryReplication` (`nas-to-offsite`, nightly 05:30) mirrors the repository's blobs to a second VersityGW endpoint on `nix-dev` (VM, same-named `kopiur` bucket) using `kopia repository sync-to` — a hash-verified incremental copy.
+
 #### S3 Destination
 
 All backups target the Synology-hosted **VersityGW** S3 gateway at `http://nas.homelab.internal:9000`, in the dedicated `s3://kopiur` bucket (provisioned by `just versity init`). S3 credentials are sourced from 1Password via the `secret/` component — an `ExternalSecret` per consumer namespace materializing `kopiur-repository-secret`, which backup movers read in their own namespace:
@@ -144,7 +148,7 @@ All backups target the Synology-hosted **VersityGW** S3 gateway at `http://nas.h
 ClusterRepository.spec.backend.s3:
   bucket:   kopiur             # repository at bucket root
   endpoint: nas.homelab.internal:9000   (TLS disabled, LAN)
-encryption password: <1Password encryption_cipher.volsync>  (legacy field name, unchanged)
+encryption password: <1Password encryption-cipher.volsync>  (legacy field name, unchanged)
 AWS_ACCESS_KEY_ID:    <1Password app-user.admin_user>       (per-namespace ExternalSecret)
 AWS_SECRET_ACCESS_KEY:<1Password app-user.admin_pass>
 ```
@@ -181,6 +185,8 @@ plugins:
 
 S3 credentials live in the `cloudnative-pg` Kubernetes Secret (populated via ExternalSecret from 1Password). A `ScheduledBackup` resource triggers periodic full backups through the barman-cloud plugin, and a weekly `CronJob` runs `barman-cloud-check-wal-archive` to verify the backup chain integrity. Prometheus alerts fire if the last backup is older than 36 hours or the WAL archive check fails.
 
+An offsite copy runs as the `postgres-backup-offsite-sync` CronJob (nightly 06:30): rclone mirrors `s3://postgres` to the same-named bucket on nix-dev's VersityGW (`http://172.19.82.10:9000`) through an rclone `crypt` remote, so barman's plaintext archives never rest unencrypted offsite. Restore from offsite: `rclone copy` the crypt remote back into a staging bucket (decrypting), then point barman-cloud at the staging bucket.
+
 ### Synology NAS Services
 
 The Synology DS923+ runs several Docker Compose services critical to the storage stack:
@@ -209,11 +215,11 @@ A single [Zot](https://zotregistry.dev) instance acts as a **pull-through cache*
 
 Each MS-01 node boots from a 256 GB SSD with the following Talos volume partitioning:
 
-| Volume | Size | Filesystem | Purpose |
-|--------|:----:|:----------:|---------|
-| `EPHEMERAL` | 80 GiB | (Talos-managed) | Container runtime root; wiped on reset |
-| `local-hostpath` | 140 GiB | (Talos-managed) | OpenEBS LocalPV base path (`/var/mnt/local-hostpath`) |
-| `local-cache` | dedicated NVMe | **XFS** | High-performance scratch space on a separate NVMe device |
+| Volume           |      Size      |   Filesystem    | Purpose                                                  |
+| ---------------- | :------------: | :-------------: | -------------------------------------------------------- |
+| `EPHEMERAL`      |     80 GiB     | (Talos-managed) | Container runtime root; wiped on reset                   |
+| `local-hostpath` |    140 GiB     | (Talos-managed) | OpenEBS LocalPV base path (`/var/mnt/local-hostpath`)    |
+| `local-cache`    | dedicated NVMe |     **XFS**     | High-performance scratch space on a separate NVMe device |
 
 The `local-cache` volume is a `UserVolumeConfig` that selects a dedicated NVMe device (`/dev/disk/by-path/pci-0000:59:00.0-nvme-1`) and formats it with XFS. This provides fast, isolated storage for workloads that benefit from a dedicated device — such as kopiur mover cache PVCs or temporary processing — without competing with the Ceph OSD NVMe or the system disk.
 
@@ -230,11 +236,11 @@ local-cache:     disk (/dev/disk/by-path/pci-0000:59:00.0-nvme-1), XFS
 
 ### StorageClass Summary
 
-| StorageClass | Default | Access | Provisioner | Backend |
-|-------------|:-------:|:------:|------------|---------|
-| `ceph-block` | yes | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (3-replica) |
-| `ceph-filesystem` | no | RWX | `storage-system.cephfs.csi.ceph.com` | CephFS (3-replica) |
-| `openebs-hostpath` | no | RWO | `local-hostpath` | Node-local NVMe |
-| `synology-volume1` | no | RWX | `nfs.csi.k8s.io` | NAS `/volume1` |
-| `synology-volume2` | no | RWX | `nfs.csi.k8s.io` | NAS `/volume2` |
-| `ceph-bucket` | no | — | `storage-system.ceph.rook.io/bucket` | Ceph RGW (S3) |
+| StorageClass       | Default | Access | Provisioner                          | Backend              |
+| ------------------ | :-----: | :----: | ------------------------------------ | -------------------- |
+| `ceph-block`       |   yes   |  RWO   | `storage-system.rbd.csi.ceph.com`    | Ceph RBD (3-replica) |
+| `ceph-filesystem`  |   no    |  RWX   | `storage-system.cephfs.csi.ceph.com` | CephFS (3-replica)   |
+| `openebs-hostpath` |   no    |  RWO   | `local-hostpath`                     | Node-local NVMe      |
+| `synology-volume1` |   no    |  RWX   | `nfs.csi.k8s.io`                     | NAS `/volume1`       |
+| `synology-volume2` |   no    |  RWX   | `nfs.csi.k8s.io`                     | NAS `/volume2`       |
+| `ceph-bucket`      |   no    |   —    | `storage-system.ceph.rook.io/bucket` | Ceph RGW (S3)        |
