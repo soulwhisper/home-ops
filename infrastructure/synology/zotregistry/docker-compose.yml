@@ -67,8 +67,8 @@ configs:
                 "deleteUntagged": true,
                 "keepTags": [
                   {
-                    "mostRecentlyPushedCount": 10,
-                    "mostRecentlyPulledCount": 5
+                    "mostRecentlyPushedCount": 5,
+                    "mostRecentlyPulledCount": 3
                   }
                 ]
               }
