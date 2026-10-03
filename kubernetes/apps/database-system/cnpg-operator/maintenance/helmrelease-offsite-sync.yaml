@@ -39,8 +39,8 @@ spec:
               tag: "1.75.1"
             args:
               - sync
-              - nas:postgres
-              - offsite:
+              - "nas:postgres"
+              - "offsite:"
               - --fast-list
               - --transfers=8
               - --stats=30s
