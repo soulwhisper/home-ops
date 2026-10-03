@@ -4,9 +4,8 @@
 # with patch: infrastructure/talos/prod/30-private-mirrors.yaml
 # S3 backend: versitygw (nas.homelab.internal:9000), bucket "zot" (just infra s3-buckets)
 # S3 creds via env (zotregistry.sops.env) — never inline in config.json
-# sync urls note: zot treats urls[0] as main host and urls[1:] as mirrors, and
-# regclient tries mirrors FIRST — docker.io entry below therefore lists Hub first so
-# mirror.gcr.io is the primary (Hub rate-limit dodge) and Hub the fallback.
+# docker.io syncs from Hub directly; mirror.gcr.io was removed 2026-10-03 —
+# its Google-backed blob lane stalls through this egress (fake-ip/proxy flap).
 # sync hardening (2026-10-03 wedge incident): stalled upstream connections (tproxy flap)
 # silently pinned sync workers for hours. syncTimeout bounds a whole image sync;
 # disableHTTP2 isolates stalls to one TCP conn instead of one shared h2 stream set;
@@ -105,7 +104,7 @@ configs:
             "downloadDir": "/tmp/zot",
             "registries": [
               {
-                "urls": ["https://registry-1.docker.io", "https://mirror.gcr.io"],
+                "urls": ["https://registry-1.docker.io"],
                 "content": [
                   {
                     "prefix": "**",
