@@ -1,11 +1,15 @@
 ---
+# Registry mirrors: route pulls through the NAS zot cache (second hop behind spegel P2P).
+# Endpoint URLs must carry the literal /v2/ prefix: with overridePath containerd fetches
+# <endpoint>/<repo> verbatim, and zot serves /v2/<upstream>/<repo> (PR #3541 bring-up bug).
+# skipFallback: false — zot/NAS down falls back to the upstream registry directly.
 apiVersion: v1alpha1
 kind: RegistryMirrorConfig
 name: docker.io
 endpoints:
   - url: http://nas.homelab.internal:9002/v2/docker.io
     overridePath: true
-skipFallback: true
+skipFallback: false
 ---
 apiVersion: v1alpha1
 kind: RegistryMirrorConfig
@@ -13,15 +17,7 @@ name: factory.talos.dev
 endpoints:
   - url: http://nas.homelab.internal:9002/v2/factory.talos.dev
     overridePath: true
-skipFallback: true
----
-apiVersion: v1alpha1
-kind: RegistryMirrorConfig
-name: gcr.io
-endpoints:
-  - url: http://nas.homelab.internal:9002/v2/gcr.io
-    overridePath: true
-skipFallback: true
+skipFallback: false
 ---
 apiVersion: v1alpha1
 kind: RegistryMirrorConfig
@@ -29,15 +25,7 @@ name: ghcr.io
 endpoints:
   - url: http://nas.homelab.internal:9002/v2/ghcr.io
     overridePath: true
-skipFallback: true
----
-apiVersion: v1alpha1
-kind: RegistryMirrorConfig
-name: registry.k8s.io
-endpoints:
-  - url: http://nas.homelab.internal:9002/v2/registry.k8s.io
-    overridePath: true
-skipFallback: true
+skipFallback: false
 ---
 apiVersion: v1alpha1
 kind: RegistryMirrorConfig
@@ -45,4 +33,12 @@ name: quay.io
 endpoints:
   - url: http://nas.homelab.internal:9002/v2/quay.io
     overridePath: true
-skipFallback: true
+skipFallback: false
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: registry.k8s.io
+endpoints:
+  - url: http://nas.homelab.internal:9002/v2/registry.k8s.io
+    overridePath: true
+skipFallback: false
