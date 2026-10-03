@@ -32,12 +32,10 @@ spec:
       replacement: *name
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/scrapeconfig_v1alpha1.json
-# nix-dev (corp VM, offsite backup target) node exporter via easytier mesh.
-# Depends on nix-config: modules.services.exporters.enable on nix-dev.
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
-  name: &name nix-dev
+  name: &name backup-server
 spec:
   staticConfigs:
     - targets:
