@@ -265,7 +265,7 @@ provisioning, and every other workload.
 | Helmfile sync fails on `cilium` | kube-proxy not disabled, conflicting iptables rules | Verify `KubeProxyConfig` has `enabled: false` in `10-general.yaml` |
 | `flux reconcile` stuck | Flux controllers not yet healthy | Wait for `flux-operator` and `flux-instance` HelmReleases; check `kubectl get pods -n gitops-system` |
 | Nodes fail to join via discovery | Discovery service unreachable | Verify `http://10.10.0.100:9300` is accessible; check core switch routing |
-| Private registry mirrors fail | NAS cache (Dragonfly) not running | Start NAS services first; or temporarily set `skipFallback: false` in `30-private-mirrors.yaml` |
+| Private registry mirrors fail | zot or VersityGW not running on the NAS | Start NAS services first; pulls fall back to upstream registries automatically (`skipFallback: false` in `30-private-mirrors.yaml`) |
 
 ---
 

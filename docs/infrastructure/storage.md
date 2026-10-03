@@ -197,7 +197,7 @@ BUCKETS: postgres  kopiur  zot
 
 #### Zot Registry (OCI Mirror)
 
-A 3-node [Zot](https://zotregistry.dev) cluster stores container images on S3 (`zot` bucket) with deduplication and garbage collection. A Caddy reverse proxy provides round-robin load balancing with health checks. Zot acts as a **pull-through cache** for `docker.io`, `gcr.io`, `ghcr.io`, `quay.io`, `registry.k8s.io`, and `public.ecr.aws` — images are fetched on-demand, cached locally, and served to the cluster via the Talos private mirrors patch. A Valkey instance provides distributed cache coordination across the three Zot replicas.
+A single [Zot](https://zotregistry.dev) instance acts as a **pull-through cache** for `docker.io`, `ghcr.io`, `quay.io`, `registry.k8s.io`, and `factory.talos.dev`, storing images in the VersityGW S3 `zot` bucket with daily garbage collection and tag retention (10 most recently pushed / 5 most recently pulled per repo). It is the second LAN hop of the node pull chain — `containerd → spegel (P2P) → zot → upstream` — wired via the Talos private mirrors patch (`infrastructure/talos/prod/30-private-mirrors.yaml`): endpoints are `http://nas.homelab.internal:9002/v2/<upstream>` with `overridePath: true`, and `skipFallback: false` lets pulls fall back to the upstream registry when zot or the NAS is down. On-demand sync caches images on first request (`docker.io` prefers `mirror.gcr.io` to dodge Hub rate limits); `http.compat: ["docker2s2"]` preserves upstream manifest digests and signatures for digest-pinned pulls. Metrics are scraped via the `zot` ScrapeConfig (`up{job="zot"}` doubles as liveness); the zot UI shares port `9002`.
 
 #### Scrutiny (SMART Monitoring)
 
