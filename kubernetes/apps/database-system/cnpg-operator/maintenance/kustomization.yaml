@@ -7,3 +7,5 @@ resources:
   - ./cronjob-dr-test.yaml
   # utils
   - ./prometheusrule.yaml
+  - ./externalsecret-offsite.yaml
+  - ./helmrelease-offsite-sync.yaml
