@@ -1,0 +1,28 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kopiur.home-operations.com/repositoryreplication_v1alpha1.json
+# Offsite mirror of the NAS kopia repository to nix-dev versitygw (corp VM),
+# kopia repository sync-to — blob-level, hash-verified incremental copy.
+# Destination inherits the source repo's format and encryption password, so
+# the offsite copy stays ciphertext; only backend credentials ride the secret.
+# Transport is plaintext HTTP over the easytier mesh (WireGuard-encrypted).
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: RepositoryReplication
+metadata:
+  name: nas-to-offsite
+spec:
+  sourceRef:
+    kind: ClusterRepository
+    name: nas
+  destination:
+    s3:
+      bucket: kopiur
+      endpoint: "172.19.82.10:9000"
+      tls:
+        disableTls: true
+      auth:
+        secretRef:
+          name: kopiur-offsite-secret
+  schedule:
+    cron: "30 5 * * *" # after CNPG backups (03:00) and kopia full maintenance (03:00)
+    jitter: 30m
+    timezone: Asia/Shanghai
