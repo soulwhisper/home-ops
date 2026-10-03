@@ -7,6 +7,10 @@
 # sync urls note: zot treats urls[0] as main host and urls[1:] as mirrors, and
 # regclient tries mirrors FIRST — docker.io entry below therefore lists Hub first so
 # mirror.gcr.io is the primary (Hub rate-limit dodge) and Hub the fallback.
+# sync hardening (2026-10-03 wedge incident): stalled upstream connections (tproxy flap)
+# silently pinned sync workers for hours. syncTimeout bounds a whole image sync;
+# disableHTTP2 isolates stalls to one TCP conn instead of one shared h2 stream set;
+# reqConcurrent/maxIdleConnsPerHost keep parallel pulls unblocked (regclient default: 3).
 
 name: zotregistry
 
@@ -63,8 +67,8 @@ configs:
                 "deleteUntagged": true,
                 "keepTags": [
                   {
-                    "mostRecentlyPushedCount": 10,
-                    "mostRecentlyPulledCount": 5
+                    "mostRecentlyPushedCount": 5,
+                    "mostRecentlyPulledCount": 3
                   }
                 ]
               }
@@ -113,7 +117,11 @@ configs:
                 "manifestCheckInterval": "10m",
                 "maxRetries": 3,
                 "retryDelay": "1s",
-                "maxRetryDelay": "30s"
+                "maxRetryDelay": "30s",
+                "syncTimeout": "30m",
+                "reqConcurrent": 30,
+                "disableHTTP2": true,
+                "maxIdleConnsPerHost": 30
               },
               {
                 "urls": ["https://ghcr.io"],
@@ -128,7 +136,11 @@ configs:
                 "manifestCheckInterval": "10m",
                 "maxRetries": 3,
                 "retryDelay": "1s",
-                "maxRetryDelay": "30s"
+                "maxRetryDelay": "30s",
+                "syncTimeout": "30m",
+                "reqConcurrent": 30,
+                "disableHTTP2": true,
+                "maxIdleConnsPerHost": 30
               },
               {
                 "urls": ["https://quay.io"],
@@ -143,7 +155,11 @@ configs:
                 "manifestCheckInterval": "10m",
                 "maxRetries": 3,
                 "retryDelay": "1s",
-                "maxRetryDelay": "30s"
+                "maxRetryDelay": "30s",
+                "syncTimeout": "30m",
+                "reqConcurrent": 30,
+                "disableHTTP2": true,
+                "maxIdleConnsPerHost": 30
               },
               {
                 "urls": ["https://registry.k8s.io"],
@@ -158,7 +174,11 @@ configs:
                 "manifestCheckInterval": "10m",
                 "maxRetries": 3,
                 "retryDelay": "1s",
-                "maxRetryDelay": "30s"
+                "maxRetryDelay": "30s",
+                "syncTimeout": "30m",
+                "reqConcurrent": 30,
+                "disableHTTP2": true,
+                "maxIdleConnsPerHost": 30
               },
               {
                 "urls": ["https://factory.talos.dev"],
@@ -173,7 +193,11 @@ configs:
                 "manifestCheckInterval": "10m",
                 "maxRetries": 3,
                 "retryDelay": "1s",
-                "maxRetryDelay": "30s"
+                "maxRetryDelay": "30s",
+                "syncTimeout": "30m",
+                "reqConcurrent": 30,
+                "disableHTTP2": true,
+                "maxIdleConnsPerHost": 30
               }
             ]
           }
