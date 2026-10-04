@@ -5,7 +5,5 @@ kind: Kustomization
 resources:
   # app
   - ./cronjob-dr-test.yaml
-  - ./cronjob-offsite-sync.yaml
   # utils
-  - ./externalsecret.yaml
   - ./prometheusrule.yaml
