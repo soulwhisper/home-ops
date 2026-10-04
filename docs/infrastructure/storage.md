@@ -144,12 +144,10 @@ All backups target the Synology-hosted **VersityGW** S3 gateway at `http://nas.h
 ClusterRepository.spec.backend.s3:
   bucket:   kopiur             # repository at bucket root
   endpoint: nas.homelab.internal:9000   (TLS disabled, LAN)
-encryption password: <1Password encryption_cipher.volsync>  (legacy field name, unchanged)
+encryption password: <1Password encryption-cipher.kopiur>
 AWS_ACCESS_KEY_ID:    <1Password app-user.admin_user>       (per-namespace ExternalSecret)
 AWS_SECRET_ACCESS_KEY:<1Password app-user.admin_pass>
 ```
-
-The legacy `volsync` bucket still holds the abandoned per-app repositories (`volsync/<app>/`) from before the ClusterRepository migration; they remain readable with the same password via the kopia CLI and can be pruned manually once the shared repository has healthy snapshots.
 
 #### Monitoring
 
