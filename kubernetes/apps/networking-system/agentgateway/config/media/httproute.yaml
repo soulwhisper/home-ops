@@ -13,6 +13,20 @@ spec:
       kind: Gateway
       name: agentgateway-proxy
   rules:
+    # model discovery: gateway-synthesized lane list (see studio-models
+    # policy — directResponse, backend never hit; keep in sync with
+    # docs/application/ai.md Studio Model Registry)
+    - name: models
+      matches:
+        - path:
+            type: PathPrefix
+            value: /v1/models
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: studio-audio
+      timeouts:
+        request: 30s
     # embeddings (oMLX, id `qwen3-embedding-0.6b`)
     - matches:
         - path:

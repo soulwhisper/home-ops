@@ -3,13 +3,13 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: firecrawl-egress
+  name: frigate-vision-egress
 spec:
   endpointSelector:
     matchLabels:
-      "app.kubernetes.io/name": firecrawl
+      "app.kubernetes.io/name": frigate-vision
   egress:
-    # LLM gateway
+    # LLM gateway (omni lane)
     - toServices:
         - k8sService:
             serviceName: agentgateway-proxy
@@ -17,28 +17,38 @@ spec:
       toPorts:
         - ports:
             - { port: "80", protocol: TCP }
-    # Dependencies
+    # frigate snapshots
     - toServices:
         - k8sService:
-            serviceName: firecrawl-database
-            namespace: selfhosted-apps
+            serviceName: frigate
+            namespace: smarthome-apps
       toPorts:
         - ports:
-            - { port: "5432", protocol: TCP }
+            - { port: "5000", protocol: TCP }
+    # MQTT events
     - toServices:
         - k8sService:
-            serviceName: firecrawl-database-dragonfly
-            namespace: selfhosted-apps
+            serviceName: mosquitto
+            namespace: smarthome-apps
       toPorts:
         - ports:
-            - { port: "6379", protocol: TCP }
+            - { port: "1883", protocol: TCP }
+    # Home Assistant persistent_notification
     - toServices:
         - k8sService:
-            serviceName: searxng
-            namespace: selfhosted-apps
+            serviceName: home-assistant
+            namespace: smarthome-apps
       toPorts:
         - ports:
-            - { port: "8080", protocol: TCP }
+            - { port: "8123", protocol: TCP }
+    # hermes webhook (ops profile alerts)
+    - toServices:
+        - k8sService:
+            serviceName: hermes-agent
+            namespace: servitor-apps
+      toPorts:
+        - ports:
+            - { port: "8644", protocol: TCP }
     # DNS
     - toEndpoints:
         - matchLabels:
@@ -48,12 +58,3 @@ spec:
         - ports:
             - { port: "53", protocol: TCP }
             - { port: "53", protocol: UDP }
-    # Internet
-    - toCIDRSet:
-        - cidr: 0.0.0.0/0
-          except:
-            - 10.0.0.0/8
-            - 172.16.0.0/12
-            - 192.168.0.0/16
-            - 169.254.0.0/16
-            - 100.64.0.0/10
