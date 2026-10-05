@@ -58,12 +58,12 @@ content only:
 
 | Route Header | Backend | Lane | Model (studio id) | Host |
 | ------------ | ------- | ---- | ----------------- | ---- |
-| `x-model: complex`, `x-priority: high`, or catch-all | `llm-backend-complex` | `complex` | Qwen3.8-27B Uncensored (`qwen3.8-27b`, MLX 4bit) | MacStudio oMLX |
+| `x-model: complex`, `x-priority: high` | `llm-backend-complex` | `complex` | Qwen3.8-27B Uncensored (`qwen3.8-27b`, MLX 4bit) | MacStudio oMLX |
 | `x-model: omni` | `llm-backend-omni` | `omni` | MiniCPM-O-4.5 (`minicpm-o-4.5`, text+vision+audio-in) | MacStudio oMLX |
 | `x-model: micro` | `llm-backend-micro` | `micro` | MiniCPM5-2B (`minicpm5-2b`) | MacStudio oMLX |
 
-The catch-all rule (last on the guarded route) sends unknown/absent model ids
-to `omni`. The open lane deliberately
+There is no catch-all: an unknown or missing model id matches no rule and
+the gateway answers `404`. The open lane deliberately
 serves **only** `complex`: it is the single uncensored model and the only
 reason the lane exists; `omni`/`micro` are reachable exclusively through the
 guarded route. All backends speak the OpenAI-compatible API on
@@ -185,7 +185,7 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 ### Open WebUI v0.11.3
 
 - Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui:v0.11.3`. Lives in **servitor-apps** (with hermes/toolhive, not selfhosted-apps). Storage is externalized: shared CNPG `postgres` (app data + `VECTOR_DB=pgvector`; role/db via `postgres-init`, plain `vector` ext self-created by migrations — vchord N/A: open-webui hardcodes pgvector DDL), app `Dragonfly` (`REDIS_URL`), app ceph bucket `open-webui` (`STORAGE_PROVIDER=s3`, `STORAGE_LOCAL_CACHE=False`) — data dir is emptyDir cache, no PVC
-- **LLM providers** (`OPENAI_API_BASE_URLS` order, keys match): 1. agentgateway open lane (`agentgateway-proxy:80/chat/raw`, key `llm-api.agentgateway_api_auth`) — serves **only** `complex`, the uncensored main brain; any model id falls through to the complex catch-all; 2. agentgateway guarded lane (`agentgateway-proxy:80/chat`, same key) — promptGuard-scanned, hosts `omni`/`micro` for aux tasks (title generation → model id `micro`); select per-task in Admin Settings. The former siliconflow and hermes chat-profile providers were removed — the gateway is the only AI egress.
+- **LLM providers** (`OPENAI_API_BASE_URLS` order, keys match): 1. agentgateway open lane (`agentgateway-proxy:80/chat/raw`, key `llm-api.agentgateway_api_auth`) — serves **only** `complex`, the uncensored main brain; the body model id is ignored by design on this single-model lane; 2. agentgateway guarded lane (`agentgateway-proxy:80/chat`, same key) — promptGuard-scanned, hosts `omni`/`micro` for aux tasks (title generation → model id `micro`); select per-task in Admin Settings. The former siliconflow and hermes chat-profile providers were removed — the gateway is the only AI egress.
 - **MCP**: native MCP tool servers via `TOOL_SERVER_CONNECTIONS` = the three tiered, sidecar-guarded gateway endpoints (`agentgateway-proxy:80/mcp/ro|rw|ext`) with `auth_type: "bearer"` and the key expanded from `$GATEWAY_API_KEY` (kubelet dependent-env expansion; bearer auth in `build_tool_server_headers` is native on v0.11.3). Same guarded endpoints hermes uses — MCP has no open lane.
 - Ingress: `chat.noirprime.com` via kgateway-internal; **auth is authentik forward-auth at the gateway** (components/authentik, provider `open-webui-proxy-provider`, homelab-admin group); open-webui's own login disabled (`WEBUI_AUTH=False`)
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (sole AI egress: LLM + MCP), open-webui-terminals:3000, open-webui-oikb:8080, postgres-rw:5432, open-webui-dragonfly:6379, ceph RGW:80, kube-dns, world-except-private (RAG web fetching)
@@ -305,7 +305,7 @@ Frigate remains the 24/7 trigger layer; MiniCPM-o 4.5 is the event describer. `s
 
 - AI memory / context store (agent long-term memory: retain / recall / reflect)
 - Image: upstream `ghcr.io/vectorize-io/hindsight:0.10.0-slim` — no in-process local-ml
-- LLM: `omni` lane → **MiniCPM-O-4.5 on the MacStudio** (via agentgateway open lane)
+- LLM: `omni` lane → **MiniCPM-O-4.5 on the MacStudio** (via agentgateway guarded `/chat` lane)
 - Embeddings: **Qwen3-Embedding-0.6B on the MacStudio** (oMLX id `qwen3-embedding-0.6b`, 1024d) via gateway `/v1/embeddings`; store rebuilt from scratch for the 0.6B space
 - Reranker: **Qwen3-Reranker-0.6B on the MacStudio** (Cohere-compatible, id `qwen3-reranker-0.6b`) via gateway `/v1/rerank`
 - Resources: req: 200m CPU / 512Mi, lim: 2 CPU / 2Gi
@@ -399,7 +399,7 @@ items:
 /chat/raw  (open, complex ONLY)   ── open-webui main chat, eval
             │
             ├─ x-priority: high / x-model: complex ──────────────► complex  Qwen3.8-27B Uncensored
-            ├─ x-model: omni / (catch-all) ──────────────────────► omni     MiniCPM-O-4.5 (text+vision)
+            ├─ x-model: omni ────────────────────────────────────► omni     MiniCPM-O-4.5 (text+vision)
             └─ x-model: micro ───────────────────────────────────► micro    MiniCPM5-2B
 
 /v1/embeddings /v1/rerank /v1/audio/*  (media, LLM-pipeline backends) ─► oMLX folder ids

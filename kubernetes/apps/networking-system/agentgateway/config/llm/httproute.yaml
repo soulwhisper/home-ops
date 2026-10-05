@@ -69,18 +69,6 @@ spec:
           name: llm-backend-omni
       timeouts:
         request: 300s
-    # Catch-all: unknown/absent model ids land on `omni` (guarded). Listed
-    # last so header rules win on implementations with ordered matching.
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /chat
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: llm-backend-omni
-      timeouts:
-        request: 300s
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
 # Open LLM lane — deliberately serves ONLY the `complex` main brain. `complex`
