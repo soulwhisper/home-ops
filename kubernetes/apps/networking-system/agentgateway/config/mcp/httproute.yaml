@@ -1,5 +1,12 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+# Tiered, guarded MCP endpoints — one per ToolHive group. Every rule rewrites
+# its tier prefix to the canonical /mcp before the backend sees it (the
+# streamable-HTTP endpoint on each vmcp lives exactly at /mcp), mirroring the
+# siliconflow-lane rewrite pattern.
+# MCP has no open lane: all three tiers carry the mcp-guardrails ExtMCP
+# sidecar (FailClosed) via the backend policy, regardless of which LLM lane
+# the client used. Auth: mcp-api-auth (strict API key) on this route.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -13,8 +20,42 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /mcp
+            value: /mcp/ro
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /mcp
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: mcp-backend
+          name: mcp-backend-ro
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /mcp/rw
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /mcp
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: mcp-backend-rw
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /mcp/ext
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /mcp
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: mcp-backend-ext

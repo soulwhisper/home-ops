@@ -1,5 +1,8 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+# Studio media lanes (embeddings / rerank / audio) onto the LLM-pipeline
+# backends. Auth: strict consumer API key (llm-api-auth); each backend
+# injects the oMLX server key upstream.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -10,29 +13,7 @@ spec:
       kind: Gateway
       name: agentgateway-proxy
   rules:
-    # image generation (vmlx / mflux, Z-Image-Turbo)
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /v1/images
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: studio-media-image
-      timeouts:
-        request: 300s
-    # audio: TTS + ASR (mlx_audio.server, VoxCPM2 + Qwen3-ASR)
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /v1/audio
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: studio-media-audio
-      timeouts:
-        request: 300s
-    # embeddings (oMLX, Qwen3-Embedding-4B)
+    # embeddings (oMLX, id `qwen3-embedding-0.6b`)
     - matches:
         - path:
             type: PathPrefix
@@ -40,10 +21,10 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: studio-media-llm
+          name: studio-embeddings
       timeouts:
         request: 120s
-    # rerank (oMLX, Qwen3-Reranker-0.6B, Cohere-compatible)
+    # rerank (oMLX, id `qwen3-reranker-0.6b`, Cohere-compatible)
     - matches:
         - path:
             type: PathPrefix
@@ -51,6 +32,17 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: studio-media-llm
+          name: studio-rerank
       timeouts:
         request: 120s
+    # audio TTS (oMLX, id `voxcpm2`)
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1/audio
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: studio-audio
+      timeouts:
+        request: 300s

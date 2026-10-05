@@ -40,12 +40,12 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /chat
+            value: /v1
       backendRefs:
         - name: agentgateway-proxy
           namespace: networking-system
           port: 80
-      # Align with the LLM route; gateway defaults would cut long streams.
+      # Align with the LLM lane; gateway defaults would cut long streams.
       timeouts:
         request: 300s
     - matches:

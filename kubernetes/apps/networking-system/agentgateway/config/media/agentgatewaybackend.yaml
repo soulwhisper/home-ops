@@ -1,35 +1,69 @@
 ---
-# Media lanes on the MacStudio inference host, plain HTTP passthrough.
-# ExternalName Service backends are not resolved by the agentgateway
-# dataplane ("service not found" on every request) — use static
-# AgentgatewayBackends with DNS host instead.
-# Ports are host-side assignments:
-#   8000 oMLX (embeddings /v1/embeddings, rerank /v1/rerank)
-#   8001 vmlx (image generation /v1/images/*)
-#   8002 mlx_audio.server (TTS /v1/audio/speech, ASR /v1/audio/transcriptions)
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+# Studio media lanes as LLM-pipeline backends (replaces the former static
+# passthrough). custom.formats declares exactly one API type per backend —
+# undeclared formats are rejected upstream. policies.auth injects the oMLX
+# server key (studio-api-auth, ES item omlx), so media consumers use the
+# regular gateway consumer key like every other app.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: studio-media-llm
+  name: studio-embeddings
 spec:
-  static:
-    host: studio.homelab.internal
-    port: 8000
+  ai:
+    provider:
+      custom:
+        model: qwen3-embedding-0.6b
+        formats:
+          - type: Embeddings
+      host: studio.homelab.internal
+      port: 8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
 ---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: studio-media-image
+  name: studio-rerank
 spec:
-  static:
-    host: studio.homelab.internal
-    port: 8001
+  ai:
+    provider:
+      custom:
+        model: qwen3-reranker-0.6b
+        formats:
+          - type: Rerank
+      host: studio.homelab.internal
+      port: 8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
 ---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+# Audio lane (VoxCPM2 TTS). openai provider + Passthrough route types:
+# audio payloads (multipart, wav streams) are forwarded unparsed; the
+# backend auth above still injects the oMLX key. `/v1/audio/speech` is not a
+# documented audio route — the `*` Passthrough catch-all covers it.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: studio-media-audio
+  name: studio-audio
 spec:
-  static:
-    host: studio.homelab.internal
-    port: 8002
+  ai:
+    provider:
+      openai:
+        model: voxcpm2
+      host: studio.homelab.internal
+      port: 8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+    ai:
+      routes:
+        "/v1/audio/speech": "Passthrough"
+        "/v1/audio/transcriptions": "Passthrough"
+        "*": "Passthrough"

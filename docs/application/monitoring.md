@@ -224,6 +224,9 @@ Per-node DaemonSet exposing S.M.A.R.T. disk health metrics from NVMe and SATA dr
 |-------|--------|---------|
 | `devices` | `icmp` | esxi, nas, unifi (all `.homelab.internal`; zigbee commented out — device offline) |
 | `nfs` | `tcp_connect` | `nas.homelab.internal:2049` |
+| `studio-models` | `http_2xx` | `studio.homelab.internal:8000/v1/models` — oMLX model-plane health |
+| `studio-embedding` | `studio_embedding` | `studio.homelab.internal:8000/v1/embeddings` — L7 inference call (qwen3-embedding) |
+| `studio-rerank` | `studio_rerank` | `studio.homelab.internal:8000/v1/rerank` — L7 inference call (qwen3-reranker) |
 
 ## Silence Operator
 

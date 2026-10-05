@@ -9,21 +9,14 @@ spec:
     matchLabels:
       "app.kubernetes.io/name": virtualmcpserver
   ingress:
+    # Post-unification: the only MCP-protocol clients are the agentgateway
+    # (tiered /mcp/* endpoints) and vmagent (metrics scrape). Chat frontends
+    # reach tools through the gateway, never directly.
     - fromEndpoints:
         - matchLabels:
             {
               "k8s:io.kubernetes.pod.namespace": monitoring-system,
               "app.kubernetes.io/name": vmagent,
-            }
-        - matchLabels:
-            {
-              "k8s:io.kubernetes.pod.namespace": servitor-apps,
-              "app.kubernetes.io/name": hermes-agent,
-            }
-        - matchLabels:
-            {
-              "k8s:io.kubernetes.pod.namespace": servitor-apps,
-              "app.kubernetes.io/name": open-webui,
             }
         - matchLabels:
             {

@@ -5,6 +5,8 @@ kind: AgentgatewayPolicy
 metadata:
   name: &name llm-api-auth
 spec:
+  # Consumer API-key auth: strict on the unified /v1 lane (all rules, incl.
+  # complex-raw) and the media route.
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
@@ -12,10 +14,6 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: agentgateway-media-route
-    # siliconflow verification lane burns real cloud quota — same strict auth
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: agentgateway-siliconflow-route
   traffic:
     apiKeyAuthentication:
       mode: Strict
