@@ -20,7 +20,7 @@ spec:
           rules:
             http:
               - method: "POST"
-                path: "/chat/.*"
+                path: "/v1/.*"
               # tiered MCP endpoints; any method (streamable-HTTP uses
               # POST/GET/DELETE on the same path)
               - path: "/mcp(/.*)?"
