@@ -31,7 +31,7 @@ spec:
         - nas.homelab.internal:2049
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
-# Studio model-plane health: GET /v1/models on oMLX — the surface every /chat
+# Studio model-plane health: GET /v1/models on oMLX — the surface every /v1
 # consumer depends on. 8001 (vmlx image) / 8002 (mlx_audio TTS/ASR) lanes are
 # retired: no in-cluster consumers, plain passthrough not worth gateway policy;
 # re-probe if they ever stand up.
@@ -52,7 +52,7 @@ spec:
         service: macstudio
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
-# per-model L7: actual qwen3-embedding-4b inference call, direct to the Mac
+# per-model L7: actual inference call on the studio folder-id, direct to the Mac
 # (agentgateway path is covered by pod monitoring; this catches Mac down /
 # model unloaded — the failure mode that crashlooped hindsight)
 apiVersion: monitoring.coreos.com/v1
@@ -71,7 +71,7 @@ spec:
         - http://studio.homelab.internal:8000/v1/embeddings
       labels:
         service: macstudio
-        model: qwen3-embedding-4b
+        model: qwen3-embedding-0.6b
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
 apiVersion: monitoring.coreos.com/v1

@@ -4,9 +4,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   # app
-  - ./agentgatewaybackend.yaml
+  - ./agentgatewaymodel.yaml
   - ./agentgatewaypolicy.yaml
   # utils
   - ./externalsecret.yaml
   - ./guardrails.yaml
-  - ./httproute.yaml

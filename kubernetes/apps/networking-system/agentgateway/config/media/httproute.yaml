@@ -10,7 +10,7 @@ spec:
       kind: Gateway
       name: agentgateway-proxy
   rules:
-    # embeddings (oMLX, alias `embedding`)
+    # embeddings (oMLX, id `qwen3-embedding-0.6b`)
     - matches:
         - path:
             type: PathPrefix
@@ -21,7 +21,7 @@ spec:
           name: studio-server
       timeouts:
         request: 120s
-    # rerank (oMLX, alias `reranker`, Cohere-compatible)
+    # rerank (oMLX, id `qwen3-reranker-0.6b`, Cohere-compatible)
     - matches:
         - path:
             type: PathPrefix

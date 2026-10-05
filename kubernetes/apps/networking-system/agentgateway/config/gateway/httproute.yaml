@@ -22,7 +22,7 @@ spec:
           namespace: networking-system
           port: 15000
 ---
-# Exposes the agentgateway API surface (/chat, /mcp) to the intranet via
+# Exposes the agentgateway API surface (/v1, /mcp) to the intranet via
 # kgateway-internal (10.10.0.131) on its own subdomain: TLS termination via
 # the wildcard cert + external-dns automation. Dashboard stays on ai.noirprime.com.
 # Auth stays at agentgateway (strict API key) — no SSO extAuth on API paths.
@@ -40,24 +40,12 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /chat
+            value: /v1
       backendRefs:
         - name: agentgateway-proxy
           namespace: networking-system
           port: 80
-      # Align with the LLM route; gateway defaults would cut long streams.
-      timeouts:
-        request: 300s
-    # Open LLM lane — same timeout discipline; auth still terminates at
-    # agentgateway (strict API key), only promptGuard differs.
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /chat/raw
-      backendRefs:
-        - name: agentgateway-proxy
-          namespace: networking-system
-          port: 80
+      # Align with the LLM lane; gateway defaults would cut long streams.
       timeouts:
         request: 300s
     - matches:

@@ -1,0 +1,113 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaymodel_v1alpha1.json
+# Studio chat lanes as AgentgatewayModel resources (replaces the former
+# AgentgatewayBackend AI providers + /chat HTTPRoutes). Client-facing name ==
+# metadata.name == lane name; policies.transformations rewrites the upstream
+# model to the oMLX folder id (docs/application/ai.md, Studio Model Registry).
+# policies.auth injects the oMLX server key from the studio-api-auth secret.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayModel
+metadata:
+  name: complex
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-proxy
+  provider: OpenAI
+  baseURL: http://studio.homelab.internal:8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+    transformations:
+      - field: model
+        expression: '"qwen3.8-27b"'
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaymodel_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayModel
+metadata:
+  name: omni
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-proxy
+  provider: OpenAI
+  baseURL: http://studio.homelab.internal:8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+    transformations:
+      - field: model
+        expression: '"minicpm-o-4.5"'
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaymodel_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayModel
+metadata:
+  name: micro
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-proxy
+  provider: OpenAI
+  baseURL: http://studio.homelab.internal:8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+    transformations:
+      - field: model
+        expression: '"minicpm5-2b"'
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaymodel_v1alpha1.json
+# Open content lane: same brain as `complex`, WITHOUT the promptGuard
+# attachment (llm-guardrails targets only complex/omni/micro/catchall).
+# Replaces the former /chat/raw route. Only the uncensored main brain gets a
+# raw variant — that is the sole reason the open lane exists.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayModel
+metadata:
+  name: complex-raw
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-proxy
+  provider: OpenAI
+  baseURL: http://studio.homelab.internal:8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+    transformations:
+      - field: model
+        expression: '"qwen3.8-27b"'
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaymodel_v1alpha1.json
+# Catch-all: unknown/absent model ids land on the guarded main brain
+# (preserves the old /chat catch-all; exact matches win over this wildcard).
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayModel
+metadata:
+  name: catchall
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-proxy
+  match:
+    model: '*'
+  provider: OpenAI
+  baseURL: http://studio.homelab.internal:8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+    transformations:
+      - field: model
+        expression: '"qwen3.8-27b"'

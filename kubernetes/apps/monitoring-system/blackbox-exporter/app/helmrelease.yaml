@@ -14,6 +14,15 @@ spec:
     fullnameOverride: *name
     image:
       registry: quay.io
+    # studio-api-auth (oMLX key) for the direct-to-studio L7 probe modules
+    extraVolumes:
+      - name: studio-api-auth
+        secret:
+          secretName: studio-api-auth
+    extraVolumeMounts:
+      - name: studio-api-auth
+        mountPath: /etc/blackbox/secrets
+        readOnly: true
     config:
       modules:
         http_2xx:
@@ -45,7 +54,9 @@ spec:
             method: POST
             headers:
               Content-Type: application/json
-            body: '{"model":"qwen3-embedding-4b","input":"probe"}'
+            authorization:
+              credentials_file: /etc/blackbox/secrets/Authorization
+            body: '{"model":"qwen3-embedding-0.6b","input":"probe"}'
             valid_http_versions:
               - HTTP/1.1
             preferred_ip_protocol: ip4
@@ -58,6 +69,8 @@ spec:
             method: POST
             headers:
               Content-Type: application/json
+            authorization:
+              credentials_file: /etc/blackbox/secrets/Authorization
             body: '{"model":"qwen3-reranker-0.6b","query":"probe","documents":["alpha","beta"]}'
             valid_http_versions:
               - HTTP/1.1

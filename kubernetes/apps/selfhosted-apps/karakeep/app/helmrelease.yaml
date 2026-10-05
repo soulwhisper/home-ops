@@ -41,11 +41,11 @@ spec:
               OAUTH_PROVIDER_NAME: authentik
               OAUTH_ALLOW_DANGEROUS_EMAIL_ACCOUNT_LINKING: true
               OAUTH_WELLKNOWN_URL: https://auth.noirprime.com/application/o/karakeep/.well-known/openid-configuration
-              # semantic/hybrid search via the studio oMLX lane (alias
-              # `embedding`, Qwen3-Embedding-0.6B, 1024d). No existing vectors
+              # semantic/hybrid search via the studio oMLX lane (studio id
+              # `qwen3-embedding-0.6b`, 1024d). No existing vectors
               # to preserve — rebuild from scratch after rollout.
               EMBEDDING_OPENAI_BASE_URL: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
-              EMBEDDING_TEXT_MODEL: embedding
+              EMBEDDING_TEXT_MODEL: qwen3-embedding-0.6b
               EMBEDDING_DIMENSIONS: 1024
               EMBEDDING_ENABLE_AUTO_INDEXING: true
             envFrom:
