@@ -32,10 +32,8 @@ spec:
               CRON_SCHEDULE: "*/30 * * * *"
               IMMEDIATE_RUN: "true"
               AI_ANALYSIS_ENABLED: "true"
-              # guarded lane, `omni` lane (news digest; `micro` is the documented
-              # fallback for classification-style passes)
-              AI_MODEL: "openai/omni"
-              AI_API_BASE: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/chat"
+              # AI lane (base/model/key) comes from the trendradar secret
+              # (envFrom below; `micro` is the documented fallback)
               # delivery channels: add NTFY_*/DINGTALK_WEBHOOK_URL/FEISHU_WEBHOOK_URL env when chosen
             envFrom:
               - secretRef:
