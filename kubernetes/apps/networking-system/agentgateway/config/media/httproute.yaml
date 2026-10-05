@@ -1,5 +1,8 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+# Studio media lanes (embeddings / rerank / audio) onto the LLM-pipeline
+# backends. Auth: strict consumer API key (llm-api-auth); each backend
+# injects the oMLX server key upstream.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -18,7 +21,7 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: studio-server
+          name: studio-embeddings
       timeouts:
         request: 120s
     # rerank (oMLX, id `qwen3-reranker-0.6b`, Cohere-compatible)
@@ -29,6 +32,17 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: studio-server
+          name: studio-rerank
       timeouts:
         request: 120s
+    # audio TTS (oMLX, id `voxcpm2`)
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1/audio
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: studio-audio
+      timeouts:
+        request: 300s

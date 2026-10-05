@@ -1,21 +1,69 @@
 ---
-# Studio media lanes, plain HTTP passthrough (no LLM parsing).
-# ExternalName Service backends are not resolved by the agentgateway
-# dataplane ("service not found" on every request) — use static
-# AgentgatewayBackends with DNS host instead.
-#   :8000 oMLX — /v1/embeddings (id `qwen3-embedding-0.6b`), /v1/rerank
-#               (id `qwen3-reranker-0.6b`); the same process serves the chat
-#               lanes via the llm-backend-* AI providers
-# :8001 ComfyUI (`image`/`voice`) retired: not LLM-type, no in-cluster
-# consumers — plain media passthrough gains nothing from gateway policy.
-# Passthrough: clients send the studio folder-id as model — the contract in
-# docs/application/ai.md (Studio Model Registry).
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+# Studio media lanes as LLM-pipeline backends (replaces the former static
+# passthrough). custom.formats declares exactly one API type per backend —
+# undeclared formats are rejected upstream. policies.auth injects the oMLX
+# server key (studio-api-auth, ES item omlx), so media consumers use the
+# regular gateway consumer key like every other app.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: studio-embeddings
+spec:
+  ai:
+    provider:
+      custom:
+        model: qwen3-embedding-0.6b
+        formats:
+          - type: Embeddings
+      host: studio.homelab.internal
+      port: 8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: studio-server
+  name: studio-rerank
 spec:
-  static:
-    host: studio.homelab.internal
-    port: 8000
+  ai:
+    provider:
+      custom:
+        model: qwen3-reranker-0.6b
+        formats:
+          - type: Rerank
+      host: studio.homelab.internal
+      port: 8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+# Audio lane (VoxCPM2 TTS). openai provider + Passthrough route types:
+# audio payloads (multipart, wav streams) are forwarded unparsed; the
+# backend auth above still injects the oMLX key. `/v1/audio/speech` is not a
+# documented audio route — the `*` Passthrough catch-all covers it.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: studio-audio
+spec:
+  ai:
+    provider:
+      openai:
+        model: voxcpm2
+      host: studio.homelab.internal
+      port: 8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+    ai:
+      routes:
+        "/v1/audio/speech": "Passthrough"
+        "/v1/audio/transcriptions": "Passthrough"
+        "*": "Passthrough"

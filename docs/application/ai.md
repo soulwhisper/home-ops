@@ -89,7 +89,7 @@ The gateway API surface is exposed to the intranet via `kgateway-internal` (10.1
 - `/chat` — guarded LLM lane (strict API key, 300s timeout, promptGuard guardrails)
 - `/chat/raw` — open LLM lane (strict API key, 300s timeout, no promptGuard; LLM content only — tools are still guarded via /mcp/*)
 - `/mcp/ro`, `/mcp/rw`, `/mcp/ext` — tiered MCP routing (strict API key, mcp-guardrails ExtMCP on every tier, FailClosed)
-- `/v1/embeddings`, `/v1/rerank` — media passthrough to studio (strict API key, no LLM parsing)
+- `/v1/embeddings`, `/v1/rerank`, `/v1/audio/*` — media lanes to studio via LLM-pipeline backends (strict API key)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)
 
 TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirprime.com`); external-dns auto-creates the AdGuardHome record. Machine clients authenticate with agentgateway API keys — no SSO extAuth on API paths. Reachable from trusted VLANs (10/100/200); IoT VLAN 210 is ACL-blocked from RFC1918.
@@ -193,16 +193,17 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
 
-Non-chat vector modalities run on the same oMLX process as the chat lanes and are exposed through the agent gateway as **plain HTTP passthrough** (no LLM parsing) on `agentgateway-media-route`, guarded by the same `llm-api-auth` API keys as `/chat`:
+Non-chat vector modalities run on the same oMLX process as the chat lanes, exposed on `agentgateway-media-route` through the **LLM pipeline** (no more static passthrough): each lane is an `AgentgatewayBackend` with a `custom` provider declaring exactly one API format, guarded by the same `llm-api-auth` API key as `/chat`:
 
-| Path             | Studio port | Server process | Studio id              | Model                                   | Timeout |
-| ---------------- | ----------- | -------------- | ---------------------- | --------------------------------------- | ------- |
-| `/v1/embeddings` | 8000        | oMLX           | `qwen3-embedding-0.6b` | Qwen3-Embedding-0.6B (1024d)            | 120s    |
-| `/v1/rerank`     | 8000        | oMLX           | `qwen3-reranker-0.6b`  | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
+| Path             | Backend             | Format (route type)    | Studio id              | Model                                   | Timeout |
+| ---------------- | ------------------- | ---------------------- | ---------------------- | --------------------------------------- | ------- |
+| `/v1/embeddings` | `studio-embeddings` | `custom` `Embeddings`  | `qwen3-embedding-0.6b` | Qwen3-Embedding-0.6B (1024d)            | 120s    |
+| `/v1/rerank`     | `studio-rerank`     | `custom` `Rerank`      | `qwen3-reranker-0.6b`  | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
+| `/v1/audio/*`    | `studio-audio`      | `openai` + `Passthrough` | `voxcpm2`            | VoxCPM2 (TTS)                           | 300s    |
 
-The ComfyUI `image`/`voice` lanes (`:8001`, `/v1/images`, `/v1/audio`) were retired: not LLM-type, no in-cluster consumers — plain media passthrough gains nothing from gateway policy. Re-add as a direct route if a consumer ever appears.
+The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download sits parked (see Studio Model Registry). `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet.
 
-Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — single static `AgentgatewayBackend` `studio-server` (oMLX, :8000), route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL. **Upstream auth**: media consumers present the **oMLX server key** (1Password `omlx` item) as their bearer — valid at the gateway because `llm-api-auth` is a multi-entry secret (`api` = consumer key, `studio` = oMLX key) — then forwarded unchanged to oMLX. **Consumers**: embeddings — karakeep, hindsight, toolhive vmcp optimizer; rerank — **hindsight only** (no other app calls it). The direct-to-studio blackbox probe reads the same key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
+Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backends + route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with the regular **gateway consumer key** — each media backend injects the oMLX server key upstream via `policies.auth.secretRef: studio-api-auth`, identical to the chat lanes (single credential model: the studio key never leaves the backends). **Consumers**: embeddings — karakeep, hindsight, toolhive vmcp optimizer; rerank — **hindsight only**; audio — none yet (TTS lane ready). The direct-to-studio blackbox probe reads the oMLX key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
 
 ---
 
@@ -347,10 +348,10 @@ consumers use plain passthrough, so `/v1/embeddings` and `/v1/rerank`
 clients must send the folder id directly.
 
 **Auth**: oMLX enforces a server API key (1Password item `omlx`, field
-`api_key`). Chat backends inject it upstream via
-`policies.auth.secretRef: studio-api-auth`; media consumers present it as
-their own bearer (valid at the gateway via the multi-entry `llm-api-auth`
-secret: `api` = shared consumer key, `studio` = oMLX key).
+`api_key`). Every backend — chat and media alike — injects it upstream via
+`policies.auth.secretRef: studio-api-auth`; consumers always present the
+shared gateway key (`llm-api` item, `agentgateway_api_auth`). Single
+credential model: the studio key never leaves the backends.
 
 Alignment table (keep in sync with the bootstrap downloads):
 
@@ -361,13 +362,13 @@ Alignment table (keep in sync with the bootstrap downloads):
 | 3     | `micro`     | `minicpm5-2b`            | MiniCPM5-2B                  | `openbmb/MiniCPM5-2B-MLX`                   | MLX 8bit, ~2.6G | oMLX :8000 |
 | 4     | `embedding` | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d) | `mlx-community/Qwen3-Embedding-0.6B-4bit-DWQ` | MLX, ~1.3G    | oMLX :8000 (`/v1/embeddings`) |
 | 5     | `reranker`  | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B          | `mlx-community/Qwen3-Reranker-0.6B-4bit`    | MLX, ~1.3G      | oMLX :8000 (`/v1/rerank`) |
+| 6     | `audio`     | `voxcpm2`                | VoxCPM2                      | `mlx-community/VoxCPM2-4bit`              | MLX 4bit        | oMLX :8000 (`/v1/audio/speech`) |
 
 Downloaded but **parked — no lane, no consumers** (re-add deliberately
-when a consumer appears; see Media lanes retirement):
+when a consumer appears; see Media lanes):
 
 | Studio dir (`~/models/`) | Model            | HF source                                 | Intended role |
 | ------------------------ | ---------------- | ----------------------------------------- | ------------- |
-| `voxcpm2`                | VoxCPM2          | `mlx-community/VoxCPM2-4bit`              | TTS           |
 | `qwen-image-2.1`         | Qwen-Image 2.1   | `abenzerps/Qwen-Image-2.1-Uncensored-GGUF` (MLX 4bit safetensors) | image gen |
 
 Host prerequisites (out of band): models present at `~/models/<folder>`
@@ -388,8 +389,8 @@ items:
 | open-terminal sandbox pods → vmcp | Egress allowed, ingress whitelist gap (effectively denies — accidentally enforces the no-open-MCP rule) | Separate PR: add sandbox pods to vmcp-ingress, or drop the egress rule and fix the comment |
 | Dify / SillyTavern / open-notebook endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
 | mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred, on watch via langfuse decision spans (open-webui and hermes both emit OTEL) | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
-| ASR/TTS model | VoxCPM2-4bit downloaded on the studio (parked, no lane) — no in-repo consumer | Stand up a lane only when a consumer appears (see Studio Model Registry, parked) |
-| backend upstream auth | `policies.auth.secretRef: studio-api-auth` on all three chat backends (oMLX server key, ES item `omlx`) | Verify at rollout: `/chat` lanes answer 200 through the gateway while oMLX 401s keyless direct calls |
+| ASR/TTS model | VoxCPM2-4bit served on the studio via `/v1/audio/*` (`studio-audio` backend) — lane ready, no in-repo consumer | Point a consumer at the lane when one appears; ASR (`/v1/audio/transcriptions`) wired but unused |
+| backend upstream auth | `policies.auth.secretRef: studio-api-auth` on all chat + media backends (oMLX server key, ES item `omlx`) | Verify at rollout: `/chat` and `/v1/embeddings|rerank|audio` answer 200 through the gateway while oMLX 401s keyless direct calls |
 
 ## Model Routing Summary
 
@@ -397,9 +398,11 @@ items:
 /chat      (guarded, promptGuard)  ── hermes, extractors, open-webui aux
 /chat/raw  (open, complex ONLY)   ── open-webui main chat, eval
             │
-            ├─ x-priority: high / x-model: complex / (catch-all) ─► complex  Qwen3.8-27B Uncensored
-            ├─ x-model: omni  ───────────────────────────────────► omni     MiniCPM-O-4.5 (text+vision)
+            ├─ x-priority: high / x-model: complex ──────────────► complex  Qwen3.8-27B Uncensored
+            ├─ x-model: omni / (catch-all) ──────────────────────► omni     MiniCPM-O-4.5 (text+vision)
             └─ x-model: micro ───────────────────────────────────► micro    MiniCPM5-2B
+
+/v1/embeddings /v1/rerank /v1/audio/*  (media, LLM-pipeline backends) ─► oMLX folder ids
 
 /mcp/ro /mcp/rw /mcp/ext  (all tiers: mcp-guardrails ExtMCP, FailClosed) ── every MCP client
 ```
