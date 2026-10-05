@@ -12,7 +12,7 @@ directories:
     path: ceph-pools
   path: _sources/ceph
 - contents:
-  - configDigest: 7e6fac8725de239a9cc9e8898bc4b3dabc4a7db176a60b8aedc9bc9dde5cf3bc
+  - configDigest: e1ed3e60f4fce039a8028e8dbf48a414b3a26bff485e54c664a1d9b9edf93ff7
     git:
       commitTitle: Prepare for release v1.20.2...
       sha: e0dc92bd6dac33d7ba3b5eace82a0448bbb13aac
@@ -21,6 +21,13 @@ directories:
     path: .
   path: _sources/cilium
 - contents:
+  - configDigest: c794d1bd992c2aab1866e9a9e0c9e078c8eed5d8f58eec9ce26492c75325c07c
+    git:
+      commitTitle: 'Revert "dashboards: add initial agentgateway dashboard" (#6)...'
+      sha: cc4b1f27754cb518da31adce89f6cb33c4a00f92
+    path: .
+  path: _sources/kgateway
+- contents:
   - configDigest: fe6d51609c2d26f1e71173afa05ac19c1addf592367367af8f6e58313f9abb6a
     git:
       commitTitle: Release cluster-v0.0.5 (#36)...
@@ -28,41 +35,24 @@ directories:
       tags:
       - cluster-v0.0.5
     path: cnpg
-  - configDigest: df3126888dc9979dca0fa8a7145d16afcf1546ced61d2e18ccbd5b9be041b620
+  - configDigest: c3b37278eaa33a9b0fe54ad961fb0694628291c4e9dc8165f47e5874b0cf8d7a
     git:
-      commitTitle: 'fix(chart): bump version to v1.6.1 with missing configmap role
-        (#543)...'
-      sha: b28637d78d828f80a3b3fd76acaa2dd6e3c28603
+      commitTitle: 'feat(release): update manifest files and bump operator version
+        (#597)...'
+      sha: 9a5522426e6ddabb914d167ee82a192c9f682c79
       tags:
-      - v1.6.1
+      - v1.7.0
     path: dragonfly
   path: _sources/database
 - contents:
-  - configDigest: 0730500aa6c68689b39a60b9ea34eac14efcf8269c1cc758372edd52d9f90879
+  - configDigest: 07f37f648c289ac55d8aed1fb2f59d885cd85ae57ae7d1e355133d04e92dc120
     git:
-      commitTitle: '[release-1.9] cherry pick v1.9.1 release notes and chore commits
-        (#9885)...'
-      sha: 0260554fd4f33b787aad77a129fc0ffeb00c1f29
+      commitTitle: '[release-1.9] Bump ratelimit version (#10136)...'
+      sha: f9f92a112a4033abed5c8d43a5f7e37da257403c
       tags:
-      - v1.9.1
+      - v1.9.2
     path: gateway
-  - configDigest: 2c2d52a9a6ad49c01930aed359636ab4d036c5735a863717a84fcc67c6d96e27
-    http: {}
-    path: envoy-mixin-overview
-  - configDigest: f7b3d87e22e139875b0714c917c852f9897543b308270227d62fc2bf00a92c57
-    http: {}
-    path: envoy-mixin-upstream
-  - configDigest: ed02d923e4710dd56eaea4d102281cfc7ee90f572169721d298502c3b20f5ceb
-    http: {}
-    path: envoy-mixin-downstream
   path: _sources/envoy
-- contents:
-  - configDigest: c9e48287ea9684f1cf9b49549a96532a6020303e76834b5373e81fc33eb6bc97
-    git:
-      commitTitle: 'dashboards: add initial agentgateway dashboard (#3)...'
-      sha: ed6c5b2177981126a0eb9b73e919c6a59e5b839b
-    path: .
-  path: _sources/kgateway
 - contents:
   - configDigest: e2b09003c7643f7797f26aafc5a5bda8981bfb6778986db52397f1c1f1a8f307
     http: {}
@@ -79,58 +69,15 @@ directories:
   - configDigest: 42d25289b64b7118b22d19a86a43885ef8eef62f1a4de5c9e4f711805342aa8c
     http: {}
     path: k8s-views-pods
-  - configDigest: 0b166ce4b0436a82890400fddf199b3ccc045eb3e1812b4900038f2f9b81794f
-    http: {}
-    path: k8s-volumes
   path: _sources/kubernetes
 - contents:
-  - configDigest: 6091287adb0a3e65df23f67de6c7202198bfd91a2328f203c0ec61734dc8ccee
-    git:
-      commitTitle: 'docs/changelog: cut release v1.152.0...'
-      sha: 540b91da031aa8b7d53d3784693bb451e2be980a
-      tags:
-      - v1.152.0
-    path: metrics
-  - configDigest: f9f340d02610177b691d9f4f7adba5b56dc7a6a6933985eac839eae67c5f6c41
-    git:
-      commitTitle: 'docs/CHANGELOG.md: cut v1.121.0'
-      sha: b1003c0e65a4d9352d6f5b7f5201e5989b687687
-      tags:
-      - v1.121.0
-    path: logs
-  path: _sources/victoria
-- contents:
-  - configDigest: 9c4f79ef06dc3bae7be46c392bde085f279012dd3410ae1b77249f0679ac00d4
-    http: {}
-    path: cert-manager
-  - configDigest: 1d57c615caf913255e49906761112b4e5b84103dcea831f473ab9a9f4ecbe135
-    http: {}
-    path: cloudflared
-  - configDigest: ffbdcb7f6c266d56f299320cbeb19e05132fdb453c05a50c01a2b660dcede111
-    http: {}
-    path: external-dns
   - configDigest: e7b9c489ae1ab51df1583f1559d485e9e2827dc8350ce913836e8db52d6a2ffb
     http: {}
     path: node-exporter-full
   - configDigest: 4df4c2d56d1559a5204d66f43dfce2e8a830e47af0cf56132b4b230d39e105f0
     http: {}
     path: smartctl-exporter
-  - configDigest: dcbe78670bc38ff2a2bd7f90ced08d356b2b4875917f3d93d0aae391b0de3b10
-    git:
-      commitTitle: 'chore(release): 0.10.9 (#454)...'
-      sha: b11ec2cd534b5a552fc5764fcde1a26ffb8934a8
-      tags:
-      - 0.10.9
-    path: kopiur
   path: _sources/default
-- contents:
-  - configDigest: 824515bc9411036b778e951db855d12feaf87be3b0d3d1fb7829dd7c766adfcd
-    http: {}
-    path: synology
-  - configDigest: e826579f984080e908bc6b12f35b50bd8993ff18140e8b3a6eb1f19b1fe3689c
-    http: {}
-    path: openwrt
-  path: _sources/infrastructure
 - contents:
   - configDigest: 162d4cb6ccb8dace1246e4f3f80c67d7d500ce224334875ef2c3a5aed24bbd9a
     http: {}

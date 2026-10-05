@@ -9,4 +9,5 @@ resources:
   # utils
   - ./externalsecret.yaml
   - ./httproute.yaml
+  - ./ciliumnetworkpolicy.yaml
   - ./rbac.yaml

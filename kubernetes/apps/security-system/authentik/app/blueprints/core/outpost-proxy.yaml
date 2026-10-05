@@ -21,6 +21,7 @@ entries:
         - !Find [authentik_providers_proxy.proxyprovider, [name, bambuddy-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, frigate-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, frigate-go2rtc-proxy-provider]]
+        - !Find [authentik_providers_proxy.proxyprovider, [name, gods-eye-view-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, hermes-agent-dashboard-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, hindsight-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, homepage-proxy-provider]]

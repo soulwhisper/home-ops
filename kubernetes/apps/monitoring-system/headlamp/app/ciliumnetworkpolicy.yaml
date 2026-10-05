@@ -1,0 +1,65 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: headlamp
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/name": headlamp
+  ingress:
+    # kubelet liveness probes
+    - fromEntities:
+        - host
+    # browser traffic enters only via the internal gateway — no direct
+    # in-cluster access to the backend
+    - fromEndpoints:
+        - matchLabels:
+            "app.kubernetes.io/name": kgateway-internal
+            "k8s:io.kubernetes.pod.namespace": networking-system
+      toPorts:
+        - ports:
+            - { port: "4466", protocol: TCP }
+  egress:
+    # API calls proxied with the end-user's token
+    - toEntities:
+        - kube-apiserver
+    # DNS
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - { port: "53", protocol: TCP }
+            - { port: "53", protocol: UDP }
+    # OIDC discovery / token exchange with authentik via the gateway VIP
+    # (policy evaluates post-DNAT against backend identity -> toServices)
+    - toServices:
+        - k8sService:
+            serviceName: kgateway-internal
+            namespace: networking-system
+      toPorts:
+        - ports:
+            - { port: "443", protocol: TCP }
+    # datasource connection tester/proxy (metrics, logs, traces, alerts)
+    - toServices:
+        - k8sService:
+            serviceName: vmsingle-victoria-metrics-cluster
+            namespace: monitoring-system
+        - k8sService:
+            serviceName: victoria-logs-server
+            namespace: monitoring-system
+        - k8sService:
+            serviceName: victoria-traces
+            namespace: monitoring-system
+        - k8sService:
+            serviceName: vmalertmanager-victoria-metrics-cluster
+            namespace: monitoring-system
+      toPorts:
+        - ports:
+            - { port: "8428", protocol: TCP }
+            - { port: "9428", protocol: TCP }
+            - { port: "10428", protocol: TCP }
+            - { port: "9093", protocol: TCP }

@@ -1,6 +1,6 @@
 # Application Catalog
 
-80 applications across 13 namespaces, managed via Flux GitOps.
+81 applications across 13 namespaces, managed via Flux GitOps.
 
 ## kube-system — Cluster Infrastructure (11)
 
@@ -106,7 +106,7 @@
 | MoviePilot    | Media automation (CNPG + Dragonfly + iGPU) |
 | Media-NFS     | Shared media storage                       |
 
-## selfhosted-apps — Self-Hosted Services (15)
+## selfhosted-apps — Self-Hosted Services (16)
 
 | App           | Purpose                                                        |
 | ------------- | -------------------------------------------------------------- |
@@ -123,6 +123,7 @@
 | SillyTavern   | AI character chat (AgentGateway)                               |
 | Bambuddy      | 3D printer monitor (Bambu Lab)                                 |
 | Dispatcharr   | IPTV dispatch (iGPU transcode)                                 |
+| God's Eye View | Live OSINT globe (custom image, forward-auth, no built-in auth) |
 
 ## servitor-apps — AI Infrastructure (3 + 10 MCP servers)
 

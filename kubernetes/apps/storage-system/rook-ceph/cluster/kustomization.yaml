@@ -6,6 +6,6 @@ resources:
   # app
   - ./helmrelease.yaml
   - ./ocirepository.yaml
+  - ./prometheusrule.yaml
   # utils
-  - ./service.yaml
   - ./httproute.yaml

@@ -75,7 +75,7 @@ spec:
         hostnames: ["scrypted.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: scrypted.svg
+          gethomepage.dev/icon: scrypted.png
           gethomepage.dev/name: ScryptedNVR
           gethomepage.dev/group: SmartHome
         parentRefs:

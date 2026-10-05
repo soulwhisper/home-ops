@@ -12,16 +12,18 @@ data:
       feishu:
         apprise:
           url: 'feishu://{{ env "FEISHU_TOKEN" }}'
-      pushover:
-        apprise:
-          url: 'pover://{{ env "PUSHOVER_USER_KEY" }}@{{ env "PUSHOVER_TOKEN" }}'
+      # pushover: disabled 2026-09-26 — feishu proved sufficient; re-enable by
+      # uncommenting here, in the alertmanager route target list, and params.
+      # pushover:
+      #   apprise:
+      #     url: 'pover://{{ env "PUSHOVER_USER_KEY" }}@{{ env "PUSHOVER_TOKEN" }}'
 
     routes:
-      # Alertmanager -> feishu (primary) + pushover (fallback, fanned out)
+      # Alertmanager -> feishu
       alertmanager:
         target:
           - feishu
-          - pushover
+          # - pushover
         title: '[{{ .payload.status | toUpper }}{{ if eq .payload.status "firing" }}:{{ len .payload.alerts }}{{ end }}] {{ .payload.commonLabels.alertname | default "Alertmanager" }}'
         # Per alert: description/summary plus curated context labels only —
         # dumping .labels produced a ~20-line wall per alert in feishu
@@ -49,10 +51,11 @@ data:
           node: {{ . }}
           {{- end }}
           {{- end }}
-        params:
-          # pushover reads priority/sound; feishu ignores unknown query keys
-          priority: '{{ ternary "1" "0" (eq .payload.status "firing") }}'
-          sound: gamelan
+        # params were pushover-only (priority/sound); feishu ignores unknown
+        # query keys. Uncomment with the pushover target if re-enabled.
+        # params:
+        #   priority: '{{ ternary "1" "0" (eq .payload.status "firing") }}'
+        #   sound: gamelan
       # authentik system notifications (blueprints/core/notifications.yaml)
       authentik:
         target:

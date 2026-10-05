@@ -15,6 +15,17 @@ spec:
     defaultPodOptions:
       automountServiceAccountToken: false
       hostUsers: false
+      # Reap dead backend sockets fast. Cilium silently drops packets to a
+      # stale backend IP after postgres/dragonfly reschedules; without
+      # keepalive the app's pool/pubsub sockets never see an RST and storm
+      # POLICY_DENIED drops for the pod's lifetime (AgentEgressDenied pages,
+      # 2026-09-17 + 2026-10-01). 300+3x30 = ~6.5m worst case, under the
+      # alert's 15m `for:` window.
+      securityContext:
+        sysctls:
+          - { name: net.ipv4.tcp_keepalive_time, value: "300" }
+          - { name: net.ipv4.tcp_keepalive_intvl, value: "30" }
+          - { name: net.ipv4.tcp_keepalive_probes, value: "3" }
     controllers:
       *name :
         annotations:
@@ -36,7 +47,7 @@ spec:
             image:
               repository: ghcr.io/open-webui/open-webui
               # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
-              tag: v0.11.3
+              tag: v0.11.4
             env:
               # Auth is authentik forward-auth at the gateway (components/authentik);
               # disable open-webui's own login so the SSO identity passes through.
@@ -75,6 +86,12 @@ spec:
                 valueFrom:
                   secretKeyRef: { name: open-webui-dragonfly, key: password }
               REDIS_URL: "redis://:$(REDIS_PASSWORD)@open-webui-dragonfly:6379/0"
+              # Passed to the socket.io AsyncRedisManager's client (the
+              # long-lived pubsub socket — the storm source). keepalive uses
+              # the pod sysctls above; health_check pings idle conns before
+              # reuse. socket_timeout must stay null: a finite timeout breaks
+              # blocking pubsub reads.
+              WEBSOCKET_REDIS_OPTIONS: '{"socket_timeout": null, "socket_connect_timeout": 5, "socket_keepalive": true, "health_check_interval": 30}'
               STORAGE_PROVIDER: "s3"
               STORAGE_LOCAL_CACHE: "False"
               S3_BUCKET_NAME: "open-webui"
@@ -82,10 +99,12 @@ spec:
               S3_ADDRESSING_STYLE: "path"
               S3_ACCESS_KEY_ID:
                 valueFrom:
-                  secretKeyRef: { name: ceph-bucket-open-webui, key: AWS_ACCESS_KEY_ID }
+                  secretKeyRef:
+                    { name: ceph-bucket-open-webui, key: AWS_ACCESS_KEY_ID }
               S3_SECRET_ACCESS_KEY:
                 valueFrom:
-                  secretKeyRef: { name: ceph-bucket-open-webui, key: AWS_SECRET_ACCESS_KEY }
+                  secretKeyRef:
+                    { name: ceph-bucket-open-webui, key: AWS_SECRET_ACCESS_KEY }
             envFrom:
               - secretRef:
                   name: *name
@@ -112,7 +131,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: open-webui.svg
           gethomepage.dev/name: Open WebUI
-          gethomepage.dev/group: AI
+          gethomepage.dev/group: Service
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system

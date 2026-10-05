@@ -3,25 +3,6 @@
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
-  name: k8s-system-api-server
-spec:
-  folderRef: kubernetes
-  resyncPeriod: 30m
-  allowCrossNamespaceImport: true
-  instanceSelector:
-    matchLabels:
-      grafana.internal/instance: grafana
-  datasources:
-    - inputName: "DS_PROMETHEUS"
-      datasourceName: "victoria-metrics"
-  configMapRef:
-    name: dashboard-k8s-system-api-server
-    key: k8s-system-api-server.json
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanadashboard_v1beta1.json
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDashboard
-metadata:
   name: k8s-views-global
 spec:
   folderRef: kubernetes
@@ -36,25 +17,6 @@ spec:
   configMapRef:
     name: dashboard-k8s-views-global
     key: k8s-views-global.json
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanadashboard_v1beta1.json
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDashboard
-metadata:
-  name: k8s-views-nodes
-spec:
-  folderRef: kubernetes
-  resyncPeriod: 30m
-  allowCrossNamespaceImport: true
-  instanceSelector:
-    matchLabels:
-      grafana.internal/instance: grafana
-  datasources:
-    - inputName: "DS_PROMETHEUS"
-      datasourceName: "victoria-metrics"
-  configMapRef:
-    name: dashboard-k8s-views-nodes
-    key: k8s-views-nodes.json
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanadashboard_v1beta1.json
 apiVersion: grafana.integreatly.org/v1beta1
@@ -79,6 +41,25 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
+  name: k8s-views-nodes
+spec:
+  folderRef: kubernetes
+  resyncPeriod: 30m
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      grafana.internal/instance: grafana
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "victoria-metrics"
+  configMapRef:
+    name: dashboard-k8s-views-nodes
+    key: k8s-views-nodes.json
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanadashboard_v1beta1.json
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
   name: k8s-views-pods
 spec:
   folderRef: kubernetes
@@ -93,22 +74,3 @@ spec:
   configMapRef:
     name: dashboard-k8s-views-pods
     key: k8s-views-pods.json
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanadashboard_v1beta1.json
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDashboard
-metadata:
-  name: k8s-volumes
-spec:
-  folderRef: kubernetes
-  resyncPeriod: 30m
-  allowCrossNamespaceImport: true
-  instanceSelector:
-    matchLabels:
-      grafana.internal/instance: grafana
-  datasources:
-    - inputName: "DS_PROMETHEUS"
-      datasourceName: "victoria-metrics"
-  configMapRef:
-    name: dashboard-k8s-volumes
-    key: k8s-volumes.json

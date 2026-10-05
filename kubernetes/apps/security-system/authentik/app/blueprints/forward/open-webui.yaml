@@ -14,10 +14,7 @@ entries:
           [slug, default-provider-authorization-implicit-consent],
         ]
       invalidation_flow:
-        !Find [
-          authentik_flows.flow,
-          [slug, default-invalidation-flow],
-        ]
+        !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
       mode: forward_domain
       external_host: &domain "https://chat.noirprime.com"
       access_token_validity: "hours=12"
@@ -30,7 +27,7 @@ entries:
       name: *name
       provider: !KeyOf open-webui-proxy-provider
       meta_launch_url: *domain
-      group: "AI"
+      group: "Service"
       policy_engine_mode: all
   - model: authentik_policies.policybinding
     identifiers:

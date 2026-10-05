@@ -20,23 +20,22 @@ spec:
     toolbox:
       enabled: false
     cephClusterSpec:
-      # Rotate cephx keys (Tentacle AUTH_INSECURE_CLIENT_KEY_TYPE warning:
-      # CSI keys use the old cipher). CSI stays aes because node kernels
-      # (6.18) don't support aes256k mounts yet.
       security:
+        # Talos 1.14+ backports the kernel 7.0 aes256k support
         cephx:
+          allowedCiphers: [aes256k]
           daemon:
             keyRotationPolicy: KeyGeneration
             keyGeneration: 2
           csi:
             keyRotationPolicy: KeyGeneration
-            keyGeneration: 2
-            keepPriorKeyCountMax: 1
-            keyType: aes
+            keyGeneration: 3
+            keepPriorKeyCountMax: 0
+            keyType: aes256k
           rbdMirrorPeer:
             keyRotationPolicy: KeyGeneration
-            keyGeneration: 2
-            keyType: aes
+            keyGeneration: 3
+            keyType: aes256k
       cephConfig:
         global:
           bdev_enable_discard: "true"
@@ -140,10 +139,7 @@ spec:
             csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
             csi.storage.k8s.io/node-stage-secret-namespace: *cluster_namespace
             csi.storage.k8s.io/fstype: ext4
-      # Cache/scratch pool: size=1 on NVMe OSDs for rewarmable data (kopia
-      # mover caches, transcode scratch, ML model caches). No replication
-      # write amplification; data loss on OSD failure is acceptable and
-      # self-healing (caches rewarm). Do NOT point durable data at this.
+      # Cache/scratch pool: size=1 for rewarmable data
       - name: ceph-cachepool
         spec:
           failureDomain: osd
@@ -200,6 +196,12 @@ spec:
                     matchLabels:
                       app.kubernetes.io/name: ceph-mds
                       app.kubernetes.io/part-of: *cephFileSystemName
+            resources:
+              requests:
+                cpu: 100m
+                memory: 1Gi
+              limits:
+                memory: 4Gi
         storageClass:
           name: ceph-filesystem
           pool: default

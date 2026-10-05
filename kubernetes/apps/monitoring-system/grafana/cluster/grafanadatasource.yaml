@@ -77,3 +77,23 @@ spec:
     url: http://vmalertmanager-victoria-metrics-cluster.monitoring-system.svc.cluster.local:9093
     jsonData:
       implementation: prometheus
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanadatasource_v1beta1.json
+# grafana.com dashboards type their datasource vars as `prometheus`; the
+# victoriametrics plugin type can't match those vars. vmsingle speaks the
+# Prometheus HTTP API, so expose it under that type. uid = legacy grafana.com
+# "Prometheus default" uid used by hardcoded panels (ceph-osd, envoy-global).
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: prometheus
+spec:
+  instanceSelector:
+    matchLabels:
+      grafana.internal/instance: grafana
+  datasource:
+    type: prometheus
+    name: prometheus
+    uid: PBFA97CFB590B2093
+    access: proxy
+    url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428

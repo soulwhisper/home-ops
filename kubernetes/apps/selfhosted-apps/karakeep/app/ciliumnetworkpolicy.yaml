@@ -26,7 +26,17 @@ spec:
         - ports:
             - { port: "53", protocol: TCP }
             - { port: "53", protocol: UDP }
-    # Internet: page crawling + auth.noirprime.com OIDC discovery
+    # auth.noirprime.com OIDC discovery -> kgateway-internal VIP (private, so
+    # the world rule below excepts it). Egress policy is evaluated post-DNAT
+    # against the backend pod identity, so the allow must target the service.
+    - toServices:
+        - k8sService:
+            serviceName: kgateway-internal
+            namespace: networking-system
+      toPorts:
+        - ports:
+            - { port: "443", protocol: TCP }
+    # Internet: page crawling
     - toCIDRSet:
         - cidr: 0.0.0.0/0
           except:

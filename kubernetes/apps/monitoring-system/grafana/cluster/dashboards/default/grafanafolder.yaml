@@ -11,31 +11,3 @@ spec:
   instanceSelector:
     matchLabels:
       grafana.internal/instance: grafana
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanafolder_v1beta1.json
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaFolder
-metadata:
-  name: infrastructure
-spec:
-  title: "Infrastructure"
-  parentFolderRef: default
-  resyncPeriod: 30m
-  allowCrossNamespaceImport: true
-  instanceSelector:
-    matchLabels:
-      grafana.internal/instance: grafana
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/grafana.integreatly.org/grafanafolder_v1beta1.json
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaFolder
-metadata:
-  name: devices
-spec:
-  title: "Devices"
-  parentFolderRef: default
-  resyncPeriod: 30m
-  allowCrossNamespaceImport: true
-  instanceSelector:
-    matchLabels:
-      grafana.internal/instance: grafana

@@ -48,7 +48,7 @@ spec:
         hostnames: ["tavern.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: sillytavern.svg
+          gethomepage.dev/icon: sillytavern.png
           gethomepage.dev/name: SillyTavern
           gethomepage.dev/group: Service
         parentRefs:

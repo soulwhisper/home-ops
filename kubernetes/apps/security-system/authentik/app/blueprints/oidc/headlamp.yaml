@@ -22,6 +22,19 @@ spec:
             client_id: "{{ .headlamp_oidc_client_id }}"
             client_secret: "{{ .headlamp_oidc_client_secret }}"
           entries:
+            # k8s structured JWT authn rejects tokens with email_verified=false
+            # when the username claim is email. Claims only ship when the client
+            # requests the mapping's scope (headlamp: openid profile email), so
+            # this replaces the stock email mapping on this provider outright.
+            - model: authentik_providers_oauth2.scopemapping
+              id: headlamp-email-verified
+              identifiers:
+                name: headlamp-email-verified
+              attrs:
+                name: headlamp-email-verified
+                scope_name: email
+                expression: |
+                  return {"email": request.user.email, "email_verified": True}
             - model: authentik_providers_oauth2.oauth2provider
               id: headlamp-oidc-provider
               identifiers:
@@ -53,7 +66,7 @@ spec:
                     [name, "authentik Self-signed Certificate"],
                   ]
                 property_mappings:
-                  - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
+                  - !KeyOf headlamp-email-verified
                   - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
                   - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
                   - !Find [authentik_providers_oauth2.scopemapping, [scope_name, groups]]

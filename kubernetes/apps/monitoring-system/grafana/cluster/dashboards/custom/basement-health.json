@@ -1,0 +1,1066 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "description": "Basement failure-revealing board: SLO budgets first, fires second, weak signals last. Panels carry 3-line runbooks (WHAT/WHY/DO) and Explore deeplinks. App-plane (*-apps) excluded by design \u2014 alerts cover it. See custom/README.md and custom/ALERTS.md.",
+  "editable": true,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "title": "API Server drilldown",
+      "type": "link",
+      "url": "/d/k8s_system_apisrv",
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "asDropdown": true,
+      "targetBlank": false,
+      "tooltip": ""
+    },
+    {
+      "title": "Gateway drilldown",
+      "type": "link",
+      "url": "/d/heHhNSFf6Na8vIZWRs8H",
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "asDropdown": true,
+      "targetBlank": false,
+      "tooltip": ""
+    },
+    {
+      "title": "Ceph drilldown",
+      "type": "link",
+      "url": "/d/tbO9LAiZK",
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "asDropdown": true,
+      "targetBlank": false,
+      "tooltip": ""
+    },
+    {
+      "title": "Backup drilldown",
+      "type": "link",
+      "url": "/d/kopiur-slo",
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "asDropdown": true,
+      "targetBlank": false,
+      "tooltip": ""
+    },
+    {
+      "title": "VM query UI",
+      "type": "link",
+      "url": "https://metrics.noirprime.com",
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": false,
+      "asDropdown": true,
+      "targetBlank": true,
+      "tooltip": ""
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "panels": [],
+      "title": "SLO budgets (30d) \u2014 basement services",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 101,
+      "panels": [],
+      "title": "On fire right now",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 102,
+      "panels": [],
+      "title": "Weak signals \u2014 erosion before it pages",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: non-5xx share of kube-apiserver requests over 30d. WHY: the control plane's only performance SLO \u2014 KubeAPIDown covers outages, this covers degradation. DO: below 99.9% \u2192 API Server drilldown; check etcd flips and latency panels.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0.995,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.998
+              },
+              {
+                "color": "green",
+                "value": 0.999
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "id": 5,
+      "links": [
+        {
+          "title": "API Server drilldown",
+          "url": "/d/k8s_system_apisrv"
+        },
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%221%20-%20%28sum%28increase%28apiserver_request_total%7Bcode%3D~%5C%225..%5C%22%7D%5B30d%5D%29%29%20or%20vector%280%29%29%20%2F%20sum%28increase%28apiserver_request_total%5B30d%5D%29%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "1 - (sum(increase(apiserver_request_total{code=~\"5..\"}[30d])) or vector(0)) / sum(increase(apiserver_request_total[30d]))",
+          "refId": "A"
+        }
+      ],
+      "title": "API server avail",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: non-5xx share of envoy downstream requests over 30d. WHY: zero alert coverage on the gateway datapath \u2014 this is the only health signal. DO: below 99.9% \u2192 Envoy Global drilldown; then kgateway board.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0.995,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.998
+              },
+              {
+                "color": "green",
+                "value": 0.999
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 6,
+      "links": [
+        {
+          "title": "Gateway drilldown",
+          "url": "/d/heHhNSFf6Na8vIZWRs8H"
+        },
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%221%20-%20%28sum%28increase%28envoy_http_downstream_rq_xx%7Benvoy_response_code_class%3D%5C%225xx%5C%22%7D%5B30d%5D%29%29%20or%20vector%280%29%29%20%2F%20sum%28increase%28envoy_http_downstream_rq_xx%5B30d%5D%29%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "1 - (sum(increase(envoy_http_downstream_rq_xx{envoy_response_code_class=\"5xx\"}[30d])) or vector(0)) / sum(increase(envoy_http_downstream_rq_xx[30d]))",
+          "refId": "A"
+        }
+      ],
+      "title": "Gateway avail",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: share of 30d hours with no CephHealth* alert firing (label-churn immune). WHY: storage is the biggest blast radius; slow health drift precedes hard failures. DO: dropping \u2192 Ceph Cluster drilldown; ceph health detail on a mgr pod.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0.8,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.99
+              },
+              {
+                "color": "green",
+                "value": 0.999
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 7,
+      "links": [
+        {
+          "title": "Ceph drilldown",
+          "url": "/d/tbO9LAiZK"
+        },
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%221%20-%20count_over_time%28%28max%28ALERTS%7Balertname%3D~%5C%22CephHealth.%2A%5C%22%2C%20alertstate%3D%5C%22firing%5C%22%7D%29%20%3E%200%29%5B30d%3A1h%5D%29%20%2F%20count_over_time%28vector%281%29%5B30d%3A1h%5D%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "1 - count_over_time((max(ALERTS{alertname=~\"CephHealth.*\", alertstate=\"firing\"}) > 0)[30d:1h]) / count_over_time(vector(1)[30d:1h])",
+          "refId": "A"
+        }
+      ],
+      "title": "Ceph healthy time",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: share of backup policies with a successful run in the last 25h. WHY: backups fail silently \u2014 fleet-level freshness SLO. DO: below 100% \u2192 Kopiur SLO drilldown; find the stale policy.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.99
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 8,
+      "links": [
+        {
+          "title": "Backup drilldown",
+          "url": "/d/kopiur-slo"
+        },
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%22count%28time%28%29%20-%20max%20by%20%28policy%29%20%28kopiur_policy_last_backup_success_timestamp_seconds%29%20%3C%3D%2090000%29%20%2F%20count%28kopiur_policy_last_backup_success_timestamp_seconds%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(time() - max by (policy) (kopiur_policy_last_backup_success_timestamp_seconds) <= 90000) / count(kopiur_policy_last_backup_success_timestamp_seconds)",
+          "refId": "A"
+        }
+      ],
+      "title": "Backup freshness",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: critical alerts firing right now. WHY: page-grade failures, already notified. DO: >0 \u2192 Alertmanager link; each alert maps to a drilldown in custom/ALERTS.md.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 8
+      },
+      "id": 1,
+      "links": [
+        {
+          "title": "Open Alertmanager",
+          "url": "https://alert.noirprime.com"
+        },
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%22count%28ALERTS%7Balertstate%3D%5C%22firing%5C%22%2C%20severity%3D%5C%22critical%5C%22%7D%29%20or%20vector%280%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(ALERTS{alertstate=\"firing\", severity=\"critical\"}) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "title": "Critical alerts firing",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: warning alerts firing. WHY: degradation that pages only on persistence. DO: sustained >5 \u2192 Alertmanager; treat repeated flapping as a finding, not noise.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 8
+      },
+      "id": 2,
+      "links": [
+        {
+          "title": "Open Alertmanager",
+          "url": "https://alert.noirprime.com"
+        },
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%22count%28ALERTS%7Balertstate%3D%5C%22firing%5C%22%2C%20severity%3D%5C%22warning%5C%22%7D%29%20or%20vector%280%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(ALERTS{alertstate=\"firing\", severity=\"warning\"}) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "title": "Warning alerts firing",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: scrape targets unreachable. WHY: blind spots in the metrics pipeline. DO: >0 \u2192 Explore up==0; check the job's pods/endpoints.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(up == 0) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "title": "Scrape targets down",
+      "type": "stat",
+      "links": [
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%22count%28up%20%3D%3D%200%29%20or%20vector%280%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: blackbox probes failing. WHY: currently 3 = MacStudio offline (expected); anything else = a consumed lane down. DO: \u22603 \u2192 Blackbox board; identify which probe.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 6
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 8
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(probe_success == 0) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "title": "Probes failing",
+      "type": "stat",
+      "links": [
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%22count%28probe_success%20%3D%3D%200%29%20or%20vector%280%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: not-ready pods in basement namespaces (Succeeded excluded). WHY: sustained >0 = stuck workload, distinct from rollout churn. DO: >0 for >10m \u2192 Namespaces drilldown / kubectl get pods -A.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 14
+      },
+      "id": 11,
+      "links": [
+        {
+          "title": "Namespaces drilldown",
+          "url": "/d/k8s_views_ns"
+        },
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%22count%28kube_pod_status_ready%7Bcondition%3D%5C%22false%5C%22%2C%20namespace%3D~%5C%22kube-system%7Cnetworking-system%7Cstorage-system%7Cdatabase-system%7Cmonitoring-system%7Csecurity-system%7Cgitops-system%5C%22%7D%20unless%20on%28namespace%2C%20pod%29%20kube_pod_status_phase%7Bphase%3D%5C%22Succeeded%5C%22%7D%29%20or%20vector%280%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(kube_pod_status_ready{condition=\"false\", namespace=~\"kube-system|networking-system|storage-system|database-system|monitoring-system|security-system|gitops-system\"} unless on(namespace, pod) kube_pod_status_phase{phase=\"Succeeded\"}) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "title": "Basement pods not-ready",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: ceph PGs in degraded/inconsistent/down/incomplete. WHY: data redundancy actively eroding. DO: >0 \u2192 Ceph Cluster drilldown; ceph health detail.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 14
+      },
+      "id": 12,
+      "links": [
+        {
+          "title": "Ceph drilldown",
+          "url": "/d/tbO9LAiZK"
+        },
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%22sum%28ceph_pg_degraded%20%2B%20ceph_pg_inconsistent%20%2B%20ceph_pg_down%20%2B%20ceph_pg_incomplete%29%20or%20vector%280%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(ceph_pg_degraded + ceph_pg_inconsistent + ceph_pg_down + ceph_pg_incomplete) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "title": "Ceph bad PGs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: hours since the oldest backup policy's last success. WHY: worst-offender view behind the freshness gauge. DO: >25h \u2192 Kopiur SLO drilldown; inspect that policy's Snapshot CR.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "red",
+                "value": 25
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 14
+      },
+      "id": 13,
+      "links": [
+        {
+          "title": "Backup drilldown",
+          "url": "/d/kopiur-slo"
+        },
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%22max%28time%28%29%20-%20kopiur_policy_last_backup_success_timestamp_seconds%29%20%2F%203600%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "max(time() - kopiur_policy_last_backup_success_timestamp_seconds) / 3600",
+          "refId": "A"
+        }
+      ],
+      "title": "Oldest backup age (h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "WHAT: etcd leader elections per 24h (sparkline shows timing). WHY: control-plane stress seismograph \u2014 flips cluster during apiserver/IO stress. DO: red (>12) \u2192 read the sparkline: past cluster = residue; ongoing = API Server drilldown + etcd alerts.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 3
+              },
+              {
+                "color": "red",
+                "value": 12
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 14
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(increase(etcd_server_leader_changes_seen_total[24h]))",
+          "refId": "A"
+        }
+      ],
+      "title": "etcd leader flips /24h",
+      "type": "stat",
+      "links": [
+        {
+          "title": "Investigate in Explore",
+          "url": "/explore?left=%7B%22datasource%22%3A%22victoria-metrics%22%2C%22queries%22%3A%5B%7B%22expr%22%3A%22sum%28increase%28etcd_server_leader_changes_seen_total%5B24h%5D%29%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-24h%22%2C%22to%22%3A%22now%22%7D%7D"
+        }
+      ]
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "tags": [
+    "slo",
+    "basement",
+    "custom",
+    "failure-revealing"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Basement \u2014 Failure Revealing",
+  "uid": "basement-health",
+  "version": 1
+}

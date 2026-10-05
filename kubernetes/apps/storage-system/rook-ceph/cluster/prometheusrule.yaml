@@ -1,0 +1,150 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/prometheusrule_v1.json
+# Local replacements for chart-rendered ceph-mixin rules (rook-ceph-cluster
+# monitoring.createPrometheusRules) that are broken or misfire in this
+# cluster. The upstream versions are blackholed at the vmalertmanager route
+# (monitoring-system/victoria-metrics/cluster/helmrelease.yaml), matched by
+# alertname + type="ceph_default" — rules here MUST NOT set a "type" label.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ceph-local-rules
+spec:
+  groups:
+    - name: ceph-local.nodes.rules
+      rules:
+        # Upstream uses predict_linear(node_filesystem_free_bytes[2d], 5d) < 0
+        # over every real-device mount: the containerd image-store sawtooth
+        # (~90 GB fill/GC cycle) extrapolated linearly and paged daily.
+        # Capacity thresholds + an absolute-floored trend instead; scoped to
+        # /var (EPHEMERAL, nvme1n1p4) — the only host FS node-exporter sees.
+        - alert: CephNodeDiskspaceWarning
+          expr: |
+            node_filesystem_free_bytes{mountpoint="/var", fstype="xfs"}
+              / node_filesystem_size_bytes{mountpoint="/var", fstype="xfs"} < 0.20
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Host filesystem on {{ $labels.nodename }} has less than 20% free space"
+            description: "EPHEMERAL (/var: containerd, kubelet, etcd, rook host data) on {{ $labels.nodename }} is above 80% used. Prune images or find the writer before kubelet eviction starts."
+        - alert: CephNodeDiskspaceCritical
+          expr: |
+            node_filesystem_free_bytes{mountpoint="/var", fstype="xfs"}
+              / node_filesystem_size_bytes{mountpoint="/var", fstype="xfs"} < 0.10
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Host filesystem on {{ $labels.nodename }} has less than 10% free space"
+            description: "EPHEMERAL (/var) on {{ $labels.nodename }} is above 90% used; kubelet image GC and pod eviction are imminent."
+        - alert: CephNodeDiskspaceFillingFast
+          expr: |
+            predict_linear(node_filesystem_free_bytes{mountpoint="/var", fstype="xfs"}[6h], 3 * 24 * 3600) < 20e9
+              and node_filesystem_free_bytes{mountpoint="/var", fstype="xfs"} < 60e9
+          for: 6h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Host filesystem on {{ $labels.nodename }} is trending below 20 GiB within 3 days"
+            description: "6h trailing fill rate on EPHEMERAL (/var) of {{ $labels.nodename }} projects under 20 GiB free in 3 days. Floored at 60 GiB current free so burst writes (image pulls) alone cannot fire this."
+    - name: ceph-local.osd.rules
+      rules:
+        # ceph-mixin only alerts at ceph's own nearfull (85%) / full (95%)
+        # ratios via health_detail. These give earlier, per-OSD capacity
+        # signal: 20% avail warning -> 85% OSD_NEARFULL -> 10% avail critical
+        # -> 95% OSD_FULL.
+        - alert: CephOSDDiskspaceLow
+          expr: |
+            1 - ceph_osd_stat_bytes_used / ceph_osd_stat_bytes < 0.20
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Ceph OSD {{ $labels.ceph_daemon }} has less than 20% available space"
+            description: "{{ $labels.ceph_daemon }} is above 80% used, ahead of ceph's own nearfull (85%) warning. Rebalance or expand before PG backfill/recovery options narrow."
+        - alert: CephOSDDiskspaceCritical
+          expr: |
+            1 - ceph_osd_stat_bytes_used / ceph_osd_stat_bytes < 0.10
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Ceph OSD {{ $labels.ceph_daemon }} has less than 10% available space"
+            description: "{{ $labels.ceph_daemon }} is above 90% used; ceph will refuse writes approaching full (95%) and recovery may stall."
+        - alert: CephClusterDiskspaceLow
+          expr: |
+            ceph_cluster_total_used_raw_bytes / ceph_cluster_total_bytes > 0.80
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Ceph cluster raw capacity above 80%"
+            description: "Raw (pre-replication) cluster usage exceeds 80%. With size=3 pools the effective ceiling is well below 100% — plan expansion now."
+        # Upstream computes down/(up)*100 >= 10: with 6 OSDs a single down OSD
+        # = 20% (critical page for a routine restart), and all-down divides by
+        # zero (silently never fires). Absolute count fits a 6-OSD cluster.
+        - alert: CephOSDDownHigh
+          expr: |
+            count(ceph_osd_up == 0) >= 2
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $value }} or more Ceph OSDs are down"
+            description: "2+ of 6 OSDs down: at least one host's storage path is degraded and size=3 pools are one failure from data unavailability."
+    - name: ceph-local.monitoring.rules
+      rules:
+        # Upstream sum(absent(up{job="rook-ceph-exporter"})) only fires when
+        # ALL exporters are gone; one of the 3 per-node exporters dying is
+        # invisible. Per-instance form.
+        - alert: PrometheusJobExporterMissing
+          expr: |
+            count(up{job="rook-ceph-exporter"} == 0) > 0
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "rook-ceph-exporter target down: {{ $labels.instance }}"
+            description: "A per-node ceph-exporter has been down 10m; OSD/daemon metrics from that node are stale."
+    - name: ceph-local.network.rules
+      rules:
+        # Upstream evaluates on a [1m] window with no for: — microbursts on
+        # host-networked ceph flap it. Widened to [5m] + for: 10m; thresholds
+        # unchanged.
+        - alert: CephNodeNetworkPacketDrops
+          expr: |
+            (
+              rate(node_network_receive_drop_total{device!="lo"}[5m]) +
+              rate(node_network_transmit_drop_total{device!="lo"}[5m])
+            ) / (
+              rate(node_network_receive_packets_total{device!="lo"}[5m]) +
+              rate(node_network_transmit_packets_total{device!="lo"}[5m])
+            ) >= 0.005 and (
+              rate(node_network_receive_drop_total{device!="lo"}[5m]) +
+              rate(node_network_transmit_drop_total{device!="lo"}[5m])
+            ) >= 10
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Network device {{ $labels.device }} on {{ $labels.nodename }} is dropping packets"
+            description: ">=0.5% of packets dropped at >=10/s for 10m on {{ $labels.device }} ({{ $labels.nodename }})."
+        - alert: CephNodeNetworkPacketErrors
+          expr: |
+            (
+              rate(node_network_receive_errs_total{device!="lo"}[5m]) +
+              rate(node_network_transmit_errs_total{device!="lo"}[5m])
+            ) / (
+              rate(node_network_receive_packets_total{device!="lo"}[5m]) +
+              rate(node_network_transmit_packets_total{device!="lo"}[5m])
+            ) >= 0.0001 or (
+              rate(node_network_receive_errs_total{device!="lo"}[5m]) +
+              rate(node_network_transmit_errs_total{device!="lo"}[5m])
+            ) >= 10
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Network device {{ $labels.device }} on {{ $labels.nodename }} reports packet errors"
+            description: ">=0.01% packet errors (or >=10/s) for 10m on {{ $labels.device }} ({{ $labels.nodename }})."

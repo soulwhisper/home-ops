@@ -2,6 +2,12 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   packageRules: [
     {
+      description: "Block intel-device-plugins-operator 0.37.x: invalid MutatingWebhookConfiguration (missing sideEffects/clientConfig/admissionReviewVersions) rejected by server-side apply; revisit on 0.38.x",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/intel/helm-charts/intel-device-plugins-operator"],
+      allowedVersions: "!/^0\\.37\\..*$/",
+    },
+    {
       description: "Pin Postgres version to 18",
       matchDatasources: ["docker"],
       matchPackagePatterns: [

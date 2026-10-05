@@ -1,0 +1,204 @@
+---
+# Zot: single-instance pull-through OCI cache (second LAN hop behind spegel P2P)
+# Chain per node: containerd -> spegel (P2P) -> zot -> upstream
+# with patch: infrastructure/talos/prod/30-private-mirrors.yaml
+# S3 backend: versitygw (nas.homelab.internal:9000), bucket "zot" (just infra s3-buckets)
+# S3 creds via env (zotregistry.sops.env) — never inline in config.json
+# docker.io syncs from Hub directly; mirror.gcr.io was removed 2026-10-03 —
+# its Google-backed blob lane stalls through this egress (fake-ip/proxy flap).
+# sync hardening (2026-10-03 wedge incident): stalled upstream connections (tproxy flap)
+# silently pinned sync workers for hours. syncTimeout bounds a whole image sync;
+# disableHTTP2 isolates stalls to one TCP conn instead of one shared h2 stream set;
+# reqConcurrent/maxIdleConnsPerHost keep parallel pulls unblocked (regclient default: 3).
+
+name: zotregistry
+
+services:
+  zot:
+    image: "ghcr.io/project-zot/zot-linux-amd64:v2.1.21"
+    container_name: "zot"
+    restart: "unless-stopped"
+    ports:
+      - "9002:9002" # registry API + UI; mirrors use path endpoints http://nas:9002/v2/<upstream>/<repo>
+    env_file:
+      - zotregistry.sops.env
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    configs:
+      - source: "config.json"
+        target: "/etc/zot/config.json"
+    extra_hosts:
+      # hairpin-safe path to versitygw (:9000) on the docker host
+      - "nas.homelab.internal:host-gateway"
+    # no volume: /tmp/zot is only regclient staging for the S3 backend (ephemeral);
+    # no healthcheck: minimal image has no shell/wget — probe /readyz externally (ScrapeConfig up{})
+
+configs:
+  config.json:
+    content: |
+      {
+        "distSpecVersion": "1.1.1",
+        "storage": {
+          "rootDirectory": "/tmp/zot",
+          "commit": false,
+          "dedupe": false,
+          "gc": true,
+          "gcDelay": "2h",
+          "gcInterval": "24h",
+          "storageDriver": {
+            "name": "s3",
+            "region": "us-east-1",
+            "regionendpoint": "nas.homelab.internal:9000",
+            "bucket": "zot",
+            "forcepathstyle": true,
+            "secure": false,
+            "skipverify": false
+          },
+          "retention": {
+            "dryRun": false,
+            "delay": "24h",
+            "policies": [
+              {
+                "repositories": ["**"],
+                "deleteReferrers": true,
+                "deleteUntagged": true,
+                "keepTags": [
+                  {
+                    "mostRecentlyPushedCount": 5,
+                    "mostRecentlyPulledCount": 3
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "http": {
+          "address": "0.0.0.0",
+          "port": "9002",
+          "compat": ["docker2s2"]
+        },
+        "log": {
+          "level": "warn"
+        },
+        "extensions": {
+          "ui": {
+            "enable": true
+          },
+          "search": {
+            "enable": true
+          },
+          "metrics": {
+            "enable": true,
+            "prometheus": {
+              "path": "/metrics"
+            }
+          },
+          "scrub": {
+            "enable": true,
+            "interval": "24h"
+          },
+          "sync": {
+            "enable": true,
+            "downloadDir": "/tmp/zot",
+            "registries": [
+              {
+                "urls": ["https://registry-1.docker.io"],
+                "content": [
+                  {
+                    "prefix": "**",
+                    "destination": "/docker.io"
+                  }
+                ],
+                "onDemand": true,
+                "tlsVerify": true,
+                "manifestCheckInterval": "10m",
+                "maxRetries": 3,
+                "retryDelay": "1s",
+                "maxRetryDelay": "30s",
+                "syncTimeout": "30m",
+                "reqConcurrent": 30,
+                "disableHTTP2": true,
+                "maxIdleConnsPerHost": 30
+              },
+              {
+                "urls": ["https://ghcr.io"],
+                "content": [
+                  {
+                    "prefix": "**",
+                    "destination": "/ghcr.io"
+                  }
+                ],
+                "onDemand": true,
+                "tlsVerify": true,
+                "manifestCheckInterval": "10m",
+                "maxRetries": 3,
+                "retryDelay": "1s",
+                "maxRetryDelay": "30s",
+                "syncTimeout": "30m",
+                "reqConcurrent": 30,
+                "disableHTTP2": true,
+                "maxIdleConnsPerHost": 30
+              },
+              {
+                "urls": ["https://quay.io"],
+                "content": [
+                  {
+                    "prefix": "**",
+                    "destination": "/quay.io"
+                  }
+                ],
+                "onDemand": true,
+                "tlsVerify": true,
+                "manifestCheckInterval": "10m",
+                "maxRetries": 3,
+                "retryDelay": "1s",
+                "maxRetryDelay": "30s",
+                "syncTimeout": "30m",
+                "reqConcurrent": 30,
+                "disableHTTP2": true,
+                "maxIdleConnsPerHost": 30
+              },
+              {
+                "urls": ["https://registry.k8s.io"],
+                "content": [
+                  {
+                    "prefix": "**",
+                    "destination": "/registry.k8s.io"
+                  }
+                ],
+                "onDemand": true,
+                "tlsVerify": true,
+                "manifestCheckInterval": "10m",
+                "maxRetries": 3,
+                "retryDelay": "1s",
+                "maxRetryDelay": "30s",
+                "syncTimeout": "30m",
+                "reqConcurrent": 30,
+                "disableHTTP2": true,
+                "maxIdleConnsPerHost": 30
+              },
+              {
+                "urls": ["https://factory.talos.dev"],
+                "content": [
+                  {
+                    "prefix": "**",
+                    "destination": "/factory.talos.dev"
+                  }
+                ],
+                "onDemand": true,
+                "tlsVerify": true,
+                "manifestCheckInterval": "10m",
+                "maxRetries": 3,
+                "retryDelay": "1s",
+                "maxRetryDelay": "30s",
+                "syncTimeout": "30m",
+                "reqConcurrent": 30,
+                "disableHTTP2": true,
+                "maxIdleConnsPerHost": 30
+              }
+            ]
+          }
+        }
+      }

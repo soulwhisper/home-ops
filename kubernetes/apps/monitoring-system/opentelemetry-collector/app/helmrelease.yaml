@@ -22,6 +22,19 @@ spec:
     resources:
       requests: { cpu: 10m, memory: 512Mi }
       limits: { memory: 1Gi }
+    # langfuse OTLP project keypair (ExternalSecret langfuse-otel); the
+    # basic_auth/client extension references these, nothing plaintext
+    extraEnvs:
+      - name: LANGFUSE_PUBLIC_KEY
+        valueFrom:
+          secretKeyRef:
+            name: langfuse-otel
+            key: LANGFUSE_PUBLIC_KEY
+      - name: LANGFUSE_SECRET_KEY
+        valueFrom:
+          secretKeyRef:
+            name: langfuse-otel
+            key: LANGFUSE_SECRET_KEY
     serviceMonitor:
       enabled: true
     service:
@@ -58,6 +71,13 @@ spec:
       extensions:
         health_check:
           endpoint: 0.0.0.0:13133
+        # langfuse /api/public/otel requires project basic auth (pk:sk);
+        # without it every batch 401s and spans drop permanently (found
+        # 2026-09-23: the langfuse leg had silently never worked)
+        basicauth/client:
+          client_auth:
+            username: ${env:LANGFUSE_PUBLIC_KEY}
+            password: ${env:LANGFUSE_SECRET_KEY}
       receivers:
         otlp:
           protocols:
@@ -122,6 +142,8 @@ spec:
             max_elapsed_time: 300s
         otlp_http/langfuse:
           endpoint: "http://langfuse-web.monitoring-system.svc.cluster.local:3000/api/public/otel"
+          auth:
+            authenticator: basicauth/client
           tls:
             insecure: true
           sending_queue:
@@ -134,7 +156,7 @@ spec:
             max_interval: 30s
             max_elapsed_time: 300s
       service:
-        extensions: [health_check]
+        extensions: [health_check, basicauth/client]
         telemetry:
           metrics:
             readers:

@@ -10,6 +10,7 @@ resources:
   - ./bambuddy/ks.yaml
   - ./dispatcharr/ks.yaml
   - ./firecrawl/ks.yaml
+  - ./gods-eye-view/ks.yaml
   - ./hindsight/ks.yaml
   - ./homepage/ks.yaml
   - ./karakeep/ks.yaml

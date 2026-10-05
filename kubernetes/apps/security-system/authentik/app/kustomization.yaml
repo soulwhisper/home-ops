@@ -44,6 +44,7 @@ configMapGenerator:
       - ./blueprints/forward/bambuddy.yaml
       - ./blueprints/forward/frigate.yaml
       - ./blueprints/forward/frigate-go2rtc.yaml
+      - ./blueprints/forward/gods-eye-view.yaml
       - ./blueprints/forward/hermes-agent.yaml
       - ./blueprints/forward/hindsight.yaml
       - ./blueprints/forward/homepage.yaml

@@ -1,0 +1,21 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./grafanafolder.yaml
+  - ./grafanadashboard.yaml
+generatorOptions:
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: "disabled"
+  # grafana-operator resolves configMapRef by exact name; hash suffix breaks the lookup
+  disableNameSuffixHash: true
+  labels:
+    app.kubernetes.io/managed-by: "grafana-operator"
+configMapGenerator:
+  - name: dashboard-node-exporter-full
+    files:
+      - node-exporter-full.json=../_sources/default/node-exporter-full/dashboard.json
+  - name: dashboard-smartctl-exporter
+    files:
+      - smartctl-exporter.json=../_sources/default/smartctl-exporter/dashboard.json

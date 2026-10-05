@@ -33,7 +33,7 @@ spec:
             image:
               # upgrade until: https://github.com/lfnovo/open-notebook/issues/378
               repository: surrealdb/surrealdb
-              tag: v2.6.5
+              tag: v2.7.0
             args: ["start"]
             env:
               SURREAL_PATH: "rocksdb:/data"
