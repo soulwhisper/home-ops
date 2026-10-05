@@ -62,7 +62,7 @@ moved from paths to model names:
 | `complex-raw` | none (open content lane) | `qwen3.8-27b` | open-webui main chat, eval |
 | `omni` | **guarded** | `minicpm-o-4.5` | extractors (see lane-fit below) |
 | `micro` | **guarded** | `minicpm5-2b` | classification, title/routing |
-| *(anything else)* | **guarded** | `qwen3.8-27b` | wildcard `catchall` model — unknown ids land on the main brain |
+| *(anything else)* | **guarded** | `minicpm-o-4.5` | wildcard `catchall` model — unknown ids land on the main brain |
 
 The open lane is deliberately **only** `complex-raw`: the uncensored main
 brain is the sole reason it exists; `omni`/`micro` are guarded-only.
@@ -165,24 +165,7 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 
 ## LLM Application Platform
 
-### Dify 1.15.0
-
-| Component     | Image                                       | Resources                    |
-| ------------- | ------------------------------------------- | ---------------------------- |
-| api           | `langgenius/dify-api:1.15.0`                | req: 100m / 512Mi, lim: 1Gi  |
-| web           | `langgenius/dify-web:1.15.0`                | req: 20m, lim: 256Mi         |
-| worker        | `langgenius/dify-api:1.15.0`                | req: 200m / 1Gi, lim: 2Gi    |
-| beat          | `langgenius/dify-api:1.15.0`                | req: 10m / 128Mi, lim: 256Mi |
-| sandbox       | `langgenius/dify-sandbox:0.2.15`            | req: 20m, lim: 1Gi (Kata)    |
-| proxy         | `ubuntu/squid:5.2-22.04_beta`               | req: 20m, lim: 256Mi         |
-| plugin-daemon | `langgenius/dify-plugin-daemon:0.6.3-local` | req: 20m, lim: 1Gi           |
-
-- **Backends**: CloudNativePG (PGVector), Dragonfly Redis (DB 0/1/2), Ceph S3
-- **Sandbox**: Kata Containers, max_workers=4, routes egress through squid proxy
-- **Model providers**: Configured at runtime via Dify admin UI, not in manifests
-- **Depends on**: proxy → database → sandbox → api → (worker, beat, web)
-
-### Open WebUI v0.11.3
+### Open WebUI
 
 - Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui:v0.11.3`. Lives in **servitor-apps** (with hermes/toolhive, not selfhosted-apps). Storage is externalized: shared CNPG `postgres` (app data + `VECTOR_DB=pgvector`; role/db via `postgres-init`, plain `vector` ext self-created by migrations — vchord N/A: open-webui hardcodes pgvector DDL), app `Dragonfly` (`REDIS_URL`), app ceph bucket `open-webui` (`STORAGE_PROVIDER=s3`, `STORAGE_LOCAL_CACHE=False`) — data dir is emptyDir cache, no PVC
 - **LLM provider**: single agentgateway entry (`OPENAI_API_BASE_URLS` = `agentgateway-proxy:80/v1`, one key from `llm-api.agentgateway_api_auth`) on the built-in OpenAI path. `/v1/models` discovery lists the lanes: `complex-raw` (unguarded main brain — the portal default for uncensored chat), `complex` (guarded same brain), `omni`/`micro` (guarded aux; title generation → model id `micro`, select per-task in Admin Settings). The former siliconflow and hermes chat-profile providers were removed — the gateway is the only AI egress.
@@ -208,7 +191,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — singl
 
 ## MCP Gateway
 
-### ToolHive 0.33.0 (Stacklok)
+### ToolHive
 
 - **Operator**: namespace-scoped RBAC
 - **Embedding Server**: 2 replicas, req: 500m/512Mi, lim: 2 CPU/1Gi, 5Gi model cache
@@ -255,7 +238,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 ## LLM Observability
 
-### Langfuse 3.203.3
+### Langfuse
 
 | Component | Image                                      | Resources            |
 | --------- | ------------------------------------------ | -------------------- |
@@ -268,7 +251,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 ---
 
 
-### TrendRadar 6.10.0
+### TrendRadar
 
 - AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`, fallback `micro`)
 - Delivery: Feishu custom group robot (`FEISHU_WEBHOOK_URL` from 1Password `feishu.webhook_url`); HTML report at `news.noirprime.com` (SSO)
@@ -281,7 +264,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 Frigate remains the 24/7 trigger layer; MiniCPM-o 4.5 is the event describer. `smarthome-apps/frigate-vision` (python bridge, ConfigMap-mounted): MQTT `frigate/events` (`end` type, label-filtered) → snapshot from frigate :5000 → `omni` lane (image-in, JSON `{description, severity}` out) → severity ≥ `MIN_SEVERITY` (default medium) → HA `persistent_notification` **and** hermes webhook `POST :8644/p/ops/webhooks/frigate-alert` (V2 HMAC) — the `ops` profile ingests it as a user message, so the batching brain sees camera events in context with everything else it knows. Webhook route is declared in the GitOps-managed default `config.yaml` (`platforms.webhook.extra.routes`, HMAC secret via `FRIGATE_WEBHOOK_SECRET` in 1Password). 1Password additions: `home-assistant.hass_token`, `hermes-agent.frigate_webhook_secret`.
 
-### SillyTavern 1.18.0
+### SillyTavern
 
 - AI character chat frontend, `ghcr.io/sillytavern/sillytavern:1.18.0`, port 8000
 - Discreet login (user accounts disabled), local-only persistence
@@ -294,13 +277,13 @@ Frigate remains the 24/7 trigger layer; MiniCPM-o 4.5 is the event describer. `s
 - Backed by SearXNG, Dragonfly Redis, nuq-postgres
 - Exposed as MCP server + internal endpoint for Hermes
 
-### Open-Notebook 1.14.0
+### Open-Notebook
 
 - AI-powered research notebook, `ghcr.io/lfnovo/open-notebook:1.14.0`
 - UI (:8502 Streamlit) + REST API (:5055), SurrealDB backend
 - No public ingress
 
-### Hindsight 0.10.0
+### Hindsight
 
 - AI memory / context store (agent long-term memory: retain / recall / reflect)
 - Image: upstream `ghcr.io/vectorize-io/hindsight:0.10.0-slim` — no in-process local-ml
@@ -310,13 +293,6 @@ Frigate remains the 24/7 trigger layer; MiniCPM-o 4.5 is the event describer. `s
 - Resources: req: 200m CPU / 512Mi, lim: 2 CPU / 2Gi
 - Storage: CloudNativePG (vchord vector + pgroonga text search), OTEL enabled
 - Exposed as MCP server for agent context retrieval
-
-### Archived
-
-- **Buzz** (relay + buzz-agent-omp) — buzz-agent-omp removed 2026-08-28; buzz-relay removed 2026-09-09, superseded by hermes' native webhook ingestion (`/p/<profile>/webhooks/<route>`, HMAC); manifests deleted from git. Its CNPG DB, Dragonfly, and Ceph bucket are retained in-cluster for manual cleanup.
-- **Fast-Note-Sync** — removed 2026-09-09, manifests deleted from git; vault facts now: read via `obsidian` filesystem MCP (read-only NFS copy), write via `forgejo` MCP to the draftbox repo. Dropbox MCP was evaluated and rejected (beta, DCR-limited clients, short-lived tokens, cloud round-trip for local data)
-- **Devbox** — removed from cluster 2026-08-05; image retained in `soulwhisper/containers` as an ad-hoc exec sandbox.
-- **llama.cpp (llama-qwen3)** — archived 2026-08-28; all local lanes moved to the MacStudio.
 
 ---
 
