@@ -62,7 +62,7 @@ moved from paths to model names:
 | `complex-raw` | none (open content lane) | `qwen3.8-27b` | open-webui main chat, eval |
 | `omni` | **guarded** | `minicpm-o-4.5` | extractors (see lane-fit below) |
 | `micro` | **guarded** | `minicpm5-2b` | classification, title/routing |
-| *(anything else)* | **guarded** | `minicpm-o-4.5` | wildcard `catchall` model — unknown ids land on the main brain |
+| *(anything else)* | **guarded** | `minicpm-o-4.5` | wildcard `catchall` model — unknown ids land on `omni` |
 
 The open lane is deliberately **only** `complex-raw`: the uncensored main
 brain is the sole reason it exists; `omni`/`micro` are guarded-only.
@@ -360,12 +360,13 @@ items:
 | Item | State | Path forward |
 | ---- | ----- | ------------ |
 | open-webui MCP bearer key rollout | Implemented (`auth_type: "bearer"` + `$GATEWAY_API_KEY` expansion); smoke-verify at rollout | Round-trip a native tool call in open-webui; on failure check kubelet dependent-env expansion ordering before anything else |
-| promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc/frigate-vision) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via langfuse/logs; if painful, re-expose `omni` on the open lane (one route rule) as the designed escape hatch |
+| promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc/frigate-vision) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via langfuse/logs; if painful, expose `omni-raw` (one unguarded model) as the designed escape hatch |
+| policy attachment to AgentgatewayModel | `llm-api-auth` (apiKeyAuthentication) and `llm-guardrails` (promptGuard) target AgentgatewayModel resources — schema allows, dataplane support unverified | Verify at rollout: guarded models 401 without key + 403 on injection probes, `complex-raw` passes them; fallback is listener-scoped auth |
 | hermes MCP server endpoints | Runtime/PVC state, not in GitOps seeds | Point hermes at `/mcp/ro|rw|ext` at rollout; add an MCP section to the seed ConfigMap once the hermes config schema is confirmed |
 | open-terminal sandbox pods → vmcp | Egress allowed, ingress whitelist gap (effectively denies — accidentally enforces the no-open-MCP rule) | Separate PR: add sandbox pods to vmcp-ingress, or drop the egress rule and fix the comment |
 | Dify / SillyTavern / open-notebook endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
 | mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred, on watch via langfuse decision spans (open-webui and hermes both emit OTEL) | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
-| ASR model | None deployed; no in-repo consumer | Add when a consumer appears |
+| ASR/TTS model | VoxCPM2-4bit downloaded on the studio (parked, no lane) — no in-repo consumer | Stand up a lane only when a consumer appears (see Studio Model Registry, parked) |
 
 ## Model Routing Summary
 
@@ -376,7 +377,7 @@ items:
             ├─ complex-raw  (OPEN)    ─► qwen3.8-27b        ── open-webui main chat, eval
             ├─ omni         (guarded) ─► minicpm-o-4.5
             ├─ micro        (guarded) ─► minicpm5-2b
-            └─ * (catchall) (guarded) ─► qwen3.8-27b
+            └─ * (catchall) (guarded) ─► minicpm-o-4.5
 
 /v1/embeddings /v1/rerank  (media passthrough, studio-keyed) ─► oMLX folder ids
 /mcp/ro /mcp/rw /mcp/ext   (all tiers: mcp-guardrails ExtMCP, FailClosed) ── every MCP client

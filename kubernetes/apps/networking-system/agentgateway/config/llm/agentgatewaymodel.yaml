@@ -89,8 +89,8 @@ spec:
         expression: '"qwen3.8-27b"'
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaymodel_v1alpha1.json
-# Catch-all: unknown/absent model ids land on the guarded main brain
-# (preserves the old /chat catch-all; exact matches win over this wildcard).
+# Catch-all: unknown/absent model ids land on the guarded omni model
+# (exact matches win over this wildcard).
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayModel
 metadata:
@@ -110,4 +110,4 @@ spec:
         name: studio-api-auth
     transformations:
       - field: model
-        expression: '"qwen3.8-27b"'
+        expression: '"minicpm-o-4.5"'
