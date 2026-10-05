@@ -35,7 +35,7 @@ spec:
               # guarded lane, `omni` lane (news digest; `micro` is the documented
               # fallback for classification-style passes)
               AI_MODEL: "openai/omni"
-              AI_API_BASE: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1"
+              AI_API_BASE: "http://agentgateway-proxy.networking-system.svc.cluster.local:80/chat"
               # delivery channels: add NTFY_*/DINGTALK_WEBHOOK_URL/FEISHU_WEBHOOK_URL env when chosen
             envFrom:
               - secretRef:

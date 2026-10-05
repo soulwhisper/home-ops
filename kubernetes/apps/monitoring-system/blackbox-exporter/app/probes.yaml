@@ -31,17 +31,18 @@ spec:
         - nas.homelab.internal:2049
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
-# Studio model-plane health: GET /v1/models on oMLX — the surface every /v1
-# consumer depends on. 8001 (vmlx image) / 8002 (mlx_audio TTS/ASR) lanes are
-# retired: no in-cluster consumers, plain passthrough not worth gateway policy;
-# re-probe if they ever stand up.
+# Studio API-plane health: GET /v1/models on oMLX — the surface every /v1
+# consumer depends on. oMLX auto-loads models and evicts KV on TTL, so
+# per-model inference probes are deliberately absent: they would force
+# reloads and false-alarm on evictions. Model-plane regressions surface at
+# the gateway (agentgateway pod monitoring) and in app error rates.
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:
   name: studio-models
 spec:
   interval: 30s
-  module: http_2xx
+  module: studio_api
   prober:
     url: blackbox-exporter.monitoring-system.svc.cluster.local:9115
   targets:
@@ -50,44 +51,3 @@ spec:
         - http://studio.homelab.internal:8000/v1/models
       labels:
         service: macstudio
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
-# per-model L7: actual inference call on the studio folder-id, direct to the Mac
-# (agentgateway path is covered by pod monitoring; this catches Mac down /
-# model unloaded — the failure mode that crashlooped hindsight)
-apiVersion: monitoring.coreos.com/v1
-kind: Probe
-metadata:
-  name: studio-embedding
-spec:
-  interval: 30s
-  scrapeTimeout: 15s
-  module: studio_embedding
-  prober:
-    url: blackbox-exporter.monitoring-system.svc.cluster.local:9115
-  targets:
-    staticConfig:
-      static:
-        - http://studio.homelab.internal:8000/v1/embeddings
-      labels:
-        service: macstudio
-        model: qwen3-embedding-0.6b
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
-apiVersion: monitoring.coreos.com/v1
-kind: Probe
-metadata:
-  name: studio-rerank
-spec:
-  interval: 30s
-  scrapeTimeout: 15s
-  module: studio_rerank
-  prober:
-    url: blackbox-exporter.monitoring-system.svc.cluster.local:9115
-  targets:
-    staticConfig:
-      static:
-        - http://studio.homelab.internal:8000/v1/rerank
-      labels:
-        service: macstudio
-        model: qwen3-reranker-0.6b

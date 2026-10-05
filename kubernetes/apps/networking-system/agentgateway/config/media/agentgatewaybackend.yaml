@@ -5,7 +5,7 @@
 # AgentgatewayBackends with DNS host instead.
 #   :8000 oMLX — /v1/embeddings (id `qwen3-embedding-0.6b`), /v1/rerank
 #               (id `qwen3-reranker-0.6b`); the same process serves the chat
-#               lanes via the AgentgatewayModel resources
+#               lanes via the llm-backend-* AI providers
 # :8001 ComfyUI (`image`/`voice`) retired: not LLM-type, no in-cluster
 # consumers — plain media passthrough gains nothing from gateway policy.
 # Passthrough: clients send the studio folder-id as model — the contract in

@@ -5,22 +5,10 @@ kind: AgentgatewayPolicy
 metadata:
   name: llm-guardrails
 spec:
-  # Guards the guarded chat lanes (AgentgatewayModels). complex-raw is
-  # deliberately absent — it is the open content lane. ROLLOUT-CHECK:
-  # verify the dataplane accepts policy attachment to AgentgatewayModel.
   targetRefs:
-    - group: agentgateway.dev
-      kind: AgentgatewayModel
-      name: complex
-    - group: agentgateway.dev
-      kind: AgentgatewayModel
-      name: omni
-    - group: agentgateway.dev
-      kind: AgentgatewayModel
-      name: micro
-    - group: agentgateway.dev
-      kind: AgentgatewayModel
-      name: catchall
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-llm-route
   backend:
     ai:
       promptGuard:

@@ -5,25 +5,13 @@ kind: AgentgatewayPolicy
 metadata:
   name: &name llm-api-auth
 spec:
-  # Consumer API-key auth: strict on every chat model and the media route.
-  # ROLLOUT-CHECK: verify policy attachment to AgentgatewayModel; fallback
-  # is listener-scoped auth if the dataplane rejects model targets.
   targetRefs:
-    - group: agentgateway.dev
-      kind: AgentgatewayModel
-      name: complex
-    - group: agentgateway.dev
-      kind: AgentgatewayModel
-      name: complex-raw
-    - group: agentgateway.dev
-      kind: AgentgatewayModel
-      name: omni
-    - group: agentgateway.dev
-      kind: AgentgatewayModel
-      name: micro
-    - group: agentgateway.dev
-      kind: AgentgatewayModel
-      name: catchall
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-llm-route
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-llm-raw-route
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: agentgateway-media-route

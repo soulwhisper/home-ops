@@ -1,0 +1,54 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+# Studio chat lanes. openai.model is the upstream model override == oMLX
+# folder id (lane names stay client-side; see ai.md Studio Model Registry).
+# policies.auth injects the oMLX server key (studio-api-auth, ES item omlx).
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: llm-backend-complex
+spec:
+  ai:
+    provider:
+      openai:
+        model: "qwen3.8-27b"
+      host: studio.homelab.internal
+      port: 8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: llm-backend-micro
+spec:
+  ai:
+    provider:
+      openai:
+        model: "minicpm5-2b"
+      host: studio.homelab.internal
+      port: 8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: llm-backend-omni
+spec:
+  ai:
+    provider:
+      openai:
+        model: "minicpm-o-4.5"
+      host: studio.homelab.internal
+      port: 8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth

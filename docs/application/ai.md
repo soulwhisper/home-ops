@@ -46,33 +46,33 @@ flowchart TB
 
 The agent gateway is the single entry point for all AI traffic. Every AI app routes through it — no app talks to an LLM or MCP server directly.
 
-### LLM Lanes (AgentgatewayModel on the built-in `/v1` paths)
+### LLM Lanes (header-based routing on `/chat`; lane name == client model id, backend maps to studio folder-id)
 
-Chat lanes are `AgentgatewayModel` resources attached to the
-`agentgateway-proxy` listener — no `AgentgatewayBackend`, no `HTTPRoute`.
-Clients call the OpenAI-standard `POST /v1/chat/completions` with
-`model: <lane>`; each model's `policies.transformations` rewrites the
-upstream model to the oMLX folder id, and `policies.auth.secretRef`
-injects the oMLX server key (`studio-api-auth`). The guarded/open split
-moved from paths to model names:
+Two faces on the same backends — the guarded/open split applies to LLM
+content only:
 
-| Client model id | promptGuard | Studio id | Consumers |
-| --------------- | ----------- | --------- | --------- |
-| `complex` | **guarded** (`llm-guardrails`, request+response) | `qwen3.8-27b` | hermes-agent, machine extractors |
-| `complex-raw` | none (open content lane) | `qwen3.8-27b` | open-webui main chat, eval |
-| `omni` | **guarded** | `minicpm-o-4.5` | extractors (see lane-fit below) |
-| `micro` | **guarded** | `minicpm5-2b` | classification, title/routing |
-| *(anything else)* | **guarded** | `minicpm-o-4.5` | wildcard `catchall` model — unknown ids land on `omni` |
+| Route | promptGuard | Consumers |
+| ----- | ----------- | --------- |
+| `/chat` | **guarded** (request+response, `llm-guardrails`) | hermes-agent, machine extractors, open-webui aux provider |
+| `/chat/raw` | none (open content lane) | open-webui main chat, eval — **`complex` only** |
 
-The open lane is deliberately **only** `complex-raw`: the uncensored main
-brain is the sole reason it exists; `omni`/`micro` are guarded-only.
-`/v1/models` on the gateway lists every model above (built-in discovery).
-All models point at `studio.homelab.internal:8000` (OpenAI-compatible).
-Auth: consumer API keys validated by `llm-api-auth` (ROLLOUT-CHECK: policy
-attachment to `AgentgatewayModel`); upstream oMLX key via
-`studio-api-auth`; no cloud fallback — the studio is a deliberate SPOF.
-Tool access from the open lane is identical to the guarded one: MCP has no
-open route (see MCP Backend).
+| Route Header | Backend | Lane | Model (studio id) | Host |
+| ------------ | ------- | ---- | ----------------- | ---- |
+| `x-model: complex`, `x-priority: high`, or catch-all | `llm-backend-complex` | `complex` | Qwen3.8-27B Uncensored (`qwen3.8-27b`, MLX 4bit) | MacStudio oMLX |
+| `x-model: omni` | `llm-backend-omni` | `omni` | MiniCPM-O-4.5 (`minicpm-o-4.5`, text+vision+audio-in) | MacStudio oMLX |
+| `x-model: micro` | `llm-backend-micro` | `micro` | MiniCPM5-2B (`minicpm5-2b`) | MacStudio oMLX |
+
+The catch-all rule (last on the guarded route) sends unknown/absent model ids
+to `omni`. The open lane deliberately
+serves **only** `complex`: it is the single uncensored model and the only
+reason the lane exists; `omni`/`micro` are reachable exclusively through the
+guarded route. All backends speak the OpenAI-compatible API on
+`studio.homelab.internal:8000`, injecting the oMLX server key via each
+backend's `policies.auth.secretRef` (`studio-api-auth`, ES item `omlx`).
+Consumer auth is ExternalSecret-managed API keys at the gateway; no cloud
+fallback is configured — the studio is a deliberate SPOF. Tool access from
+the open lane is identical to the guarded one: MCP has no open route (see
+MCP Backend).
 
 
 Lane-fit guidance: `micro` fits classification, tagging, title/routing decisions, short structured extraction (MiniCPM5-2B is text-only — never a vision candidate). `omni` covers everything fidelity-sensitive: summarization, compression, session search, memory writes, OCR/vision (MiniCPM5-2B's long-context recall AA-LCR 59% and abstention bias make it unsafe for those). `complex` for agentic reasoning and hard synthesis.
@@ -84,10 +84,10 @@ Lane-fit guidance: `micro` fits classification, tagging, title/routing decisions
 
 ### Intranet exposure
 
-The gateway API surface is exposed to the intranet via `kgateway-internal` (10.10.0.131) at `https://api.noirprime.com` (`/v1/*` LLM + media, `/mcp`; dashboard stays on `https://ai.noirprime.com/ui`):
+The gateway API surface is exposed to the intranet via `kgateway-internal` (10.10.0.131) at `https://api.noirprime.com` (`/chat`, `/mcp`, `/v1/*` media; dashboard stays on `https://ai.noirprime.com/ui`):
 
-- `/v1/chat/completions` — LLM lanes via AgentgatewayModel (strict API key; promptGuard on all but `complex-raw`)
-- `/v1/models` — built-in model discovery (strict API key)
+- `/chat` — guarded LLM lane (strict API key, 300s timeout, promptGuard guardrails)
+- `/chat/raw` — open LLM lane (strict API key, 300s timeout, no promptGuard; LLM content only — tools are still guarded via /mcp/*)
 - `/mcp/ro`, `/mcp/rw`, `/mcp/ext` — tiered MCP routing (strict API key, mcp-guardrails ExtMCP on every tier, FailClosed)
 - `/v1/embeddings`, `/v1/rerank` — media passthrough to studio (strict API key, no LLM parsing)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)
@@ -106,10 +106,10 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | SillyTavern          | UI-configured     | Gemma4-31B lane    | Creative/RP; no repo-level config                            |
 | open-notebook        | UI-configured     | suggest `complex`  | Research synthesis; no repo-level config                     |
-| open-webui           | `/v1` (models)    | `complex-raw` (open) / `omni`·`micro` (guarded) | Chat portal; native tools via the guarded tiered `/mcp/*` (bearer key); no hermes provider |
+| open-webui           | `/chat/raw` + `/chat` | `complex` (open) / `omni`·`micro` (guarded) | Chat portal; native tools via the guarded tiered `/mcp/*` (bearer key); no hermes provider |
 
 All `omni`/`micro` consumers (extractors + hermes aux) ride the **guarded**
-`/v1` lane; their prompts carry scraped web content, so a low rate of
+`/chat` route; their prompts carry scraped web content, so a low rate of
 promptGuard false-positive rejections (403) is expected and watched — see
 the TODO table.
 
@@ -152,7 +152,7 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 - **Runtime**: Kata Containers (VM isolation)
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
 - **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP, Agent Gateway LLM
-- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, open.feishu.cn:443. No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
+- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/chat/*` + `/mcp/*` only), kube-dns, open.feishu.cn:443. No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
   - `ops` — the batching brain: cron/Feishu/automation workload lives here (read-only-first posture, ToolHive tiers as today); Feishu home channel for cron results
@@ -165,10 +165,27 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 
 ## LLM Application Platform
 
-### Open WebUI
+### Dify 1.15.0
+
+| Component     | Image                                       | Resources                    |
+| ------------- | ------------------------------------------- | ---------------------------- |
+| api           | `langgenius/dify-api:1.15.0`                | req: 100m / 512Mi, lim: 1Gi  |
+| web           | `langgenius/dify-web:1.15.0`                | req: 20m, lim: 256Mi         |
+| worker        | `langgenius/dify-api:1.15.0`                | req: 200m / 1Gi, lim: 2Gi    |
+| beat          | `langgenius/dify-api:1.15.0`                | req: 10m / 128Mi, lim: 256Mi |
+| sandbox       | `langgenius/dify-sandbox:0.2.15`            | req: 20m, lim: 1Gi (Kata)    |
+| proxy         | `ubuntu/squid:5.2-22.04_beta`               | req: 20m, lim: 256Mi         |
+| plugin-daemon | `langgenius/dify-plugin-daemon:0.6.3-local` | req: 20m, lim: 1Gi           |
+
+- **Backends**: CloudNativePG (PGVector), Dragonfly Redis (DB 0/1/2), Ceph S3
+- **Sandbox**: Kata Containers, max_workers=4, routes egress through squid proxy
+- **Model providers**: Configured at runtime via Dify admin UI, not in manifests
+- **Depends on**: proxy → database → sandbox → api → (worker, beat, web)
+
+### Open WebUI v0.11.3
 
 - Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui:v0.11.3`. Lives in **servitor-apps** (with hermes/toolhive, not selfhosted-apps). Storage is externalized: shared CNPG `postgres` (app data + `VECTOR_DB=pgvector`; role/db via `postgres-init`, plain `vector` ext self-created by migrations — vchord N/A: open-webui hardcodes pgvector DDL), app `Dragonfly` (`REDIS_URL`), app ceph bucket `open-webui` (`STORAGE_PROVIDER=s3`, `STORAGE_LOCAL_CACHE=False`) — data dir is emptyDir cache, no PVC
-- **LLM provider**: single agentgateway entry (`OPENAI_API_BASE_URLS` = `agentgateway-proxy:80/v1`, one key from `llm-api.agentgateway_api_auth`) on the built-in OpenAI path. `/v1/models` discovery lists the lanes: `complex-raw` (unguarded main brain — the portal default for uncensored chat), `complex` (guarded same brain), `omni`/`micro` (guarded aux; title generation → model id `micro`, select per-task in Admin Settings). The former siliconflow and hermes chat-profile providers were removed — the gateway is the only AI egress.
+- **LLM providers** (`OPENAI_API_BASE_URLS` order, keys match): 1. agentgateway open lane (`agentgateway-proxy:80/chat/raw`, key `llm-api.agentgateway_api_auth`) — serves **only** `complex`, the uncensored main brain; any model id falls through to the complex catch-all; 2. agentgateway guarded lane (`agentgateway-proxy:80/chat`, same key) — promptGuard-scanned, hosts `omni`/`micro` for aux tasks (title generation → model id `micro`); select per-task in Admin Settings. The former siliconflow and hermes chat-profile providers were removed — the gateway is the only AI egress.
 - **MCP**: native MCP tool servers via `TOOL_SERVER_CONNECTIONS` = the three tiered, sidecar-guarded gateway endpoints (`agentgateway-proxy:80/mcp/ro|rw|ext`) with `auth_type: "bearer"` and the key expanded from `$GATEWAY_API_KEY` (kubelet dependent-env expansion; bearer auth in `build_tool_server_headers` is native on v0.11.3). Same guarded endpoints hermes uses — MCP has no open lane.
 - Ingress: `chat.noirprime.com` via kgateway-internal; **auth is authentik forward-auth at the gateway** (components/authentik, provider `open-webui-proxy-provider`, homelab-admin group); open-webui's own login disabled (`WEBUI_AUTH=False`)
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (sole AI egress: LLM + MCP), open-webui-terminals:3000, open-webui-oikb:8080, postgres-rw:5432, open-webui-dragonfly:6379, ceph RGW:80, kube-dns, world-except-private (RAG web fetching)
@@ -176,7 +193,7 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
 
-Non-chat vector modalities run on the same oMLX process as the chat lanes and are exposed through the agent gateway as **plain HTTP passthrough** (no LLM parsing) on `agentgateway-media-route`, guarded by the same `llm-api-auth` API-key policy as the chat models:
+Non-chat vector modalities run on the same oMLX process as the chat lanes and are exposed through the agent gateway as **plain HTTP passthrough** (no LLM parsing) on `agentgateway-media-route`, guarded by the same `llm-api-auth` API keys as `/chat`:
 
 | Path             | Studio port | Server process | Studio id              | Model                                   | Timeout |
 | ---------------- | ----------- | -------------- | ---------------------- | --------------------------------------- | ------- |
@@ -185,13 +202,13 @@ Non-chat vector modalities run on the same oMLX process as the chat lanes and ar
 
 The ComfyUI `image`/`voice` lanes (`:8001`, `/v1/images`, `/v1/audio`) were retired: not LLM-type, no in-cluster consumers — plain media passthrough gains nothing from gateway policy. Re-add as a direct route if a consumer ever appears.
 
-Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — single static `AgentgatewayBackend` `studio-server` (oMLX, :8000), route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL. **Upstream auth**: media consumers present the **oMLX server key** (1Password `omlx` item) as their bearer — valid at the gateway because `llm-api-auth` is a multi-entry secret (`api` = consumer key, `studio` = oMLX key) — then forwarded unchanged to oMLX. The direct-to-studio blackbox probes read the same key via `credentials_file` from a mounted `studio-api-auth` secret. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
+Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — single static `AgentgatewayBackend` `studio-server` (oMLX, :8000), route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL. **Upstream auth**: media consumers present the **oMLX server key** (1Password `omlx` item) as their bearer — valid at the gateway because `llm-api-auth` is a multi-entry secret (`api` = consumer key, `studio` = oMLX key) — then forwarded unchanged to oMLX. **Consumers**: embeddings — karakeep, hindsight, toolhive vmcp optimizer; rerank — **hindsight only** (no other app calls it). The direct-to-studio blackbox probe reads the same key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
 
 ---
 
 ## MCP Gateway
 
-### ToolHive
+### ToolHive 0.33.0 (Stacklok)
 
 - **Operator**: namespace-scoped RBAC
 - **Embedding Server**: 2 replicas, req: 500m/512Mi, lim: 2 CPU/1Gi, 5Gi model cache
@@ -238,7 +255,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 ## LLM Observability
 
-### Langfuse
+### Langfuse 3.203.3
 
 | Component | Image                                      | Resources            |
 | --------- | ------------------------------------------ | -------------------- |
@@ -251,7 +268,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 ---
 
 
-### TrendRadar
+### TrendRadar 6.10.0
 
 - AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`, fallback `micro`)
 - Delivery: Feishu custom group robot (`FEISHU_WEBHOOK_URL` from 1Password `feishu.webhook_url`); HTML report at `news.noirprime.com` (SSO)
@@ -264,7 +281,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 Frigate remains the 24/7 trigger layer; MiniCPM-o 4.5 is the event describer. `smarthome-apps/frigate-vision` (python bridge, ConfigMap-mounted): MQTT `frigate/events` (`end` type, label-filtered) → snapshot from frigate :5000 → `omni` lane (image-in, JSON `{description, severity}` out) → severity ≥ `MIN_SEVERITY` (default medium) → HA `persistent_notification` **and** hermes webhook `POST :8644/p/ops/webhooks/frigate-alert` (V2 HMAC) — the `ops` profile ingests it as a user message, so the batching brain sees camera events in context with everything else it knows. Webhook route is declared in the GitOps-managed default `config.yaml` (`platforms.webhook.extra.routes`, HMAC secret via `FRIGATE_WEBHOOK_SECRET` in 1Password). 1Password additions: `home-assistant.hass_token`, `hermes-agent.frigate_webhook_secret`.
 
-### SillyTavern
+### SillyTavern 1.18.0
 
 - AI character chat frontend, `ghcr.io/sillytavern/sillytavern:1.18.0`, port 8000
 - Discreet login (user accounts disabled), local-only persistence
@@ -277,22 +294,29 @@ Frigate remains the 24/7 trigger layer; MiniCPM-o 4.5 is the event describer. `s
 - Backed by SearXNG, Dragonfly Redis, nuq-postgres
 - Exposed as MCP server + internal endpoint for Hermes
 
-### Open-Notebook
+### Open-Notebook 1.14.0
 
 - AI-powered research notebook, `ghcr.io/lfnovo/open-notebook:1.14.0`
 - UI (:8502 Streamlit) + REST API (:5055), SurrealDB backend
 - No public ingress
 
-### Hindsight
+### Hindsight 0.10.0
 
 - AI memory / context store (agent long-term memory: retain / recall / reflect)
 - Image: upstream `ghcr.io/vectorize-io/hindsight:0.10.0-slim` — no in-process local-ml
-- LLM: `omni` lane → **MiniCPM-O-4.5 on the MacStudio** (via agentgateway `/v1/chat/completions`)
+- LLM: `omni` lane → **MiniCPM-O-4.5 on the MacStudio** (via agentgateway open lane)
 - Embeddings: **Qwen3-Embedding-0.6B on the MacStudio** (oMLX id `qwen3-embedding-0.6b`, 1024d) via gateway `/v1/embeddings`; store rebuilt from scratch for the 0.6B space
 - Reranker: **Qwen3-Reranker-0.6B on the MacStudio** (Cohere-compatible, id `qwen3-reranker-0.6b`) via gateway `/v1/rerank`
 - Resources: req: 200m CPU / 512Mi, lim: 2 CPU / 2Gi
 - Storage: CloudNativePG (vchord vector + pgroonga text search), OTEL enabled
 - Exposed as MCP server for agent context retrieval
+
+### Archived
+
+- **Buzz** (relay + buzz-agent-omp) — buzz-agent-omp removed 2026-08-28; buzz-relay removed 2026-09-09, superseded by hermes' native webhook ingestion (`/p/<profile>/webhooks/<route>`, HMAC); manifests deleted from git. Its CNPG DB, Dragonfly, and Ceph bucket are retained in-cluster for manual cleanup.
+- **Fast-Note-Sync** — removed 2026-09-09, manifests deleted from git; vault facts now: read via `obsidian` filesystem MCP (read-only NFS copy), write via `forgejo` MCP to the draftbox repo. Dropbox MCP was evaluated and rejected (beta, DCR-limited clients, short-lived tokens, cloud round-trip for local data)
+- **Devbox** — removed from cluster 2026-08-05; image retained in `soulwhisper/containers` as an ad-hoc exec sandbox.
+- **llama.cpp (llama-qwen3)** — archived 2026-08-28; all local lanes moved to the MacStudio.
 
 ---
 
@@ -316,14 +340,14 @@ Frigate remains the 24/7 trigger layer; MiniCPM-o 4.5 is the event describer. `s
 
 The host-side contract. oMLX serves each model under its **folder name**
 in `~/models/` — the folder name IS the API-visible model id (there is no
-oMLX-side alias layer). Chat lane names (`complex`/`complex-raw`/`omni`/
-`micro`) are mapped to folder ids by each AgentgatewayModel's
-`policies.transformations` (`kubernetes/apps/networking-system/agentgateway/config/llm/agentgatewaymodel.yaml`);
-media consumers use plain passthrough, so `/v1/embeddings` and
-`/v1/rerank` clients must send the folder id directly.
+oMLX-side alias layer). Gateway lane names (`complex`/`omni`/`micro`) are
+mapped to folder ids by the AgentgatewayBackend `openai.model` override
+(`kubernetes/apps/networking-system/agentgateway/config/llm/`); media
+consumers use plain passthrough, so `/v1/embeddings` and `/v1/rerank`
+clients must send the folder id directly.
 
 **Auth**: oMLX enforces a server API key (1Password item `omlx`, field
-`api_key`). Chat models inject it upstream via
+`api_key`). Chat backends inject it upstream via
 `policies.auth.secretRef: studio-api-auth`; media consumers present it as
 their own bearer (valid at the gateway via the multi-entry `llm-api-auth`
 secret: `api` = shared consumer key, `studio` = oMLX key).
@@ -348,9 +372,8 @@ when a consumer appears; see Media lanes retirement):
 
 Host prerequisites (out of band): models present at `~/models/<folder>`
 with folder names exactly as the Studio id column (bootstrap
-`hf download --local-dir`), and the oMLX server API key stored in the
-`omlx` 1Password item (`api_key`). (Retired: ComfyUI `image`/`voice` on
-:8001 — see Media lanes.)
+`hf download --local-dir`). (Retired: ComfyUI `image`/`voice` on :8001 —
+see Media lanes.)
 
 ## Non-unified Configuration & TODO
 
@@ -360,27 +383,25 @@ items:
 | Item | State | Path forward |
 | ---- | ----- | ------------ |
 | open-webui MCP bearer key rollout | Implemented (`auth_type: "bearer"` + `$GATEWAY_API_KEY` expansion); smoke-verify at rollout | Round-trip a native tool call in open-webui; on failure check kubelet dependent-env expansion ordering before anything else |
-| promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc/frigate-vision) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via langfuse/logs; if painful, expose `omni-raw` (one unguarded model) as the designed escape hatch |
-| policy attachment to AgentgatewayModel | `llm-api-auth` (apiKeyAuthentication) and `llm-guardrails` (promptGuard) target AgentgatewayModel resources — schema allows, dataplane support unverified | Verify at rollout: guarded models 401 without key + 403 on injection probes, `complex-raw` passes them; fallback is listener-scoped auth |
+| promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc/frigate-vision) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via langfuse/logs; if painful, re-expose `omni` on the open lane (one route rule) as the designed escape hatch |
 | hermes MCP server endpoints | Runtime/PVC state, not in GitOps seeds | Point hermes at `/mcp/ro|rw|ext` at rollout; add an MCP section to the seed ConfigMap once the hermes config schema is confirmed |
 | open-terminal sandbox pods → vmcp | Egress allowed, ingress whitelist gap (effectively denies — accidentally enforces the no-open-MCP rule) | Separate PR: add sandbox pods to vmcp-ingress, or drop the egress rule and fix the comment |
 | Dify / SillyTavern / open-notebook endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
 | mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred, on watch via langfuse decision spans (open-webui and hermes both emit OTEL) | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
 | ASR/TTS model | VoxCPM2-4bit downloaded on the studio (parked, no lane) — no in-repo consumer | Stand up a lane only when a consumer appears (see Studio Model Registry, parked) |
+| backend upstream auth | `policies.auth.secretRef: studio-api-auth` on all three chat backends (oMLX server key, ES item `omlx`) | Verify at rollout: `/chat` lanes answer 200 through the gateway while oMLX 401s keyless direct calls |
 
 ## Model Routing Summary
 
 ```
-/v1/chat/completions  (strict API key)
-            │  model:
-            ├─ complex      (guarded) ─► qwen3.8-27b        ── hermes, extractors
-            ├─ complex-raw  (OPEN)    ─► qwen3.8-27b        ── open-webui main chat, eval
-            ├─ omni         (guarded) ─► minicpm-o-4.5
-            ├─ micro        (guarded) ─► minicpm5-2b
-            └─ * (catchall) (guarded) ─► minicpm-o-4.5
+/chat      (guarded, promptGuard)  ── hermes, extractors, open-webui aux
+/chat/raw  (open, complex ONLY)   ── open-webui main chat, eval
+            │
+            ├─ x-priority: high / x-model: complex / (catch-all) ─► complex  Qwen3.8-27B Uncensored
+            ├─ x-model: omni  ───────────────────────────────────► omni     MiniCPM-O-4.5 (text+vision)
+            └─ x-model: micro ───────────────────────────────────► micro    MiniCPM5-2B
 
-/v1/embeddings /v1/rerank  (media passthrough, studio-keyed) ─► oMLX folder ids
-/mcp/ro /mcp/rw /mcp/ext   (all tiers: mcp-guardrails ExtMCP, FailClosed) ── every MCP client
+/mcp/ro /mcp/rw /mcp/ext  (all tiers: mcp-guardrails ExtMCP, FailClosed) ── every MCP client
 ```
 
 All routing is internal via the agent gateway. No app has direct LLM or MCP server access — the gateway is the single choke point for auth, routing, guardrails, and observability.

@@ -44,46 +44,30 @@ spec:
           timeout: 5s
           tcp:
             preferred_ip_protocol: ip4
-        # MacStudio (oMLX) per-model L7 probes: direct to the host, bypassing
-        # agentgateway (gateway health is covered by pod monitoring; these
-        # catch Mac down / model unloaded, the hindsight-crashloop failure mode)
-        studio_embedding:
+        # MacStudio (oMLX) API-plane probe: GET /v1/models with the server
+        # key, direct to the host (bypasses agentgateway on purpose — its
+        # health is covered by pod monitoring). Per-model inference probes
+        # were removed: oMLX auto-loads models and evicts KV on TTL, so
+        # inference calls from monitoring would force reloads and flap on
+        # evictions. The mounted secret feeds credentials_file.
+        studio_api:
           prober: http
-          timeout: 15s
+          timeout: 10s
           http:
-            method: POST
-            headers:
-              Content-Type: application/json
+            method: GET
             authorization:
               credentials_file: /etc/blackbox/secrets/Authorization
-            body: '{"model":"qwen3-embedding-0.6b","input":"probe"}'
             valid_http_versions:
               - HTTP/1.1
             preferred_ip_protocol: ip4
             fail_if_body_not_matches_regexp:
-              - '"embedding"'
-        studio_rerank:
-          prober: http
-          timeout: 15s
-          http:
-            method: POST
-            headers:
-              Content-Type: application/json
-            authorization:
-              credentials_file: /etc/blackbox/secrets/Authorization
-            body: '{"model":"qwen3-reranker-0.6b","query":"probe","documents":["alpha","beta"]}'
-            valid_http_versions:
-              - HTTP/1.1
-            preferred_ip_protocol: ip4
-            fail_if_body_not_matches_regexp:
-              - '"results"|"relevance"'
+              - '"id"'
     prometheusRule:
       enabled: true
       rules:
         - alert: BlackboxProbeFailed
           # $labels.target does not exist on probe metrics (host is .instance);
-          # macstudio lanes excluded: MacStudioModelServiceDown covers them
-          # faster and model-aware (fires 5m vs 15m)
+          # macstudio excluded: MacStudioApiDown covers it (fires 5m vs 15m)
           expr: probe_success{service!="macstudio"} == 0
           for: 15m
           labels:
@@ -91,19 +75,20 @@ spec:
           annotations:
             summary: |-
               The host {{ $labels.instance }} is currently unreachable
-        # faster + model-specific companion to BlackboxProbeFailed (15m) for the
-        # MacStudio lanes agents depend on (vmcp optimizer, hindsight).
+        # faster companion to BlackboxProbeFailed (15m) for the studio API
+        # surface every model consumer depends on (agentgateway LLM lanes,
+        # vmcp optimizer, hindsight embeddings/rerank).
         # NOTE: Prometheus annotation templates have no sprig `default` — the vm
         # operator silently drops rules that use it during VMRule conversion.
-        - alert: MacStudioModelServiceDown
+        - alert: MacStudioApiDown
           expr: probe_success{service="macstudio"} == 0
           for: 5m
           labels:
             severity: critical
           annotations:
             summary: |-
-              Mac Studio model service probe failing: {{ $labels.model }} {{ $labels.instance }} (5m).
-              Dependents: vmcp optimizer (find_tool), hindsight embeddings/rerank.
+              Mac Studio oMLX API probe failing: {{ $labels.instance }} (5m).
+              Dependents: agentgateway LLM lanes, vmcp optimizer (find_tool), hindsight embeddings/rerank.
     securityContext:
       readOnlyRootFilesystem: true
       allowPrivilegeEscalation: false

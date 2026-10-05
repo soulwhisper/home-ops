@@ -18,9 +18,3 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-        # Once kinds is set the listener accepts ONLY these — keep both.
-        kinds:
-          - group: gateway.networking.k8s.io
-            kind: HTTPRoute
-          - group: agentgateway.dev
-            kind: AgentgatewayModel
