@@ -22,8 +22,13 @@ spec:
     auth:
       secretRef:
         name: studio-api-auth
+    # Without this map every path is parsed as Completions ("missing field
+    # `messages`"); the route type drives request parsing, custom.formats
+    # drives the upstream call.
+    ai:
+      routes:
+        "/v1/embeddings": "Embeddings"
 ---
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
@@ -41,6 +46,9 @@ spec:
     auth:
       secretRef:
         name: studio-api-auth
+    ai:
+      routes:
+        "/v1/rerank": "Rerank"
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 # Audio lane (VoxCPM2 TTS). openai provider + Passthrough route types:

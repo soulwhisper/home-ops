@@ -180,9 +180,9 @@ Non-chat vector modalities run on the same oMLX process as the chat lanes, expos
 | ---------------- | ------------------- | ------------ | ------------------------ | --------------------------------------- | ------- |
 | `/v1/embeddings` | `studio-embeddings` | `embedding`  | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d)            | 120s    |
 | `/v1/rerank`     | `studio-rerank`     | `reranker`   | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
-| `/v1/audio/*`    | `studio-audio`      | `audio`      | `voxcpm2`                | VoxCPM2 (TTS)                           | 300s    |
+| `/v1/audio/*`    | `studio-audio`      | `voxcpm2`    | (passthrough — no override) | VoxCPM2 (TTS)                           | 300s    |
 
-The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download sits parked (see Studio Model Registry). `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet.
+The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download sits parked (see Studio Model Registry). `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet. Passthrough applies no LLM parsing — the audio lane has no model override, so clients send the folder id `voxcpm2` (unlike embeddings/rerank aliases).
 
 Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backends + route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with the regular **gateway consumer key** — each media backend injects the oMLX server key upstream via `policies.auth.secretRef: studio-api-auth`, identical to the chat lanes (single credential model: the studio key never leaves the backends). **Consumers**: embeddings — karakeep, hindsight, toolhive vmcp optimizer; rerank — **hindsight only**; audio — none yet (TTS lane ready). The direct-to-studio blackbox probe reads the oMLX key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
 
@@ -319,17 +319,15 @@ Frigate remains the 24/7 trigger layer; MiniCPM-o 4.5 is the event describer. `s
 | **VictoriaMetrics**         | `monitoring-system` | Metrics for ToolHive + OTEL                         |
 | **OpenTelemetry Collector** | `monitoring-system` | Traces/metrics pipeline                             |
 
-## Studio Model Registry
-
 The host-side contract. oMLX serves each model under its **folder name**
 in `~/models/` — the folder name IS the API-visible model id (there is no
-oMLX-side alias layer). Gateway lane names (`complex`/`omni`/`micro`) are
-mapped to folder ids by the AgentgatewayBackend `openai.model` override
-(`kubernetes/apps/networking-system/agentgateway/config/llm/`). Media lanes
-work the same way: clients send the lane aliases `embedding` / `reranker` /
-`audio`, and each media backend's `custom.model` (or `openai.model`)
-override rewrites them to the folder id. Folder ids are only needed for
-direct-to-studio calls.
+oMLX-side alias layer). Chat lane names (`complex`/`complex-raw`/`omni`/
+`micro`) map to folder ids via each backend's `openai.model` override
+(`kubernetes/apps/networking-system/agentgateway/config/llm/`). Media
+lanes: clients send `embedding` / `reranker` and the media backends'
+`custom.model` override rewrites them to folder ids; the audio lane is a
+passthrough exception — clients send `voxcpm2` directly. Folder ids are
+only needed for direct-to-studio calls.
 
 **Auth**: oMLX enforces a server API key (1Password item `omlx`, field
 `api_key`). Every backend — chat and media alike — injects it upstream via
@@ -384,9 +382,7 @@ items:
             ├─ complex      (guarded) ─► qwen3.8-27b        ── hermes, extractors
             ├─ complex-raw  (OPEN)    ─► qwen3.8-27b        ── open-webui main chat, eval
             ├─ omni         (guarded) ─► minicpm-o-4.5
-            └─ micro        (guarded) ─► minicpm5-2b
-
-/v1/embeddings /v1/rerank /v1/audio/*  (media: alias ─► backend override ─► folder id)
+/v1/embeddings /v1/rerank /v1/audio/*  (media: alias ─► override ─► folder id; audio: direct)
 
 /mcp/ro /mcp/rw /mcp/ext  (all tiers: mcp-guardrails ExtMCP, FailClosed) ── every MCP client
 ```
