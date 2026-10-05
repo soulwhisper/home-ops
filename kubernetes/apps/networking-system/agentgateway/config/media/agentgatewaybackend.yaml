@@ -29,6 +29,7 @@ spec:
       routes:
         "/v1/embeddings": "Embeddings"
 ---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
