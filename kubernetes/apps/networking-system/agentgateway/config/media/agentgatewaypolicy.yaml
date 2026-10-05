@@ -20,7 +20,7 @@ spec:
       status: 200
       headers:
         - name: content-type
-          value: application/json
+          value: '"application/json"'
       body: |
         {"object":"list","data":[
           {"id":"complex-raw","object":"model","owned_by":"omlx"},
