@@ -86,6 +86,7 @@ Lane-fit guidance: `micro` fits classification, tagging, title/routing decisions
 The gateway API surface is exposed to the intranet via `kgateway-internal` (10.10.0.131) at `https://api.noirprime.com` (`/v1/*`, `/mcp`; dashboard stays on `https://ai.noirprime.com/ui`):
 
 - `/v1/chat/completions` — LLM lanes (strict API key; promptGuard on all but `complex-raw`)
+- `/v1/models` — gateway-synthesized lane discovery (`studio-models` directResponse; keep in sync with Studio Model Registry)
 - `/v1/embeddings`, `/v1/rerank`, `/v1/audio/*` — media lanes via LLM-pipeline backends (strict API key)
 - `/mcp/ro`, `/mcp/rw`, `/mcp/ext` — tiered MCP routing (strict API key, mcp-guardrails ExtMCP on every tier, FailClosed)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)

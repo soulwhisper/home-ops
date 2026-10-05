@@ -1,0 +1,33 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+# Gateway-synthesized /v1/models: returns the LANE model list (not the
+# studio folder ids) so OpenAI clients (open-webui etc.) discover usable
+# model names. KEEP IN SYNC with docs/application/ai.md Studio Model
+# Registry. oMLX itself only proxies /v1/models on the audio passthrough,
+# which would teach clients folder ids that 404 on the chat route.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: studio-models
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-media-route
+      sectionName: models
+  traffic:
+    directResponse:
+      status: 200
+      headers:
+        - name: content-type
+          value: application/json
+      body: |
+        {"object":"list","data":[
+          {"id":"complex-raw","object":"model","owned_by":"omlx"},
+          {"id":"complex","object":"model","owned_by":"omlx"},
+          {"id":"omni","object":"model","owned_by":"omlx"},
+          {"id":"micro","object":"model","owned_by":"omlx"},
+          {"id":"embedding","object":"model","owned_by":"omlx"},
+          {"id":"reranker","object":"model","owned_by":"omlx"},
+          {"id":"voxcpm2","object":"model","owned_by":"omlx"}
+        ]}
