@@ -3,13 +3,13 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: firecrawl-egress
+  name: hindsight-egress
 spec:
   endpointSelector:
     matchLabels:
-      "app.kubernetes.io/name": firecrawl
+      "app.kubernetes.io/name": hindsight
   egress:
-    # LLM gateway
+    # LLM gateway (chat /v1 + media /v1/*)
     - toServices:
         - k8sService:
             serviceName: agentgateway-proxy
@@ -17,28 +17,22 @@ spec:
       toPorts:
         - ports:
             - { port: "80", protocol: TCP }
-    # Dependencies
+    # CloudNativePG
     - toServices:
         - k8sService:
-            serviceName: firecrawl-database
-            namespace: selfhosted-apps
+            serviceName: postgres-rw
+            namespace: database-system
       toPorts:
         - ports:
             - { port: "5432", protocol: TCP }
+    # OTEL traces
     - toServices:
         - k8sService:
-            serviceName: firecrawl-database-dragonfly
-            namespace: selfhosted-apps
+            serviceName: opentelemetry-collector
+            namespace: monitoring-system
       toPorts:
         - ports:
-            - { port: "6379", protocol: TCP }
-    - toServices:
-        - k8sService:
-            serviceName: searxng
-            namespace: selfhosted-apps
-      toPorts:
-        - ports:
-            - { port: "8080", protocol: TCP }
+            - { port: "4318", protocol: TCP }
     # DNS
     - toEndpoints:
         - matchLabels:
@@ -48,12 +42,3 @@ spec:
         - ports:
             - { port: "53", protocol: TCP }
             - { port: "53", protocol: UDP }
-    # Internet
-    - toCIDRSet:
-        - cidr: 0.0.0.0/0
-          except:
-            - 10.0.0.0/8
-            - 172.16.0.0/12
-            - 192.168.0.0/16
-            - 169.254.0.0/16
-            - 100.64.0.0/10

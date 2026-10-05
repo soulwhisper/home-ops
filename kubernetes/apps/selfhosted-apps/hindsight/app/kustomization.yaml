@@ -7,5 +7,6 @@ resources:
   - ./helmrelease.yaml
   # utils
   - ./externalsecret.yaml
+  - ./ciliumnetworkpolicy.yaml
   # bounded restart for upstream memory leak (see file header)
   - ./restart-cronjob.yaml
