@@ -44,7 +44,7 @@ spec:
     optimizer:
       embeddingProvider: openai
       embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
-      embeddingModel: qwen3-embedding-0.6b
+      embeddingModel: embedding
       embeddingServiceTimeout: 15s
       maxToolsToReturn: 10
       hybridSearchSemanticRatio: "0.6"
@@ -100,7 +100,7 @@ spec:
     optimizer:
       embeddingProvider: openai
       embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
-      embeddingModel: qwen3-embedding-0.6b
+      embeddingModel: embedding
       embeddingServiceTimeout: 15s
       maxToolsToReturn: 10
       hybridSearchSemanticRatio: "0.6"
@@ -156,7 +156,7 @@ spec:
     optimizer:
       embeddingProvider: openai
       embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
-      embeddingModel: qwen3-embedding-0.6b
+      embeddingModel: embedding
       embeddingServiceTimeout: 15s
       maxToolsToReturn: 10
       hybridSearchSemanticRatio: "0.6"

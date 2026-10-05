@@ -101,7 +101,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | hermes-agent         | `complex`         | Qwen3.8-27B        | Agentic reasoning / KB QA / automation; aux side-tasks on `omni`/`micro` (GitOps configmap) |
 | hindsight            | `omni`            | MiniCPM-o 4.5      | Extraction-dominant (single-model constraint); embeddings + reranker via gateway media routes |
 | firecrawl            | `omni`            | MiniCPM-o 4.5      | Batch page extraction/summarization                          |
-| karakeep             | `omni`            | MiniCPM-o 4.5      | Text + image tagging (unified); embeddings via `/v1/embeddings` (studio id `qwen3-embedding-0.6b`, 1024d) |
+| karakeep             | `omni`            | MiniCPM-o 4.5      | Text + image tagging (unified); embeddings via `/v1/embeddings` (model `embedding`, 1024d) |
 | trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`; `micro` fallback); egress-isolated MCP group member |
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | SillyTavern          | UI-configured     | Gemma4-31B lane    | Creative/RP; no repo-level config                            |
@@ -195,11 +195,11 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 
 Non-chat vector modalities run on the same oMLX process as the chat lanes, exposed on `agentgateway-media-route` through the **LLM pipeline** (no more static passthrough): each lane is an `AgentgatewayBackend` with a `custom` provider declaring exactly one API format, guarded by the same `llm-api-auth` API key as `/chat`:
 
-| Path             | Backend             | Format (route type)    | Studio id              | Model                                   | Timeout |
-| ---------------- | ------------------- | ---------------------- | ---------------------- | --------------------------------------- | ------- |
-| `/v1/embeddings` | `studio-embeddings` | `custom` `Embeddings`  | `qwen3-embedding-0.6b` | Qwen3-Embedding-0.6B (1024d)            | 120s    |
-| `/v1/rerank`     | `studio-rerank`     | `custom` `Rerank`      | `qwen3-reranker-0.6b`  | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
-| `/v1/audio/*`    | `studio-audio`      | `openai` + `Passthrough` | `voxcpm2`            | VoxCPM2 (TTS)                           | 300s    |
+| Path             | Backend             | Client model | Upstream (override)      | Model                                   | Timeout |
+| ---------------- | ------------------- | ------------ | ------------------------ | --------------------------------------- | ------- |
+| `/v1/embeddings` | `studio-embeddings` | `embedding`  | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d)            | 120s    |
+| `/v1/rerank`     | `studio-rerank`     | `reranker`   | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
+| `/v1/audio/*`    | `studio-audio`      | `audio`      | `voxcpm2`                | VoxCPM2 (TTS)                           | 300s    |
 
 The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download sits parked (see Studio Model Registry). `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet.
 
@@ -343,9 +343,11 @@ The host-side contract. oMLX serves each model under its **folder name**
 in `~/models/` — the folder name IS the API-visible model id (there is no
 oMLX-side alias layer). Gateway lane names (`complex`/`omni`/`micro`) are
 mapped to folder ids by the AgentgatewayBackend `openai.model` override
-(`kubernetes/apps/networking-system/agentgateway/config/llm/`); media
-consumers use plain passthrough, so `/v1/embeddings` and `/v1/rerank`
-clients must send the folder id directly.
+(`kubernetes/apps/networking-system/agentgateway/config/llm/`). Media lanes
+work the same way: clients send the lane aliases `embedding` / `reranker` /
+`audio`, and each media backend's `custom.model` (or `openai.model`)
+override rewrites them to the folder id. Folder ids are only needed for
+direct-to-studio calls.
 
 **Auth**: oMLX enforces a server API key (1Password item `omlx`, field
 `api_key`). Every backend — chat and media alike — injects it upstream via
@@ -402,7 +404,7 @@ items:
             ├─ x-model: omni ────────────────────────────────────► omni     MiniCPM-O-4.5 (text+vision)
             └─ x-model: micro ───────────────────────────────────► micro    MiniCPM5-2B
 
-/v1/embeddings /v1/rerank /v1/audio/*  (media, LLM-pipeline backends) ─► oMLX folder ids
+/v1/embeddings /v1/rerank /v1/audio/*  (media: alias ─► backend override ─► folder id)
 
 /mcp/ro /mcp/rw /mcp/ext  (all tiers: mcp-guardrails ExtMCP, FailClosed) ── every MCP client
 ```
