@@ -29,9 +29,15 @@ jobs:
       - name: Accept subnet routes
         run: sudo tailscale set --accept-routes=true
 
+      - name: Show approved subnet routes
+        run: >-
+          tailscale status --json | jq -r
+          '.Peer[] | select(.PrimaryRoutes!=null) | "\(.HostName): \(.PrimaryRoutes[])"'
+
       - name: Smoke agentgateway through tailnet
         run: |
-          curl -sS --fail --retry 6 --retry-delay 15 --retry-all-errors \
+          curl -sS --fail --connect-timeout 10 --max-time 30 \
+            --retry 3 --retry-delay 10 --retry-all-errors \
             --resolve api.noirprime.com:443:10.10.0.128 \
             https://api.noirprime.com/v1/models \
             -H "Authorization: Bearer ${{ secrets.AGW_CI_KEY }}" \
