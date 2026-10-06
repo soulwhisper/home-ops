@@ -59,3 +59,50 @@ spec:
           rules:
             dns:
               - matchPattern: "*"
+
+---
+# Ingress lockdown (issue #3934): the API server (8642) runs with a local
+# terminal backend — network access to it must be caller-scoped.
+# 9119 dashboard: kgateway-internal only. 8644 webhook ingest: frigate + LAN
+# (NAS scripts, tailnet-forwarded). 8642/8787: same-namespace consumers.
+# kubelet probes arrive from the node host — fromEntities host is mandatory.
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: hermes-agent-ingress
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/name": hermes-agent
+  ingress:
+    - fromEntities:
+        - host
+    - fromEndpoints:
+        - matchLabels:
+            "gateway.networking.k8s.io/gateway-name": kgateway-internal
+            "k8s:io.kubernetes.pod.namespace": networking-system
+      toPorts:
+        - ports:
+            - { port: "9119", protocol: TCP }
+            - { port: "8644", protocol: TCP }
+    # (Cilium rejects mixed fromEndpoints+fromCIDR in one rule — keep split)
+    - fromEndpoints:
+        - matchLabels:
+            "app.kubernetes.io/name": frigate
+            "k8s:io.kubernetes.pod.namespace": smarthome-apps
+      toPorts:
+        - ports:
+            - { port: "8644", protocol: TCP }
+    - fromCIDR:
+        - 10.10.0.0/24
+      toPorts:
+        - ports:
+            - { port: "8644", protocol: TCP }
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": servitor-apps
+      toPorts:
+        - ports:
+            - { port: "8642", protocol: TCP }
+            - { port: "8787", protocol: TCP }
