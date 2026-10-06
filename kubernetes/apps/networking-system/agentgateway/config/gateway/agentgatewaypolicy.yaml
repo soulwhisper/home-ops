@@ -33,4 +33,4 @@ spec:
           - name: "x-model"
             value: "json(request.body).model"
           - name: "x-priority"
-            value: 'coalesce(json(request.body).priority, "standard")'
+            value: "coalesce(json(request.body).priority, \"standard\")"
