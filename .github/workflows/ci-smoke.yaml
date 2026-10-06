@@ -94,10 +94,11 @@ jobs:
           echo "toolcall=$tc" && [ "$tc" = 200 ]
           jq -e '.choices[0].message.tool_calls[0].function.name == "get_weather"' /tmp/tc.json
 
-          # constrained JSON (decision gate depends on this)
+          # constrained JSON (decision gate) — strict schema mode:
+          # json_object alone let the model return an array (E3 finding)
           js=$(curl -sS $R --connect-timeout 10 --max-time 240 \
             -H "$K" -H 'content-type: application/json' \
-            -d '{"model":"complex","messages":[{"role":"user","content":"Reply with a JSON object {\"ok\": true} and nothing else."}],"response_format":{"type":"json_object"},"max_tokens":64}' \
+            -d '{"model":"complex","messages":[{"role":"user","content":"Reply with JSON: {\"ok\": true}"}],"response_format":{"type":"json_schema","json_schema":{"name":"probe","schema":{"type":"object","properties":{"ok":{"type":"boolean"}},"required":["ok"],"additionalProperties":false}}},"max_tokens":64}' \
             -o /tmp/js.json -w '%{http_code}' "$B")
           echo "jsonmode=$js" && [ "$js" = 200 ]
           jq -er '.choices[0].message.content | fromjson | .ok == true' /tmp/js.json
