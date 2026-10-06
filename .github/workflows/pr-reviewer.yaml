@@ -13,11 +13,9 @@ permissions:
   contents: read
   checks: read
   pull-requests: write
-  id-token: write
-
 concurrency:
-  group: ai-review-${{ github.event.number }}
-  cancel-in-progress: true
+  group: ai-review
+  cancel-in-progress: false
 
 jobs:
   review:
