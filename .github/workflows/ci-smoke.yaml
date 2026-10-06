@@ -1,0 +1,98 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# yamllint disable rule:truthy
+
+name: CI Smoke - Tailnet Pass-through
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  smoke:
+    name: Tailnet + agentgateway smoke
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    steps:
+      - name: Join tailnet (WiF, tag:gha-ci, ephemeral)
+        uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:gha-ci
+          version: 1.102.5
+
+      - name: Accept subnet routes
+        run: sudo tailscale set --accept-routes=true
+
+      - name: Show tailnet peers and routes
+        run: |
+          tailscale status
+          tailscale status --json | jq -r \
+            '.Peer[] | select(.PrimaryRoutes!=null) | "\(.HostName): \(.PrimaryRoutes[])"'
+
+      - name: Kernel route for target
+        run: ip route get 10.10.0.140
+
+      - name: Ping subnet router via mesh
+        run: |
+          ROUTER=$(tailscale status --json | jq -r \
+            '.Peer[] | select(.PrimaryRoutes!=null) | .TailscaleIPs[0]' | head -1)
+          tailscale ping --c 3 "$ROUTER" || true
+
+      - name: Negative control (off-scope target must fail)
+        run: >-
+          curl -sS --connect-timeout 5 --max-time 10 http://10.10.0.100:9003/healthz
+          && echo 'UNEXPECTED: off-scope target reachable' || echo 'OK: blocked'
+
+      - name: Smoke agentgateway through tailnet
+        if: always()
+        run: |
+          set -o pipefail
+          R="--resolve api.noirprime.com:443:10.10.0.140"
+          B="https://api.noirprime.com"
+          K="Authorization: Bearer ${{ secrets.AGW_CI_KEY }}"
+
+          llm=$(curl -sS $R --connect-timeout 10 --max-time 90 \
+            --retry 3 --retry-delay 10 --retry-all-errors \
+            -H "$K" -H 'content-type: application/json' \
+            -d '{"model":"micro","messages":[{"role":"user","content":"reply with: ok"}],"max_tokens":8}' \
+            -D /tmp/hdrs -o /tmp/llm.json -w '%{http_code}' "$B/v1/chat/completions")
+          echo "llm=$llm" && [ "$llm" = 200 ]
+          jq -r '.choices[0].message.content' /tmp/llm.json
+          grep -qi '^x-ratelimit-limit' /tmp/hdrs && echo "ratelimit headers present"
+
+          # scope assertions (CI route = complex/micro only)
+          omni=$(curl -sS $R -o /dev/null -w '%{http_code}' -H "$K" -H 'content-type: application/json' -d '{"model":"omni","messages":[{"role":"user","content":"hi"}]}' "$B/v1/chat/completions")
+          models=$(curl -sS $R -o /dev/null -w '%{http_code}' -H "$K" "$B/v1/models")
+          mcp=$(curl -sS $R -o /dev/null -w '%{http_code}' -H "$K" "$B/mcp/ro")
+          noauth=$(curl -sS $R -o /dev/null -w '%{http_code}' -H 'content-type: application/json' -d '{"model":"complex","messages":[{"role":"user","content":"hi"}]}' "$B/v1/chat/completions")
+          echo "omni=$omni models=$models mcp=$mcp noauth=$noauth"
+          [ "$omni" = 404 ] && [ "$models" = 401 ] && [ "$mcp" = 401 ] && [ "$noauth" = 401 ]
+
+      - name: "Probe complex lane (E3: tool calling + JSON mode)"
+        if: always()
+        run: |
+          set -o pipefail
+          R="--resolve api.noirprime.com:443:10.10.0.140"
+          B="https://api.noirprime.com/v1/chat/completions"
+          K="Authorization: Bearer ${{ secrets.AGW_CI_KEY }}"
+
+          tc=$(curl -sS $R --connect-timeout 10 --max-time 240 \
+            -H "$K" -H 'content-type: application/json' \
+            -d '{"model":"complex","messages":[{"role":"user","content":"What is the weather in Paris? Use the tool."}],"tools":[{"type":"function","function":{"name":"get_weather","description":"Get weather for a city","parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]}}}],"max_tokens":256}' \
+            -o /tmp/tc.json -w '%{http_code}' "$B")
+          echo "toolcall=$tc" && [ "$tc" = 200 ]
+          jq -e '.choices[0].message.tool_calls[0].function.name == "get_weather"' /tmp/tc.json
+
+          # strict json_schema — plain json_object returned an array once
+          js=$(curl -sS $R --connect-timeout 10 --max-time 240 \
+            -H "$K" -H 'content-type: application/json' \
+            -d '{"model":"complex","messages":[{"role":"user","content":"Reply with JSON: {\"ok\": true}"}],"response_format":{"type":"json_schema","json_schema":{"name":"probe","schema":{"type":"object","properties":{"ok":{"type":"boolean"}},"required":["ok"],"additionalProperties":false}}},"max_tokens":64}' \
+            -o /tmp/js.json -w '%{http_code}' "$B")
+          echo "jsonmode=$js" && [ "$js" = 200 ]
+          jq -er '.choices[0].message.content | fromjson | .ok == true' /tmp/js.json

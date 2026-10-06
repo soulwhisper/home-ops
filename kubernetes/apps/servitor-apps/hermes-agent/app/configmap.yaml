@@ -1,8 +1,8 @@
 ---
 # Declarative hermes-agent config, seeded onto the PVC by the seed-config
 # initContainer at every pod start (dashboard edits to these files revert on
-# restart — edit here instead). \$${VAR} refs resolve against each profile's
-# own .env, which the initContainer renders from pod env (ExternalSecret).
+# restart — edit here instead). $${VAR} refs (flux-escaped) land as ${VAR}
+# in-cluster and resolve against each profile's own .env, which the
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -14,8 +14,8 @@ data:
     model:
       default: complex
       provider: custom
-      base_url: \$${OPENAI_BASE_URL}
-      api_key: \$${OPENAI_API_KEY}
+      base_url: $${OPENAI_BASE_URL}
+      api_key: $${OPENAI_API_KEY}
     gateway:
       multiplex_profiles: true
     # gateway enforces authentik; this gate only satisfies hermes' refusal to
@@ -31,12 +31,19 @@ data:
           port: 8644
           routes:
             frigate-alert:
-              secret: \$${FRIGATE_WEBHOOK_SECRET}
+              secret: $${FRIGATE_WEBHOOK_SECRET}
               profile: ops
               prompt: |
                 [Frigate alert] camera={camera} severity={severity}: {description}
                 (label={label}, zones={zones}, event={event_id}, ts={timestamp})
               deliver: log
+            stall-alert:
+              secret: $${STALL_ALERT_SECRET}
+              profile: ops
+              prompt: |
+                [Stall alert] {message}
+                detail: {detail}
+              deliver: feishu
     # side tasks pinned to cheap gateway lanes (body model -> x-model header)
     auxiliary:
       vision: { provider: main, model: omni, timeout: 30 }
@@ -57,8 +64,8 @@ data:
     model:
       default: complex
       provider: custom
-      base_url: \$${OPENAI_BASE_URL}
-      api_key: \$${OPENAI_API_KEY}
+      base_url: $${OPENAI_BASE_URL}
+      api_key: $${OPENAI_API_KEY}
     auxiliary:
       title_generation:
         enabled: true
@@ -84,8 +91,8 @@ data:
     model:
       default: complex
       provider: custom
-      base_url: \$${OPENAI_BASE_URL}
-      api_key: \$${OPENAI_API_KEY}
+      base_url: $${OPENAI_BASE_URL}
+      api_key: $${OPENAI_API_KEY}
     auxiliary:
       vision: { provider: main, model: omni, timeout: 30 }
       web_extract: { provider: main, model: omni, reasoning_effort: low }
@@ -103,7 +110,7 @@ data:
     {"desired_state": "running"}
 
   # rendered from pod env (ExternalSecret); writes profile .env files because
-  # profile-scoped \$${VAR} refs never see the pod env
+  # profile-scoped $${VAR} refs never see the pod env
   seed.sh: |
     #!/bin/sh
     set -eu
@@ -114,12 +121,13 @@ data:
     # root .env — authoritative; prevents first-boot placeholder seeding from
     # shadowing pod env (dotenv loads with override=True)
     cat > /opt/data/.env <<EOF
-    OPENAI_BASE_URL=\$${OPENAI_BASE_URL}
-    OPENAI_API_KEY=\$${OPENAI_API_KEY}
+    OPENAI_BASE_URL=$${OPENAI_BASE_URL}
+    OPENAI_API_KEY=$${OPENAI_API_KEY}
     API_SERVER_ENABLED=true
     API_SERVER_HOST=0.0.0.0
-    API_SERVER_KEY=\$${API_SERVER_KEY}
-    FRIGATE_WEBHOOK_SECRET=\$${FRIGATE_WEBHOOK_SECRET}
+    API_SERVER_KEY=$${API_SERVER_KEY}
+    FRIGATE_WEBHOOK_SECRET=$${FRIGATE_WEBHOOK_SECRET}
+    STALL_ALERT_SECRET=$${STALL_ALERT_SECRET}
     EOF
 
     for p in chat ops; do
@@ -132,14 +140,14 @@ data:
     done
 
     cat > /opt/data/profiles/chat/.env <<EOF
-    OPENAI_BASE_URL=\$${OPENAI_BASE_URL}
-    OPENAI_API_KEY=\$${OPENAI_API_KEY}
+    OPENAI_BASE_URL=$${OPENAI_BASE_URL}
+    OPENAI_API_KEY=$${OPENAI_API_KEY}
     API_SERVER_ENABLED=true
-    API_SERVER_KEY=\$${CHAT_API_SERVER_KEY}
+    API_SERVER_KEY=$${CHAT_API_SERVER_KEY}
     EOF
 
     # ops profile: no API server key -> /p/ops/ API fails closed by design
     cat > /opt/data/profiles/ops/.env <<EOF
-    OPENAI_BASE_URL=\$${OPENAI_BASE_URL}
-    OPENAI_API_KEY=\$${OPENAI_API_KEY}
+    OPENAI_BASE_URL=$${OPENAI_BASE_URL}
+    OPENAI_API_KEY=$${OPENAI_API_KEY}
     EOF
