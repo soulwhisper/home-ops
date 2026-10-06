@@ -71,6 +71,15 @@ speak the OpenAI-compatible API on `studio.homelab.internal:8000` and
 inject the oMLX server key via `policies.auth.secretRef`
 (`studio-api-auth`). Consumers authenticate with ExternalSecret-managed
 API keys; there is no cloud fallback — the studio is a deliberate SPOF.
+
+CI access lane: GitHub Actions runners reach the gateway over tailnet at
+`https://api.noirprime.com` (agentgateway-proxy LB `10.10.0.140:443`, TLS via
+`noirprime-com-tls`) on a dedicated route (`agentgateway-llm-route-ci`) with
+only `complex`/`micro` sections, the `gha-ci` key (`gha-ci-auth` secret,
+strictly scoped — media/MCP answer 401 to it), promptGuard on, and a
+300k-tokens/h + 60-req/min budget (`ci-access` policy). In-cluster consumers
+keep using plain HTTP :80.
+
 MCP has no open route (see MCP Backend).
 
 
@@ -154,6 +163,7 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
 - **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP, Agent Gateway LLM
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, open.feishu.cn:443. No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
+- **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 via kgateway-internal only, webhook ingest :8644 from frigate + LAN, profile API :8642/:8787 same-namespace only; `fromEntities: host` keeps kubelet probes working
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
   - `ops` — the batching brain: cron/Feishu/automation workload lives here (read-only-first posture, ToolHive tiers as today); Feishu home channel for cron results
