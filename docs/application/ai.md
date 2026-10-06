@@ -150,7 +150,7 @@ All lanes run on the MacStudio inference host (`complex` Qwen3.8-27B, `omni` Min
 | Gateway   | 8642 | Internal, health: `/health` |
 | Web UI    | 8787 | Deployed, no ingress (chat moved to Open WebUI; SSO route removed 2026-09-09) |
 
-- **Runtime**: Kata Containers (VM isolation)
+- **Runtime**: user namespaces (`hostUsers: false`) + egress CNP (ADR-03; Kata removed)
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
 - **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP, Agent Gateway LLM
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, open.feishu.cn:443. No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
@@ -274,7 +274,7 @@ Frigate remains the 24/7 trigger layer; MiniCPM-o 4.5 is the event describer. `s
 
 - Web scraping pipeline for AI data ingestion
 - 3 containers: api (:3002), nuq-worker (:3006), playwright-service (:3000)
-- `ghcr.io/firecrawl/firecrawl:latest`, Kata runtime
+- `ghcr.io/firecrawl/firecrawl:latest`, sandboxed per ADR-03 (`hostUsers: false` + egress CNP)
 - Backed by SearXNG, Dragonfly Redis, nuq-postgres
 - Exposed as MCP server + internal endpoint for Hermes
 
@@ -313,7 +313,7 @@ Frigate remains the 24/7 trigger layer; MiniCPM-o 4.5 is the event describer. `s
 | **Dragonfly**               | Various             | Redis-compatible cache/queue                        |
 | **ClickHouse**              | `database-system`   | Langfuse analytics                                  |
 | **Ceph (Rook)**             | `storage-system`    | S3 + block + CephFS for model/data storage          |
-| **Kata Containers**         | `kube-system`       | VM isolation for sandboxed workloads                |
+| **Workload sandboxing**      | —                   | user namespaces + egress CNP per ADR-03 (Kata removed)  |
 | **kgateway**                | `networking-system` | API gateway + SSO extAuth                           |
 | **Authentik**               | `security-system`   | SSO for all public AI endpoints                     |
 | **Cert-Manager**            | `security-system`   | TLS certificates                                    |
