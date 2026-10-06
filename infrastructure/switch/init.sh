@@ -50,6 +50,10 @@ dns-list 10.0.0.254
 option 43 hex 01040a0a00c8
 static-bind ip-address 10.0.0.201 24 hardware-address 9C05-D6A1-6277
 static-bind ip-address 10.0.0.202 24 hardware-address 9C05-D6A1-69C7
+# jetkvm: no dns-list on purpose (device gets no DNS option)
+ dhcp server ip-pool 1
+ gateway-list 10.0.0.1
+ static-bind ip-address 10.0.0.210 24 hardware-address 3052-5301-A32D
 
 # stp
 stp mode rstp
@@ -205,11 +209,11 @@ interface ten-gigabitethernet 1/0/16
  port link-aggregation group 80 force
  lacp period short
 
-# to winbox eth
+# to macstudio eth
 interface ten-gigabitethernet 1/0/18
- description winbox-eth
+ description macstudio-eth
  port link-type access
- port access vlan 10
+ port access vlan 100
  stp edged-port
  broadcast-suppression 5
  multicast-suppression 5

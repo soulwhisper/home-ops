@@ -130,6 +130,10 @@ spec:
         existingClaim: video
         globalMounts:
           - path: /media
+      downloads:
+        existingClaim: downloads
+        globalMounts:
+          - path: /downloads
       tmpfs:
         type: emptyDir
         globalMounts:

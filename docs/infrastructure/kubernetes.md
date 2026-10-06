@@ -216,7 +216,7 @@ Each non-trivial application defines its own `OCIRepository` resource in its `ap
 | networking-system | 5     | kgateway (app + CRDs), agentgateway (app + CRDs), externaldns                                                                                                                                                                                         |
 | monitoring-system | 15    | victoria-metrics (operator + cluster + app), victoria-logs (app + collector), victoria-traces, grafana, kube-state-metrics, node-exporter, prometheus-crds, blackbox-exporter, smartctl-exporter, opentelemetry-collector, silence-operator, headlamp |
 | gitops-system     | 3     | flux-operator, flux-instance, tuppr (system-upgrade-controller)                                                                                                                                                                                       |
-| others            | 4     | toolhive (app + CRDs), woodpecker, netbox                                                                                                                                                                                                             |
+| others            | 3     | toolhive (app + CRDs), netbox                                                                                                                                                                                                            |
 
 The `OCIRepository` fetches only the chart layer via `layerSelector` with `operation: copy`, which extracts the Helm chart tarball from the OCI manifest without pulling unrelated layers.
 
@@ -382,7 +382,7 @@ The cluster uses 13 namespaces, ordered by dependency from foundational infrastr
 | 9   | `media-apps`        | Media serving and management         | Jellyfin, Kavita, Navidrome, qBittorrent, Immich, MoviePilot, MeTube                                                                                                                                                                       |
 | 10  | `selfhosted-apps`   | Self-hosted web services             | SearXNG, NetBox, Stirling PDF, SillyTavern, Karakeep, Homepage, Hindsight, Dispatcharr, BambuBuddy, Fast Note Sync, Open Notebook, Firecrawl                                                                                                 |
 | 11  | `gaming-apps`       | Game servers                         | Crafty Controller (Minecraft), Foundry VTT                                                                                                                                                                                                 |
-| 12  | `worker-apps`       | CI/CD and automation                 | Woodpecker CI                                                                                                                                                                                                                              |
+| 12  | `worker-apps`       | — (removed 2026-10-06)             | Woodpecker retired → `.archived/woodpecker/`                                                                                                                                                                                            |
 | 13  | `gitops-system`     | Flux itself                          | Flux Operator, Flux Instance, System Upgrade Controller                                                                                                                                                                                    |
 
 ### Dependency Order
@@ -511,7 +511,6 @@ kubernetes/
 │   ├── media-apps/                #  9. Media serving
 │   ├── selfhosted-apps/           # 10. Self-hosted web services
 │   ├── gaming-apps/               # 11. Game servers
-│   ├── worker-apps/               # 12. CI/CD and automation
 │   └── gitops-system/             # 13. Flux itself
 ├── bootstrap/                     # Pre-Flux cluster provisioning
 │   ├── helmfile.yaml              #   8-step sequential bootstrap
