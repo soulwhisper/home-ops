@@ -1,12 +1,13 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
-# Unified LLM lane: everything OpenAI lives under /v1 (chat completions +
-# media). Lane selection by model id (body model -> x-model header via the
-# gateway-wide PreRouting transform). Guarded/open split is a MODEL NAME:
-# `complex-raw` skips promptGuard, everything else is guarded (policy
-# targets the guarded rules by sectionName). No catch-all — unknown ids 404.
+# Unified LLM lane (in-cluster leg, HTTP listener only): everything OpenAI
+# lives under /v1 (chat completions + media). Lane selection by model id
+# (body model -> x-model header via the gateway-wide PreRouting transform).
+# Guarded/open split is a MODEL NAME: `complex-raw` skips promptGuard,
+# everything else is guarded. No catch-all — unknown ids 404.
 # SDK note: OpenAI/litellm clients append /chat/completions to their base
-# URL, so consumer base URLs are .../v1 (see ai.md).
+# URL, so consumer base URLs are .../v1 (see ai.md). CI callers do NOT use
+# this route — they get agentgateway-llm-route-ci (HTTPS listener).
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -16,6 +17,7 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: agentgateway-proxy
+      sectionName: http
   rules:
     # OPEN lane (rule `raw`): the single uncensored model, unguarded.
     - name: raw

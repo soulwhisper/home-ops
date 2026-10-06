@@ -24,6 +24,15 @@ spec:
       kind: HTTPRoute
       name: agentgateway-llm-route
       sectionName: omni
+    # CI route lanes (reviewer reads untrusted web text — promptGuard mandatory)
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-llm-route-ci
+      sectionName: complex
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-llm-route-ci
+      sectionName: micro
   backend:
     ai:
       promptGuard:
