@@ -85,11 +85,15 @@ spec:
       toPorts:
         - ports:
             - { port: "9119", protocol: TCP }
+    # (Cilium rejects mixed fromEndpoints+fromCIDR in one rule — keep split)
     - fromEndpoints:
         - matchLabels:
             "app.kubernetes.io/name": frigate
             "k8s:io.kubernetes.pod.namespace": smarthome-apps
-      fromCIDR:
+      toPorts:
+        - ports:
+            - { port: "8644", protocol: TCP }
+    - fromCIDR:
         - 10.10.0.0/24
       toPorts:
         - ports:
