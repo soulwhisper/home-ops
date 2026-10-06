@@ -24,3 +24,6 @@ talosconfig
 # Scratch
 .tmp-*/
 .tmp-*.md
+
+# Local planning scratch (leaked once via git add -A in #3919; never commit)
+/temp/

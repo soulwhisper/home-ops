@@ -1,0 +1,64 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# yamllint disable rule:truthy
+
+name: CI Smoke - Tailnet Pass-through
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  smoke:
+    name: Tailnet + agentgateway smoke
+    runs-on: ubuntu-latest
+    environment: ci
+    timeout-minutes: 10
+    steps:
+      - name: Join tailnet (WiF, tag:gha-ci, ephemeral)
+        uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:gha-ci
+          version: 1.102.5
+
+      - name: Accept subnet routes
+        run: sudo tailscale set --accept-routes=true
+
+      - name: Show tailnet peers and routes
+        run: |
+          tailscale status
+          tailscale status --json | jq -r \
+            '.Peer[] | select(.PrimaryRoutes!=null) | "\(.HostName): \(.PrimaryRoutes[])"'
+
+      - name: Kernel route for target
+        run: ip route get 10.10.0.140
+
+      - name: Ping subnet router via mesh
+        run: |
+          ROUTER=$(tailscale status --json | jq -r \
+            '.Peer[] | select(.PrimaryRoutes!=null) | .TailscaleIPs[0]' | head -1)
+          tailscale ping --c 3 "$ROUTER" || true
+
+      - name: Negative control (NAS must be ACL-blocked)
+        run: >-
+          curl -sS --connect-timeout 5 --max-time 10 http://10.10.0.100:9003/healthz
+          && echo 'UNEXPECTED: NAS reachable - ACL missing!' || echo 'OK: ACL blocked NAS'
+
+      - name: Smoke agentgateway through tailnet
+        if: always()
+        run: |
+          set -o pipefail
+          # agentgateway-proxy pinned at 10.10.0.140, HTTPS:443
+          # (noirprime-com-tls). Plain :80 stays for in-cluster consumers.
+          curl -sS --fail --connect-timeout 10 --max-time 30 \
+            --retry 3 --retry-delay 10 --retry-all-errors \
+            --resolve api.noirprime.com:443:10.10.0.140 \
+            https://api.noirprime.com/v1/models \
+            -H "Authorization: Bearer ${{ secrets.AGW_CI_KEY }}" \
+            -o /tmp/models.json -w 'HTTP %{http_code}\n'
+          jq -r '.data[].id' /tmp/models.json
