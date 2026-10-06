@@ -7,6 +7,8 @@ metadata:
 spec:
   gatewayClassName: agentgateway
   infrastructure:
+    annotations:
+      lbipam.cilium.io/ips: "10.10.0.140"
     parametersRef:
       name: agentgateway-params
       group: agentgateway.dev
@@ -18,3 +20,13 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: https
+      protocol: HTTPS
+      port: 443
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        certificateRefs:
+          - kind: Secret
+            name: noirprime-com-tls
