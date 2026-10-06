@@ -15,5 +15,5 @@ spec:
   traffic:
     apiKeyAuthentication:
       mode: Strict
-      secretRef:
+      secretRef: 
         name: llm-api-auth
