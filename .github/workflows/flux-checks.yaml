@@ -52,6 +52,7 @@ jobs:
 
       - name: Run flate test
         run: |
+          # zizmor: ignore[template-injection] default_branch is repo config, not attacker input
           flate test all --base ${{ github.event.repository.default_branch }}
 
       - name: Run flate diff
