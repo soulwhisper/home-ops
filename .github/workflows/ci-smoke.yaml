@@ -53,12 +53,27 @@ jobs:
         if: always()
         run: |
           set -o pipefail
-          # agentgateway-proxy pinned at 10.10.0.140, HTTPS:443
-          # (noirprime-com-tls). Plain :80 stays for in-cluster consumers.
-          curl -sS --fail --connect-timeout 10 --max-time 30 \
+          # CI route: HTTPS listener, api.noirprime.com, gha-ci key only,
+          # rate-limited (ci-access policy). In-cluster lanes stay on :80.
+          R="--resolve api.noirprime.com:443:10.10.0.140"
+          B="https://api.noirprime.com"
+          K="Authorization: Bearer ${{ secrets.AGW_CI_KEY }}"
+
+          # positive: real micro-lane inference -> 200 + rate-limit headers
+          llm=$(curl -sS $R --connect-timeout 10 --max-time 90 \
             --retry 3 --retry-delay 10 --retry-all-errors \
-            --resolve api.noirprime.com:443:10.10.0.140 \
-            https://api.noirprime.com/v1/models \
-            -H "Authorization: Bearer ${{ secrets.AGW_CI_KEY }}" \
-            -o /tmp/models.json -w 'HTTP %{http_code}\n'
-          jq -r '.data[].id' /tmp/models.json
+            -H "$K" -H 'content-type: application/json' \
+            -d '{"model":"micro","messages":[{"role":"user","content":"reply with: ok"}],"max_tokens":8}' \
+            -D /tmp/hdrs -o /tmp/llm.json -w '%{http_code}' "$B/v1/chat/completions")
+          echo "llm=$llm" && [ "$llm" = 200 ]
+          jq -r '.choices[0].message.content' /tmp/llm.json
+          grep -qi '^x-ratelimit-limit' /tmp/hdrs && echo "ratelimit headers present"
+
+          # negatives: no key -> 401; omni lane absent on CI route -> 404;
+          # media/MCP reject gha-ci -> 401
+          omni=$(curl -sS $R -o /dev/null -w '%{http_code}' -H "$K" -H 'content-type: application/json' -d '{"model":"omni","messages":[{"role":"user","content":"hi"}]}' "$B/v1/chat/completions")
+          models=$(curl -sS $R -o /dev/null -w '%{http_code}' -H "$K" "$B/v1/models")
+          mcp=$(curl -sS $R -o /dev/null -w '%{http_code}' -H "$K" "$B/mcp/ro")
+          noauth=$(curl -sS $R -o /dev/null -w '%{http_code}' -H 'content-type: application/json' -d '{"model":"complex","messages":[{"role":"user","content":"hi"}]}' "$B/v1/chat/completions")
+          echo "omni=$omni models=$models mcp=$mcp noauth=$noauth"
+          [ "$omni" = 404 ] && [ "$models" = 401 ] && [ "$mcp" = 401 ] && [ "$noauth" = 401 ]

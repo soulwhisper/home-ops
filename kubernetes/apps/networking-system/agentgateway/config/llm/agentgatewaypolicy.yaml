@@ -19,3 +19,28 @@ spec:
       mode: Strict
       secretRef:
         name: *name
+---
+# CI route access: gha-ci key only + hard budget. Unconditional — the CI
+# route authenticates nothing else. Tokens counted post-stream; over-budget
+# requests fail fast 429 with Retry-After.
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: ci-access
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-llm-route-ci
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      secretRef:
+        name: gha-ci-auth
+    rateLimit:
+      local:
+        - tokens: 300000
+          unit: Hours
+        - requests: 60
+          unit: Minutes
