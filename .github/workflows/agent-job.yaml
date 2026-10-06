@@ -26,7 +26,7 @@ jobs:
   execute:
     name: Execute task card
     runs-on: ubuntu-latest
-    environment: ci
+    environment: production
     timeout-minutes: 45
     steps:
       - name: Generate Token
