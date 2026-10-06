@@ -511,7 +511,6 @@ kubernetes/
 │   ├── media-apps/                #  9. Media serving
 │   ├── selfhosted-apps/           # 10. Self-hosted web services
 │   ├── gaming-apps/               # 11. Game servers
-│   ├── worker-apps/               # 12. CI/CD and automation
 │   └── gitops-system/             # 13. Flux itself
 ├── bootstrap/                     # Pre-Flux cluster provisioning
 │   ├── helmfile.yaml              #   8-step sequential bootstrap

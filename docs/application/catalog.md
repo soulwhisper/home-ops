@@ -15,7 +15,6 @@
 | Reloader         | Auto-restart on ConfigMap/Secret change            |
 | Descheduler      | Pod rebalancing                                    |
 | K8tz             | Timezone injection (Asia/Shanghai)                 |
-| Runtime Classes  | Kata Containers VM isolation                       |
 | Gateway API CRDs | CRDs for kgateway                                  |
 
 ## gitops-system — GitOps Engine (3)
@@ -115,11 +114,11 @@
 | NetBox        | DCIM/IPAM (9 plugins, CNPG + Dragonfly)                        |
 | SearXNG       | Privacy meta-search (Dragonfly, bot detection)                 |
 | Homepage      | App dashboard                                                  |
-| Karakeep      | Bookmark manager (Kata VM, Chrome + Meilisearch, omni lane)    |
+| Karakeep      | Bookmark manager (Chrome + Meilisearch, omni lane)             |
 | Hindsight     | AI memory (slim image; LLM + embeddings + rerank on MacStudio) |
 | Open-Notebook | AI research notebook (SurrealDB)                               |
 | Open WebUI    | AI chat frontend (native MCP via ToolHive tiers)               |
-| Firecrawl     | Web scraping pipeline (Kata, 3 containers, MCP)                |
+| Firecrawl     | Web scraping pipeline (3 containers, MCP)                        |
 | SillyTavern   | AI character chat (AgentGateway)                               |
 | Bambuddy      | 3D printer monitor (Bambu Lab)                                 |
 | Dispatcharr   | IPTV dispatch (iGPU transcode)                                 |
@@ -129,7 +128,7 @@
 
 | App          | Purpose                                                                                        |
 | ------------ | ---------------------------------------------------------------------------------------------- |
-| Hermes Agent | AI agent suite (Kata VM, Feishu, cron/automation)                                              |
+| Hermes Agent | AI agent suite (Feishu, cron/automation)                                              |
 | ToolHive     | MCP gateway (3 VirtualMCP tiers, semantic search)                                              |
 | MCP Servers  | kubernetes/HA/hindsight/github/firecrawl/grafana/flux/vlogs/obsidian/forgejo/trendradar |
 
@@ -140,9 +139,3 @@
 | Crafty Controller | Minecraft server control panel        |
 | FoundryVTT        | Virtual tabletop RPG (ExternalSecret) |
 | Gaming-NFS        | Shared game storage                   |
-
-## worker-apps — CI/CD (1)
-
-| App        | Purpose           |
-| ---------- | ----------------- |
-| Woodpecker | Self-hosted CI/CD |
