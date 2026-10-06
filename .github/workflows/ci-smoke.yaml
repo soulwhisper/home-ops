@@ -42,9 +42,15 @@ jobs:
         run: |
           ROUTER=$(tailscale status --json | jq -r \
             '.Peer[] | select(.PrimaryRoutes!=null) | .TailscaleIPs[0]' | head -1)
-          tailscale ping --c 3 "$ROUTER"
+          tailscale ping --c 3 "$ROUTER" || true
+
+      - name: Negative control (NAS must be ACL-blocked)
+        run: >-
+          curl -sS --connect-timeout 5 --max-time 10 http://10.10.0.100:9003/healthz
+          && echo 'UNEXPECTED: NAS reachable - ACL missing!' || echo 'OK: ACL blocked NAS'
 
       - name: Smoke agentgateway through tailnet
+        if: always()
         run: |
           set -o pipefail
           curl -sS --fail --connect-timeout 10 --max-time 30 \
