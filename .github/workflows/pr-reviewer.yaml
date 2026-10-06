@@ -24,9 +24,13 @@ concurrency:
 jobs:
   review:
     name: AI PR Review
+    # Skip automation PRs (renovate[bot] bumps, repo-butler vendir/label-sync).
+    # Override: the existing `review/required` label also forces an AI review.
     if: >-
       !github.event.pull_request.draft &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.pull_request.user.type != 'Bot' ||
+        contains(github.event.pull_request.labels.*.name, 'review/required'))
     runs-on: ubuntu-latest
     environment: ci
     timeout-minutes: 30
