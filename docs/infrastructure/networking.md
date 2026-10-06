@@ -197,31 +197,33 @@ Traffic ingress is handled by two Gateway API implementations deployed in the `n
 | Gateway             | LB IP       | External DNS Target         | Purpose                                       |
 | ------------------- | ----------- | --------------------------- | --------------------------------------------- |
 | `kgateway-internal` | 10.10.0.131 | `gateway-int.noirprime.com` | Internal services (media, gaming, monitoring) |
-| `kgateway-external` | 10.10.0.132 | `gateway-ext.noirprime.com` | Public-facing services                        |
+| `kgateway-external` | 10.10.0.132 | `gateway-ext.noirprime.com` | Public-facing — **retired, empty scaffold (ADR-02)** |
 
-Both gateways use the `kgateway` GatewayClass with TLS termination via cert-manager certificates (`noirprime-com-tls`). The internal gateway accepts routes from all namespaces on HTTPS; the external gateway restricts HTTP routes to `Same` namespace. Cilium LB IPAM assigns the LoadBalancer IPs from the `10.10.0.128/27` pool, and BGP advertises them to the switch.
+The two kgateway gateways use the `kgateway` GatewayClass with TLS termination via cert-manager certificates (`noirprime-com-tls`). The internal gateway accepts routes from all namespaces on HTTPS; the external gateway keeps zero HTTPRoutes by design (ADR-02). Cilium LB IPAM assigns the LoadBalancer IPs from the `10.10.0.128/27` pool, and BGP advertises them to the switch.
 
 #### AgentGateway (LLM + MCP Proxy)
 
-`agentgateway-proxy` is a purpose-built Gateway API implementation for AI workload routing, exposed internally at `http://agentgateway-proxy.networking-system.svc.cluster.local:80`. Its API surface (`/chat`, `/mcp`) is also exposed to the intranet through `kgateway-internal` at `https://api.noirprime.com` (TLS at kgateway, DNS via external-dns, strict API-key auth at agentgateway). Local lanes (`fast`/`memory`/`vision`) route to the MacStudio inference host at 10.10.0.210 (`studio.homelab.internal`).
+`agentgateway-proxy` is a purpose-built Gateway API implementation for AI workload routing. In-cluster consumers use `http://agentgateway-proxy.networking-system.svc.cluster.local:80`; the LB is pinned at `10.10.0.140` with HTTP:80 (in-cluster) and HTTPS:443 (TLS via `noirprime-com-tls` — the tailnet/CI entry). Its API surface is also proxied to the intranet through `kgateway-internal` at `https://api.noirprime.com` (internal DNS, strict API-key auth at agentgateway). Model lanes route to the MacStudio inference host at 10.10.0.210 (`studio.homelab.internal`).
 
-**LLM routing** — header-based model dispatch on `/chat`:
+**LLM routing** — model dispatch on `/v1/chat/completions` (body `model` → synthesized `x-model` header):
 
-| Header             | Value | Backend               | Timeout |
-| ------------------ | ----- | --------------------- | ------- |
-| `x-priority: high` | —     | `llm-backend-complex` | 300s    |
-| `x-model: complex` | —     | `llm-backend-complex` | 300s    |
-| `x-model: fast`    | —     | `llm-backend-fast`    | 300s    |
-| `x-model: memory`  | —     | `llm-backend-memory`  | 300s    |
-| `x-model: vision`  | —     | `llm-backend-vision`  | 300s    |
+| Match                | Backend               | Timeout | Guardrails |
+| -------------------- | --------------------- | ------- | ---------- |
+| `x-model: complex`   | `llm-backend-complex` | 300s    | yes        |
+| `x-model: complex-raw` | `llm-backend-complex` | 300s  | no (open lane) |
+| `x-priority: high`   | `llm-backend-complex` | 300s    | yes        |
+| `x-model: micro`     | `llm-backend-micro`   | 120s    | yes        |
+| `x-model: omni`      | `llm-backend-omni`    | 300s    | yes        |
 
-**MCP routing** — tool-call dispatch on `/mcp`:
+**MCP routing** — tiered ToolHive virtual-MCP dispatch:
 
-| Path   | Backend       |
-| ------ | ------------- |
-| `/mcp` | `mcp-backend` |
+| Path       | Tier                     |
+| ---------- | ------------------------ |
+| `/mcp/ro`  | internal read-only       |
+| `/mcp/rw`  | internal read-write      |
+| `/mcp/ext` | external (FailClosed)    |
 
-API key authentication is enforced via `AgentgatewayPolicy` in strict mode for all LLM and MCP routes. The gateway is used by all AI-capable workloads as the single choke point for auth, routing, guardrails, and observability.
+API key authentication is enforced via `AgentgatewayPolicy` in strict mode for all LLM and MCP routes. CI traffic is further scoped: a dedicated route (`agentgateway-llm-route-ci`, HTTPS listener only) accepts only the `gha-ci` key on the `complex`/`micro` sections, behind a 300k-tokens/hour + 60-requests/minute budget (`ci-access` policy). The gateway is the single choke point for auth, routing, guardrails, and observability.
 
 ### DNS Architecture
 
