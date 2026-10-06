@@ -7,7 +7,6 @@ Thumbs.db
 site*/
 
 # Other files
-eval/
 kubeconfig
 talosconfig
 .env
@@ -15,8 +14,8 @@ talosconfig
 .log
 
 # Scratch
+eval/
+temp/
 .tmp-*/
 .tmp-*.md
-
-# Local planning scratch (leaked once via git add -A in #3919; never commit)
-/temp/
+.vscode/
