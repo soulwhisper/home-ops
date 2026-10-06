@@ -15,7 +15,7 @@ name: zotregistry
 
 services:
   zot:
-    image: "ghcr.io/project-zot/zot-linux-amd64:v2.1.21"
+    image: "ghcr.io/project-zot/zot-linux-amd64:v2.1.22"
     container_name: "zot"
     restart: "unless-stopped"
     ports:
