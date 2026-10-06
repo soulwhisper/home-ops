@@ -57,6 +57,7 @@ jobs:
       - name: Run executor
         env:
           OPENAI_BASE_URL: https://api.noirprime.com/v1
+          PI_CODING_AGENT_DIR: /tmp/omp-agent
           OPENAI_API_KEY: ${{ secrets.AGW_CI_KEY }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GIT_AUTHOR_NAME: repo-butler[bot]
@@ -69,7 +70,8 @@ jobs:
             --json title,body --template '{{.title}}{{"\n\n"}}{{.body}}' > /tmp/task.md
           mise install --yes
           mise use -g github:can1357/oh-my-pi@latest
-          omp -p --auto-approve --no-pty --model openai/complex \
+          mkdir -p /tmp/omp-agent && cp .github/omp-models.yml /tmp/omp-agent/models.yml
+          omp -p --auto-approve --no-pty --model homeops/complex \
             --append-system-prompt "$(cat .github/agent-executor-prompt.md)" \
             "$(cat /tmp/task.md)" | tee /tmp/agent.log
           # fail loud on a no-op run (no branch produced)
