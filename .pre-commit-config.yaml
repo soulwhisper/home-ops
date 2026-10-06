@@ -21,6 +21,9 @@ repos:
     rev: v1.7.12
     hooks:
       - id: actionlint
+        # v1.7.12 ships a stale popular-actions schema that marks client-id
+        # invalid for create-github-app-token; runtime v3 accepts client-id.
+        args: ['-ignore', 'missing input "app-id" which is required by action "actions/create-github-app-token"']
 
   # GitHub Actions security audit
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
