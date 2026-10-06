@@ -2,7 +2,7 @@
 # Declarative hermes-agent config, seeded onto the PVC by the seed-config
 # initContainer at every pod start (dashboard edits to these files revert on
 # restart — edit here instead). $${VAR} refs (flux-escaped) land as ${VAR}
-# in-cluster and resolve against each profile's own .env, which the
+# which the initContainer renders from pod env (ExternalSecret).
 apiVersion: v1
 kind: ConfigMap
 metadata:
