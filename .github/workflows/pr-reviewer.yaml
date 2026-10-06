@@ -5,9 +5,7 @@
 name: AI PR Review
 
 on:
-  # zizmor: ignore[dangerous-triggers] deliberate: base-branch context keeps
-  # the main-only ci environment reachable; pinned action reads PR code as
-  # evidence only, never executes it.
+  # zizmor: ignore[dangerous-triggers] base-branch context; PR code read-only
   pull_request_target:
     types: [opened, reopened, synchronize, ready_for_review]
 
