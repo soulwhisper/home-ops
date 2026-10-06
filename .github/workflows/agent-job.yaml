@@ -64,13 +64,17 @@ jobs:
           GIT_AUTHOR_EMAIL: repo-butler[bot]@users.noreply.github.com
           GIT_COMMITTER_EMAIL: repo-butler[bot]@users.noreply.github.com
         run: |
+          set -euo pipefail
           gh issue view "${{ inputs.issue }}" \
             --json title,body --template '{{.title}}{{"\n\n"}}{{.body}}' > /tmp/task.md
           mise install --yes
           mise use -g github:can1357/oh-my-pi@latest
-          omp -p --auto-approve --no-pty --model complex \
+          omp -p --auto-approve --no-pty --model openai/complex \
             --append-system-prompt "$(cat .github/agent-executor-prompt.md)" \
             "$(cat /tmp/task.md)" | tee /tmp/agent.log
+          # fail loud on a no-op run (no branch produced)
+          git branch -r | grep -q "origin/agent/${{ inputs.issue }}-" || {
+            echo "::error:: executor produced no branch"; exit 1; }
 
       - name: Report run link on the issue
         if: always()
