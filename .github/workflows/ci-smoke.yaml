@@ -1,0 +1,38 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# yamllint disable rule:truthy
+
+name: CI Smoke - Tailnet Pass-through
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  smoke:
+    name: Tailnet + agentgateway smoke
+    runs-on: ubuntu-latest
+    environment: ci
+    timeout-minutes: 10
+    steps:
+      - name: Join tailnet (WiF, tag:gha-ci, ephemeral)
+        uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:gha-ci
+          version: 1.102.5
+
+      - name: Accept subnet routes
+        run: sudo tailscale set --accept-routes=true
+
+      - name: Smoke agentgateway through tailnet
+        run: |
+          curl -sS --fail --retry 6 --retry-delay 15 --retry-all-errors \
+            --resolve api.noirprime.com:443:10.10.0.128 \
+            https://api.noirprime.com/v1/models \
+            -H "Authorization: Bearer ${{ secrets.AGW_CI_KEY }}" \
+            | jq -r '.data[].id'
