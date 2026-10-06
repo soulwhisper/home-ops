@@ -24,7 +24,7 @@ repos:
         # v1.7.12 ships a stale popular-actions schema for
         # create-github-app-token (rejects client-id, demands app-id);
         # runtime v3 accepts client-id. Ignore scoped to that action only.
-        args: [-ignore, 'input.*(app-id|client-id).*create-github-app-token']
+        args: [-ignore, input.*(app-id|client-id).*create-github-app-token]
 
   # GitHub Actions security audit
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
