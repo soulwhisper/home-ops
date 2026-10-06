@@ -13,6 +13,7 @@ permissions:
   contents: read
   checks: read
   pull-requests: write
+  id-token: write
 concurrency:
   group: ai-review
   cancel-in-progress: false
