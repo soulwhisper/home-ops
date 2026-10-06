@@ -28,7 +28,7 @@ jobs:
       (github.event.pull_request.user.type != 'Bot' ||
         contains(github.event.pull_request.labels.*.name, 'review/required'))
     runs-on: ubuntu-latest
-    environment: ci
+    environment: production
     timeout-minutes: 30
     steps:
       - name: Generate Token

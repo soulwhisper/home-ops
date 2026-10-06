@@ -19,7 +19,7 @@ jobs:
   check:
     name: Stall check
     runs-on: ubuntu-latest
-    environment: ci
+    environment: production
     timeout-minutes: 10
     steps:
       - name: Map intranet hostname
