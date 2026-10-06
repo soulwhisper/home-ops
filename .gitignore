@@ -6,13 +6,6 @@ Thumbs.db
 .cache/
 site*/
 
-# Terraform
-.terraform/
-.terraform.lock.hcl
-.tfstate
-.tfstate.backup
-.tfvars
-
 # Other files
 eval/
 kubeconfig
