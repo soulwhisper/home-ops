@@ -10,3 +10,4 @@ resources:
   - ./externalsecret.yaml
   - ./guardrails.yaml
   - ./httproute.yaml
+  - ./httproute-ci.yaml

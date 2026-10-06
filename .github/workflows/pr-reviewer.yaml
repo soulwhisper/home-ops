@@ -1,0 +1,66 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# yamllint disable rule:truthy
+
+name: AI PR Review
+
+on:
+  # zizmor: ignore[dangerous-triggers] base-branch context; PR code read-only
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  checks: read
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: ai-review
+  cancel-in-progress: false
+
+jobs:
+  review:
+    name: AI PR Review
+    # Skip automation PRs (renovate[bot] bumps, repo-butler vendir/label-sync).
+    # Override: the existing `review/required` label also forces an AI review.
+    if: >-
+      !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.pull_request.user.type != 'Bot' ||
+        contains(github.event.pull_request.labels.*.name, 'review/required'))
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - name: Generate Token
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout PR head
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Map intranet hostname to pinned LB
+        run: echo "10.10.0.140 api.noirprime.com" | sudo tee -a /etc/hosts
+
+      - name: Join tailnet (WiF, tag:gha-ci, ephemeral)
+        uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:gha-ci
+
+      - name: AI review
+        uses: misospace/pr-reviewer-action@829f395f7154b4d87c229500fd09b30a8ad2224d # v3.3.0
+        with:
+          ai-base-url: https://api.noirprime.com/v1
+          ai-api-key: ${{ secrets.AGW_CI_KEY }}
+          ai-model: complex
+          github-token: ${{ steps.app-token.outputs.token }}
+          ai-response-format: json_schema

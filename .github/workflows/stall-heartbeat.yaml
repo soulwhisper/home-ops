@@ -1,0 +1,65 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# yamllint disable rule:truthy
+
+name: Stall Heartbeat
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: read
+  id-token: write
+
+jobs:
+  check:
+    name: Stall check
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    steps:
+      - name: Map intranet hostname
+        run: echo "10.10.0.131 hooks.noirprime.com" | sudo tee -a /etc/hosts
+
+      - name: Join tailnet (WiF, tag:gha-ci, ephemeral)
+        uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:gha-ci
+
+      - name: Stall check + alert
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STALL_ALERT_SECRET: ${{ secrets.STALL_ALERT_SECRET }}
+          STALL_HOURS: "6"
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          last=$(gh api repos/{owner}/{repo}/commits/main --jq '.commit.committer.date')
+          age_h=$(( ( $(date +%s) - $(date -d "$last" +%s) ) / 3600 ))
+          running=$(gh api 'repos/{owner}/{repo}/actions/runs?status=in_progress' \
+            --jq '[.workflow_runs[] | select(.name == "Agent Job")] | length')
+          open_cards=$(gh issue list --state open --json number --jq 'length')
+          latest_failed=$(gh api 'repos/{owner}/{repo}/actions/runs?status=failure&per_page=1' \
+            --jq '[.workflow_runs[] | select(.name == "Agent Job")][0].databaseId // ""')
+
+          msg=""
+          if [ -n "$latest_failed" ]; then
+            msg="agent-job failed: run $latest_failed"
+          elif [ "$age_h" -ge "$STALL_HOURS" ] && [ "$running" -eq 0 ] && [ "$open_cards" -gt 0 ]; then
+            msg="stalled: no commit in ${age_h}h, no running agent-job, $open_cards open task card(s)"
+          fi
+          [ -z "$msg" ] && { echo "healthy (age=${age_h}h running=$running open=$open_cards)"; exit 0; }
+
+          body=$(jq -nc --arg m "$msg" --arg d "run repo: $GITHUB_REPOSITORY" \
+            '{message: $m, detail: $d, timestamp: (now | todate)}')
+          sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$STALL_ALERT_SECRET" | sed 's/^.* //')
+          curl -sS --fail -X POST "https://hooks.noirprime.com/p/ops/webhooks/stall-alert" \
+            -H 'content-type: application/json' -H "X-Hub-Signature-256: sha256=$sig" \
+            -d "$body"
+          echo "alert sent: $msg"
