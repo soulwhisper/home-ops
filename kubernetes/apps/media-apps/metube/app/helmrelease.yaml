@@ -79,15 +79,15 @@ spec:
 
     persistence:
       movie:
-        existingClaim: video
+        existingClaim: downloads
         globalMounts:
           - path: /data/movie
-            subPath: youtube
+            subPath: metube/movie
       music:
-        existingClaim: music
+        existingClaim: downloads
         globalMounts:
           - path: /data/audio
-            subPath: youtube
+            subPath: metube/audio
       tmpfs:
         type: emptyDir
         globalMounts:
