@@ -1,0 +1,21 @@
+providers:
+  homeops:
+    baseUrl: https://api.noirprime.com/v1
+    apiKey: AGW_CI_KEY
+    api: openai-completions
+    auth: apiKey
+    models:
+      - id: complex
+        api: openai-completions
+        reasoning: true
+        input: [text]
+        contextWindow: 256000
+        maxTokens: 16384
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+      - id: micro
+        api: openai-completions
+        reasoning: false
+        input: [text]
+        contextWindow: 128000
+        maxTokens: 8192
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
