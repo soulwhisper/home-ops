@@ -29,16 +29,28 @@ jobs:
       - name: Accept subnet routes
         run: sudo tailscale set --accept-routes=true
 
-      - name: Show approved subnet routes
-        run: >-
-          tailscale status --json | jq -r
-          '.Peer[] | select(.PrimaryRoutes!=null) | "\(.HostName): \(.PrimaryRoutes[])"'
+      - name: Show tailnet peers and routes
+        run: |
+          tailscale status
+          tailscale status --json | jq -r \
+            '.Peer[] | select(.PrimaryRoutes!=null) | "\(.HostName): \(.PrimaryRoutes[])"'
+
+      - name: Kernel route for target
+        run: ip route get 10.10.0.128
+
+      - name: Ping subnet router via mesh
+        run: |
+          ROUTER=$(tailscale status --json | jq -r \
+            '.Peer[] | select(.PrimaryRoutes!=null) | .TailscaleIPs[0]' | head -1)
+          tailscale ping --c 3 "$ROUTER"
 
       - name: Smoke agentgateway through tailnet
         run: |
+          set -o pipefail
           curl -sS --fail --connect-timeout 10 --max-time 30 \
             --retry 3 --retry-delay 10 --retry-all-errors \
             --resolve api.noirprime.com:443:10.10.0.128 \
             https://api.noirprime.com/v1/models \
             -H "Authorization: Bearer ${{ secrets.AGW_CI_KEY }}" \
-            | jq -r '.data[].id'
+            -o /tmp/models.json -w 'HTTP %{http_code}\n'
+          jq -r '.data[].id' /tmp/models.json
