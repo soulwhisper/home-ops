@@ -13,8 +13,9 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
   checks: read
+  pull-requests: write
+  id-token: write
 
 concurrency:
   group: ai-review-${{ github.event.number }}
