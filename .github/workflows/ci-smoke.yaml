@@ -36,7 +36,7 @@ jobs:
             '.Peer[] | select(.PrimaryRoutes!=null) | "\(.HostName): \(.PrimaryRoutes[])"'
 
       - name: Kernel route for target
-        run: ip route get 10.10.0.128
+        run: ip route get 10.10.0.140
 
       - name: Ping subnet router via mesh
         run: |
@@ -53,11 +53,12 @@ jobs:
         if: always()
         run: |
           set -o pipefail
-          # agentgateway-proxy LB serves HTTP :80 only (no 443 listener);
-          # plaintext leg rides inside WireGuard + trusted LAN. API key required.
+          # agentgateway-proxy pinned at 10.10.0.140, HTTPS:443
+          # (noirprime-com-tls). Plain :80 stays for in-cluster consumers.
           curl -sS --fail --connect-timeout 10 --max-time 30 \
             --retry 3 --retry-delay 10 --retry-all-errors \
-            http://10.10.0.128/v1/models \
+            --resolve api.noirprime.com:443:10.10.0.140 \
+            https://api.noirprime.com/v1/models \
             -H "Authorization: Bearer ${{ secrets.AGW_CI_KEY }}" \
             -o /tmp/models.json -w 'HTTP %{http_code}\n'
           jq -r '.data[].id' /tmp/models.json
