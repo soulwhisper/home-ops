@@ -1,0 +1,80 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# yamllint disable rule:truthy
+
+name: Agent Job
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: Task card issue number
+        required: true
+        type: number
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+  id-token: write
+
+concurrency:
+  group: agent-job-${{ inputs.issue }}
+  cancel-in-progress: false
+
+jobs:
+  execute:
+    name: Execute task card
+    runs-on: ubuntu-latest
+    environment: ci
+    timeout-minutes: 45
+    steps:
+      - name: Generate Token
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Map intranet hostname to pinned LB
+        run: echo "10.10.0.140 api.noirprime.com" | sudo tee -a /etc/hosts
+
+      - name: Join tailnet (WiF, tag:gha-ci, ephemeral)
+        uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:gha-ci
+
+      - name: Install mise
+        uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+
+      - name: Run executor
+        env:
+          OPENAI_BASE_URL: https://api.noirprime.com/v1
+          OPENAI_API_KEY: ${{ secrets.AGW_CI_KEY }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GIT_AUTHOR_NAME: repo-butler[bot]
+          GIT_COMMITTER_NAME: repo-butler[bot]
+          GIT_AUTHOR_EMAIL: repo-butler[bot]@users.noreply.github.com
+          GIT_COMMITTER_EMAIL: repo-butler[bot]@users.noreply.github.com
+        run: |
+          gh issue view "${{ inputs.issue }}" \
+            --json title,body --template '{{.title}}{{"\n\n"}}{{.body}}' > /tmp/task.md
+          mise use -g github:can1357/oh-my-pi@latest
+          omp -p --auto-approve --no-pty --model complex \
+            --append-system-prompt "$(cat .github/agent-executor-prompt.md)" \
+            "$(cat /tmp/task.md)" | tee /tmp/agent.log
+
+      - name: Report run link on the issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: >-
+          gh issue comment "${{ inputs.issue }}" --body
+          "agent-job ${{ github.run_id }} finished: ${{ job.status }} — ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
