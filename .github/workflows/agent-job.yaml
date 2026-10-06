@@ -19,7 +19,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: agent-job-${{ inputs.issue }}
+  group: agent-job
   cancel-in-progress: false
 
 jobs:
@@ -66,6 +66,7 @@ jobs:
         run: |
           gh issue view "${{ inputs.issue }}" \
             --json title,body --template '{{.title}}{{"\n\n"}}{{.body}}' > /tmp/task.md
+          mise install --yes
           mise use -g github:can1357/oh-my-pi@latest
           omp -p --auto-approve --no-pty --model complex \
             --append-system-prompt "$(cat .github/agent-executor-prompt.md)" \
