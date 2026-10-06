@@ -6,15 +6,7 @@ Thumbs.db
 .cache/
 site*/
 
-# Terraform
-.terraform/
-.terraform.lock.hcl
-.tfstate
-.tfstate.backup
-.tfvars
-
 # Other files
-eval/
 kubeconfig
 talosconfig
 .env
@@ -22,5 +14,8 @@ talosconfig
 .log
 
 # Scratch
+eval/
+temp/
 .tmp-*/
 .tmp-*.md
+.vscode/
