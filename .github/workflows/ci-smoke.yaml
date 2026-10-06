@@ -15,7 +15,7 @@ jobs:
   smoke:
     name: Tailnet + agentgateway smoke
     runs-on: ubuntu-latest
-    environment: ci
+    environment: production
     timeout-minutes: 10
     steps:
       - name: Join tailnet (WiF, tag:gha-ci, ephemeral)
