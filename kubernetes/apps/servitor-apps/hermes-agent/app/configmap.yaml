@@ -37,6 +37,13 @@ data:
                 [Frigate alert] camera={camera} severity={severity}: {description}
                 (label={label}, zones={zones}, event={event_id}, ts={timestamp})
               deliver: log
+            stall-alert:
+              secret: $${STALL_ALERT_SECRET}
+              profile: ops
+              prompt: |
+                [Stall alert] {message}
+                detail: {detail}
+              deliver: feishu
     # side tasks pinned to cheap gateway lanes (body model -> x-model header)
     auxiliary:
       vision: { provider: main, model: omni, timeout: 30 }
@@ -120,6 +127,7 @@ data:
     API_SERVER_HOST=0.0.0.0
     API_SERVER_KEY=$${API_SERVER_KEY}
     FRIGATE_WEBHOOK_SECRET=$${FRIGATE_WEBHOOK_SECRET}
+    STALL_ALERT_SECRET=$${STALL_ALERT_SECRET}
     EOF
 
     for p in chat ops; do

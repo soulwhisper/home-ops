@@ -85,6 +85,7 @@ spec:
       toPorts:
         - ports:
             - { port: "9119", protocol: TCP }
+            - { port: "8644", protocol: TCP }
     # (Cilium rejects mixed fromEndpoints+fromCIDR in one rule — keep split)
     - fromEndpoints:
         - matchLabels:
