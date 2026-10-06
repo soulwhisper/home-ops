@@ -15,7 +15,7 @@ Each MS-01 node runs Talos Linux with:
 - **NVMe OSD**: SK Hynix P41 2TB, 2 OSDs per device for Rook-Ceph
 - **Additional NVMe slots**: WD Black SN850X 8TB, Kioxia RC20 2TB (available for future expansion)
 - **GPU**: Intel Iris Xe (i915) — exposed via Intel GPU Plugin for media transcoding
-- **Boot**: sd-boot, Talos factory image with custom schematic (Kata Containers, i915, NUT, Intel microcode)
+- **Boot**: sd-boot, Talos factory image with custom schematic (i915, NUT, Intel microcode; Kata sysext dropped with ADR-03)
 
 ### Network Topology
 
