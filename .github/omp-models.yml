@@ -2,7 +2,7 @@
 providers:
   homeops:
     baseUrl: https://api.noirprime.com/v1
-    apiKey: AGW_CI_KEY
+    apiKey: OPENAI_API_KEY
     api: openai-completions
     auth: apiKey
     models:
