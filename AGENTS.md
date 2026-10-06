@@ -19,6 +19,11 @@ and will be reverted.
   out-of-band manifests.
 - **`targetNamespace` set via `ks.yaml` postBuild** (not `metadata.namespace`)
   is an intentional convention — do not flag or "fix" it.
+- **App-level `ks.yaml` omit `interval`/`sourceRef`/`prune`/`timeout` on purpose.**
+  `cluster-apps` injects them via `spec.patches` (selector
+  `config.home-ops.io/managed=true`) at apply time. kubeconform flags these
+  files as invalid — that is a false positive of the schema against this
+  convention; do not "fix" by adding the fields.
 
 ## Sandboxing (ADR-03)
 
