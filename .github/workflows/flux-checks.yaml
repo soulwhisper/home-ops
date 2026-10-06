@@ -58,6 +58,7 @@ jobs:
         id: diff
         run: |
           flate diff all > /tmp/flate-diff.out || true
+          python3 .github/scripts/compact_diff.py < /tmp/flate-diff.out > /tmp/flate-digest.md || true
           DIFF_RAW=$(head -c 60000 /tmp/flate-diff.out)
           if [[ $(wc -c < /tmp/flate-diff.out) -gt 60000 ]]; then
             DIFF_RAW="${DIFF_RAW%$'\n'*}"
@@ -66,6 +67,9 @@ jobs:
           {
             echo 'diff<<EOF'
             echo "${DIFF_RAW}"
+            echo 'EOF'
+            echo 'digest<<EOF'
+            cat /tmp/flate-digest.md
             echo 'EOF'
           } >> $GITHUB_OUTPUT
 
@@ -84,9 +88,15 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           header: ${{ github.event.pull_request.number }}/kubernetes
           message: |
+            ${{ steps.diff.outputs.digest }}
+
+            <details><summary>Full rendered diff</summary>
+
             ```diff
             ${{ steps.diff.outputs.diff }}
             ```
+
+            </details>
 
   kubeconform:
     if: ${{ needs.filter.outputs.changed-files != '[]' }}
