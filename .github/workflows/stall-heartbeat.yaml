@@ -37,6 +37,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           STALL_ALERT_SECRET: ${{ secrets.STALL_ALERT_SECRET }}
           STALL_HOURS: "6"
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           last=$(gh api repos/{owner}/{repo}/commits/main --jq '.commit.committer.date')
