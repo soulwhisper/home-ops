@@ -6,3 +6,4 @@ metadata:
 data:
   00-langfuse.sql: |
     CREATE DATABASE IF NOT EXISTS langfuse ON CLUSTER '{cluster}';
+
