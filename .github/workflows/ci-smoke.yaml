@@ -44,22 +44,19 @@ jobs:
             '.Peer[] | select(.PrimaryRoutes!=null) | .TailscaleIPs[0]' | head -1)
           tailscale ping --c 3 "$ROUTER" || true
 
-      - name: Negative control (NAS must be ACL-blocked)
+      - name: Negative control (off-scope target must fail)
         run: >-
           curl -sS --connect-timeout 5 --max-time 10 http://10.10.0.100:9003/healthz
-          && echo 'UNEXPECTED: NAS reachable - ACL missing!' || echo 'OK: ACL blocked NAS'
+          && echo 'UNEXPECTED: off-scope target reachable' || echo 'OK: blocked'
 
       - name: Smoke agentgateway through tailnet
         if: always()
         run: |
           set -o pipefail
-          # CI route: HTTPS listener, api.noirprime.com, gha-ci key only,
-          # rate-limited (ci-access policy). In-cluster lanes stay on :80.
           R="--resolve api.noirprime.com:443:10.10.0.140"
           B="https://api.noirprime.com"
           K="Authorization: Bearer ${{ secrets.AGW_CI_KEY }}"
 
-          # positive: real micro-lane inference -> 200 + rate-limit headers
           llm=$(curl -sS $R --connect-timeout 10 --max-time 90 \
             --retry 3 --retry-delay 10 --retry-all-errors \
             -H "$K" -H 'content-type: application/json' \
@@ -69,8 +66,7 @@ jobs:
           jq -r '.choices[0].message.content' /tmp/llm.json
           grep -qi '^x-ratelimit-limit' /tmp/hdrs && echo "ratelimit headers present"
 
-          # negatives: no key -> 401; omni lane absent on CI route -> 404;
-          # media/MCP reject gha-ci -> 401
+          # scope assertions (CI route = complex/micro only)
           omni=$(curl -sS $R -o /dev/null -w '%{http_code}' -H "$K" -H 'content-type: application/json' -d '{"model":"omni","messages":[{"role":"user","content":"hi"}]}' "$B/v1/chat/completions")
           models=$(curl -sS $R -o /dev/null -w '%{http_code}' -H "$K" "$B/v1/models")
           mcp=$(curl -sS $R -o /dev/null -w '%{http_code}' -H "$K" "$B/mcp/ro")
@@ -86,7 +82,6 @@ jobs:
           B="https://api.noirprime.com/v1/chat/completions"
           K="Authorization: Bearer ${{ secrets.AGW_CI_KEY }}"
 
-          # tool calling (reviewer tool loop depends on this)
           tc=$(curl -sS $R --connect-timeout 10 --max-time 240 \
             -H "$K" -H 'content-type: application/json' \
             -d '{"model":"complex","messages":[{"role":"user","content":"What is the weather in Paris? Use the tool."}],"tools":[{"type":"function","function":{"name":"get_weather","description":"Get weather for a city","parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]}}}],"max_tokens":256}' \
@@ -94,8 +89,7 @@ jobs:
           echo "toolcall=$tc" && [ "$tc" = 200 ]
           jq -e '.choices[0].message.tool_calls[0].function.name == "get_weather"' /tmp/tc.json
 
-          # constrained JSON (decision gate) — strict schema mode:
-          # json_object alone let the model return an array (E3 finding)
+          # strict json_schema — plain json_object returned an array once
           js=$(curl -sS $R --connect-timeout 10 --max-time 240 \
             -H "$K" -H 'content-type: application/json' \
             -d '{"model":"complex","messages":[{"role":"user","content":"Reply with JSON: {\"ok\": true}"}],"response_format":{"type":"json_schema","json_schema":{"name":"probe","schema":{"type":"object","properties":{"ok":{"type":"boolean"}},"required":["ok"],"additionalProperties":false}}},"max_tokens":64}' \

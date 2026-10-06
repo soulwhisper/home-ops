@@ -20,9 +20,7 @@ spec:
       secretRef:
         name: *name
 ---
-# CI route access: gha-ci key only + hard budget. Unconditional — the CI
-# route authenticates nothing else. Tokens counted post-stream; over-budget
-# requests fail fast 429 with Retry-After.
+# CI route access: gha-ci key only + token/request budget.
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy

@@ -1,8 +1,6 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
-# CI-only LLM lane: HTTPS listener + api.noirprime.com + gha-ci key +
-# rate limit (ci-access policy). complex/micro sections only; everything
-# else on this listener is 404/401 by design.
+# CI lane: HTTPS listener, api.noirprime.com, complex/micro sections only.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
