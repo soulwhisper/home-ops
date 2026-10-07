@@ -16,7 +16,11 @@ spec:
     # + /api/chat, or the holmes CLI.
     extraEnvVarsSecrets:
       - *name # OPENAI_API_BASE + OPENAI_API_KEY (ExternalSecret)
-
+    additionalEnvVars:
+      # default model for requests that don't name one (HealthChecks!): without
+      # this, holmes falls back to "gpt-5.4" whenever OPENAI_API_KEY is set
+      # (config.py _apply_env_fallbacks) -> agentgateway 404s the unknown lane
+      - { name: MODEL, value: complex }
     # LLM: local agentgateway `complex` lane (Qwen3.8-27B on the studio).
     # Agentic RCA needs tool-calling; omni/micro lanes are extractors and too
     # weak. Lane stays guarded (promptGuard) — investigation prompts carry
