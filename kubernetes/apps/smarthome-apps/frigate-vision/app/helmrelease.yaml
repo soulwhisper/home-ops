@@ -27,17 +27,14 @@ spec:
         containers:
           app:
             image:
-              repository: docker.io/library/python
-              # renovate: datasource=docker depName=docker.io/library/python
-              tag: "3.14-slim"
+              repository: ghcr.io/soulwhisper/frigate-vision
+              tag: "2026.10.07"
+            # deps (paho-mqtt, httpx) are baked into the image at build time;
+            # no runtime pip install (the CNP grants no Internet egress, and
+            # pypi.org availability stops being a boot dependency)
             command:
-              - /bin/sh
-              - -ec
-              - pip install --no-cache-dir --quiet paho-mqtt httpx && exec python /app/bridge.py
-            env:
-              # pip falls back to the user site ($HOME/.local) since site-packages
-              # is RO; HOME=/ in the slim image, so point it at the tmp emptyDir
-              HOME: /tmp
+              - python
+              - /app/bridge.py
             envFrom:
               - secretRef:
                   name: *name

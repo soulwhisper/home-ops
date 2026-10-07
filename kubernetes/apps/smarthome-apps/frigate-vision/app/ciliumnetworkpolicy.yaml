@@ -9,15 +9,7 @@ spec:
     matchLabels:
       "app.kubernetes.io/name": frigate-vision
   egress:
-    # LLM gateway (omni lane)
-    - toServices:
-        - k8sService:
-            serviceName: agentgateway-proxy
-            namespace: networking-system
-      toPorts:
-        - ports:
-            - { port: "80", protocol: TCP }
-    # frigate snapshots
+    # frigate events API (enrichment lookup for description updates)
     - toServices:
         - k8sService:
             serviceName: frigate
@@ -25,7 +17,7 @@ spec:
       toPorts:
         - ports:
             - { port: "5000", protocol: TCP }
-    # MQTT events
+    # MQTT description updates
     - toServices:
         - k8sService:
             serviceName: mosquitto
@@ -33,14 +25,6 @@ spec:
       toPorts:
         - ports:
             - { port: "1883", protocol: TCP }
-    # Home Assistant persistent_notification
-    - toServices:
-        - k8sService:
-            serviceName: home-assistant
-            namespace: smarthome-apps
-      toPorts:
-        - ports:
-            - { port: "8123", protocol: TCP }
     # hermes webhook (ops profile alerts)
     - toServices:
         - k8sService:
