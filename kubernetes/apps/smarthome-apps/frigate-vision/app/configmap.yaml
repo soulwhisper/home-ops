@@ -1,18 +1,22 @@
 ---
-# Frigate event -> omni-lane VLM description -> HA notify + hermes (ops profile)
-# webhook. Secrets arrive via env (ExternalSecret); nothing sensitive in here.
+# Frigate native GenAI description -> hermes (ops profile) webhook forwarder.
+# VLM description+severity run INSIDE frigate (objects.genai -> agentgateway
+# omni lane, severity as a [prefix]); this bridge only parses the prefix,
+# gates on MIN_SEVERITY, enriches via the events API, and signs the hermes
+# webhook (HMAC-V2). HA notification moved to an HA-side MQTT automation.
+# Secrets arrive via env (ExternalSecret); nothing sensitive in here.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: frigate-vision
 data:
   bridge.py: |
-    import base64
     import hashlib
     import hmac
     import json
     import logging
     import os
+    import re
     import time
 
     import httpx
@@ -24,77 +28,33 @@ data:
     MQTT_HOST = os.environ.get("MQTT_HOST", "mosquitto.smarthome-apps.svc.cluster.local")
     MQTT_PORT = int(os.environ.get("MQTT_PORT", "1883"))
     FRIGATE_URL = os.environ.get("FRIGATE_URL", "http://frigate.smarthome-apps.svc.cluster.local:5000")
-    GATEWAY_URL = os.environ["GATEWAY_URL"]
-    GATEWAY_MODEL = os.environ["GATEWAY_MODEL"]
-    GATEWAY_KEY = os.environ["GATEWAY_API_KEY"]
-    HA_URL = os.environ.get("HA_URL", "http://home-assistant.smarthome-apps.svc.cluster.local:8123")
-    HA_TOKEN = os.environ["HA_TOKEN"]
-    HA_NOTIFY_SERVICE = os.environ.get("HA_NOTIFY_SERVICE", "persistent_notification.create")
     HERMES_WEBHOOK_URL = os.environ.get(
         "HERMES_WEBHOOK_URL",
         "http://hermes-agent.servitor-apps.svc.cluster.local:8644/p/ops/webhooks/frigate-alert",
     )
     HERMES_WEBHOOK_SECRET = os.environ["HERMES_WEBHOOK_SECRET"]
     MIN_SEVERITY = os.environ.get("MIN_SEVERITY", "medium")  # low|medium|high
-    LABELS = set(os.environ.get("LABEL_FILTER", "person,car,cat,dog").split(","))
 
     SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2}
+    # frigate objects.genai prompt instructs the model to start with [severity]
+    SEVERITY_PREFIX = re.compile(r"^\[(low|medium|high)\][.:]?\s*(.*)", re.IGNORECASE | re.DOTALL)
 
-    PROMPT = (
-        "You are a home-security camera analyst. Describe this camera event image concisely "
-        "and judge its severity. Reply with ONLY JSON: "
-        '{"description": "<one sentence, what/who/where/action>", '
-        '"severity": "low|medium|high"}. '
-        "high = immediate danger or intrusion; medium = unusual/noteworthy activity; "
-        "low = normal/routine. If the image is unusable, severity=low."
-    )
-
-    http = httpx.Client(timeout=httpx.Timeout(120.0, connect=10.0))
+    http = httpx.Client(timeout=httpx.Timeout(30.0, connect=5.0))
 
 
-    def describe(snapshot: bytes) -> dict:
-        resp = http.post(
-            GATEWAY_URL,
-            headers={"Authorization": f"Bearer {GATEWAY_KEY}"},
-            json={
-                "model": GATEWAY_MODEL,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": PROMPT},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": "data:image/jpeg;base64," + base64.b64encode(snapshot).decode()
-                                },
-                            },
-                        ],
-                    }
-                ],
-                "temperature": 0.2,
-                "max_tokens": 256,
-            },
-        )
-        resp.raise_for_status()
-        text = resp.json()["choices"][0]["message"]["content"]
-        text = text.strip().removeprefix("```json").removesuffix("```").strip()
-        try:
-            out = json.loads(text)
-            return {"description": str(out.get("description", ""))[:500],
-                    "severity": out.get("severity", "low")}
-        except json.JSONDecodeError:
-            log.warning("VLM returned non-JSON: %r", text[:200])
-            return {"description": text[:500], "severity": "low"}
-
-
-    def notify_ha(title: str, message: str) -> None:
-        domain, _, service = HA_NOTIFY_SERVICE.partition(".")
-        http.post(
-            f"{HA_URL}/api/services/{domain}/{service}",
-            headers={"Authorization": f"Bearer {HA_TOKEN}"},
-            json={"title": title, "message": message, "notification_id": "frigate-vision"},
-        ).raise_for_status()
+    def lookup_event(event_id: str) -> dict:
+        # description updates fire at end of object lifecycle; one retry covers
+        # the rare case where the event row isn't readable yet
+        for attempt in (0, 1):
+            try:
+                resp = http.get(f"{FRIGATE_URL}/api/events/{event_id}")
+                resp.raise_for_status()
+                return resp.json()
+            except Exception:
+                if attempt:
+                    raise
+                time.sleep(2)
+        return {}
 
 
     def notify_hermes(payload: dict) -> None:
@@ -116,30 +76,29 @@ data:
 
     def on_message(client, userdata, msg):
         try:
-            event = json.loads(msg.payload)
-            if event.get("type") != "end":  # 'end' has final severity + snapshot ready
+            update = json.loads(msg.payload)
+            if update.get("type") != "description":
                 return
-            after = event.get("after", {})
-            if after.get("label") not in LABELS or not after.get("has_snapshot"):
+            m = SEVERITY_PREFIX.match(str(update.get("description", "")).strip())
+            if not m:
+                log.warning("description missing severity prefix: %r", str(update.get("description"))[:120])
                 return
-            event_id, camera = after["id"], after["camera"]
-            snap = http.get(f"{FRIGATE_URL}/api/events/{event_id}/snapshot.jpg")
-            snap.raise_for_status()
-            result = describe(snap.content)
-            log.info("event=%s camera=%s -> %s [%s]", event_id, camera, result["description"], result["severity"])
-            if SEVERITY_RANK.get(result["severity"], 0) < SEVERITY_RANK[MIN_SEVERITY]:
+            severity, description = m.group(1).lower(), m.group(2).strip()
+            if SEVERITY_RANK.get(severity, 0) < SEVERITY_RANK[MIN_SEVERITY]:
                 return
+            event_id = update["id"]
+            event = lookup_event(event_id)
             payload = {
                 "event_type": "frigate.alert",
                 "event_id": event_id,
-                "camera": camera,
-                "label": after.get("label"),
-                "zones": after.get("zones", []),
-                "severity": result["severity"],
-                "description": result["description"],
-                "timestamp": int(after.get("end_time") or time.time()),
+                "camera": event.get("camera"),
+                "label": event.get("label") or event.get("data", {}).get("label"),
+                "zones": event.get("zones", []),
+                "severity": severity,
+                "description": description[:500],
+                "timestamp": int(event.get("end_time") or time.time()),
             }
-            notify_ha(f"Frigate: {camera} ({result['severity']})", result["description"])
+            log.info("event=%s camera=%s [%s] %s", event_id, payload["camera"], severity, description[:80])
             notify_hermes(payload)
         except Exception:
             log.exception("failed processing message")
@@ -149,6 +108,6 @@ data:
     client.username_pw_set(os.environ["MQTT_USERNAME"], os.environ["MQTT_PASSWORD"])
     client.on_message = on_message
     client.connect(MQTT_HOST, MQTT_PORT)
-    client.subscribe("frigate/events")
-    log.info("listening on %s:%s frigate/events", MQTT_HOST, MQTT_PORT)
+    client.subscribe("frigate/tracked_object_update")
+    log.info("listening on %s:%s frigate/tracked_object_update", MQTT_HOST, MQTT_PORT)
     client.loop_forever()
