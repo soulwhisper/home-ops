@@ -30,7 +30,7 @@ spec:
       # one-way only — upstream notes CallbackBlock interactivity is unimplemented)
       - mattermost_sink:
           name: mattermost-ops
-          url: "https://mm.noirprime.com"
+          url: "https://ops.noirprime.com"
           token: "{{ env.MM_BOT_TOKEN }}"
           token_id: "{{ env.MM_BOT_TOKEN_ID }}"
           channel: "ops-alerts"

@@ -34,7 +34,7 @@ spec:
               # renovate: datasource=docker depName=mattermost/mattermost-team-edition
               tag: "10.12.4"
             env:
-              MM_SERVICESETTINGS_SITEURL: "https://mm.noirprime.com"
+              MM_SERVICESETTINGS_SITEURL: "https://ops.noirprime.com"
               MM_SQLSETTINGS_DRIVERNAME: postgres
               # cnpg component pguser secret carries uri/host/port/username/password
               MM_SQLSETTINGS_DATASOURCE:
@@ -82,7 +82,7 @@ spec:
 
     route:
       app:
-        hostnames: ["mm.noirprime.com"]
+        hostnames: ["ops.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: mattermost.svg
