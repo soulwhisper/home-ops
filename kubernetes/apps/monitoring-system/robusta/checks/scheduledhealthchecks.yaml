@@ -1,8 +1,5 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/holmesgpt.dev/scheduledhealthcheck_v1alpha1.json
-# Holmes 定时巡检(mode 默认 monitor:无目的地,结果留 CR status,
-# kubectl get shc 消费;要通知时再挂 destinations)。
-# 覆盖已知痛点:ceph、证书、节点密度、告警规则质量、备份链。
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
 metadata:
