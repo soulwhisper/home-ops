@@ -1,0 +1,66 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: holmesgpt-egress
+spec:
+  # flux commonMetadata puts this label on the holmes server AND the operator
+  # pods (chart ships app.kubernetes.io/name=holmes-operator on the operator);
+  # one policy covers both, rules below are the union.
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/name": holmesgpt
+  egress:
+    # kubernetes/core + kubernetes/logs toolsets; operator CRD watches
+    - toEntities:
+        - kube-apiserver
+    # LLM gateway (complex lane)
+    - toServices:
+        - k8sService:
+            serviceName: agentgateway-proxy
+            namespace: networking-system
+      toPorts:
+        - ports:
+            - { port: "80", protocol: TCP }
+    # metrics datasource (prometheus/metrics toolset)
+    - toServices:
+        - k8sService:
+            serviceName: vmsingle-victoria-metrics-cluster
+            namespace: monitoring-system
+      toPorts:
+        - ports:
+            - { port: "8428", protocol: TCP }
+    # alerts datasource
+    - toServices:
+        - k8sService:
+            serviceName: vmalertmanager-victoria-metrics-cluster
+            namespace: monitoring-system
+      toPorts:
+        - ports:
+            - { port: "9093", protocol: TCP }
+    # logs datasource (victorialogs toolset)
+    - toServices:
+        - k8sService:
+            serviceName: victoria-logs-server
+            namespace: monitoring-system
+      toPorts:
+        - ports:
+            - { port: "9428", protocol: TCP }
+    # operator -> holmes API (in-namespace)
+    - toServices:
+        - k8sService:
+            serviceName: holmesgpt-holmes
+            namespace: servitor-apps
+      toPorts:
+        - ports:
+            - { port: "80", protocol: TCP }
+    # DNS
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - { port: "53", protocol: TCP }
+            - { port: "53", protocol: UDP }
