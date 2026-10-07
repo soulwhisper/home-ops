@@ -8,5 +8,6 @@ components:
 resources:
   - ./authentik/ks.yaml
   - ./cert-manager/ks.yaml
+  - ./kyverno/ks.yaml
   - ./external-secrets/ks.yaml
   - ./onepassword-connect/ks.yaml
