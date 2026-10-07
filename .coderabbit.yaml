@@ -4,6 +4,11 @@
 # never blocks merges (automerge must keep flowing), silent on renovate PRs
 language: en-US
 
+# root-level key (v2 schema): beside `language`, NOT under `reviews`
+tone_instructions: |
+  Terse engineer register: facts, file:line evidence, risk, concrete fix.
+  No compliments, no filler, no summary-of-my-own-comment.
+
 reviews:
   # fewer, higher-signal findings over exhaustive nitpicks
   profile: chill
@@ -14,9 +19,6 @@ reviews:
   sequence_diagrams: false
   review_status: true
   collapse_walkthrough: true
-  tone_instructions: |
-    Terse engineer register: facts, file:line evidence, risk, concrete fix.
-    No compliments, no filler, no summary-of-my-own-comment.
   auto_review:
     enabled: true
     drafts: false
