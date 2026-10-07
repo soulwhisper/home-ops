@@ -42,6 +42,19 @@ spec:
                   secretKeyRef: { name: mattermost-pguser, key: uri }
               # cluster-internal ops bus: no telemetry, no outbound calls
               MM_LOGSETTINGS_CONSOLELEVEL: INFO
+              # filestore on ceph RGW (ceph-bucket component OBC): rebuildable
+              # data stays out of rbd/kopiur snapshot scope by design
+              MM_FILESETTINGS_DRIVERNAME: amazons3
+              MM_FILESETTINGS_AMAZONS3BUCKET: *name
+              MM_FILESETTINGS_AMAZONS3ENDPOINT: "rook-ceph-rgw-ceph-objectstore.storage-system.svc.cluster.local:80"
+              MM_FILESETTINGS_AMAZONS3SSL: "false"
+              MM_FILESETTINGS_AMAZONS3REGION: "us-east-1"
+              MM_FILESETTINGS_AMAZONS3ACCESSKEYID:
+                valueFrom:
+                  secretKeyRef: { name: ceph-bucket-mattermost, key: AWS_ACCESS_KEY_ID }
+              MM_FILESETTINGS_AMAZONS3SECRETACCESSKEY:
+                valueFrom:
+                  secretKeyRef: { name: ceph-bucket-mattermost, key: AWS_SECRET_ACCESS_KEY }
             probes:
               liveness: &probes
                 enabled: true
@@ -80,12 +93,9 @@ spec:
           - name: kgateway-internal
             namespace: networking-system
 
-    # files/images local store (S3 migration to ceph-bucket is a later option)
+    # scratch only (logs/plugins); filestore lives on the ceph bucket above
     persistence:
       data:
-        type: persistentVolumeClaim
-        storageClass: ceph-block
-        size: 20Gi
-        accessMode: ReadWriteOnce
+        type: emptyDir
         globalMounts:
           - path: /mattermost/data

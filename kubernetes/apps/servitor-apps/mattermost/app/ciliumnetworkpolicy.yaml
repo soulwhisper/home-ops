@@ -17,9 +17,16 @@ spec:
       toPorts:
         - ports:
             - { port: "5432", protocol: TCP }
+    # filestore S3 (rook rgw)
+    - toServices:
+        - k8sService:
+            serviceName: rook-ceph-rgw-ceph-objectstore
+            namespace: storage-system
+      toPorts:
+        - ports:
+            - { port: "80", protocol: TCP }
     # DNS
     - toEndpoints:
-        - matchLabels:
             "k8s:io.kubernetes.pod.namespace": kube-system
             "k8s:k8s-app": kube-dns
       toPorts:
