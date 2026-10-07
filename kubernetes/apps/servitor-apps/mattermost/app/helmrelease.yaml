@@ -1,0 +1,91 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name mattermost
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: gitops-system
+
+  values:
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      hostUsers: false
+    controllers:
+      *name :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: "18"
+            envFrom:
+              - secretRef:
+                  name: mattermost-pguser
+        containers:
+          app:
+            image:
+              repository: docker.io/mattermost/mattermost-team-edition
+              # renovate: datasource=docker depName=mattermost/mattermost-team-edition
+              tag: "10.12.4"
+            env:
+              MM_SERVICESETTINGS_SITEURL: "https://mm.noirprime.com"
+              MM_SQLSETTINGS_DRIVERNAME: postgres
+              # cnpg component pguser secret carries uri/host/port/username/password
+              MM_SQLSETTINGS_DATASOURCE:
+                valueFrom:
+                  secretKeyRef: { name: mattermost-pguser, key: uri }
+              # cluster-internal ops bus: no telemetry, no outbound calls
+              MM_LOGSETTINGS_CONSOLELEVEL: INFO
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v4/system/ping
+                    port: 8065
+              readiness: *probes
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+
+    service:
+      app:
+        ports:
+          http:
+            port: 8065
+
+    route:
+      app:
+        hostnames: ["mm.noirprime.com"]
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/icon: mattermost.svg
+          gethomepage.dev/name: Mattermost
+          gethomepage.dev/group: Observability
+          gethomepage.dev/pod-selector: app.kubernetes.io/name=mattermost
+        parentRefs:
+          - name: kgateway-internal
+            namespace: networking-system
+
+    # files/images local store (S3 migration to ceph-bucket is a later option)
+    persistence:
+      data:
+        type: persistentVolumeClaim
+        storageClass: ceph-block
+        size: 20Gi
+        accessMode: ReadWriteOnce
+        globalMounts:
+          - path: /mattermost/data

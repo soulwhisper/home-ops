@@ -56,6 +56,12 @@ data:
         # params:
         #   priority: '{{ ternary "1" "0" (eq .payload.status "firing") }}'
         #   sound: gamelan
+      # Robusta runner -> feishu (enriched alerts + findings)
+      robusta:
+        target:
+          - feishu
+        title: '[{{ .payload.status | default "info" | toUpper }}] {{ .payload.title | default "robusta" }}'
+        message: '{{ .payload.description | default (.payload.message | default "") }}'
       # authentik system notifications (blueprints/core/notifications.yaml)
       authentik:
         target:

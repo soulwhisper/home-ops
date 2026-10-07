@@ -145,6 +145,10 @@ spec:
               # webhook-relay: feishu primary, pushover fallback
               - url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/alertmanager"
                 send_resolved: true
+              # robusta runner (parallel during P0 evaluation): enrichment +
+              # Holmes RCA; feishu delivery happens via its webhook sink
+              - url: "http://robusta-runner.monitoring-system.svc.cluster.local/api/alerts"
+                send_resolved: true
 
     kubeApiServer:
       vmScrape:
