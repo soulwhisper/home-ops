@@ -91,7 +91,7 @@ spec:
               # the pod sysctls above; health_check pings idle conns before
               # reuse. socket_timeout must stay null: a finite timeout breaks
               # blocking pubsub reads.
-              WEBSOCKET_REDIS_OPTIONS: '{"socket_timeout": null, "socket_connect_timeout": 5, "socket_keepalive": true, "health_check_interval": 30}'
+              WEBSOCKET_REDIS_OPTIONS: "{\"socket_timeout\": null, \"socket_connect_timeout\": 5, \"socket_keepalive\": true, \"health_check_interval\": 30}"
               STORAGE_PROVIDER: "s3"
               STORAGE_LOCAL_CACHE: "False"
               S3_BUCKET_NAME: "open-webui"
