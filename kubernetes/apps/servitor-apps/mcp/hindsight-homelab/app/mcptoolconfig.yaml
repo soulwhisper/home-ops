@@ -3,7 +3,7 @@
 apiVersion: toolhive.stacklok.dev/v1alpha1
 kind: MCPToolConfig
 metadata:
-  name: mcp-hindsight # single-bank mode
+  name: mcp-hindsight-homelab # conversational bank, single-bank mode
 spec:
   toolsFilter:
     - retain

@@ -3,7 +3,7 @@
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPRemoteProxy
 metadata:
-  name: &name mcp-hindsight
+  name: &name mcp-hindsight-homelab
 spec:
   groupRef:
     name: internal-rw

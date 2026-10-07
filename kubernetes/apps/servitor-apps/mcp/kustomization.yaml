@@ -12,7 +12,7 @@ resources:
   - ./hindsight-aiops/ks.yaml
   - ./github/ks.yaml
   - ./grafana/ks.yaml
-  - ./hindsight/ks.yaml
+  - ./hindsight-homelab/ks.yaml
   - ./home-assistant/ks.yaml
   - ./kubernetes/ks.yaml
   - ./reflex/ks.yaml
