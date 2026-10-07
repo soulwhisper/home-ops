@@ -9,8 +9,12 @@ spec:
     enabled: true
     endpoint: opentelemetry-collector.monitoring-system.svc.cluster.local:4318
     insecure: true
+    # OTEL metrics disabled: the collector runs traces-only pipelines (no
+    # otlp metrics pipeline), so every upload 404s and spams "failed to upload
+    # metrics". MCP metrics are already collected via the prometheus scrape
+    # below (scrapeconfig.yaml targets up).
     metrics:
-      enabled: true
+      enabled: false
     tracing:
       enabled: true
       samplingRate: "0.05"
