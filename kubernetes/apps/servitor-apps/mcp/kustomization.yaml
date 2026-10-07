@@ -9,6 +9,7 @@ resources:
   - ./firecrawl/ks.yaml
   - ./forgejo/ks.yaml
   - ./fluxcd/ks.yaml
+  - ./hindsight-aiops/ks.yaml
   - ./github/ks.yaml
   - ./grafana/ks.yaml
   - ./hindsight/ks.yaml

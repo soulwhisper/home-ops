@@ -1,0 +1,30 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcptoolconfig_v1alpha1.json
+apiVersion: toolhive.stacklok.dev/v1alpha1
+kind: MCPToolConfig
+metadata:
+  name: mcp-hindsight-aiops # incident-memory bank, single-bank mode
+spec:
+  toolsFilter:
+    - retain
+    - recall
+    - reflect
+    - list_mental_models
+    - get_mental_model
+    - refresh_mental_model
+    - get_operation
+    - list_tags
+    - get_bank
+  toolsOverride:
+    retain:
+      description: >-
+        Store incident/RCA memory. Unlike the conversational homelab bank,
+        FACTUAL operational fields are welcome here: alert/event ids,
+        timelines, root causes, actions taken, and verification results.
+        Still NEVER retain credentials, raw tool dumps, or verbatim log
+        payloads; distill first. Tag consistently using existing tags
+        (see list_tags).
+    recall:
+      description: >-
+        Search incident memories. Prefer reflect for synthesized answers;
+        use recall only when individual incident entries are needed.
