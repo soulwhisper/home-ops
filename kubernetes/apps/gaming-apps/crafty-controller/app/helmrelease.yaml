@@ -20,7 +20,6 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
-          config.home-ops.io/proxy: "https" # https_proxy needed
         pod:
           securityContext:
             runAsNonRoot: true
