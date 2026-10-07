@@ -31,7 +31,7 @@ spec:
           app:
             image:
               repository: ghcr.io/langfuse/langfuse-worker
-              tag: 4.53.0
+              tag: 4.54.0
             env:
               REDIS_AUTH:
                 valueFrom:
