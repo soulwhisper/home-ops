@@ -1,0 +1,44 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/holmesgpt.dev/scheduledhealthcheck_v1alpha1.json
+# Holmes 定时巡检(mode 默认 monitor:无目的地,结果留 CR status,
+# kubectl get shc 消费;要通知时再挂 destinations)。
+# 覆盖已知痛点:ceph、证书、节点密度、告警规则质量、备份链。
+apiVersion: holmesgpt.dev/v1alpha1
+kind: ScheduledHealthCheck
+metadata:
+  name: ceph-health-growth
+spec:
+  schedule: "17 */6 * * *"
+  query: "Check the ceph cluster (namespace storage-system) health: overall HEALTH status, OSD count/in/out state, pool usage vs the ceph-blockpool/ceph-cachepool/ceph-filesystem trend, and any slow or blocked requests. Report concise status and flag anything trending worse."
+---
+apiVersion: holmesgpt.dev/v1alpha1
+kind: ScheduledHealthCheck
+metadata:
+  name: cert-expiry-watch
+spec:
+  schedule: "23 7 * * *"
+  query: "Check cert-manager managed certificates in this cluster: list certificates expiring within 14 days, and any cert-manager Certificate resources not in Ready state. Report a concise list, or 'all clear'."
+---
+apiVersion: holmesgpt.dev/v1alpha1
+kind: ScheduledHealthCheck
+metadata:
+  name: node-density-trend
+spec:
+  schedule: "41 8 * * *"
+  query: "Check per-node pod density and resource requests across the exarch nodes: pod count vs the 110 per-node limit, cpu/memory request utilization, and any node trending toward saturation (like the recent exarch-03 pile-up to 106 pods). Report a small table and flag nodes above 80% of any dimension."
+---
+apiVersion: holmesgpt.dev/v1alpha1
+kind: ScheduledHealthCheck
+metadata:
+  name: alert-rule-quality-weekly
+spec:
+  schedule: "13 9 * * 1"
+  query: "Review alert quality using vmalertmanager and vmsingle (namespace monitoring-system): which alerts fired most in the past 7 days, which are flapping (fire/resolve repeatedly), and which look like threshold-vs-normal mismatch (for example latency-based health checks whose normal latency exceeds the alert threshold). Propose concrete rule adjustments (threshold, for-duration, or silence) for the top 3 offenders."
+---
+apiVersion: holmesgpt.dev/v1alpha1
+kind: ScheduledHealthCheck
+metadata:
+  name: backup-chain-daily
+spec:
+  schedule: "7 6 * * *"
+  query: "Check backup health: kopiur snapshot jobs (namespace storage-system) and the cnpg postgres backup plus DR-test cronjobs (namespace database-system): any failed or missed runs in the last 48 hours, and the oldest successful snapshot age per critical app. Report concise status."
