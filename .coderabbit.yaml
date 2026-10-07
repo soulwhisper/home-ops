@@ -1,0 +1,109 @@
+---
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit config — app installed on this repo only. Advisory reviewer:
+# never blocks merges (automerge must keep flowing), silent on renovate PRs
+language: en-US
+
+# root-level key (v2 schema): beside `language`, NOT under `reviews`
+tone_instructions: |
+  Terse engineer register: facts, file:line evidence, risk, concrete fix.
+  No compliments, no filler, no summary-of-my-own-comment.
+
+reviews:
+  # fewer, higher-signal findings over exhaustive nitpicks
+  profile: chill
+  # advisory only: never request changes / block (renovate automerge, solo op)
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  sequence_diagrams: false
+  review_status: true
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+    labels:
+      # renovate family: automerge + repo-butler rendered diff already cover
+      - "!area/renovate"
+      - "!renovate/container"
+      - "!renovate/github-action"
+      - "!renovate/grafana-dashboard"
+      - "!renovate/github-release"
+      - "!renovate/helm"
+    ignore_title_keywords:
+      # repo-butler bot backstop: renovate's semanticCommitType/Scope format.
+      - "feat(container): update"
+      - "fix(container): update"
+      - "feat(helm): update"
+      - "fix(helm): update"
+      - "feat(github-action): update"
+      - "fix(github-action): update"
+      - "feat(github-release): update"
+      - "fix(github-release): update"
+
+  path_filters:
+    # vendored content is not reviewable source
+    - "!**/_sources/**"
+
+  tools:
+    yamllint:
+      enabled: true
+    actionlint:
+      enabled: true
+    zizmor:
+      enabled: true
+    shellcheck:
+      enabled: true
+    gitleaks:
+      enabled: true
+    trufflehog:
+      enabled: false # gitleaks covers; avoid duplicate secret-scanner noise
+
+
+  path_instructions:
+    - path: "kubernetes/**"
+      instructions: |
+        Flux GitOps repo: flux Kustomization -> app dir -> HelmRelease (chartRef
+        OCIRepository) + plain manifests. Helm values belong ONLY in the
+        HelmRelease in git.
+        Hard rules to enforce:
+        - Secrets: never plaintext. ExternalSecret (ClusterSecretStore
+          onepassword) or *.sops.yaml only. Flag anything that looks like a
+          credential/token/password in cleartext YAML.
+        - CiliumNetworkPolicy: least-privilege egress. New egress rules almost
+          always need the kube-dns block. One toServices entry per service:port
+          pair — multiple services in one rule with multiple ports creates a
+          port cross-product.
+        - Storage: never suggest renaming CSI driver name prefixes or changing
+          StorageClass immutable fields; ceph-cache (size=1) is rewarmable
+          scratch by design, ceph-block/ceph-filesystem are size=3.
+        - Images: pinned tags (date/semver/digest) with renovate comments where
+          conventional; flag unpinned :latest on new workloads.
+        - Do NOT ask for replica/HA increases: single WAN/router/switch/NAS
+          homelab, shared physical layer collapses those failure domains anyway
+          (see infrastructure/switch/README.md). Node-level failures are the
+          only real domain.
+
+    - path: "infrastructure/**"
+      instructions: |
+        Recorded infra truth. infrastructure/talos/clusterconfig/** is
+        GENERATED output (talos machine configs, kubeconfig): flag any edit
+        there as a mistake — sources are patches/ and version.yaml. Treat the
+        recorded physical design (single WAN/router/switches/NAS) as intended;
+        drift from it is the finding, not the design itself.
+
+    - path: ".github/workflows/**"
+      instructions: |
+        zizmor discipline: minimal permissions per job; no pull_request_target
+        combined with write permissions and checkout of the PR head; prefer
+        pinned action SHAs; keep bot PR automation (renovate/repo-butler)
+        compatible with automerge (no new required checks without discussion).
+
+    - path: "docs/**"
+      instructions: |
+        Docs are operator-runbooks for a solo homelab: keep them terse and
+        factual. Flag stale statements that contradict kubernetes/ or
+        infrastructure/ content (versions, service names, topology).
+
+chat:
+  auto_reply: true
