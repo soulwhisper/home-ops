@@ -6,36 +6,86 @@ metadata:
   name: &name robusta
 spec:
   interval: 1h
-  chart:
-    spec:
-      chart: robusta
-      version: "0.51.0"
-      sourceRef:
-        kind: HelmRepository
-        name: robusta
+  chartRef:
+    kind: OCIRepository
+    name: robusta
+
   values:
     clusterName: main
     # OSS classic mode: no platform account (account_id/signing_key stay empty).
     # Platform features (UI / smart grouping / Slack bot) are SaaS-gated and
     # deliberately out of scope.
-    # Holmes stays standalone (servitor-apps/holmesgpt) — do not let the chart
-    # install a second copy; AI-analysis wiring to the existing deployment is a
-    # follow-up item (see PR body).
-    enableHolmesGPT: false
+    # Holmes is unified INTO this release (subchart, same 0.42.0 chart as the
+    # retired standalone servitor-apps/holmesgpt): runner AI analysis requires
+    # enableHolmesGPT, and the subchart has no enabled kill-switch — so the
+    # embedded topology is the only sane one. Holmes service: robusta-holmes.
+    enableHolmesGPT: true
 
-    # feishu via the existing webhook-relay (route added in this PR)
     sinksConfig:
+      # feishu via the existing webhook-relay (route added in this PR)
       - webhook_sink:
           name: feishu-relay
           url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta"
+      # mattermost ops bus (bot creds via runner env, see externalsecret.yaml;
+      # one-way only — upstream notes CallbackBlock interactivity is unimplemented)
+      - mattermost_sink:
+          name: mattermost-ops
+          url: "https://mm.noirprime.com"
+          token: "{{ env.MM_BOT_TOKEN }}"
+          token_id: "{{ env.MM_BOT_TOKEN_ID }}"
+          channel: "ops-alerts"
 
-    # P0 posture: enrichment only. No remediation playbooks yet — those land
-    # behind an explicit alertname->action allow-list (Kyverno/match rules) in
-    # a later phase, never by default.
     runner:
+      additional_env_vars:
+        - name: MM_BOT_TOKEN
+          valueFrom:
+            secretKeyRef: { name: robusta, key: MM_BOT_TOKEN, optional: true }
+        - name: MM_BOT_TOKEN_ID
+          valueFrom:
+            secretKeyRef: { name: robusta, key: MM_BOT_TOKEN_ID, optional: true }
       resources:
         requests:
           cpu: 50m
           memory: 256Mi
         limits:
           memory: 1Gi
+
+    # ---- unified holmes (values carried over from servitor-apps/holmesgpt) ----
+    holmes:
+      extraEnvVarsSecrets:
+        - robusta-holmes # OPENAI_API_BASE + OPENAI_API_KEY (ExternalSecret)
+      additionalEnvVars:
+        # default model for requests that don't name one (HealthChecks!):
+        # without it holmes falls back to "gpt-5.4" when OPENAI_API_KEY is set
+        # -> agentgateway 404s the unknown lane
+        - { name: MODEL, value: complex }
+      modelList:
+        complex:
+          model: openai/complex
+          api_base: envRef:OPENAI_API_BASE
+          api_key: envRef:OPENAI_API_KEY
+          temperature: 0
+      toolsets:
+        internet:
+          enabled: false # no Internet egress for this pod (see CNP)
+        robusta:
+          enabled: false # requires a Robusta SaaS account; not used
+        prometheus/metrics:
+          enabled: true
+          config:
+            subtype: victoriametrics
+            prometheus_url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428
+        victorialogs:
+          enabled: true
+          config:
+            api_url: http://victoria-logs-server.monitoring-system.svc.cluster.local:9428
+      # operator mode (alpha upstream): HealthCheck CRDs; no destinations —
+      # results read from CR status
+      operator:
+        enabled: true
+      resources:
+        requests:
+          cpu: 100m
+          memory: 1Gi
+        limits:
+          memory: 2Gi

@@ -1,21 +1,21 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+# One policy for the whole robusta stack: flux commonMetadata labels every pod
+# of this kustomization app.kubernetes.io/name=robusta (runner, kubewatch,
+# holmes server, holmes operator). Rules are the union of their needs.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: holmesgpt-egress
+  name: robusta-egress
 spec:
-  # flux commonMetadata puts this label on the holmes server AND the operator
-  # pods (chart ships app.kubernetes.io/name=holmes-operator on the operator);
-  # one policy covers both, rules below are the union.
   endpointSelector:
     matchLabels:
-      "app.kubernetes.io/name": holmesgpt
+      "app.kubernetes.io/name": robusta
   egress:
-    # kubernetes/core + kubernetes/logs toolsets; operator CRD watches
+    # kubewatch api access; holmes kubernetes toolsets; operator CRD watches
     - toEntities:
         - kube-apiserver
-    # LLM gateway (complex lane)
+    # holmes LLM (agentgateway complex lane)
     - toServices:
         - k8sService:
             serviceName: agentgateway-proxy
@@ -23,7 +23,7 @@ spec:
       toPorts:
         - ports:
             - { port: "80", protocol: TCP }
-    # metrics datasource (prometheus/metrics toolset)
+    # holmes datasources + runner metrics
     - toServices:
         - k8sService:
             serviceName: vmsingle-victoria-metrics-cluster
@@ -31,7 +31,6 @@ spec:
       toPorts:
         - ports:
             - { port: "8428", protocol: TCP }
-    # alerts datasource
     - toServices:
         - k8sService:
             serviceName: vmalertmanager-victoria-metrics-cluster
@@ -39,7 +38,6 @@ spec:
       toPorts:
         - ports:
             - { port: "9093", protocol: TCP }
-    # logs datasource (victorialogs toolset)
     - toServices:
         - k8sService:
             serviceName: victoria-logs-server
@@ -47,11 +45,27 @@ spec:
       toPorts:
         - ports:
             - { port: "9428", protocol: TCP }
-    # operator -> holmes API (in-namespace)
+    # feishu sink
     - toServices:
         - k8sService:
-            serviceName: holmesgpt-holmes
+            serviceName: webhook-relay
+            namespace: monitoring-system
+      toPorts:
+        - ports:
+            - { port: "8080", protocol: TCP }
+    # mattermost sink
+    - toServices:
+        - k8sService:
+            serviceName: mattermost
             namespace: servitor-apps
+      toPorts:
+        - ports:
+            - { port: "8065", protocol: TCP }
+    # holmes operator -> holmes API (in-namespace)
+    - toServices:
+        - k8sService:
+            serviceName: robusta-holmes
+            namespace: monitoring-system
       toPorts:
         - ports:
             - { port: "80", protocol: TCP }

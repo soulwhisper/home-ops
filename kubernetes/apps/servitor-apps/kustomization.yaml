@@ -13,7 +13,6 @@ resources:
   - ./mcp
   # app
   - ./hermes-agent/ks.yaml
-  - ./holmesgpt/ks.yaml
   - ./mattermost/ks.yaml
   - ./open-webui/ks.yaml
 patches:
