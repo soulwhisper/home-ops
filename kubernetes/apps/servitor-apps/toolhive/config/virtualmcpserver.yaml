@@ -91,7 +91,11 @@ spec:
       failureHandling:
         partialFailureMode: best_effort
         healthCheckInterval: 10s
-        healthCheckTimeout: 5s
+        # 5s was below mcp-home-assistant's NORMAL tools/list latency (~6s
+        # measured healthy; tool-search index build spikes well past it), so
+        # every health check timed out and the circuit breaker stormed OPEN
+        # (issue #3958). 30s clears normal latency, still catches real hangs.
+        healthCheckTimeout: 30s
         unhealthyThreshold: 2
         circuitBreaker:
           enabled: true
