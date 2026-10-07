@@ -46,8 +46,7 @@ reviews:
       - "fix(github-release): update"
 
   path_filters:
-    # generated / vendored content is not reviewable source
-    - "!infrastructure/talos/clusterconfig/**"
+    # vendored content is not reviewable source
     - "!**/_sources/**"
 
   tools:
