@@ -15,6 +15,9 @@ spec:
     - group: agentgateway.dev
       kind: AgentgatewayBackend
       name: mcp-backend-ext
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-aiops
   backend:
     mcp:
       guardrails:

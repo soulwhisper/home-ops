@@ -6,7 +6,9 @@ metadata:
   name: &name mcp-hindsight-aiops
 spec:
   groupRef:
-    name: internal-rw
+    # isolated tier (virtualmcpserver/aiops via agentgateway /mcp/aiops) —
+    # chat-tier consumers on ro/rw/ext can never retain into incident memory
+    name: aiops
   toolConfigRef:
     name: *name
   # dedicated memory bank for ai-ops incident/RCA memory — recall boundary

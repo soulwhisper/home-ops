@@ -59,3 +59,17 @@ spec:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
           name: mcp-backend-ext
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /mcp/aiops
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /mcp
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: mcp-backend-aiops
