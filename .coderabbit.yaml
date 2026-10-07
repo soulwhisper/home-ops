@@ -2,10 +2,6 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # CodeRabbit config — app installed on this repo only. Advisory reviewer:
 # never blocks merges (automerge must keep flowing), silent on renovate PRs
-# (already covered by repo-butler rendered diffs + automerge), high signal on
-# human PRs. Complementary to the in-repo shadow reviewer planned in #3963 —
-# when that lands, decide the split (CodeRabbit = PR-time review; shadow
-# reviewer = standards/standup jobs) or retire one.
 language: en-US
 
 reviews:
@@ -34,8 +30,6 @@ reviews:
       - "!renovate/helm"
     ignore_title_keywords:
       # repo-butler bot backstop: renovate's semanticCommitType/Scope format.
-      # Human scopes here are apps/areas (servitor-apps, k8s, ci...), never
-      # these renovate-owned scopes.
       - "feat(container): update"
       - "fix(container): update"
       - "feat(helm): update"
