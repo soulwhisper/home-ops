@@ -90,12 +90,13 @@ spec:
     operational:
       failureHandling:
         partialFailureMode: best_effort
-        healthCheckInterval: 10s
-        # 5s was below mcp-home-assistant's NORMAL tools/list latency (~6s
-        # measured healthy; tool-search index build spikes well past it), so
-        # every health check timed out and the circuit breaker stormed OPEN
-        # (issue #3958). 30s clears normal latency, still catches real hangs.
-        healthCheckTimeout: 30s
+        # vmcp requires timeout < interval (startup validation). ha-mcp's
+        # NORMAL tools/list is ~6s (measured healthy; tool-search index build
+        # spikes past 5s), so 10s/5s stormed the circuit breaker (#3958);
+        # 30s/15s clears normal latency with 2.5x headroom, catches real
+        # hangs, and cuts check churn vs the old 10s cadence.
+        healthCheckInterval: 30s
+        healthCheckTimeout: 15s
         unhealthyThreshold: 2
         circuitBreaker:
           enabled: true
