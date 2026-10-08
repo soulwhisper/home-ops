@@ -33,16 +33,19 @@ API_KEY="$(op item get omlx --fields api_key)"            # server API key (cons
 SECRET_KEY="$(op item get omlx --fields secret_key)"      # admin-session signing key (64 hex chars)
 SUB_KEY="$(op item get omlx --fields sub_key)"            # admin sub-key shown in the dashboard
 
-# 2. inject into a private temp file (not ~/.omlx), without touching the repo copy
+# 2. inject into a private temp file (not ~/.omlx), without touching the repo
+#    copy; secrets travel via stdin pipe (printf is a shell builtin) so they
+#    never appear in process arguments visible to `ps`
 tmp="$(mktemp -t omlx-settings)" && chmod 600 "$tmp"
-python3 - settings.json "$API_KEY" "$SECRET_KEY" "$SUB_KEY" > "$tmp" <<'EOF'
+printf '%s\n' "$API_KEY" "$SECRET_KEY" "$SUB_KEY" | python3 -c '
 import json, sys
-d = json.load(open(sys.argv[1]))
-d["auth"]["api_key"], d["auth"]["secret_key"] = sys.argv[2], sys.argv[3]
+api_key, secret_key, sub_key = [l.rstrip("\n") for l in sys.stdin]
+d = json.load(open("settings.json"))
+d["auth"]["api_key"], d["auth"]["secret_key"] = api_key, secret_key
 for sk in d["auth"].get("sub_keys", []):
-    sk["key"] = sys.argv[4]
+  sk["key"] = sub_key
 json.dump(d, sys.stdout, indent=2)
-EOF
+' > "$tmp"
 
 # 3. only now install; the server never sees placeholder credentials
 install -m 600 "$tmp" ~/.omlx/settings.json && rm -f "$tmp"
