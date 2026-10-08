@@ -22,24 +22,25 @@ spec:
 
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
-# AgentWorld harness (agent lane only, via rule sectionName): encodes the
-# weaknesses measured in the oMLX PoC (temp/omlx-optimization.md) —
-# repeat-call loops, training-time date anchors, truncation blindness,
-# LogsQL unfamiliarity. Static text only; Holmes' native current-time
-# injection stays authoritative for timestamps.
+# AgentWorld harness, scoped by backend (only the agent lane consumes
+# llm-backend-agent). Encodes the weaknesses measured in the oMLX PoC
+# (temp/omlx-optimization.md): repeat-call loops, training-time date anchors,
+# truncation blindness, LogsQL unfamiliarity. Static text only; Holmes' native
+# current-time injection stays authoritative for timestamps.
+# NOTE: v1.6.0 shape is backend.ai.prompt; main moved this to
+# traffic.ai.promptEnrichment — revisit on the next agentgateway bump.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
   name: llm-agent-harness
 spec:
   targetRefs:
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: agentgateway-llm-route
-      sectionName: agent
-  traffic:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: llm-backend-agent
+  backend:
     ai:
-      promptEnrichment:
+      prompt:
         prepend:
           - role: SYSTEM
             content: >-
