@@ -166,7 +166,7 @@ Both exporters use queued retry with 10 consumers, 5000 queue depth, and exponen
 
 ## Grafana
 
-Grafana 12.3.1 is managed by the **Grafana Operator** (`grafana-operator` Helm chart, 1 replica), not via the Helm chart directly. The `Grafana` CR declares the full deployment spec: 2 replicas with `topologySpreadConstraints` (hostname skew). PostgreSQL-backed (CNPG `postgres-rw.database-system`), `postgres-init:18` init container with the `grafana-pguser` secret for automatic database provisioning.
+Grafana is managed by the **Grafana Operator** (`grafana-operator` Helm chart, 1 replica), not via the Helm chart directly. The `Grafana` CR declares the full deployment spec: 2 replicas with `topologySpreadConstraints` (hostname skew). PostgreSQL-backed (CNPG `postgres-rw.database-system`), `postgres-init` init container with the `grafana-pguser` secret for automatic database provisioning.
 
 ### Authentication
 
@@ -244,7 +244,7 @@ Per-node DaemonSet exposing S.M.A.R.T. disk health metrics from NVMe and SATA dr
 
 ## Headlamp
 
-Headlamp K8s web UI deployed with 1 replica at `headlamp.noirprime.com`. Uses a read-only `view` ClusterRole (aggregated, excludes secrets) extended with Flux CRD read access (`headlamp-flux-view` aggregated ClusterRole). Kubeconfig generated at init via SA token. OIDC SSO via Authentik (client credentials from ExternalSecret). Flux plugin (`headlamp-plugin-flux:v0.6.0`) copied at init.
+Headlamp K8s web UI deployed with 1 replica at `headlamp.noirprime.com`. Uses a read-only `view` ClusterRole (aggregated, excludes secrets) extended with Flux CRD read access (`headlamp-flux-view` aggregated ClusterRole). Kubeconfig generated at init via SA token. OIDC SSO via Authentik (client credentials from ExternalSecret). Flux plugin (`headlamp-plugin-flux`) copied at init.
 
 ## Langfuse
 
@@ -252,8 +252,8 @@ LLM observability platform for tracing servitor (agent) interactions. Two compon
 
 | Component | Image | Resources |
 |-----------|-------|-----------|
-| `langfuse-web` | `ghcr.io/langfuse/langfuse:3.224.2` | 1 CPU request, 2Gi memory limit |
-| `langfuse-worker` | `ghcr.io/langfuse/langfuse-worker:3.224.2` | 2 CPU request, 4Gi memory limit |
+| `langfuse-web` | `ghcr.io/langfuse/langfuse` | 1 CPU request, 2Gi memory limit |
+| `langfuse-worker` | `ghcr.io/langfuse/langfuse-worker` | 2 CPU request, 4Gi memory limit |
 
 ### Storage backends
 

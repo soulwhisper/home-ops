@@ -244,7 +244,7 @@ spec:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
   ref:
-    tag: 5.2.1
+    tag: x.y.z # pinned here; renovate-managed
   url: oci://ghcr.io/bjw-s-labs/helm/app-template
 ```
 

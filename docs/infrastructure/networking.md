@@ -38,8 +38,8 @@ The network is built around an enterprise-grade Layer 3 core switch with eBGP + 
 | ------------------ | ------------------------------------- | --------------------- | ----------------------- |
 | H3C S6520-24S-SI   | L3 core switch, BGP router (AS 65000) | 24×10G SFP+           | 2×10G LACP to router    |
 | Miniforum MS-01 ×3 | Talos K8s control-plane + worker      | Intel X710 2×10G SFP+ | 2×10G LACP per node     |
-| N305 IPC           | ESXi 8 hypervisor                     | 2.5G RJ45             | OpenWrt VM + management |
-| Synology DS923+    | NAS (NFS, S3, Docker)                 | 2×1G RJ45 LACP        | 2×1G LACP               |
+| N305 IPC           | ESXi hypervisor                       | 2.5G RJ45             | OpenWrt VM + management |
+| Synology DS1825+   | NAS (NFS, S3, Docker)                 | 2×2.5GbE RJ45 LACP    | 2×2.5G LACP             |
 | SANTAK TG-Box 850  | UPS (NUT)                             | USB                   | —                       |
 
 ```mermaid
@@ -50,7 +50,7 @@ graph TD
     NODE1["exarch-01<br/>10.10.0.101"]
     NODE2["exarch-02<br/>10.10.0.102"]
     NODE3["exarch-03<br/>10.10.0.103"]
-    NAS["Synology DS923+<br/>10.10.0.100"]
+    NAS["Synology DS1825+<br/>10.10.0.100"]
     WS["ESXi Workstation<br/>10.10.0.10"]
     UNIFI["UniFi Controller<br/>10.10.0.200"]
 

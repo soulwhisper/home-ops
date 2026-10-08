@@ -171,9 +171,9 @@ All lanes run on the MacStudio inference host (`uncensored` Qwen3.8-27B, `agent`
 
 ### Open WebUI
 
-- Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui:v0.11.4`. Lives in **servitor-apps** (with hermes/toolhive, not selfhosted-apps). Storage is externalized: shared CNPG `postgres` (app data + `VECTOR_DB=pgvector`; role/db via `postgres-init`, plain `vector` ext self-created by migrations — vchord N/A: open-webui hardcodes pgvector DDL), app `Dragonfly` (`REDIS_URL`), app ceph bucket `open-webui` (`STORAGE_PROVIDER=s3`, `STORAGE_LOCAL_CACHE=False`) — data dir is emptyDir cache, no PVC
+- Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui`. Lives in **servitor-apps** (with hermes/toolhive, not selfhosted-apps). Storage is externalized: shared CNPG `postgres` (app data + `VECTOR_DB=pgvector`; role/db via `postgres-init`, plain `vector` ext self-created by migrations — vchord N/A: open-webui hardcodes pgvector DDL), app `Dragonfly` (`REDIS_URL`), app ceph bucket `open-webui` (`STORAGE_PROVIDER=s3`, `STORAGE_LOCAL_CACHE=False`) — data dir is emptyDir cache, no PVC
 - **LLM provider**: single agentgateway entry (`OPENAI_API_BASE_URLS` = `agentgateway-proxy:80/v1`, one key from `llm-api.agentgateway_api_auth`) on the unified OpenAI surface. Lane choice is a model name: `uncensored` (unguarded main brain — the portal default), `agent`/`omni`/`micro` (guarded; title generation → `micro`, select per-task in Admin Settings). The gateway is the only AI egress.
-- **MCP**: native MCP tool servers via `TOOL_SERVER_CONNECTIONS` = the three tiered, sidecar-guarded gateway endpoints (`agentgateway-proxy:80/mcp/ro|rw|ext`) with `auth_type: "bearer"` and the key expanded from `$GATEWAY_API_KEY` (kubelet dependent-env expansion; bearer auth in `build_tool_server_headers` is native on v0.11.3). Same guarded endpoints hermes uses — MCP has no open lane.
+- **MCP**: native MCP tool servers via `TOOL_SERVER_CONNECTIONS` = the three tiered, sidecar-guarded gateway endpoints (`agentgateway-proxy:80/mcp/ro|rw|ext`) with `auth_type: "bearer"` and the key expanded from `$GATEWAY_API_KEY` (kubelet dependent-env expansion; bearer auth in `build_tool_server_headers` is native upstream). Same guarded endpoints hermes uses — MCP has no open lane.
 - Ingress: `chat.noirprime.com` via kgateway-internal; **auth is authentik forward-auth at the gateway** (components/authentik, provider `open-webui-proxy-provider`, homelab-admin group); open-webui's own login disabled (`WEBUI_AUTH=False`)
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (sole AI egress: LLM + MCP), open-webui-terminals:3000, open-webui-oikb:8080, postgres-rw:5432, open-webui-dragonfly:6379, ceph RGW:80, kube-dns, world-except-private (RAG web fetching)
 - **Sandbox suite**: `open-webui-terminals` (orchestrator, `kubernetes` backend, Role-limited to pods/services/pvcs in servitor-apps, state on shared CNPG via `TERMINALS_DATABASE_URL`) spawns per-user `open-terminal:slim` sandboxes — cluster access MCP-only (vMCP:4483), internet minus private ranges; `open-webui-oikb` (0.4.0 daemon) syncs Knowledge Bases from external sources — parked at `replicas: 0` with `sources: []` until the first KB source is defined (stateless by design: diff state lives server-side, sync history is disposable)
@@ -226,7 +226,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | -------------- | -------------------- | ---------------------- |
 | home-assistant | HTTP (FastMCP) :8086 | Home Assistant         |
 | hindsight      | HTTP proxy :8080     | Hindsight MCP endpoint |
-| forgejo        | Streamable HTTP :8080 | Forgejo on nas:9003 (forgejo-mcp v3.2.0); read+write via forwarded user PAT |
+| forgejo        | Streamable HTTP :8080 | Forgejo on nas:9003 via forgejo-mcp; read+write via forwarded user PAT |
 
 #### external (full egress)
 
@@ -248,8 +248,8 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 | Component | Image                                      | Resources            |
 | --------- | ------------------------------------------ | -------------------- |
-| web       | `ghcr.io/langfuse/langfuse:4.54.0`        | req: 1 CPU, lim: 2Gi |
-| worker    | `ghcr.io/langfuse/langfuse-worker:4.54.0` | req: 2 CPU, lim: 4Gi |
+| web       | `ghcr.io/langfuse/langfuse`        | req: 1 CPU, lim: 2Gi |
+| worker    | `ghcr.io/langfuse/langfuse-worker` | req: 2 CPU, lim: 4Gi |
 
 - **Backends**: ClickHouse (analytics), Dragonfly Redis (cache/queue), Ceph S3 (events/exports), CloudNativePG (metadata)
 - **Features**: Experimental features enabled, telemetry disabled
@@ -272,7 +272,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 
 ### SillyTavern
 
-- AI character chat frontend, `ghcr.io/sillytavern/sillytavern:1.19.0`, port 8000
+- AI character chat frontend, `ghcr.io/sillytavern/sillytavern`, port 8000
 - Uses the `uncensored` lane (Qwen3.8-27B) through the gateway — Gemma4-31B is retired
 - Discreet login (user accounts disabled), local-only persistence
 
@@ -280,20 +280,20 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 
 - Web scraping pipeline for AI data ingestion
 - 3 containers: api (:3002), nuq-worker (:3006), playwright-service (:3000)
-- `ghcr.io/firecrawl/firecrawl:2.11.473` (api + nuq-worker; playwright-service pinned `latest@sha256`), sandboxed per ADR-03 (`hostUsers: false` + egress CNP)
+- `ghcr.io/firecrawl/firecrawl` (api + nuq-worker; playwright-service pinned by digest), sandboxed per ADR-03 (`hostUsers: false` + egress CNP)
 - Backed by SearXNG, Dragonfly Redis, nuq-postgres
 - Exposed as MCP server + internal endpoint for Hermes
 
 ### Open-Notebook
 
-- AI-powered research notebook, `ghcr.io/lfnovo/open-notebook:1.15.0`
+- AI-powered research notebook, `ghcr.io/lfnovo/open-notebook`
 - UI (:8502 Streamlit) + REST API (:5055), SurrealDB backend
 - No public ingress
 
 ### Hindsight
 
 - AI memory / context store (agent long-term memory: retain / recall / reflect)
-- Image: upstream `ghcr.io/vectorize-io/hindsight:0.10.2-slim` — no in-process local-ml
+- Image: upstream `ghcr.io/vectorize-io/hindsight` (slim variant) — no in-process local-ml
 - LLM: `omni` lane → **MiniCPM-O-4.5 on the MacStudio** (via agentgateway `/v1/chat/completions`)
 - Embeddings: **Qwen3-Embedding-0.6B on the MacStudio** (oMLX id `qwen3-embedding-0.6b`, 1024d) via gateway `/v1/embeddings`; store rebuilt from scratch for the 0.6B space
 - Reranker: **Qwen3-Reranker-0.6B on the MacStudio** (Cohere-compatible, id `qwen3-reranker-0.6b`) via gateway `/v1/rerank`

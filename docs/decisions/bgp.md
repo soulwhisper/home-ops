@@ -66,7 +66,7 @@ spec:
         minimumTtl: 1
 ```
 
-- bird2 extension since talos v1.12.0
+- bird2 extension bundled with Talos
 
 ```yaml
 ---

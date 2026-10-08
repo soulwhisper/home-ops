@@ -3,10 +3,10 @@
 | Device | Count | CPU | RAM | OS Disk | Data Disk | NIC | OS | Role |
 |--------|:-----:|-----|:---:|---------|-----------|-----|:--:|------|
 | Miniforum MS-01 | 3 | i9-13900H | 96GB | 256GB industrial SSD | 2TB NVMe (P41, OSD) | Intel X710 2×10G SFP+ | Talos | K8s control-plane + worker |
-| N305 IPC | 1 | N305 | 24GB | 1TB SSD | — | 2.5G RJ45 | ESXi 8 | OpenWrt edge router |
-| H3C S6520-24S-SI | 1 | — | — | — | — | 24×10G SFP+ | Comware 7 | L3 core switch |
+| N305 IPC | 1 | N305 | 24GB | 1TB SSD | — | 2.5G RJ45 | ESXi | OpenWrt edge router |
+| H3C S6520-24S-SI | 1 | — | — | — | — | 24×10G SFP+ | Comware | L3 core switch |
 | SANTAK TG-Box 850 | 1 | — | — | — | — | USB | — | UPS (NUT) |
-| Synology DS1825+ | 1 | Ryzen V1500B | 8GB | — | 4×HDD (SHR) + NVMe cache | 2×2.5GbE RJ45 (LACP) | DSM 7 | NAS (NFS/S3/Docker) |
+| Synology DS1825+ | 1 | Ryzen V1500B | 8GB | — | 4×HDD (SHR) + NVMe cache | 2×2.5GbE RJ45 (LACP) | DSM | NAS (NFS/S3/Docker) |
 | Mac Studio | 1 | Apple Silicon | — | — | — | 10Gbase-T (built-in) | macOS | LLM inference host (oMLX, `studio.homelab.internal`) |
 
 ### Node Details
