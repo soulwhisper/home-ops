@@ -21,12 +21,14 @@ TICKET = os.environ["TICKET"]
 
 
 def get_json(url, headers):
+    """GET url and decode the JSON response."""
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.load(r)
 
 
 def post_json(url, headers, body):
+    """POST body as JSON and decode the JSON response."""
     req = urllib.request.Request(
         url, data=json.dumps(body).encode(), headers=headers, method="POST"
     )
@@ -35,6 +37,7 @@ def post_json(url, headers, body):
 
 
 def slugify(title):
+    """Lowercase, filesystem-safe slug of the ticket title (max 60 chars)."""
     slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
     return slug[:60] or "lesson"
 
@@ -80,7 +83,11 @@ text = re.sub(r"^```(?:markdown)?\n|\n```$", "", text)
 
 os.makedirs("learnings", exist_ok=True)
 today = datetime.date.today().isoformat()
-path = f"learnings/{today}-{slugify(issue['title'])}.md"
-with open(path, "w", encoding="utf-8") as f:
+# ticket number keeps same-title tickets apart; the exists guard keeps a
+# re-dispatch from overwriting manual edits to the first lesson
+path = f"learnings/{today}-ticket{TICKET}-{slugify(issue['title'])}.md"
+if os.path.exists(path):
+    sys.exit(f"{path} already exists — refusing to overwrite; remove it first to re-distill")
+with open(path, "x", encoding="utf-8") as f:
     f.write(text + "\n")
 print(f"wrote {path}")

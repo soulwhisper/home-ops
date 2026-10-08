@@ -16,9 +16,10 @@ the tickets repo and are covered by NAS backup, never by this repository.
 
 This repo is the source of truth; after edits, push `skills/` and `workflows/`
 into the tickets repo by hand (clone → rsync both dirs → commit → push,
-authenticated with `forgejo.pat_tickets`). The tickets repo holds no other
-tracked content.
-
+authenticated with `forgejo.pat_tickets`). Besides those two dirs the tickets
+repo also tracks `learnings/` — but those files are written by the lessons
+workflow, never by this sync: do not rsync, delete, or "clean up" files there
+you did not write.
 
 ## Runner
 

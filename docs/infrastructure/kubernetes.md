@@ -144,8 +144,12 @@ spec:
     name: gitops-system
     namespace: gitops-system
   prune: true
-  wait: false
 ```
+
+`wait` is deliberately not injected: unset falls back to the CRD default
+(`false`), so an app that needs dependency-ordered readiness can still set
+`wait: true` in its own `ks.yaml` — an injected default would silently
+override it.
 
 This means individual `ks.yaml` files never need to declare their `sourceRef`, `prune` behavior, or reconciliation interval — they only specify what varies: `targetNamespace`, `path`, `dependsOn`, `components`, and `postBuild`.
 
