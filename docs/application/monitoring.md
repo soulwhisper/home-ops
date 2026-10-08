@@ -272,7 +272,9 @@ OTel Collector routes servitor traces to Langfuse's OTLP endpoint (`langfuse-web
 
 ## Robusta
 
-Robusta (runner + embedded Holmes) receives a parallel fan-out of every alert from Alertmanager for enrichment and AI root-cause analysis (agentgateway LLM lane, `robusta-holmes` service). Findings are delivered to Feishu via the webhook-relay `robusta` sink and to the Mattermost ops bus (bot credentials via ExternalSecret). The Robusta SaaS sink is disabled.
+Robusta (runner + embedded Holmes) receives a parallel fan-out of every alert from Alertmanager for enrichment and AI root-cause analysis (agentgateway LLM lane, `robusta-holmes` service). Findings are delivered to Feishu via the webhook-relay `robusta` route, and warning-or-higher findings also land as tickets in the Forgejo `homelab-tickets` repo via the same relay's HTTP target. The Robusta SaaS sink is disabled.
+
+**Tickets**: the second sink (`tickets-relay`) posts every finding to the relay's `robusta-tickets` route, which gates MEDIUM/HIGH into Forgejo `homelab-tickets` issues (`nas.homelab.internal:9003`). Conventions: open issues = inbox; the issue body carries `aggregation_key` for consumer-side dedupe (Forgejo has no idempotency); the fixer agent claims by comment, opens a PR on GitHub, and closes the ticket with the PR link after merge + post-merge verification. Requires 1Password field `tickets_pat` on the `forgejo` item (PAT scoped to issues write on that repo).
 
 Holmes also runs on a schedule via `ScheduledHealthCheck` CRs:
 

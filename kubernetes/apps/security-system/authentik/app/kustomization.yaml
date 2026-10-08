@@ -48,7 +48,6 @@ configMapGenerator:
       - ./blueprints/forward/hindsight.yaml
       - ./blueprints/forward/homepage.yaml
       - ./blueprints/forward/hubble.yaml
-      - ./blueprints/forward/mattermost.yaml
       - ./blueprints/forward/metube.yaml
       - ./blueprints/forward/open-webui.yaml
       - ./blueprints/forward/qbittorrent.yaml

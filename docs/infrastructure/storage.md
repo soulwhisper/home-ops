@@ -66,7 +66,7 @@ The metadata server placement uses a `DoNotSchedule` topology spread across `kub
 
 #### CephObjectStore: `ceph-objectstore`
 
-The RADOS Gateway (RGW) exposes an S3-compatible HTTP endpoint consumed via per-app `ObjectBucketClaim`s (component `ceph-bucket`) by **langfuse**, **open-webui**, and **mattermost**. It is not exposed via Ingress — all consumption is intra-cluster. Backup traffic (kopiur, CNPG) targets the NAS-hosted VersityGW instead.
+The RADOS Gateway (RGW) exposes an S3-compatible HTTP endpoint consumed via per-app `ObjectBucketClaim`s (component `ceph-bucket`) by **langfuse** and **open-webui**. It is not exposed via Ingress — all consumption is intra-cluster. Backup traffic (kopiur, CNPG) targets the NAS-hosted VersityGW instead.
 
 ```
 Internal endpoint: http://rook-ceph-rgw-ceph-objectstore.storage-system.svc.cluster.local

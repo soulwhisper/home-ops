@@ -27,25 +27,15 @@ spec:
           name: feishu-relay
           url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta"
           format: json # default is text; chaski parses a JSON payload
-      # mattermost ops bus (bot creds via runner env, see externalsecret.yaml;
-      # one-way only — upstream notes CallbackBlock interactivity is unimplemented).
-      # Direct in-cluster URL: the CNP allows only this egress, and the public
-      # route sits behind authentik forward-auth which would 302 the POST.
-      - mattermost_sink:
-          name: mattermost-ops
-          url: "http://mattermost.servitor-apps.svc.cluster.local:8065"
-          token: "{{ env.MM_BOT_TOKEN }}"
-          token_id: "{{ env.MM_BOT_TOKEN_ID }}"
-          channel: "ops-alerts"
+      # findings delivery: feishu via webhook-relay (json, validated) + ticket
+      # fan-out to Forgejo homelab-tickets via the relay's HTTP target
+      # (route robusta-tickets gates MEDIUM+; both sinks fire per finding)
+      - webhook_sink:
+          name: tickets-relay
+          url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta-tickets"
+          format: json
 
     runner:
-      additional_env_vars:
-        - name: MM_BOT_TOKEN
-          valueFrom:
-            secretKeyRef: { name: robusta, key: MM_BOT_TOKEN, optional: true }
-        - name: MM_BOT_TOKEN_ID
-          valueFrom:
-            secretKeyRef: { name: robusta, key: MM_BOT_TOKEN_ID, optional: true }
       resources:
         requests:
           cpu: 50m

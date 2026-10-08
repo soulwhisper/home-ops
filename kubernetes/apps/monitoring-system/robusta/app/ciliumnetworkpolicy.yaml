@@ -64,14 +64,6 @@ spec:
       toPorts:
         - ports:
             - { port: "8080", protocol: TCP }
-    # mattermost sink
-    - toServices:
-        - k8sService:
-            serviceName: mattermost
-            namespace: servitor-apps
-      toPorts:
-        - ports:
-            - { port: "8065", protocol: TCP }
     # holmes operator -> holmes API (in-namespace)
     - toServices:
         - k8sService:

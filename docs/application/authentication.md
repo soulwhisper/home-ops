@@ -35,7 +35,7 @@ These apps use their own authentication — no OIDC needed:
 
 ## Forward Auth (embedded outpost)
 
-Apps without built-in auth sit behind the authentik embedded outpost via `components/authentik` (ext-authz TrafficPolicy + `/outpost.goauthentik.io` route). This covers MeTube (single-user download tool), Bambuddy (Bambu Lab account auth only), and Mattermost (Team Edition has no OIDC; at `ops.noirprime.com`). Adding one takes **two** blueprint changes — both are required:
+Apps without built-in auth sit behind the authentik embedded outpost via `components/authentik` (ext-authz TrafficPolicy + `/outpost.goauthentik.io` route). This covers MeTube (single-user download tool) and Bambuddy (Bambu Lab account auth only). Adding one takes **two** blueprint changes — both are required:
 
 1. `blueprints/forward/<app>.yaml` — creates the app's `forward_domain` proxy provider (`external_host` = app URL, `cookie_domain: noirprime.com`).
 2. `blueprints/core/outpost-proxy.yaml` — bind the new provider to the Embedded Outpost's `providers` list. The outpost maps host → provider via `x-forwarded-host`; an unbound provider makes the outpost fall back to an arbitrary bound provider, so logins redirect to a *different* app's domain.

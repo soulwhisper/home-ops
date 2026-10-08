@@ -17,6 +17,14 @@ data:
       # pushover:
       #   apprise:
       #     url: 'pover://{{ env "PUSHOVER_USER_KEY" }}@{{ env "PUSHOVER_TOKEN" }}'
+      # ai-ops ticket fan-out: Forgejo homelab-tickets issues (create via REST;
+      # token from FORGEJO_TICKETS_TOKEN, see externalsecret prerequisite)
+      forgejo-tickets:
+        http:
+          url: http://nas.homelab.internal:9003/api/v1/repos/soulwhisper/homelab-tickets/issues
+          headers:
+            Authorization: 'token {{ env "FORGEJO_TICKETS_TOKEN" }}'
+            Content-Type: application/json
 
     routes:
       # Alertmanager -> feishu
@@ -78,6 +86,24 @@ data:
           {{- end }}
           {{- end }}
           {{- end }}
+      # Robusta runner -> Forgejo homelab-tickets (fed by the second sink at
+      # /hooks/robusta-tickets). Ticket floor MEDIUM+; Forgejo has no
+      # idempotency, so dedupe on aggregation_key is the consumer's (omp) job.
+      robusta-tickets:
+        whenExpr: 'payload.severity in ["MEDIUM", "HIGH"]'
+        target:
+          - forgejo-tickets
+        message: |-
+          {{- $sev := .payload.severity | default "INFO" -}}
+          {{- $sub := .payload.subject | default dict -}}
+          {{- $title := printf "[%s] %s" $sev (.payload.title | default "robusta finding") -}}
+          {{- $body := printf "**Source:** %s | **Aggregation key:** `%s` | **Fingerprint:** `%s`\n**Subject:** %s `%s` (ns `%s`)\n\n%s"
+                (.payload.source | default "unknown")
+                (.payload.aggregation_key | default "n/a")
+                (.payload.fingerprint | default "n/a")
+                ($sub.kind | default "?") ($sub.name | default "?") ($sub.namespace | default "-")
+                (.payload.description | default "no description") -}}
+          {{ dict "title" $title "body" $body | toJSON }}
       # authentik system notifications (blueprints/core/notifications.yaml)
       authentik:
         target:

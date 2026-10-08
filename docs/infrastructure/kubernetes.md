@@ -265,7 +265,7 @@ This cross-namespace reference is used by 40 HelmReleases across 8 namespaces:
 | media-apps        | 8     | jellyfin, kavita, navidrome, qbittorrent, immich, moviepilot, metube, qbittorrent-ui                                                                                 |
 | selfhosted-apps   | 13    | searxng, sillytavern, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, trendradar, hindsight, open-notebook (app + database), firecrawl (app + database) |
 | smarthome-apps    | 7     | home-assistant (app + sgcc), frigate, frigate-vision, zigbee2mqtt, mosquitto, scrypted                                                                                               |
-| servitor-apps     | 5     | hermes-agent, mattermost, open-webui (app + oikb + terminals)                                                                                                                         |
+| servitor-apps     | 4     | hermes-agent, open-webui (app + oikb + terminals)                                                                                                                                                                     |
 | gaming-apps       | 2     | crafty-controller, foundryvtt                                                                                                                                        |
 | monitoring-system | 3     | langfuse (app + worker), webhook-relay                                                                                                                                              |
 | networking-system | 1     | agentgateway MCP config                                                                                                                                              |
@@ -368,7 +368,7 @@ Optional Flux substitution variables:
 
 **Path**: `kubernetes/components/ceph-bucket/`
 
-Injects an `ObjectBucketClaim` that provisions an S3-compatible bucket from the Rook-Ceph object store. Used by `langfuse`, `mattermost`, and `open-webui`.
+Injects an `ObjectBucketClaim` that provisions an S3-compatible bucket from the Rook-Ceph object store. Used by `langfuse` and `open-webui`.
 
 ### Component Composition
 
@@ -395,7 +395,7 @@ The cluster uses 12 namespaces, ordered by dependency from foundational infrastr
 | 4   | `database-system`   | Database operators                   | CloudNativePG, Dragonfly Operator, ClickHouse Operator                                                                                                                                                                                     |
 | 5   | `networking-system` | Ingress, DNS, API gateway            | kgateway (Envoy Gateway), Agent Gateway (AI agent routing), ExternalDNS                                                                                                                                                                    |
 | 6   | `monitoring-system` | Observability                        | Victoria Metrics (operator + cluster), Victoria Logs, Victoria Traces, Grafana, Prometheus CRDs, kube-state-metrics, node-exporter, blackbox-exporter, Smartctl exporter, OTel Collector, Silence Operator, Langfuse, Robusta, webhook-relay, Headlamp |
-| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, Toolhive, MCP server fleet (14 servers), Mattermost, Open-WebUI                                                                                                                                                                                                        |
+| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, Toolhive, MCP server fleet (14 servers), Open-WebUI                                                                                                                                                                                                        |
 | 8   | `smarthome-apps`    | Home automation                      | Home Assistant (app + SGCC), Frigate NVR (+ frigate-vision), Zigbee2MQTT, Mosquitto MQTT, Scrypted, smarthome-nfs                                                                                                                                                            |
 | 9   | `media-apps`        | Media serving and management         | Jellyfin, Kavita, Navidrome, qBittorrent (+ qbittorrent-ui), Immich, MoviePilot, MeTube, media-nfs                                                                                                                                                                       |
 | 10  | `selfhosted-apps`   | Self-hosted web services             | SearXNG, NetBox, Stirling PDF, SillyTavern, Karakeep, Homepage, Hindsight, Dispatcharr, BambuBuddy, trendradar, Open Notebook, Firecrawl                                                                                                 |
