@@ -4,7 +4,7 @@
 The cluster currently exposes three HTTPRoutes to the public internet via a Cloudflare Tunnel (`cloudflared`) attached to `kgateway-external`: `kromgo` (status badges), `authentik-external` (OIDC for non-existent external consumers), and `flux-webhook` (GitHub push delivery). All other access is VPN-first by design. The exposure surface is therefore vestigial — only `kromgo` carries semantic intent, and that intent is broken: its delivery path traverses the very components it claims to measure (WAN → Cloudflare → tunnel → cluster gateway → kromgo → in-cluster Prometheus), so a grey badge cannot distinguish "cluster down" from "tunnel down" or "WAN down". The observer is bound to the observed.
 
 **Decision:**
-I have decided to retire all public exposure and relocate the cluster-health observation surface to an out-of-cluster Gatus instance on the NAS. The `kgateway-external` Gateway resource itself is **retained as an empty scaffold** for topological symmetry with `kgateway-internal`; no HTTPRoutes are attached, and the wildcard certificate remains provisioned.
+I have decided to retire all public exposure and relocate the cluster-health observation surface to an out-of-cluster Gatus instance on the NAS. The `kgateway-external` Gateway resource itself is **retained** for topological symmetry with `kgateway-internal`, and the wildcard certificate remains provisioned. Today it carries two HTTPRoutes: `authentik-external` (auth.noirprime.com — OIDC / ForwardAuth / login flows) and `https-redirect`.
 
 **Rationale & Comparison:**
 
@@ -21,7 +21,7 @@ I have decided to retire all public exposure and relocate the cluster-health obs
 - **Push + pull hybrid:** Critical cluster jobs (DR test, backups, reconcile checks) push success heartbeats to Gatus External Endpoints; Gatus actively probes API server, gateway, and key application HTTPRoutes. Missing pushes and failed probes both trigger Pushover.
 - **Information badges sacrificed deliberately:** PromQL-derived numeric badges (CPU %, pod count) are lost. They were decorative; actionable signals (up/down, reachability) are binary and fully covered.
 
-**3. Retain `kgateway-external` Gateway, no HTTPRoutes (Selected):**
+**3. Retain `kgateway-external` Gateway (Selected):**
 
 - **Topological symmetry:** Gateway-API resource layout mirrors `kgateway-internal`; documentation, diagrams, and operator muscle memory stay coherent.
 - **Reversibility:** Future exposure of a single service (e.g., Tailscale Funnel proving insufficient for a media use case) requires attaching one HTTPRoute, not re-bootstrapping the public-facing routing layer.
@@ -36,7 +36,7 @@ I have decided to retire all public exposure and relocate the cluster-health obs
 **Known Risks / Mitigation:**
 
 - **Risk:** `kgateway-external` becomes an attractive nuisance — an HTTPRoute is attached absentmindedly, re-introducing public exposure without a decision.
-  - **Mitigation:** Empty Gateway manifest carries an inline comment referencing this ADR; future attachment requires an ADR amendment or supersession.
+  - **Mitigation:** Attaching further public routes requires an ADR amendment or supersession.
 - **Risk:** NAS becomes a new single point for observability.
   - **Mitigation:** NAS is independent of cluster failure domains. For correlated NAS+cluster outages, the missing external-endpoint heartbeats from cluster cron jobs still surface eventually via a separate out-of-tree heartbeat (e.g., Forgejo Actions runner pushing to Gatus from a non-cluster context).
 - **Risk:** Public README badges go stale.
@@ -45,6 +45,6 @@ I have decided to retire all public exposure and relocate the cluster-health obs
 
 **Scope of change:**
 
-- **Removed:** `cloudflare-tunnel` Kustomization, `kromgo` Kustomization, `external-dns-cloudflare` Kustomization, HTTPRoutes (`kromgo`, `authentik-external`, `flux-webhook`), Cloudflare tunnel and DNS records for the above, Homepage `cloudflared` widget and associated ExternalSecret vars, all `gatus.io/*` annotation residue.
-- **Retained:** `kgateway-external` Gateway (empty), `noirprime-com-tls` certificate.
-- **Added (out of cluster):** Gatus container on NAS with SQLite persistence, Pushover alerting, declarative endpoint config in a NAS-resident git repository.
+- **Removed:** `cloudflare-tunnel` Kustomization, `kromgo` Kustomization, `external-dns-cloudflare` Kustomization, HTTPRoutes (`kromgo`, `flux-webhook`), Cloudflare tunnel and DNS records for the above, Homepage `cloudflared` widget and associated ExternalSecret vars, all `gatus.io/*` annotation residue.
+- **Retained:** `kgateway-external` Gateway (with `authentik-external` and `https-redirect` HTTPRoutes), `noirprime-com-tls` certificate.
+- **Added (out of cluster):** Gatus container on NAS with SQLite persistence, Pushover alerting, declarative endpoint config in a NAS-resident git repository — subsequently archived; alerting runs through Alertmanager → webhook-relay (feishu) until an external observer is re-established.

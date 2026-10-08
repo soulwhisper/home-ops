@@ -6,7 +6,8 @@
 | N305 IPC | 1 | N305 | 24GB | 1TB SSD | — | 2.5G RJ45 | ESXi 8 | OpenWrt edge router |
 | H3C S6520-24S-SI | 1 | — | — | — | — | 24×10G SFP+ | Comware 7 | L3 core switch |
 | SANTAK TG-Box 850 | 1 | — | — | — | — | USB | — | UPS (NUT) |
-| Synology DS923+ | 1 | Ryzen R1600 | 16GB | — | 4×HDD (SHR) + NVMe cache | 2×1G RJ45 (LACP) | DSM 7 | NAS (NFS/S3/Docker) |
+| Synology DS1825+ | 1 | Ryzen V1500B | 8GB | — | 4×HDD (SHR) + NVMe cache | 2×1G RJ45 (LACP) | DSM 7 | NAS (NFS/S3/Docker) |
+| Mac Studio | 1 | Apple Silicon | — | — | — | 10G SFP+ | macOS | LLM inference host (oMLX, `studio.homelab.internal`) |
 
 ### Node Details
 
@@ -40,12 +41,12 @@ Each MS-01 node runs Talos Linux with:
                          │  H3C S6520-24S-SI       │
                          │  Core Switch (AS 65000) │
                          │  BGP + BFD + LACP       │
-                         └──┬──────┬──────┬──────┬─┘
-                            │      │      │      │
-              ┌─────────────▼┐ ┌───▼───┐ ┌──▼──┐ ┌▼──────────┐
-              │  exarch-01   │ │exarch │ │exarch│ │ Synology  │
-              │    .101      │ │ -02   │ │ -03  │ │ NAS .100  │
-              │ 2×10G LACP   │ │ .102  │ │ .103 │ │2×1G LACP  │
-              └──────────────┘ └───────┘ └──────┘ └───────────┘
+                         └──┬──────┬────────┬────┬────────────┬─┘
+                            │      │        │    │            │
+              ┌─────────────▼┐ ┌───▼───┐ ┌──▼──┐┌▼──────────┐┌▼──────────┐
+              │  exarch-01   │ │exarch │ │exarch││ Synology  ││Mac Studio │
+              │    .101      │ │ -02   │ │ -03  ││ NAS .100  ││   .210    │
+              │ 2×10G LACP   │ │ .102  │ │ .103 ││2×1G LACP  ││ 10G SFP+  │
+              └──────────────┘ └───────┘ └──────┘└───────────┘└───────────┘
               └────────── VLAN 100 (10.10.0.0/24) ──────────┘
 ```

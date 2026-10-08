@@ -58,9 +58,9 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
 | Cilium datapath | `netkit` (L3) — kept |
 | kata | **removed** (RuntimeClass + Talos sysext; sysext drops at next node image upgrade) |
 | `hostUsers: false` | All app-template workloads **except** NFS consumers |
-| Egress CNP | **AI workloads only** (LLM-gateway callers / agent pipelines): firecrawl, hermes-agent, karakeep, trendradar, open-notebook. Contains where a compromised agent can *go* — lateral-movement block. Traditional apps (searxng, qbittorrent, media) deliberately not covered |
+| Egress CNP | AI/agent workloads plus selected traditional apps: firecrawl, hermes-agent, karakeep, trendradar, open-notebook, hindsight, open-webui (app / oikb / terminals / open-terminal-sandbox), frigate-vision, home-assistant-sgcc, headlamp, robusta, mattermost. Contains where a compromised workload can *go* — lateral-movement block |
 | Ingress CNP | Different angle — constrains who may *call* a sensitive endpoint: `onepassword-connect-ingress` (only external-secrets reaches the Connect API) and `vmcp-ingress` (only vmagent + hermes-agent reach the virtual-MCP tool plane) |
-| `automountServiceAccountToken: false` | All app-template workloads except `heartbeats`, `homepage`. Audited live: no other app SA holds RoleBindings; `netbox` (official chart, untouched by the sweep) keeps its token for `netbox_prometheus_sd` |
+| `automountServiceAccountToken: false` | All app-template workloads except `homepage`; `open-webui/terminals` sets the token `true` with a dedicated SA. Audited live: no other app SA holds RoleBindings; `netbox` (official chart, untouched by the sweep) keeps its token for `netbox_prometheus_sd` |
 | `enableServiceLinks: false` | app-template v5 chart default — no action needed |
 | Pod Security Admission | **privileged cluster-wide — open decision, see below** |
 | seccomp | **RuntimeDefault globally** — Talos kubelet default (`defaultRuntimeSeccompEnabled: true`, verified: unannotated pods run with an active filter). Only cilium-agent runs Unconfined (deliberate: needs bpf/mount) |
@@ -96,8 +96,8 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
    `10-general.yaml` (Talos multi-doc config; not yet applied to nodes —
    takes effect on next config apply). Guards against a future Talos
    default flip silently widening the syscall surface.
-3. **CNP coverage** — scoped to AI workloads (LLM-gateway callers and agent
-   pipelines); current set complete. Do not extend to traditional apps
-   (searxng, qbittorrent, media) — policy churn without threat-model value.
-   Revisit only for new agent/LLM-calling workloads.
+3. **CNP coverage** — grew beyond the original AI-workload scope: hindsight,
+   the open-webui family, frigate-vision, home-assistant-sgcc, headlamp,
+   robusta, and mattermost are now covered, including traditional apps.
+   Revisit as new workloads with external reachability land.
 4. **Kernel watch** — NFS idmapped mounts; kata netkit support (#12159).

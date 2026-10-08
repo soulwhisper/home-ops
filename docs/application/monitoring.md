@@ -35,7 +35,8 @@ flowchart LR
   subgraph Alerting
     VMALERT[VMAlert]
     AM[Alertmanager]
-    PUSH[Pushover]
+    RELAY[Webhook Relay → Feishu]
+    ROB[Robusta Runner + Holmes]
   end
 
   NE & KSM & SMART --> VM
@@ -46,7 +47,9 @@ flowchart LR
   VAUTH --> VMS & VL
   GRAF --> VAUTH & VL & VT
   VMALERT --> VAUTH
-  VMALERT --> AM --> PUSH
+  VMALERT --> AM
+  AM --> RELAY
+  AM --> ROB
 ```
 
 ## VictoriaMetrics cluster
@@ -55,7 +58,7 @@ The metrics stack uses VictoriaMetrics deployed as the `victoria-metrics-k8s-sta
 
 ### VMSingle
 
-Single-node time-series database with 30-day retention and 100Gi Ceph block storage (`ceph-block` StorageClass). Series cardinality is capped to protect Ceph: `storage.maxHourlySeries: 200000`, `storage.maxDailySeries: 500000`. Internal endpoint: `vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428`. UI exposed at `metrics.noirprime.com` (root path rewritten to `/vmui/`).
+Single-node time-series database with 30-day retention and 100Gi Ceph block storage (`ceph-block` StorageClass). Series cardinality is capped to protect Ceph: `storage.maxHourlySeries: 400000`, `storage.maxDailySeries: 1000000`. Internal endpoint: `vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428`. UI exposed at `metrics.noirprime.com` (root path rewritten to `/vmui/`).
 
 High-cardinality metric relabeling drops unnecessary histogram buckets and labels at scrape time (kube-apiserver request duration buckets, admission metrics, kubelet runtime/PLEG operation buckets). Container blkio metrics are preserved for per-pod IOPS panels.
 
@@ -96,17 +99,18 @@ Alerting rules engine with datasource pointed at VMAuth (`8427`). Internal endpo
 
 | Group | Alerts |
 |-------|--------|
-| `vlogs.rules` | `HasErrorLog` — prod error/warn log count > 0; `TooManyFailedRequest` — IPs with >1% failed requests |
+| `vlogs.rules` | `HasErrorLog` — prod error/warn log count > 0 |
+| `ServiceRequest` | `TooManyFailedRequest` — IPs with >1% failed requests |
 
 ### Alertmanager
 
 Single Alertmanager instance at `vmalertmanager-victoria-metrics-cluster.monitoring-system.svc.cluster.local:9093`. UI at `alert.noirprime.com`.
 
-**Routing**: alerts grouped by `alertname` and `job`. Group interval 10m, repeat 12h. Info/warning/critical alerts route to `default` receiver (Pushover). `InfoInhibitor` and `Watchdog` alerts are blackholed.
+**Routing**: alerts grouped by `alertname` and `job`. Group interval 10m, repeat 12h. Warning/critical alerts route to the `default` receiver. `InfoInhibitor`/`Watchdog` alerts are blackholed, and a second blackhole route drops chart-rendered ceph-mixin alerts (`type=ceph_default`) that are replaced by ceph-local-rules.
 
 **Inhibition**: critical alerts suppress warning alerts for the same `alertname` + `namespace`.
 
-**Pushover integration**: notifications delivered via Pushover with HTML formatting, resolved-alert notifications, priority 1 (firing) / 0 (resolved), and gamelan sound. Credentials sourced from 1Password via ExternalSecret.
+**Delivery**: the `default` receiver fans out via `webhook_configs` to webhook-relay (Feishu, via apprise, with resolved-alert notifications) and in parallel to the robusta-runner (`/api/alerts`) for enrichment + Holmes RCA, which delivers through its own webhook sink. Pushover remains in the relay config, commented out, as a re-enable option. Credentials sourced from 1Password via ExternalSecret.
 
 ## VictoriaLogs
 
@@ -162,7 +166,7 @@ Both exporters use queued retry with 10 consumers, 5000 queue depth, and exponen
 
 ## Grafana
 
-Grafana 12.3.1 is managed by the **Grafana Operator** (`grafana-operator` Helm chart, 1 replica), not via the Helm chart directly. The `Grafana` CR declares the full deployment spec: 2 replicas with `topologySpreadConstraints` (hostname skew). PostgreSQL-backed (CNPG `postgres-rw.database-system`), `grafana-initdb` secret for automatic database provisioning.
+Grafana 12.3.1 is managed by the **Grafana Operator** (`grafana-operator` Helm chart, 1 replica), not via the Helm chart directly. The `Grafana` CR declares the full deployment spec: 2 replicas with `topologySpreadConstraints` (hostname skew). PostgreSQL-backed (CNPG `postgres-rw.database-system`), `postgres-init:18` init container with the `grafana-pguser` secret for automatic database provisioning.
 
 ### Authentication
 
@@ -191,14 +195,14 @@ The set is **debug-focused** (2026-09 audit): current state belongs to native UI
 
 | Folder | Boards |
 |--------|--------|
-| Default (must-check, alert-silent) | k8s-system-api-server, blackbox-exporter, envoy-proxy-global, **kopiur-slo** (custom) |
+| Default (must-check, alert-silent) | k8s-system-api-server, blackbox-exporter, envoy-proxy-global, **kopiur-slo** (custom), **basement-health** (custom) |
 | Kubernetes | k8s-views global / namespaces / nodes / pods |
 | Storage | ceph-cluster, ceph-osd, ceph-pools |
 | Network | kgateway, cilium-agent |
 | Databases | cnpg, dragonfly |
 | Nodes | node-exporter-full, smartctl-exporter |
 
-`custom/kopiur-slo.json` replaces the vendored kopiur board, whose queries referenced metric families the operator does not emit; it tracks backup staleness, failures, size/duration, and repository health from the live `kopiur_*` families.
+`custom/` holds two repo-owned boards. `kopiur-slo.json` replaces the vendored kopiur board, whose queries referenced metric families the operator does not emit; it tracks backup staleness, failures, size/duration, and repository health from the live `kopiur_*` families. `basement-health.json` is the failure-revealing board: SLO budgets first, fires second, weak signals last, with 3-line runbooks per panel (app-plane excluded — alerts cover it).
 
 ## Host, cluster, and disk metrics
 
@@ -216,7 +220,7 @@ Per-node DaemonSet exposing S.M.A.R.T. disk health metrics from NVMe and SATA dr
 
 ## Blackbox Exporter
 
-`blackbox-exporter` chart with `http_2xx`, `icmp`, and `tcp_connect` modules (all IPv4-preferred, 5s timeout). ServiceMonitor scrapes at 1m interval. `NET_RAW` capability for ICMP probes. Alert rule: `BlackboxProbeFailed` fires after 15m of probe failure.
+`blackbox-exporter` chart with `http_2xx`, `icmp`, and `tcp_connect` modules (all IPv4-preferred, 5s timeout) plus a `studio_api` module (10s timeout, bearer token from the `studio-api-auth` ExternalSecret) for the MacStudio oMLX API plane. ServiceMonitor scrapes at 1m interval. `NET_RAW` capability for ICMP probes. Alert rules: `BlackboxProbeFailed` fires after 15m of probe failure; `MacStudioApiDown` covers the studio probe with a faster 5m trigger. Per-model inference probes (embedding/rerank) are deliberately absent — inference calls would force oMLX model reloads and flap on evictions.
 
 ### Probe targets
 
@@ -224,9 +228,7 @@ Per-node DaemonSet exposing S.M.A.R.T. disk health metrics from NVMe and SATA dr
 |-------|--------|---------|
 | `devices` | `icmp` | esxi, nas, unifi (all `.homelab.internal`; zigbee commented out — device offline) |
 | `nfs` | `tcp_connect` | `nas.homelab.internal:2049` |
-| `studio-models` | `http_2xx` | `studio.homelab.internal:8000/v1/models` — oMLX model-plane health |
-| `studio-embedding` | `studio_embedding` | `studio.homelab.internal:8000/v1/embeddings` — L7 inference call (qwen3-embedding) |
-| `studio-rerank` | `studio_rerank` | `studio.homelab.internal:8000/v1/rerank` — L7 inference call (qwen3-reranker) |
+| `studio-models` | `studio_api` | `studio.homelab.internal:8000/v1/models` — oMLX model-plane health (30s interval) |
 
 ## Silence Operator
 
@@ -236,11 +238,9 @@ Per-node DaemonSet exposing S.M.A.R.T. disk health metrics from NVMe and SATA dr
 
 | Silence | Matchers | Reason |
 |---------|----------|--------|
-| `ceph-node-diskspace-warning-local` | `CephNodeDiskspaceWarning` on `/dev/sd.*` | Local drives are managed |
-| `ceph-node-diskspace-warning-nfs` | `CephNodeDiskspaceWarning` on `/etc/nfsmount.conf` | NFS mount, not disk |
-| `talos-kubelet-ephemeral-fs` | `NodeFilesystemAlmostOutOfSpace` on `/var/lib/kubelet/pods` | Expected fullness during workloads |
-| `bond-flap-during-upgrade` | `NodeNetworkInterfaceFlapping` on bond0/enp2s0f* | Expected flapping during Talos upgrades |
-| `cilium-rolling-upgrade-churn` | `CiliumIdentitiesChurning` | Churn during rolling restarts |
+| `vm-health-too-many-logs` | `TooManyLogs` | Chart-default threshold-0 rule: any warn log in the VM stack fires |
+| `vm-health-too-many-scrape-errors` | `TooManyScrapeErrors` | Threshold-0 rule: a single failed scrape in 15m fires; `TargetDown` covers real outages |
+| `macstudio-offline` | `MacStudioModelServiceDown` | Mac Studio offline (owner decision); remove when the box is back |
 
 ## Headlamp
 
@@ -270,6 +270,20 @@ Web component exposed at `langfuse.noirprime.com`. Telemetry disabled. Experimen
 
 OTel Collector routes servitor traces to Langfuse's OTLP endpoint (`langfuse-web:3000/api/public/otel`) after credential redaction and gen_ai span filtering. See [OpenTelemetry Collector](#opentelemetry-collector) for pipeline details.
 
+## Robusta
+
+Robusta (runner + embedded Holmes) receives a parallel fan-out of every alert from Alertmanager for enrichment and AI root-cause analysis (agentgateway LLM lane, `robusta-holmes` service). Findings are delivered to Feishu via the webhook-relay `robusta` sink and to the Mattermost ops bus (bot credentials via ExternalSecret). The Robusta SaaS sink is disabled.
+
+Holmes also runs on a schedule via `ScheduledHealthCheck` CRs:
+
+| Check | Schedule | Scope |
+|-------|----------|-------|
+| `ceph-health-growth` | every 6h | Ceph health, OSD/pool usage trends |
+| `cert-expiry-watch` | daily | cert-manager certs expiring < 14d or not Ready |
+| `node-density-trend` | daily | per-node pod density and request saturation |
+| `alert-rule-quality-weekly` | weekly | top firing/flapping rules, proposed adjustments |
+| `backup-chain-daily` | daily | kopiur + CNPG backup runs and snapshot age |
+
 ## Alert routing
 
 ```
@@ -279,18 +293,16 @@ VMAlert rules (PromQL + LogsQL)
 VMAuth (read proxy for VMSingle + VictoriaLogs)
   │
   ▼
-Alertmanager ──► blackhole (InfoInhibitor, Watchdog)
+Alertmanager ──► blackhole (InfoInhibitor, Watchdog, chart-rendered ceph-mixin)
   │
   ▼
-Pushover (mobile notifications)
-  ├── severity: critical → priority 1 (high)
-  ├── severity: warning → priority 0 (normal)
-  ├── sendResolved: true
-  └── sound: gamelan
+default receiver (webhook_configs)
+  ├──► webhook-relay → Feishu (chat notifications, sendResolved: true)
+  └──► robusta-runner → enrichment + Holmes RCA → Feishu via webhook sink
 ```
 
-Alertmanager groups alerts by `alertname` + `job`, waits 1m before first notification, and repeats every 12h. Credentials (token + user key) from 1Password via ExternalSecret.
+Alertmanager groups alerts by `alertname` + `job`, waits 1m before first notification, and repeats every 12h. Credentials (Feishu webhook token) from 1Password via ExternalSecret.
 
 ## External observation
 
-Gatus on the Synology NAS and the cluster heartbeat CronJobs were archived (`.archived/infrastructure/synology/gatus`, `.archived/kubernetes/monitoring/heartbeats`) — the NAS no longer deploys the Gatus stack. Alerting is Pushover-only via Alertmanager until an external observer is re-established.
+Gatus on the Synology NAS and the cluster heartbeat CronJobs were archived (`.archived/infrastructure/synology/gatus`, `.archived/kubernetes/monitoring/heartbeats`) — the NAS no longer deploys the Gatus stack. Alert delivery is Feishu-only via webhook-relay until an external observer is re-established.

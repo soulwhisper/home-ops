@@ -1,8 +1,8 @@
 # Application Catalog
 
-81 applications across 13 namespaces, managed via Flux GitOps.
+81 applications across 12 namespaces, managed via Flux GitOps.
 
-## kube-system — Cluster Infrastructure (11)
+## kube-system — Cluster Infrastructure (10)
 
 | App              | Purpose                                            |
 | ---------------- | -------------------------------------------------- |
@@ -25,7 +25,7 @@
 | Flux Instance             | GitOps controller                  |
 | System Upgrade Controller | Talos/K8s version upgrades (tuppr) |
 
-## security-system — Security (4)
+## security-system — Security (5)
 
 | App               | Purpose                     |
 | ----------------- | --------------------------- |
@@ -33,23 +33,24 @@
 | 1Password Connect | 1Password API bridge        |
 | Authentik         | SSO/OIDC provider           |
 | Cert-Manager      | TLS certificate automation  |
+| Kyverno           | Policy engine (6 ClusterPolicies) |
 
-## networking-system — Network Services (3)
+## networking-system — Network Services (4)
 
 | App           | Purpose                                           |
 | ------------- | ------------------------------------------------- |
 | Kgateway      | Envoy Gateway API (internal + external)           |
 | Agent Gateway | AI LLM routing (uncensored/agent/omni/micro) + MCP gateway |
 | External DNS  | AdGuardHome DNS automation                        |
+| Kgateway CRDs | CRDs for the kgateway control plane               |
 
-## storage-system — Storage (5)
+## storage-system — Storage (4)
 
 | App                 | Purpose                                  |
 | ------------------- | ---------------------------------------- |
 | Rook-Ceph           | Distributed storage (RBD + CephFS + RGW) |
 | kopiur              | PVC backup (Kopia → Ceph S3)             |
 | Snapshot Controller | Volume snapshot management               |
-| OpenEBS LocalPV     | Node-local persistent storage            |
 | CSI Driver NFS      | Synology NFS mount CSI                   |
 
 ## database-system — Database Operators (3)
@@ -60,7 +61,7 @@
 | Dragonfly Operator  | Redis-compatible cache operator         |
 | ClickHouse Operator | Analytical database operator (Langfuse) |
 
-## monitoring-system — Observability (13)
+## monitoring-system — Observability (15)
 
 | App                     | Purpose                                                |
 | ----------------------- | ------------------------------------------------------ |
@@ -77,6 +78,8 @@
 | Headlamp                | K8s Web UI (RBAC + OIDC)                               |
 | Langfuse                | LLM observability (ClickHouse + CNPG + S3)             |
 | Prometheus CRDs         | Operator CRDs                                          |
+| Robusta                 | AI-ops alert enrichment + Holmes analysis + ScheduledHealthChecks |
+| Webhook Relay           | Inbound webhook collector (Feishu fan-out)             |
 
 ## smarthome-apps — Smart Home (8)
 
@@ -105,7 +108,7 @@
 | MoviePilot    | Media automation (CNPG + Dragonfly + iGPU) |
 | Media-NFS     | Shared media storage                       |
 
-## selfhosted-apps — Self-Hosted Services (16)
+## selfhosted-apps — Self-Hosted Services (12)
 
 | App           | Purpose                                                        |
 | ------------- | -------------------------------------------------------------- |
@@ -117,20 +120,20 @@
 | Karakeep      | Bookmark manager (Chrome + Meilisearch, omni lane)             |
 | Hindsight     | AI memory (slim image; LLM + embeddings + rerank on MacStudio) |
 | Open-Notebook | AI research notebook (SurrealDB)                               |
-| Open WebUI    | AI chat frontend (native MCP via ToolHive tiers)               |
 | Firecrawl     | Web scraping pipeline (3 containers, MCP)                        |
 | SillyTavern   | AI character chat (AgentGateway)                               |
 | Bambuddy      | 3D printer monitor (Bambu Lab)                                 |
 | Dispatcharr   | IPTV dispatch (iGPU transcode)                                 |
-| God's Eye View | Live OSINT globe (custom image, forward-auth, no built-in auth) |
 
-## servitor-apps — AI Infrastructure (3 + 10 MCP servers)
+## servitor-apps — AI Infrastructure (4 + 14 MCP servers)
 
-| App          | Purpose                                                                                        |
-| ------------ | ---------------------------------------------------------------------------------------------- |
-| Hermes Agent | AI agent suite (Feishu, cron/automation)                                              |
-| ToolHive     | MCP gateway (3 VirtualMCP tiers, semantic search)                                              |
-| MCP Servers  | kubernetes/HA/hindsight/github/firecrawl/grafana/flux/vlogs/obsidian/forgejo/trendradar |
+| App           | Purpose                                                                                     |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| Hermes Agent  | AI agent suite (Feishu, cron/automation)                                                    |
+| Mattermost    | Ops bus chat (Team Edition, forward-auth, CNPG + Ceph S3)                                   |
+| Open WebUI    | AI chat frontend (native MCP via ToolHive tiers; oikb + terminals companions)               |
+| ToolHive      | MCP gateway (4 VirtualMCP tiers: internal-ro/internal-rw/external/aiops, semantic search)   |
+| MCP Servers   | context/firecrawl/fluxcd/forgejo/github/grafana/hindsight-aiops/hindsight-homelab/home-assistant/kubernetes/reflex/trendradar/victoria-logs/victoria-metrics |
 
 ## gaming-apps — Gaming (3)
 

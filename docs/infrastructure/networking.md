@@ -99,7 +99,7 @@ The core switch enforces strict L3 isolation between security domains. Inter-VLA
 | 210  | IoT        | 10.20.10.0/24   | 10.20.10.1   | Untrusted IoT devices (ACL-isolated)            | Yes (OpenWrt)    |
 | 1000 | Transit    | 10.255.255.0/30 | 10.255.255.1 | Switch↔Router point-to-point link               | Static           |
 
-**IoT isolation (VLAN 210):** An advanced ACL (3500) restricts IoT egress to DHCP, DNS (switch only), NTP, and ICMP toward the gateway. Internet access is permitted; all RFC 1918 private ranges are explicitly denied. Inbound from WiFi (VLAN 200) is restricted to the Aqara hub (10.20.10.100) on TCP 80/443 plus ICMP. A QoS policy (10 Mbps CIR) caps all IoT traffic at the access switch uplink.
+**IoT isolation (VLAN 210):** An advanced ACL (3500) restricts IoT egress to DHCP, DNS (switch only), NTP, and ICMP toward the gateway. Internet access is permitted; all RFC 1918 private ranges are explicitly denied. Inbound from WiFi (VLAN 200, ACL 3510) permits full IP access to the Aqara hub (10.20.10.100), plus TCP 80/443 and ICMP to the entire IoT subnet. A QoS policy (10 Mbps CIR) caps all IoT traffic at the access switch uplink.
 
 ### LACP Link Aggregation
 
@@ -120,16 +120,16 @@ Management connectivity uses a dedicated access port (Ten-GE 1/0/19, VLAN 1) wit
 
 ### BGP Design
 
-The core switch and each Kubernetes node run eBGP to advertise pod and LoadBalancer CIDRs.
+The core switch and each Kubernetes node run eBGP to advertise the LoadBalancer CIDR.
 
 | Component               | ASN   | Router ID | Peers                   |
 | ----------------------- | ----- | --------- | ----------------------- |
 | Core switch (Comware 7) | 65000 | 10.10.0.1 | 10.10.0.101, .102, .103 |
 | FRR-K8s per node        | 65100 | (node IP) | 10.10.0.1               |
 
-- **Advertised prefixes (FRR→switch):** Pod CIDR `10.100.0.0/17`, LoadBalancer pool `10.10.0.128/27`
+- **Advertised prefixes (FRR→switch):** LoadBalancer pool `10.10.0.128/27` (only prefix advertised)
 - **Advertised prefixes (switch→FRR):** `import-route direct` (connected routes)
-- **Timers:** keepalive 60s, hold 180s
+- **Timers:** FRR side keepalive 60s, hold 180s; switch side keepalive 10s, hold 30s — negotiated hold is 30s
 - **Graceful restart:** disabled (BFD provides faster failover)
 
 #### BFD Fast Failover
@@ -144,7 +144,7 @@ BFD runs between the switch's VLAN 100 SVI and each K8s node via FRR-K8s:
 | Echo mode         | Disabled         |
 | Min TTL           | 1                |
 
-This provides sub-2-second failure detection for pod and service IP reachability, independent of BGP hold timers.
+This provides sub-2-second failure detection for LoadBalancer service IP reachability, independent of BGP hold timers.
 
 ### Cilium Network
 
@@ -152,14 +152,14 @@ Cilium runs as the sole CNI with full kube-proxy replacement on a `netkit` datap
 
 | Feature               | Configuration                                              |
 | --------------------- | ---------------------------------------------------------- |
-| Datapath              | `netkit` (optimized for Intel X710 / `ice` driver)         |
+| Datapath              | `netkit` (Intel X710/X722 NICs, `i40e` driver)               |
 | Routing               | Native (`autoDirectNodeRoutes`, `endpointRoutes`)          |
 | Pod CIDR              | `10.100.0.0/17`                                            |
 | Service CIDR          | `10.100.128.0/17`                                          |
 | IPAM                  | Kubernetes host-scope                                      |
 | kube-proxy            | Replaced (`kubeProxyReplacement: true`)                    |
 | Bandwidth management  | BBR congestion control, enabled                            |
-| BIGTCP                | Enabled (IPv4)                                             |
+| BIGTCP                | Disabled (`i40e` lacks BIG TCP support)                      |
 | BPF clock probe       | Enabled                                                    |
 | BPF map preallocation | Enabled (8% dynamic size ratio, distributed LRU)           |
 | Masquerade            | BPF-based                                                  |
@@ -170,7 +170,7 @@ Cilium runs as the sole CNI with full kube-proxy replacement on a `netkit` datap
 | Hubble                | Enabled (relay ×2 replicas, UI, metrics + ServiceMonitors) |
 | Hubble metrics        | DNS, drop, TCP, flow, port-distribution, ICMP, HTTP        |
 | Gateway API           | Disabled (kgateway handles this)                           |
-| L2 announcements      | Disabled                                                   |
+| L2 announcements      | Enabled (`CiliumL2AnnouncementPolicy/default` answers ARP for LB VIPs) |
 | Envoy                 | Disabled                                                   |
 | Devices               | `bond+` (binds to all bond interfaces)                     |
 | Cluster ID            | 1, name: `main`                                            |
@@ -186,7 +186,7 @@ Cilium runs as the sole CNI with full kube-proxy replacement on a `netkit` datap
 | `net.ipv4.neigh.default.gc_thresh1/2/3` | 1024/2048/4096 | ARP table for BGP + Cilium |
 | `sunrpc.tcp_slot_table_entries`         | 128            | NFS over 10G concurrency   |
 
-**IRQ affinity:** Network IRQs for the `ice` driver are pinned to P-cores 2–11 (i9-13900H) via a Talos static pod, avoiding contention with E-cores.
+**IRQ affinity:** Network IRQs for the `i40e` driver are pinned to P-cores 2–11 (i9-13900H) via a Talos static pod, avoiding contention with E-cores.
 
 ### Gateway Layer
 
@@ -197,13 +197,13 @@ Traffic ingress is handled by two Gateway API implementations deployed in the `n
 | Gateway             | LB IP       | External DNS Target         | Purpose                                       |
 | ------------------- | ----------- | --------------------------- | --------------------------------------------- |
 | `kgateway-internal` | 10.10.0.131 | `gateway-int.noirprime.com` | Internal services (media, gaming, monitoring) |
-| `kgateway-external` | 10.10.0.132 | `gateway-ext.noirprime.com` | Public-facing — **retired, empty scaffold (ADR-02)** |
+| `kgateway-external` | 10.10.0.132 | `gateway-ext.noirprime.com` | Public-facing (authentik route + HTTP→HTTPS redirect) |
 
-The two kgateway gateways use the `kgateway` GatewayClass with TLS termination via cert-manager certificates (`noirprime-com-tls`). The internal gateway accepts routes from all namespaces on HTTPS; the external gateway keeps zero HTTPRoutes by design (ADR-02). Cilium LB IPAM assigns the LoadBalancer IPs from the `10.10.0.128/27` pool, and BGP advertises them to the switch.
+The two kgateway gateways use the `kgateway` GatewayClass with TLS termination via cert-manager certificates (`noirprime-com-tls`). The internal gateway accepts routes from all namespaces on HTTPS; the external gateway serves only the authentik route and the HTTP→HTTPS redirect. Cilium LB IPAM assigns the LoadBalancer IPs from the `10.10.0.128/27` pool, and BGP advertises them to the switch.
 
 #### AgentGateway (LLM + MCP Proxy)
 
-`agentgateway-proxy` is a purpose-built Gateway API implementation for AI workload routing. In-cluster consumers use `http://agentgateway-proxy.networking-system.svc.cluster.local:80`; the LB is pinned at `10.10.0.140` with HTTP:80 (in-cluster) and HTTPS:443 (TLS via `noirprime-com-tls` — the tailnet/CI entry). Its API surface is also proxied to the intranet through `kgateway-internal` at `https://api.noirprime.com` (internal DNS, strict API-key auth at agentgateway). Model lanes route to the MacStudio inference host at 10.10.0.210 (`studio.homelab.internal`).
+`agentgateway-proxy` is a purpose-built Gateway API implementation for AI workload routing. In-cluster consumers use `http://agentgateway-proxy.networking-system.svc.cluster.local:80`; the LoadBalancer IP is dynamically assigned from the LB pool (currently `10.10.0.140`), and the gateway exposes only an HTTP:80 listener. Its API surface is also proxied to the intranet through `kgateway-internal` at `https://api.noirprime.com` (internal DNS, strict API-key auth at agentgateway). Model lanes route to the MacStudio inference host at 10.10.0.210 (`studio.homelab.internal`).
 
 **LLM routing** — model dispatch on `/v1/chat/completions` (body `model` → synthesized `x-model` header):
 
@@ -216,11 +216,14 @@ The two kgateway gateways use the `kgateway` GatewayClass with TLS termination v
 
 **MCP routing** — tiered ToolHive virtual-MCP dispatch:
 
-| Path       | Tier                     |
-| ---------- | ------------------------ |
-| `/mcp/ro`  | internal read-only       |
-| `/mcp/rw`  | internal read-write      |
-| `/mcp/ext` | external (FailClosed)    |
+| Path       | Tier                          |
+| ---------- | ----------------------------- |
+| `/mcp/ro`  | internal read-only            |
+| `/mcp/rw`  | internal read-write           |
+| `/mcp/ext` | external                      |
+| `/mcp/aiops` | internal AI-ops             |
+
+All four tiers are FailClosed — each backend carries the mcp-guardrails sidecar regardless of the LLM lane the client used.
 
 API key authentication is enforced via `AgentgatewayPolicy` in strict mode for all LLM and MCP routes. The gateway is the single choke point for auth, routing, guardrails, and observability.
 
@@ -245,6 +248,7 @@ Split-horizon DNS separates internal homelab resolution from public records.
 | `zigbee.homelab.internal`    | 10.10.0.20          | Zigbee coordinator           |
 | `nas.homelab.internal`       | 10.10.0.100         | Synology NAS                 |
 | `unifi.homelab.internal`     | 10.10.0.200         | UniFi controller             |
+| `studio.homelab.internal`    | 10.10.0.210         | MacStudio inference host       |
 
 #### Dynamic DNS — external-dns
 
