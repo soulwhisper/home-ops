@@ -226,7 +226,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | -------------- | -------------------- | ---------------------- |
 | home-assistant | HTTP (FastMCP) :8086 | Home Assistant         |
 | hindsight      | HTTP proxy :8080     | Hindsight MCP endpoint |
-| forgejo        | Streamable HTTP :8080 | Forgejo on nas:9003 (forgejo-mcp v3.2.0); draftbox repo read+write, repo-scoped PAT |
+| forgejo        | Streamable HTTP :8080 | Forgejo on nas:9003 (forgejo-mcp v3.2.0); read+write via forwarded user PAT |
 
 #### external (full egress)
 
@@ -238,7 +238,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 
 #### Obsidian facts workflow
 
-Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own sync/revisions) → Synology CloudSync pull → `/volume1/backup` on the NAS. Agent-authored notes never write into the vault copy — they go to the **draftbox** git repo on Forgejo (`nas.homelab.internal:9003`) via the `forgejo` MCP (`create_file`/`update_file`, commit-per-call), keeping generated drafts versioned and reviewable before any manual promotion into the vault.
+Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own sync/revisions) → Synology CloudSync pull → `/volume1/backup` on the NAS. Agent-authored notes never write into the vault copy; they currently have no versioned landing zone — promotion into the vault is manual.
 
 ---
 
@@ -304,7 +304,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 ### Archived
 
 - **Buzz** (relay + buzz-agent-omp) — buzz-agent-omp removed 2026-08-28; buzz-relay removed 2026-09-09, superseded by hermes' native webhook ingestion (`/p/<profile>/webhooks/<route>`, HMAC); manifests deleted from git. Its CNPG DB, Dragonfly, and Ceph bucket are retained in-cluster for manual cleanup.
-- **Fast-Note-Sync** — removed 2026-09-09, manifests deleted from git; vault facts now: write via `forgejo` MCP to the draftbox repo. Dropbox MCP was evaluated and rejected (beta, DCR-limited clients, short-lived tokens, cloud round-trip for local data)
+- **Fast-Note-Sync** — removed 2026-09-09, manifests deleted from git; the draftbox-via-forgejo-MCP successor was never implemented and is dropped. Dropbox MCP was evaluated and rejected (beta, DCR-limited clients, short-lived tokens, cloud round-trip for local data)
 - **Devbox** — removed from cluster 2026-08-05; image retained in `soulwhisper/containers` as an ad-hoc exec sandbox.
 - **llama.cpp (llama-qwen3)** — archived 2026-08-28; all local lanes moved to the MacStudio.
 
