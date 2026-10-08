@@ -10,22 +10,21 @@ I have decided to retire all public exposure except one retained exception — `
 
 **1. Retire `cloudflared` + public HTTPRoutes (Selected):**
 
-- **Correct dependency direction:** Observation source moves to NAS — an independent failure domain. Gatus probes the cluster from outside; when the cluster is down, the dashboard reflects that truthfully rather than going dark itself.
+- **Intended dependency direction:** When an external observer is re-established, it will probe the cluster from outside. Until then, alert delivery remains in-cluster through Alertmanager → webhook-relay.
 - **Surface reduction:** Removes Cloudflare tunnel, public DNS records, and three HTTPRoutes from the attack surface and from operational knowledge load.
 - **VPN-first consistency:** All legitimate access patterns (admin, programmatic, family media) already route via Tailscale/WireGuard + `kgateway-internal`. No application loses functionality.
 - **`flux-webhook` accepts pull-mode degradation:** Flux's 1-minute `GitRepository` polling is sufficient; webhook delivery only shaved reconcile latency by seconds.
 
-**2. Migrate `kromgo` → NAS-side Gatus (Selected):**
+**2. Migrate `kromgo` → NAS-side Gatus (Deferred):**
 
-- **Single binary replaces stack:** Gatus subsumes blackbox probing, uptime storage, badge rendering (`/api/v1/endpoints/.../badge.svg`), Pushover alerting, and a status UI — collapsing what would otherwise be a `blackbox-exporter + victoria-metrics-single + kromgo + alerter` stack on the NAS.
-- **Push + pull hybrid:** Critical cluster jobs (DR test, backups, reconcile checks) push success heartbeats to Gatus External Endpoints; Gatus actively probes API server, gateway, and key application HTTPRoutes. Missing pushes and failed probes both trigger Pushover.
-- **Information badges sacrificed deliberately:** PromQL-derived numeric badges (CPU %, pod count) are lost. They were decorative; actionable signals (up/down, reachability) are binary and fully covered.
+- **Planned single-binary replacement:** When re-established, Gatus would subsume blackbox probing, uptime storage, badge rendering (`/api/v1/endpoints/.../badge.svg`), Pushover alerting, and a status UI.
+- **Planned push + pull hybrid:** When re-established, critical cluster jobs (DR test, backups, reconcile checks) would push success heartbeats to Gatus External Endpoints, and Gatus would probe the API server, gateway, and key application HTTPRoutes. Missing pushes and failed probes would trigger Pushover.
 
 **3. Retain `kgateway-external` Gateway (Selected):**
 
 - **Topological symmetry:** Gateway-API resource layout mirrors `kgateway-internal`; documentation, diagrams, and operator muscle memory stay coherent.
 - **Reversibility:** Future exposure of a single service (e.g., Tailscale Funnel proving insufficient for a media use case) requires attaching one HTTPRoute, not re-bootstrapping the public-facing routing layer.
-- **No runtime cost:** A Gateway with zero routes consumes no LB IP beyond the listener and adds no public surface.
+- **No runtime cost:** The two attached routes (`authentik-external`, `https-redirect`) consume no LB IP beyond the listener; the gateway binds an RFC1918 address only, so route attachment alone establishes no public reachability.
 
 **4. Rejected alternatives:**
 
