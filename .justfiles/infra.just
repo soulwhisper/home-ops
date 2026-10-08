@@ -79,3 +79,19 @@ versity mode:
       exit 1
     fi
   done
+
+[doc('Sync forgejo skills + workflows into the homelab-tickets repo')]
+[script]
+forgejo-sync:
+    set -euo pipefail
+    PAT="$(op item get forgejo --fields pat_tickets --reveal)"
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+    git clone "http://oauth2:${PAT}@nas.homelab.internal:9003/soulwhisper/homelab-tickets.git" "$tmp/repo"
+    rsync -a --delete infrastructure/forgejo/skills/ "$tmp/repo/skills/"
+    mkdir -p "$tmp/repo/.forgejo"
+    rsync -a --delete infrastructure/forgejo/workflows/ "$tmp/repo/.forgejo/workflows/"
+    git -C "$tmp/repo" add -A
+    git -C "$tmp/repo" diff --cached --quiet \
+      || git -C "$tmp/repo" commit -m "chore: sync skills + workflows from home-ops"
+    git -C "$tmp/repo" push

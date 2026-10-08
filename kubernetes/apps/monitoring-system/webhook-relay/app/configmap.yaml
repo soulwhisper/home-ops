@@ -18,7 +18,13 @@ data:
       #   apprise:
       #     url: 'pover://{{ env "PUSHOVER_USER_KEY" }}@{{ env "PUSHOVER_TOKEN" }}'
       # ai-ops ticket fan-out: Forgejo homelab-tickets issues (create via REST;
-      # token from FORGEJO_TICKETS_TOKEN, see externalsecret prerequisite)
+      # token from FORGEJO_TICKETS_TOKEN, see externalsecret prerequisite).
+      # Cleartext HTTP to the NAS is an accepted risk: wired VLAN 100 LAN only,
+      # same posture as mcp-forgejo/NFS/RGW; TLS termination on Forgejo is a
+      # NAS-side follow-up. Duplicate sources by design: alertmanager
+      # repeat_interval (12h) re-notifies and chaski retries after 5xx —
+      # consumer-side merge on aggregation_key handles both until a stateful
+      # create-or-comment consumer replaces this route.
       forgejo-tickets:
         http:
           url: http://nas.homelab.internal:9003/api/v1/repos/soulwhisper/homelab-tickets/issues
@@ -89,8 +95,14 @@ data:
       # Robusta runner -> Forgejo homelab-tickets (fed by the second sink at
       # /hooks/robusta-tickets). Ticket floor MEDIUM+; Forgejo has no
       # idempotency, so dedupe on aggregation_key is the consumer's (omp) job.
+      # verify.token: this route spends the relay's Forgejo PAT — only the
+      # robusta runner (sink authorization header) may trigger it.
       robusta-tickets:
         whenExpr: 'payload.severity in ["MEDIUM", "HIGH"]'
+        verify:
+          token:
+            header: Authorization
+            secret: '{{ env "ROBUSTA_TICKETS_SECRET" }}'
         target:
           - forgejo-tickets
         message: |-

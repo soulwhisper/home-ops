@@ -1,0 +1,41 @@
+---
+# forgejo actions runner — executes workflows for NAS-hosted repos
+# (homelab-tickets lessons etc). Registered against nas.homelab.internal:9003.
+# Secrets (FORGEJO_RUNNER_TOKEN) come from the NAS-side env, never committed.
+# Limits: single concurrent job, hard RAM/CPU caps — NAS stays responsive.
+
+services:
+  forgejo-runner:
+    # renovate: datasource=docker depName=code.forgejo.org/forgejo/runner
+    image: "code.forgejo.org/forgejo/runner:13.2.0"
+    container_name: "forgejo-runner"
+    restart: "unless-stopped"
+    cpus: 2.0
+    mem_limit: 3g
+    mem_reservation: 512m
+    environment:
+      - "DOCKER_HOST=unix:///var/run/docker.sock"
+      - "FORGEJO_INSTANCE_URL=http://nas.homelab.internal:9003"
+      - "FORGEJO_RUNNER_NAME=nas-docker"
+      # act-compatible alias for GHA syntax workflows
+      - "FORGEJO_RUNNER_LABELS=ubuntu-latest:docker://ghcr.io/catthehacker/ubuntu:act-22.04,self-hosted:host"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/volume3/docker/forgejo-runner:/data"
+    command: >
+      sh -ec 'if [ ! -s /data/config.yml ]; then
+                forgejo-runner register --no-interactive
+                  --instance "$${FORGEJO_INSTANCE_URL}"
+                  --token "$${FORGEJO_RUNNER_TOKEN}"
+                  --name "$${FORGEJO_RUNNER_NAME}"
+                  --labels "$${FORGEJO_RUNNER_LABELS}"
+                  --config /data/config.yml;
+              fi;
+              exec forgejo-runner daemon --config /data/config.yml'
+    healthcheck:
+      test: ["CMD", "forgejo-runner", "--version"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

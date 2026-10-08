@@ -33,6 +33,9 @@ API_KEY="$(op item get omlx --fields api_key)"            # server API key (cons
 SECRET_KEY="$(op item get omlx --fields secret_key)"      # admin-session signing key (64 hex chars)
 SUB_KEY="$(op item get omlx --fields sub_key)"            # admin sub-key shown in the dashboard
 
+# a failed lookup must abort here, not install empty credentials over working ones
+: "${API_KEY:?op lookup failed or empty}" "${SECRET_KEY:?op lookup failed or empty}" "${SUB_KEY:?op lookup failed or empty}"
+
 # 2. inject into a private temp file (not ~/.omlx), without touching the repo
 #    copy; secrets travel via stdin pipe (printf is a shell builtin) so they
 #    never appear in process arguments visible to `ps`

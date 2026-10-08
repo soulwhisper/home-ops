@@ -1,6 +1,6 @@
 # Application Catalog
 
-81 applications across 12 namespaces, managed via Flux GitOps.
+79 applications and 14 MCP servers across 12 namespaces, managed via Flux GitOps.
 
 ## kube-system — Cluster Infrastructure (10)
 
