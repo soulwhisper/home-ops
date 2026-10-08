@@ -6,7 +6,7 @@
 | N305 IPC | 1 | N305 | 24GB | 1TB SSD | — | 2.5G RJ45 | ESXi | OpenWrt edge router |
 | H3C S6520-24S-SI | 1 | — | — | — | — | 24×10G SFP+ | Comware | L3 core switch |
 | SANTAK TG-Box 850 | 1 | — | — | — | — | USB | — | UPS (NUT) |
-| Synology DS1825+ | 1 | Ryzen V1500B | 8GB | — | 4×HDD (SHR) + NVMe cache | 2×2.5GbE RJ45 (LACP) | DSM | NAS (NFS/S3/Docker) |
+| Synology DS1825+ | 1 | Ryzen V1500B | 8GB | — | 4×HDD (SHR) + NVMe cache | 2×10G SFP+ (extension card, LACP; 2×2.5GbE onboard unused) | DSM | NAS (NFS/S3/Docker) |
 | Mac Studio | 1 | Apple Silicon | — | — | — | 10Gbase-T (built-in) | macOS | LLM inference host (oMLX, `studio.homelab.internal`) |
 
 ### Node Details

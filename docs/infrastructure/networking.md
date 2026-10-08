@@ -29,7 +29,7 @@ The network is built around an enterprise-grade Layer 3 core switch with eBGP + 
             ┌────────▼┐ ┌───▼──┐ ┌──▼───┐ ┌▼────────┐
             │exarch-01│ │ex-02 │ │ex-03 │ │Synology │
             │.101     │ │.102  │ │.103  │ │NAS .100 │
-            │2×10G LAG│ │2×10G │ │2×10G │ │2×2.5G LAG│
+            │2×10G LAG│ │2×10G │ │2×10G │ │2×10G LAG│
             └─────────┘ └──────┘ └──────┘ └─────────┘
             VLAN 100 (10.10.0.0/24) — K8S + NAS
 ```
@@ -39,7 +39,7 @@ The network is built around an enterprise-grade Layer 3 core switch with eBGP + 
 | H3C S6520-24S-SI   | L3 core switch, BGP router (AS 65000) | 24×10G SFP+           | 2×10G LACP to router    |
 | Miniforum MS-01 ×3 | Talos K8s control-plane + worker      | Intel X710 2×10G SFP+ | 2×10G LACP per node     |
 | N305 IPC           | ESXi hypervisor                       | 2.5G RJ45             | OpenWrt VM + management |
-| Synology DS1825+   | NAS (NFS, S3, Docker)                 | 2×2.5GbE RJ45 LACP    | 2×2.5G LACP             |
+| Synology DS1825+   | NAS (NFS, S3, Docker)                 | 2×10G SFP+ (ext card) | 2×10G LACP              |
 | SANTAK TG-Box 850  | UPS (NUT)                             | USB                   | —                       |
 
 ```mermaid
@@ -64,7 +64,7 @@ graph TD
         SWITCH -->|"LAG 10/20/30 (2×10G, LACP)"| NODE1
         SWITCH -->|"LAG 10/20/30 (2×10G, LACP)"| NODE2
         SWITCH -->|"LAG 10/20/30 (2×10G, LACP)"| NODE3
-        SWITCH -->|"LAG 70 (2×2.5G, LACP)"| NAS
+        SWITCH -->|"LAG 70 (2×10G, LACP)"| NAS
         SWITCH -->|"LAG 80 (2×10G, LACP)"| WS
         SWITCH -->|"VLAN 100"| UNIFI
     end
@@ -110,7 +110,7 @@ All LACP bonds use **layer 3+4** hashing (`xmitHashPolicy: layer3+4`) for optima
 | 10      | Ten-GE 1/0/1–2   | 2×10G | Dynamic LACP, access | 100                 | K8s node exarch-01                 |
 | 20      | Ten-GE 1/0/3–4   | 2×10G | Dynamic LACP, access | 100                 | K8s node exarch-02                 |
 | 30      | Ten-GE 1/0/5–6   | 2×10G | Dynamic LACP, access | 100                 | K8s node exarch-03                 |
-| 70      | Ten-GE 1/0/13–14 | 2×2.5G | Dynamic LACP, access | 100                 | Synology NAS                       |
+| 70      | Ten-GE 1/0/13–14 | 2×10G | Dynamic LACP, access | 100                 | Synology NAS                       |
 | 80      | Ten-GE 1/0/15–16 | 2×10G | Dynamic LACP, access | 100                 | ESXi workstation fiber             |
 | 120     | Ten-GE 1/0/23–24 | 2×10G | Static LAG, trunk    | 10,100,200,210,1000 | Router fiber (ESXi VSS limitation) |
 
