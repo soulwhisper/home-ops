@@ -56,6 +56,7 @@ name:
 | ------------ | ----------- | ------- | ----------------- |
 | `complex` | **guarded** | `llm-backend-complex` | Qwen3.8-27B Uncensored (`qwen3.8-27b`, MLX 4bit) |
 | `complex-raw` | none (open lane) | `llm-backend-complex` | Qwen3.8-27B Uncensored (`qwen3.8-27b`, MLX 4bit) |
+| `agent` | **guarded** | `llm-backend-agent` | Qwen-AgentWorld-35B-A3B (`qwen-agentworld-35b-a3b`, MLX oQ4) — AI-ops automation |
 | `omni` | **guarded** | `llm-backend-omni` | MiniCPM-O-4.5 (`minicpm-o-4.5`, text+vision+audio-in) |
 | `micro` | **guarded** | `llm-backend-micro` | MiniCPM5-2B (`minicpm5-2b`) |
 
@@ -83,7 +84,7 @@ keep using plain HTTP :80.
 MCP has no open route (see MCP Backend).
 
 
-Lane-fit guidance: `micro` fits classification, tagging, title/routing decisions, short structured extraction (MiniCPM5-2B is text-only — never a vision candidate). `omni` covers everything fidelity-sensitive: summarization, compression, session search, memory writes, OCR/vision (MiniCPM5-2B's long-context recall AA-LCR 59% and abstention bias make it unsafe for those). `complex` for agentic reasoning and hard synthesis.
+Lane-fit guidance: `micro` fits classification, tagging, title/routing decisions, short structured extraction (MiniCPM5-2B is text-only — never a vision candidate). `omni` covers everything fidelity-sensitive: summarization, compression, session search, memory writes, OCR/vision (MiniCPM5-2B's long-context recall AA-LCR 59% and abstention bias make it unsafe for those). `complex` for agentic reasoning and hard synthesis. `agent` for AI-ops automation: alert RCA, ScheduledHealthChecks, MCP batch tool workloads.
 
 `micro` uses **MiniCPM5-2B** (Apache-2.0, 2.6B dense, official 4-bit MLX port `openbmb/MiniCPM5-2B-MLX`, ~2.6 GB resident on the studio) for cheap, low-latency work: classification, extraction, tagging, short summaries, and as the classifier for semantic routing. Serve it with thinking disabled (`chat_template_kwargs: {"enable_thinking": false}`) and constrained JSON output for label safety. Served on the studio as folder id `minicpm5-2b`; the `micro` lane maps to it (see Studio Model Registry).
 
@@ -107,6 +108,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | App                  | Lane              | Model              | Notes                                                        |
 | -------------------- | ----------------- | ------------------ | ------------------------------------------------------------ |
 | hermes-agent         | `complex`         | Qwen3.8-27B        | Agentic reasoning / KB QA / automation; aux side-tasks on `omni`/`micro` (GitOps configmap) |
+| robusta (holmes)     | `agent`           | Qwen-AgentWorld-35B-A3B | Alert RCA + ScheduledHealthChecks; 3-25x faster than 27b on tool workloads (measured 2026-10); temperature 0.6 per model tuning |
 | hindsight            | `omni`            | MiniCPM-o 4.5      | Extraction-dominant (single-model constraint); embeddings + reranker via gateway media routes |
 | firecrawl            | `omni`            | MiniCPM-o 4.5      | Batch page extraction/summarization                          |
 | karakeep             | `omni`            | MiniCPM-o 4.5      | Text + image tagging (unified); embeddings via `/v1/embeddings` (model `embedding`, 1024d) |

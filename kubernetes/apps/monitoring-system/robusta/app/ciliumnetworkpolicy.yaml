@@ -15,7 +15,7 @@ spec:
     # kubewatch api access; holmes kubernetes toolsets; operator CRD watches
     - toEntities:
         - kube-apiserver
-    # holmes LLM (agentgateway complex lane)
+    # holmes LLM (agentgateway agent lane)
     - toServices:
         - k8sService:
             serviceName: agentgateway-proxy

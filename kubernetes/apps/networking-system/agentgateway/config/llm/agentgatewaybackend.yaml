@@ -20,6 +20,26 @@ spec:
         name: studio-api-auth
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+# AI-ops automation lane (alert RCA / ScheduledHealthChecks / MCP batch).
+# Qwen-AgentWorld-35B-A3B oQ4 — measured 3-25x faster than qwen3.8-27b on
+# tool-calling workloads (temp/omlx-optimization.md); 27b keeps `complex`.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: llm-backend-agent
+spec:
+  ai:
+    provider:
+      openai:
+        model: "qwen-agentworld-35b-a3b"
+      host: studio.homelab.internal
+      port: 8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:

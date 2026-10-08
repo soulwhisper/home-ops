@@ -15,6 +15,10 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: agentgateway-llm-route
+      sectionName: agent
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-llm-route
       sectionName: priority
     - group: gateway.networking.k8s.io
       kind: HTTPRoute

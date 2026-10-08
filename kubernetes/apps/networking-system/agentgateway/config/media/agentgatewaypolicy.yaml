@@ -25,6 +25,7 @@ spec:
         {"object":"list","data":[
           {"id":"complex-raw","object":"model","owned_by":"omlx"},
           {"id":"complex","object":"model","owned_by":"omlx"},
+          {"id":"agent","object":"model","owned_by":"omlx"},
           {"id":"omni","object":"model","owned_by":"omlx"},
           {"id":"micro","object":"model","owned_by":"omlx"},
           {"id":"embedding","object":"model","owned_by":"omlx"},

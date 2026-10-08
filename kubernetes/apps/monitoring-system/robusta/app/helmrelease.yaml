@@ -58,13 +58,17 @@ spec:
         # default model for requests that don't name one (HealthChecks!):
         # without it holmes falls back to "gpt-5.4" when OPENAI_API_KEY is set
         # -> agentgateway 404s the unknown lane
-        - { name: MODEL, value: complex }
+        - { name: MODEL, value: agent }
       modelList:
-        complex:
-          model: openai/complex
+        # agent lane = Qwen-AgentWorld-35B-A3B (oQ4) on the studio — measured
+        # 3-25x faster than qwen3.8-27b on tool-calling workloads. temperature
+        # 0.6 follows the model's tuned sampling (0.6/0.95/top_k 20), not the
+        # previous complex convention of 0.
+        agent:
+          model: openai/agent
           api_base: envRef:OPENAI_API_BASE
           api_key: envRef:OPENAI_API_KEY
-          temperature: 0
+          temperature: 0.6
       toolsets:
         internet:
           enabled: false # no Internet egress for this pod (see CNP)

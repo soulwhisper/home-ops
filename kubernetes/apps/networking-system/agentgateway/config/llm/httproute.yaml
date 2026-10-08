@@ -49,6 +49,21 @@ spec:
           name: llm-backend-complex
       timeouts:
         request: 300s
+    - name: agent
+      matches:
+        - path:
+            type: PathPrefix
+            value: /v1/chat/completions
+          headers:
+            - type: Exact
+              name: x-model
+              value: "agent"
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: llm-backend-agent
+      timeouts:
+        request: 300s
     - name: priority
       matches:
         - path:
