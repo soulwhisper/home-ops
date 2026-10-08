@@ -12,11 +12,6 @@ data:
       feishu:
         apprise:
           url: 'feishu://{{ env "FEISHU_TOKEN" }}'
-      # pushover: disabled — feishu proved sufficient; re-enable by
-      # uncommenting here, in the alertmanager route target list, and params.
-      # pushover:
-      #   apprise:
-      #     url: 'pover://{{ env "PUSHOVER_USER_KEY" }}@{{ env "PUSHOVER_TOKEN" }}'
       # ai-ops ticket fan-out: Forgejo homelab-tickets issues (create via REST;
       # token from FORGEJO_TICKETS_TOKEN, see externalsecret prerequisite).
       # Cleartext HTTP to the NAS is an accepted risk: wired VLAN 100 LAN only,
@@ -35,7 +30,6 @@ data:
       alertmanager:
         target:
           - feishu
-          # - pushover
         title: '[{{ .payload.status | toUpper }}{{ if eq .payload.status "firing" }}:{{ len .payload.alerts }}{{ end }}] {{ .payload.commonLabels.alertname | default "Alertmanager" }}'
         # Per alert: description/summary plus curated context labels only —
         # dumping .labels produced a ~20-line wall per alert in feishu
@@ -63,11 +57,6 @@ data:
           node: {{ . }}
           {{- end }}
           {{- end }}
-        # params were pushover-only (priority/sound); feishu ignores unknown
-        # query keys. Uncomment with the pushover target if re-enabled.
-        # params:
-        #   priority: '{{ ternary "1" "0" (eq .payload.status "firing") }}'
-        #   sound: gamelan
       # Robusta runner -> feishu (enriched alerts + findings)
       robusta:
         target:

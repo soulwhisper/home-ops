@@ -110,7 +110,7 @@ Single Alertmanager instance at `vmalertmanager-victoria-metrics-cluster.monitor
 
 **Inhibition**: critical alerts suppress warning alerts for the same `alertname` + `namespace`.
 
-**Delivery**: the `default` receiver fans out via `webhook_configs` to webhook-relay (Feishu, via apprise, with resolved-alert notifications) and in parallel to the robusta-runner (`/api/alerts`) for enrichment + Holmes RCA, which delivers through its own webhook sink. Pushover remains in the relay config, commented out, as a re-enable option. Credentials sourced from 1Password via ExternalSecret.
+**Delivery**: the `default` receiver fans out via `webhook_configs` to webhook-relay (Feishu, via apprise, with resolved-alert notifications) and in parallel to the robusta-runner (`/api/alerts`) for enrichment + Holmes RCA, which delivers through its own webhook sink. Credentials sourced from 1Password via ExternalSecret.
 
 ## VictoriaLogs
 

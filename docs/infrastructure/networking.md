@@ -273,7 +273,6 @@ While the infrastructure is predominantly self-hosted, a small set of cloud serv
 | [1Password](https://1password.com/)       | Secrets via [External Secrets Operator](https://external-secrets.io/) (1Password Connect) | ~$36/yr     |
 | [Cloudflare](https://www.cloudflare.com/) | Domain registrar, S3-compatible R2, Zero Trust tunnels                                    | Free        |
 | [GitHub](https://github.com/)             | Repository hosting, CI/CD (Flux + Renovate)                                               | Free        |
-| [Pushover](https://pushover.net/)         | Notification delivery for alerts and events                                               | One-time $5 |
 
 **Total: ~$3/mo**
 

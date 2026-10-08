@@ -3,7 +3,7 @@
 version: 1
 #
 # Notifications: route authentik system events to webhook-relay (chaski →
-# feishu + pushover) instead of email. Local (UI) notifications are kept.
+# feishu) instead of email. Local (UI) notifications are kept.
 # Rules are rebound before the email transport is removed (order matters).
 entries:
   - model: authentik_events.notificationtransport
