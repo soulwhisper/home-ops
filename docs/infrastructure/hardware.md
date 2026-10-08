@@ -7,7 +7,7 @@
 | H3C S6520-24S-SI | 1 | — | — | — | — | 24×10G SFP+ | Comware 7 | L3 core switch |
 | SANTAK TG-Box 850 | 1 | — | — | — | — | USB | — | UPS (NUT) |
 | Synology DS1825+ | 1 | Ryzen V1500B | 8GB | — | 4×HDD (SHR) + NVMe cache | 2×1G RJ45 (LACP) | DSM 7 | NAS (NFS/S3/Docker) |
-| Mac Studio | 1 | Apple Silicon | — | — | — | 10G SFP+ | macOS | LLM inference host (oMLX, `studio.homelab.internal`) |
+| Mac Studio | 1 | Apple Silicon | — | — | — | 10Gbase-T (built-in) | macOS | LLM inference host (oMLX, `studio.homelab.internal`) |
 
 ### Node Details
 
@@ -46,7 +46,7 @@ Each MS-01 node runs Talos Linux with:
               ┌─────────────▼┐ ┌───▼───┐ ┌──▼──┐┌▼──────────┐┌▼──────────┐
               │  exarch-01   │ │exarch │ │exarch││ Synology  ││Mac Studio │
               │    .101      │ │ -02   │ │ -03  ││ NAS .100  ││   .210    │
-              │ 2×10G LACP   │ │ .102  │ │ .103 ││2×1G LACP  ││ 10G SFP+  │
+              │ 2×10G LACP   │ │ .102  │ │ .103 ││2×1G LACP  ││ 10Gbase-T │
               └──────────────┘ └───────┘ └──────┘└───────────┘└───────────┘
               └────────── VLAN 100 (10.10.0.0/24) ──────────┘
 ```
