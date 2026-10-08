@@ -27,11 +27,10 @@ spec:
                 - HTTPRoute
                 - HelmRelease
                 - Kustomization
-              operations: ["CREATE", "UPDATE", "PATCH", "DELETE"]
+              operations: ["CREATE", "UPDATE", "DELETE"]  # admission maps HTTP PATCH to UPDATE
               namespaces:
                 - servitor-apps
                 - smarthome-apps
-                - media-apps
                 - selfhosted-apps
                 - gaming-apps
                 - monitoring-system
