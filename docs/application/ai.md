@@ -73,13 +73,6 @@ inject the oMLX server key via `policies.auth.secretRef`
 (`studio-api-auth`). Consumers authenticate with ExternalSecret-managed
 API keys; there is no cloud fallback — the studio is a deliberate SPOF.
 
-CI access lane: GitHub Actions runners reach the gateway over tailnet at
-`https://api.noirprime.com` (agentgateway-proxy LB `10.10.0.140:443`, TLS via
-`noirprime-com-tls`) on a dedicated route (`agentgateway-llm-route-ci`) with
-only `complex`/`micro` sections, the `gha-ci` key (`gha-ci-auth` secret,
-strictly scoped — media/MCP answer 401 to it), promptGuard on, and a
-300k-tokens/h + 60-req/min budget (`ci-access` policy). In-cluster consumers
-keep using plain HTTP :80.
 
 MCP has no open route (see MCP Backend).
 

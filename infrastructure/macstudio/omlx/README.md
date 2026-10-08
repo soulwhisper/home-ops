@@ -11,7 +11,6 @@ the source of truth for manual (re)deployment and drift reference.
 |---|---|---|
 | `settings.json` | `~/.omlx/settings.json` | Global server settings (secrets stripped) |
 | `model_settings.json` | `~/.omlx/model_settings.json` | Per-model overrides (e.g. `qwen-agentworld-35b-a3b` pinned to `max_context_window: 65536`) |
-| `sh.brew.omlx.plist` | `~/Library/LaunchAgents/sh.brew.omlx.plist` | launchd unit (`omlx serve`, KeepAlive) |
 
 Intentionally **not** tracked: `stats.json`, `usage.sqlite3`, `logs/`,
 `cache/` (telemetry/runtime state, regenerable), `~/models/*` (weights,
@@ -23,7 +22,12 @@ re-downloadable from Hugging Face — see model ids in `docs/application/ai.md`)
 # on macstudio
 install -m 600 settings.json       ~/.omlx/settings.json
 install -m 600 model_settings.json ~/.omlx/model_settings.json
-install -m 644 sh.brew.omlx.plist  ~/Library/LaunchAgents/sh.brew.omlx.plist
+```
+
+Service lifecycle is owned by the oMLX desktop app (release DMG, auto-start
+on login) — no launchd unit is tracked here. The legacy Homebrew
+`sh.brew.omlx.plist` + `/opt/homebrew` CLI on the machine are remnants of the
+old brew-based install (no dashboard/GUI) and should be uninstalled manually.
 ```
 
 ## Injecting secrets after deploy (REQUIRED)
@@ -58,8 +62,7 @@ ExternalSecret item (`studio-api-auth`) and every consumer key.
 ## Apply
 
 ```bash
-launchctl kickstart -k gui/$(id -u)/sh.brew.omlx   # restart via launchd
-# or: omlx restart
+# restart from the oMLX desktop app (menu bar -> Restart Server)
 curl -H "Authorization: Bearer $API_KEY" http://127.0.0.1:8000/v1/models
 ```
 

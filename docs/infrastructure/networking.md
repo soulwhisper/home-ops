@@ -223,7 +223,7 @@ The two kgateway gateways use the `kgateway` GatewayClass with TLS termination v
 | `/mcp/rw`  | internal read-write      |
 | `/mcp/ext` | external (FailClosed)    |
 
-API key authentication is enforced via `AgentgatewayPolicy` in strict mode for all LLM and MCP routes. CI traffic is further scoped: a dedicated route (`agentgateway-llm-route-ci`, HTTPS listener only) accepts only the `gha-ci` key on the `complex`/`micro` sections, behind a 300k-tokens/hour + 60-requests/minute budget (`ci-access` policy). The gateway is the single choke point for auth, routing, guardrails, and observability.
+API key authentication is enforced via `AgentgatewayPolicy` in strict mode for all LLM and MCP routes. The gateway is the single choke point for auth, routing, guardrails, and observability.
 
 ### DNS Architecture
 
