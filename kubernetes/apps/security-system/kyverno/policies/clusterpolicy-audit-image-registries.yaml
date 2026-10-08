@@ -29,7 +29,7 @@ spec:
               conditions:
                 all:
                   # registry-qualified image (first segment has '.' or ':')
-                  - key: "{{ regex_match('[.:]', split(element.image, '/')[0]) }}"
+                  - key: "{{ regex_match('^[^/]*[.:][^/]*/', element.image) }}"
                     operator: Equals
                     value: true
                   # ... and not in the allowlist
@@ -40,7 +40,7 @@ spec:
             deny:
               conditions:
                 all:
-                  - key: "{{ regex_match('[.:]', split(element.image, '/')[0]) }}"
+                  - key: "{{ regex_match('^[^/]*[.:][^/]*/', element.image) }}"
                     operator: Equals
                     value: true
                   - key: "{{ regex_match('^(ghcr\\.io|quay\\.io|registry\\.k8s\\.io|docker\\.io|registry\\.gitlab\\.com|gsoci\\.azurecr\\.io|cr\\.kgateway\\.dev|cr\\.agentgateway\\.dev|docker\\.stirlingpdf\\.com|docker\\.dragonflydb\\.io|git\\.b4mad\\.industries)/', element.image) }}"

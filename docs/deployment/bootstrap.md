@@ -59,8 +59,8 @@ just talos generate prod
    resolving 1Password references to produce cluster secrets (IDs, tokens, CA
    certs and keys). The resolved YAML is piped to `talosctl gen config`.
 
-   `secret.yaml` is compatible with Talos 1.14 unchanged: the secrets bundle
-   schema is identical across 1.13/1.14, and the 1.14 cluster-ID encoding
+   `secret.yaml` is compatible with current Talos unchanged: the secrets bundle
+   schema is stable across recent releases, and the cluster-ID encoding
    alignment (URL-safe → standard base64) is a non-issue because Talos never
    decodes the cluster ID — it is used as an opaque identifier string.
 
@@ -78,12 +78,12 @@ just talos generate prod
    | 30 | `30-private-mirrors.yaml` | Registry mirrors routing through NAS cache (`nas.homelab.internal:9002`) |
    | — | `nodes/<hostname>.yaml` | Hostname, bond configuration (802.3ad, 10G, MTU 9000), static IP |
 
-   Only numbered patches (`[1-9][0-9]-*.yaml`) are applied to the machineconfig. `00-schematic.yaml` is consumed exclusively by the Talos Image Factory (Phase 1) to resolve the schematic ID, which `generate` then injects into the installer image — it is never a machineconfig patch.
+   Numbered shared patches (`[1-9][0-9]-*.yaml`) and each node's `nodes/<hostname>.yaml` file are applied to the machineconfig. `00-schematic.yaml` is consumed exclusively by the Talos Image Factory (Phase 1) to resolve the schematic ID, which `generate` then injects into the installer image — it is never a machineconfig patch.
 
    The result is `clusterconfig/main-<hostname>.yaml` per node. The
    `talosconfig` is copied to `~/.talos/config`.
 
-**Key `10-general.yaml` decisions** (Talos 1.14 multi-document model):
+**Key `10-general.yaml` decisions** (multi-document model):
 
 - Flannel document is deleted (Cilium is installed later via Helm).
 - `KubeCoreDNSConfig` disabled (replaced by Cilium-managed CoreDNS).

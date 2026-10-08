@@ -61,7 +61,23 @@ data:
         target:
           - feishu
         title: '[{{ .payload.severity | default "info" | toUpper }}] {{ .payload.title | default "robusta" }}'
-        message: '{{ .payload.description | default (.payload.message | default "") }}'
+        # enrichments carry the actual enrichment blocks (markdown/header text,
+        # list items, json); absent when the sink's size_limit trims them
+        message: |-
+          {{ .payload.description | default (.payload.message | default "") }}
+          {{- range $e := .payload.enrichments }}
+          {{- range $b := $e.blocks }}
+          {{- if $b.text }}
+          {{ $b.text }}
+          {{- else if $b.items }}
+          {{- range $b.items }}
+          - {{ . }}
+          {{- end }}
+          {{- else if $b.json_str }}
+          {{ $b.json_str }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
       # authentik system notifications (blueprints/core/notifications.yaml)
       authentik:
         target:

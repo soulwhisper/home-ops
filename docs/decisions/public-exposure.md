@@ -32,7 +32,7 @@ I have decided to retire all public exposure except one retained exception — `
 - **Risk:** `kgateway-external` becomes an attractive nuisance — an HTTPRoute is attached absentmindedly, re-introducing public exposure without a decision.
   - **Mitigation:** Attaching further public routes requires an ADR amendment or supersession.
 - **Risk:** No out-of-cluster observation — a total cluster or WAN outage surfaces only as the absence of Feishu alerts.
-  - **Mitigation:** Accepted. Alertmanager → webhook-relay covers every partial failure; for a full outage the missing alerts are themselves the signal (silence = incident).
+  - **Mitigation:** Accepted. Alertmanager → webhook-relay covers component-level failures as long as Alertmanager itself and at least one receiver leg survive; an Alertmanager outage or a total cluster/WAN outage surfaces only as silence (silence = incident).
 
 **Scope of change:**
 

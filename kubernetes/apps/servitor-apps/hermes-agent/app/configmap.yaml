@@ -93,6 +93,10 @@ data:
     FRIGATE_WEBHOOK_SECRET=$${FRIGATE_WEBHOOK_SECRET}
     EOF
 
+    # remove retired profiles on upgrade — multiplex_profiles=true keeps any
+    # leftover dir live (incl. its API key + model config); seed only owns ops
+    rm -rf /opt/data/profiles/chat
+
     for p in ops; do
       d="/opt/data/profiles/$p"
       mkdir -p "$d"

@@ -19,7 +19,14 @@ spec:
     # kubewatch api access; holmes kubernetes toolsets; operator CRD watches
     - toEntities:
         - kube-apiserver
-    # holmes LLM (agentgateway agent lane)
+    # kubewatch forwarder -> runner event delivery (/api/handle)
+    - toServices:
+        - k8sService:
+            serviceName: robusta-runner
+            namespace: monitoring-system
+      toPorts:
+        - ports:
+            - { port: "80", protocol: TCP }
     - toServices:
         - k8sService:
             serviceName: agentgateway-proxy

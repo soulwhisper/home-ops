@@ -236,6 +236,12 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | firecrawl | Streamable HTTP :8080 | Local Firecrawl instance |
 | context7  | stdio :3000           | Context7 API             |
 
+#### aiops (isolated incident/RCA memory)
+
+| Server          | Transport             | Notes                                       |
+| --------------- | --------------------- | ------------------------------------------- |
+| hindsight-aiops | Streamable HTTP :8080 (proxy→:8888) | Hindsight `aiops` bank; isolated tier, no chat-tier consumers |
+
 #### Obsidian facts workflow
 
 Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own sync/revisions) → Synology CloudSync pull → `/volume1/backup` on the NAS. Agent-authored notes never write into the vault copy; they currently have no versioned landing zone — promotion into the vault is manual.

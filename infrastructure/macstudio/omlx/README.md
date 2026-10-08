@@ -37,7 +37,10 @@ SUB_KEY="$(op item get omlx --fields sub_key)"            # admin sub-key shown 
 #    copy; secrets travel via stdin pipe (printf is a shell builtin) so they
 #    never appear in process arguments visible to `ps`
 tmp="$(mktemp -t omlx-settings)" && chmod 600 "$tmp"
-printf '%s\n' "$API_KEY" "$SECRET_KEY" "$SUB_KEY" | python3 -c '
+
+# 3. install only on a clean python exit — a failed injection removes $tmp
+#    and leaves the live settings.json untouched
+if printf '%s\n' "$API_KEY" "$SECRET_KEY" "$SUB_KEY" | python3 -c '
 import json, sys
 api_key, secret_key, sub_key = [l.rstrip("\n") for l in sys.stdin]
 d = json.load(open("settings.json"))
@@ -45,10 +48,12 @@ d["auth"]["api_key"], d["auth"]["secret_key"] = api_key, secret_key
 for sk in d["auth"].get("sub_keys", []):
   sk["key"] = sub_key
 json.dump(d, sys.stdout, indent=2)
-' > "$tmp"
-
-# 3. only now install; the server never sees placeholder credentials
-install -m 600 "$tmp" ~/.omlx/settings.json && rm -f "$tmp"
+' > "$tmp"; then
+  install -m 600 "$tmp" ~/.omlx/settings.json && rm -f "$tmp"
+else
+  rm -f "$tmp"
+  echo "injection failed — ~/.omlx/settings.json left untouched" >&2
+fi
 ```
 
 If the 1Password item is lost, rotate instead of recover: `uuidgen` for
