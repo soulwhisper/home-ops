@@ -12,7 +12,7 @@ data:
   # are additive; model config mirrors what was previously set via 1Password)
   config.yaml: |
     model:
-      default: complex
+      default: agent
       provider: custom
       base_url: $${OPENAI_BASE_URL}
       api_key: $${OPENAI_API_KEY}
@@ -51,38 +51,9 @@ data:
       session_search: { provider: main, model: omni, max_concurrency: 3 }
       compression: { provider: main, model: omni, reasoning_effort: low }
 
-  # chat profile — Open WebUI and similar chat frontends (served at :8642/p/chat/v1,
-  # model id "chat" = profile name under multiplexing)
-  chat-config.yaml: |
-    model:
-      default: complex
-      provider: custom
-      base_url: $${OPENAI_BASE_URL}
-      api_key: $${OPENAI_API_KEY}
-    auxiliary:
-      title_generation:
-        enabled: true
-        provider: main
-        model: micro
-        timeout: 30
-        extra_body:
-          chat_template_kwargs: { enable_thinking: false }
-    # Secret hygiene: profile .env holds gateway keys and any process secret is
-    # readable by tools running as the same user — so the chat profile gets NO
-    # terminal/file toolsets. MCP tools (mcp_*) are not gated by toolsets.
-    platform_toolsets:
-      cli: [web, vision, skills, todo]
-  chat-profile.yaml: |
-    description: "Chat frontends (Open WebUI etc.); isolated memory + API key"
-    display_name: "Chat"
-  chat-SOUL.md: |
-    # Chat profile
-    Conversational frontend profile. Serve interactive chat (Open WebUI) with full
-    ToolHive MCP tools. Read-only-first: never mutate cluster/home state
-    unless the user explicitly asks and the tool requires it.
   ops-config.yaml: |
     model:
-      default: complex
+      default: agent
       provider: custom
       base_url: $${OPENAI_BASE_URL}
       api_key: $${OPENAI_API_KEY}
@@ -122,7 +93,7 @@ data:
     FRIGATE_WEBHOOK_SECRET=$${FRIGATE_WEBHOOK_SECRET}
     EOF
 
-    for p in chat ops; do
+    for p in ops; do
       d="/opt/data/profiles/$p"
       mkdir -p "$d"
       cp "/seed/$p-config.yaml" "$d/config.yaml"
@@ -130,13 +101,6 @@ data:
       cp "/seed/$p-profile.yaml" "$d/profile.yaml"
       cp /seed/gateway-state.json "$d/gateway_state.json"
     done
-
-    cat > /opt/data/profiles/chat/.env <<EOF
-    OPENAI_BASE_URL=$${OPENAI_BASE_URL}
-    OPENAI_API_KEY=$${OPENAI_API_KEY}
-    API_SERVER_ENABLED=true
-    API_SERVER_KEY=$${CHAT_API_SERVER_KEY}
-    EOF
 
     # ops profile: no API server key -> /p/ops/ API fails closed by design
     cat > /opt/data/profiles/ops/.env <<EOF

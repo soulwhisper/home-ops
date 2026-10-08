@@ -39,7 +39,7 @@
 | App           | Purpose                                           |
 | ------------- | ------------------------------------------------- |
 | Kgateway      | Envoy Gateway API (internal + external)           |
-| Agent Gateway | AI LLM routing (complex/omni/micro) + MCP gateway |
+| Agent Gateway | AI LLM routing (uncensored/agent/omni/micro) + MCP gateway |
 | External DNS  | AdGuardHome DNS automation                        |
 
 ## storage-system — Storage (5)

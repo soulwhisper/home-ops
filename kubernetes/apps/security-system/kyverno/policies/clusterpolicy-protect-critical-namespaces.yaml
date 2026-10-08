@@ -1,0 +1,40 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kyverno.io/clusterpolicy_v1.json
+# Hard protection against accidental/malicious deletion of namespaces whose
+# loss is unrecoverable or cluster-breaking. ENFORCE from day one: every
+# legitimate namespace deleter in this cluster is cluster-admin (flux
+# controllers, system:masters) — verified via RBAC audit 2026-10 — so the
+# exemption costs nothing and there is no legit traffic to break. The
+# namespace-controller finalizes via finalizer updates, not DELETE calls, so
+# normal namespace teardown by admins still works.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: protect-critical-namespaces
+spec:
+  background: false
+  rules:
+    - name: deny-critical-namespace-delete
+      match:
+        any:
+          - resources:
+              kinds: ["Namespace"]
+              operations: ["DELETE"]
+              names:
+                - kube-system
+                - gitops-system
+                - networking-system
+                - security-system
+                - storage-system
+                - database-system
+                - monitoring-system
+      exclude:
+        any:
+          - clusterRoles: ["cluster-admin"]
+      validate:
+        failureAction: Enforce
+        message: >-
+          deleting the {{ request.name }} namespace is blocked by policy
+          (protect-critical-namespaces). Only cluster-admin actors may do
+          this; if you are an admin, use a cluster-admin credential.
+        deny: {}

@@ -3,7 +3,7 @@
 # Unified LLM lane: everything OpenAI lives under /v1 (chat completions +
 # media). Lane selection by model id (body model -> x-model header via the
 # gateway-wide PreRouting transform). Guarded/open split is a MODEL NAME:
-# `complex-raw` skips promptGuard, everything else is guarded (policy
+# `uncensored` skips promptGuard, everything else is guarded (policy
 # targets the guarded rules by sectionName). No catch-all — unknown ids 404.
 # SDK note: OpenAI/litellm clients append /chat/completions to their base
 # URL, so consumer base URLs are .../v1 (see ai.md).
@@ -17,8 +17,10 @@ spec:
       kind: Gateway
       name: agentgateway-proxy
   rules:
-    # OPEN lane (rule `raw`): the single uncensored model, unguarded.
-    - name: raw
+    # OPEN lane (rule `uncensored`): the single uncensored model, unguarded.
+    # Pure-chat consumers only (SillyTavern / open-notebook / open-webui);
+    # automation rides the guarded `agent` lane.
+    - name: uncensored
       matches:
         - path:
             type: PathPrefix
@@ -26,7 +28,7 @@ spec:
           headers:
             - type: Exact
               name: x-model
-              value: "complex-raw"
+              value: "uncensored"
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
@@ -34,21 +36,6 @@ spec:
       timeouts:
         request: 300s
     # GUARDED lanes (llm-guardrails targets these rules by sectionName).
-    - name: complex
-      matches:
-        - path:
-            type: PathPrefix
-            value: /v1/chat/completions
-          headers:
-            - type: Exact
-              name: x-model
-              value: "complex"
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: llm-backend-complex
-      timeouts:
-        request: 300s
     - name: agent
       matches:
         - path:
@@ -62,21 +49,6 @@ spec:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
           name: llm-backend-agent
-      timeouts:
-        request: 300s
-    - name: priority
-      matches:
-        - path:
-            type: PathPrefix
-            value: /v1/chat/completions
-          headers:
-            - type: Exact
-              name: x-priority
-              value: "high"
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: llm-backend-complex
       timeouts:
         request: 300s
     - name: micro

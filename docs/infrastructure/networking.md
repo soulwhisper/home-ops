@@ -209,9 +209,8 @@ The two kgateway gateways use the `kgateway` GatewayClass with TLS termination v
 
 | Match                | Backend               | Timeout | Guardrails |
 | -------------------- | --------------------- | ------- | ---------- |
-| `x-model: complex`   | `llm-backend-complex` | 300s    | yes        |
-| `x-model: complex-raw` | `llm-backend-complex` | 300s  | no (open lane) |
-| `x-priority: high`   | `llm-backend-complex` | 300s    | yes        |
+| `x-model: uncensored` | `llm-backend-complex` | 300s | no (open lane) |
+| `x-model: agent`     | `llm-backend-agent`   | 300s    | yes        |
 | `x-model: micro`     | `llm-backend-micro`   | 120s    | yes        |
 | `x-model: omni`      | `llm-backend-omni`    | 300s    | yes        |
 

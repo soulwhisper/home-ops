@@ -6,7 +6,7 @@ metadata:
   name: &name llm-api-auth
 spec:
   # Consumer API-key auth: strict on the unified /v1 lane (all rules, incl.
-  # complex-raw) and the media route.
+  # uncensored) and the media route.
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute

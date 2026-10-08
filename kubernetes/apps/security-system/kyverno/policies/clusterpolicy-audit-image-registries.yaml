@@ -1,0 +1,48 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kyverno.io/clusterpolicy_v1.json
+# Image provenance visibility (AUDIT). Flags containers whose image registry
+# is outside the allowlist observed in-cluster 2026-10 (ghcr/quay/
+# registry.k8s.io/docker hub + the few vendor CRs in use). An image is
+# treated as registry-qualified only when its first path segment contains
+# '.' or ':' — bare names are docker.io by definition.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: audit-image-registries
+spec:
+  background: false
+  rules:
+    - name: non-allowlisted-registry
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              operations: ["CREATE", "UPDATE"]
+      validate:
+        failureAction: Audit
+        message: >-
+          container image from a non-allowlisted registry in
+          {{ request.namespace }}/{{ request.name }} — review provenance
+        foreach:
+          - list: "request.object.spec.containers[]"
+            deny:
+              conditions:
+                all:
+                  # registry-qualified image (first segment has '.' or ':')
+                  - key: "{{ regex_match('[.:]', split(element.image, '/')[0]) }}"
+                    operator: Equals
+                    value: true
+                  # ... and not in the allowlist
+                  - key: "{{ regex_match('^(ghcr\\.io|quay\\.io|registry\\.k8s\\.io|docker\\.io|registry\\.gitlab\\.com|gsoci\\.azurecr\\.io|cr\\.kgateway\\.dev|cr\\.agentgateway\\.dev|docker\\.stirlingpdf\\.com|docker\\.dragonflydb\\.io|git\\.b4mad\\.industries)/', element.image) }}"
+                    operator: Equals
+                    value: false
+          - list: "request.object.spec.initContainers[]"
+            deny:
+              conditions:
+                all:
+                  - key: "{{ regex_match('[.:]', split(element.image, '/')[0]) }}"
+                    operator: Equals
+                    value: true
+                  - key: "{{ regex_match('^(ghcr\\.io|quay\\.io|registry\\.k8s\\.io|docker\\.io|registry\\.gitlab\\.com|gsoci\\.azurecr\\.io|cr\\.kgateway\\.dev|cr\\.agentgateway\\.dev|docker\\.stirlingpdf\\.com|docker\\.dragonflydb\\.io|git\\.b4mad\\.industries)/', element.image) }}"
+                    operator: Equals
+                    value: false
