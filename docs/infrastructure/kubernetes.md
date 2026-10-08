@@ -413,7 +413,7 @@ The namespace numbering reflects the reconciliation dependency chain:
 5. **networking-system** configures ingress routes and DNS records for externally accessible services.
 6. **monitoring-system** scrapes metrics and collects logs from all other namespaces.
    7-11. **Application namespaces** depend on layers 1-6 being operational.
-7. **gitops-system** runs Flux itself — bootstrapped externally, then self-managed.
+12. **gitops-system** runs Flux itself — bootstrapped externally, then self-managed.
 
 ## Bootstrap Chain
 

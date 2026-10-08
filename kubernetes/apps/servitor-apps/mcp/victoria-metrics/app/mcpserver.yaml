@@ -12,6 +12,8 @@ spec:
   env:
     - name: VM_INSTANCE_ENTRYPOINT
       value: "http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428"
+    - name: VM_INSTANCE_TYPE # required alongside ENTRYPOINT; endpoint is vmsingle
+      value: "single"
     - name: MCP_SERVER_MODE
       value: "http"
     - name: MCP_LISTEN_ADDR

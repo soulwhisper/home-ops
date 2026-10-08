@@ -14,6 +14,8 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: monitoring-system
   path: "./kubernetes/apps/monitoring-system/robusta/app"
+  # robusta-checks CRs need the chart's CRDs; wait for the release to be ready
+  wait: true
   postBuild:
     substitute:
       APP: *name

@@ -204,7 +204,7 @@ Two steps, run sequentially:
    | `flux-operator` | `gitops-system` | `external-secrets` | Flux controller manager |
    | `flux-instance` | `gitops-system` | `flux-operator` | Flux Kustomization controllers |
 
-   Each release waits to become healthy before its dependents proceed. Total timeout per release: 600s.
+   Each release waits to become healthy before its dependents proceed, except `coredns`, which uses `wait: false` so Cilium can render Hubble Relay before CoreDNS is ready. Total timeout per release: 600s.
 
 ---
 

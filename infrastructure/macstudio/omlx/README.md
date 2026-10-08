@@ -18,41 +18,34 @@ re-downloadable from Hugging Face — see model ids in `docs/application/ai.md`)
 
 ## Deploy / restore
 
+`settings.json` ships with `INJECT_AT_DEPLOY` placeholders — the server will
+not authenticate anything until real values are written. The oMLX desktop app
+auto-starts on login, so **inject secrets into a private temp file first and
+install last**; never install the placeholder file where the server can read
+it. All secrets live in 1Password (item `omlx`); never commit them.
+
 ```bash
 # on macstudio
-install -m 600 settings.json       ~/.omlx/settings.json
 install -m 600 model_settings.json ~/.omlx/model_settings.json
-```
 
-Service lifecycle is owned by the oMLX desktop app (release DMG, auto-start
-on login) — no launchd unit is tracked here. The legacy Homebrew
-`sh.brew.omlx.plist` + `/opt/homebrew` CLI on the machine are remnants of the
-old brew-based install (no dashboard/GUI) and should be uninstalled manually.
-```
-
-## Injecting secrets after deploy (REQUIRED)
-
-`settings.json` ships with `INJECT_AT_DEPLOY` placeholders — the server will
-not authenticate anything until real values are written. All secrets live in
-1Password (item `omlx`); never commit them.
-
-```bash
 # 1. generate or fetch values
 API_KEY="$(op item get omlx --fields api_key)"            # server API key (consumers: cluster ES studio-api-auth)
 SECRET_KEY="$(op item get omlx --fields secret_key)"      # admin-session signing key (64 hex chars)
 SUB_KEY="$(op item get omlx --fields sub_key)"            # admin sub-key shown in the dashboard
 
-# 2. inject without touching the rest of the file
-python3 - "$API_KEY" "$SECRET_KEY" "$SUB_KEY" <<'EOF'
-import json, os, sys
-p = os.path.expanduser("~/.omlx/settings.json")
-d = json.load(open(p))
-d["auth"]["api_key"], d["auth"]["secret_key"] = sys.argv[1], sys.argv[2]
+# 2. inject into a private temp file (not ~/.omlx), without touching the repo copy
+tmp="$(mktemp -t omlx-settings)" && chmod 600 "$tmp"
+python3 - settings.json "$API_KEY" "$SECRET_KEY" "$SUB_KEY" > "$tmp" <<'EOF'
+import json, sys
+d = json.load(open(sys.argv[1]))
+d["auth"]["api_key"], d["auth"]["secret_key"] = sys.argv[2], sys.argv[3]
 for sk in d["auth"].get("sub_keys", []):
-    sk["key"] = sys.argv[3]
-json.dump(d, open(p, "w"), indent=2)
+    sk["key"] = sys.argv[4]
+json.dump(d, sys.stdout, indent=2)
 EOF
-chmod 600 ~/.omlx/settings.json
+
+# 3. only now install; the server never sees placeholder credentials
+install -m 600 "$tmp" ~/.omlx/settings.json && rm -f "$tmp"
 ```
 
 If the 1Password item is lost, rotate instead of recover: `uuidgen` for

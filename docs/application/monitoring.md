@@ -240,7 +240,7 @@ Per-node DaemonSet exposing S.M.A.R.T. disk health metrics from NVMe and SATA dr
 |---------|----------|--------|
 | `vm-health-too-many-logs` | `TooManyLogs` | Chart-default threshold-0 rule: any warn log in the VM stack fires |
 | `vm-health-too-many-scrape-errors` | `TooManyScrapeErrors` | Threshold-0 rule: a single failed scrape in 15m fires; `TargetDown` covers real outages |
-| `macstudio-offline` | `MacStudioModelServiceDown` | Mac Studio offline (owner decision); remove when the box is back |
+| `macstudio-offline` | `MacStudioApiDown` | Mac Studio offline (owner decision); remove when the box is back |
 
 ## Headlamp
 

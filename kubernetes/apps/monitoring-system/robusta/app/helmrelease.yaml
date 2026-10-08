@@ -26,6 +26,7 @@ spec:
       - webhook_sink:
           name: feishu-relay
           url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta"
+          format: json # default is text; chaski parses a JSON payload
       # mattermost ops bus (bot creds via runner env, see externalsecret.yaml;
       # one-way only — upstream notes CallbackBlock interactivity is unimplemented)
       - mattermost_sink:

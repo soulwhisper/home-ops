@@ -39,4 +39,4 @@ metadata:
 spec:
   matchers:
     - name: alertname
-      value: MacStudioModelServiceDown
+      value: MacStudioApiDown

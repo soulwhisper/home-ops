@@ -144,7 +144,7 @@ BFD runs between the switch's VLAN 100 SVI and each K8s node via FRR-K8s:
 | Echo mode         | Disabled         |
 | Min TTL           | 1                |
 
-This provides sub-2-second failure detection for LoadBalancer service IP reachability, independent of BGP hold timers.
+This provides 2-second failure detection for LoadBalancer service IP reachability, independent of BGP hold timers.
 
 ### Cilium Network
 

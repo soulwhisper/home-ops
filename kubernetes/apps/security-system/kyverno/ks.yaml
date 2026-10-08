@@ -14,6 +14,8 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: security-system
   path: "./kubernetes/apps/security-system/kyverno/app"
+  # kyverno-policies needs the chart's CRDs + admission webhook; wait for ready
+  wait: true
   postBuild:
     substitute:
       APP: *name

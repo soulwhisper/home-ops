@@ -40,6 +40,13 @@ spec:
               MM_SQLSETTINGS_DATASOURCE:
                 valueFrom:
                   secretKeyRef: { name: mattermost-pguser, key: uri }
+              # DB-backed config store: System Console changes land in the
+              # Configurations table instead of ephemeral /mattermost/config,
+              # so they survive pod recreation (no PVC in this app by design).
+              # MM_* env vars still override the stored values.
+              MM_CONFIG:
+                valueFrom:
+                  secretKeyRef: { name: mattermost-pguser, key: uri }
               # cluster-internal ops bus: no telemetry, no outbound calls
               MM_LOGSETTINGS_CONSOLELEVEL: INFO
               # filestore on ceph RGW (ceph-bucket component OBC): rebuildable

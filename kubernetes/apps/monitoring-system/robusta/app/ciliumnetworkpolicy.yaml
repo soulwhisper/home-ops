@@ -1,16 +1,20 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
-# One policy for the whole robusta stack: flux commonMetadata labels every pod
-# of this kustomization app.kubernetes.io/name=robusta (runner, kubewatch,
-# holmes server, holmes operator). Rules are the union of their needs.
+# One policy for the whole robusta stack (runner, kubewatch forwarder, holmes
+# server, holmes operator). Flux commonMetadata only labels the HelmRelease
+# object, NOT chart-rendered pods, and the holmes subchart rejects
+# app.kubernetes.io/name overrides as reserved — so select the chart-native
+# `app` labels instead. Values track release name `robusta`.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
   name: robusta-egress
 spec:
   endpointSelector:
-    matchLabels:
-      "app.kubernetes.io/name": robusta
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [robusta-runner, robusta-forwarder, holmes, holmes-operator]
   egress:
     # kubewatch api access; holmes kubernetes toolsets; operator CRD watches
     - toEntities:

@@ -60,7 +60,7 @@ data:
       robusta:
         target:
           - feishu
-        title: '[{{ .payload.status | default "info" | toUpper }}] {{ .payload.title | default "robusta" }}'
+        title: '[{{ .payload.severity | default "info" | toUpper }}] {{ .payload.title | default "robusta" }}'
         message: '{{ .payload.description | default (.payload.message | default "") }}'
       # authentik system notifications (blueprints/core/notifications.yaml)
       authentik:
