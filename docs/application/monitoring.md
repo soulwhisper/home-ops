@@ -305,4 +305,4 @@ Alertmanager groups alerts by `alertname` + `job`, waits 1m before first notific
 
 ## External observation
 
-Gatus on the Synology NAS and the cluster heartbeat CronJobs were archived (`.archived/infrastructure/synology/gatus`, `.archived/kubernetes/monitoring/heartbeats`) — the NAS no longer deploys the Gatus stack. Alert delivery is Feishu-only via webhook-relay until an external observer is re-established.
+No out-of-cluster observation surface exists and none is planned. Alert delivery is Feishu-only via Alertmanager → webhook-relay; a total cluster or WAN outage surfaces as the absence of alerts (silence = incident).
