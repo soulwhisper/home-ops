@@ -15,11 +15,18 @@ services:
     mem_reservation: 512m
     environment:
       - "DOCKER_HOST=unix:///var/run/docker.sock"
+      # passed through from the NAS-side compose env; required for first
+      # registration, unused afterwards (config.yml persists the runner)
+      - "FORGEJO_RUNNER_TOKEN=${FORGEJO_RUNNER_TOKEN}"
       - "FORGEJO_INSTANCE_URL=http://nas.homelab.internal:9003"
       - "FORGEJO_RUNNER_NAME=nas-docker"
       # act-compatible alias for GHA syntax workflows
       - "FORGEJO_RUNNER_LABELS=ubuntu-latest:docker://ghcr.io/catthehacker/ubuntu:act-22.04,self-hosted:host"
     volumes:
+      # host docker socket grants full host-level control by design; accepted
+      # because the runner is registered repo-scoped (homelab-tickets only) and
+      # every workflow it can ever run is operator-authored. A socket proxy
+      # cannot restrict privileged container creation, so it buys nothing here.
       - "/etc/localtime:/etc/localtime:ro"
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/volume3/docker/forgejo-runner:/data"

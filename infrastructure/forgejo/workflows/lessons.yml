@@ -25,6 +25,8 @@ jobs:
       - name: Distill ticket into learnings/
         env:
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+          # cleartext HTTP to the NAS is an accepted risk: wired VLAN 100 LAN
+          # only, same posture as the cluster-internal Forgejo clients
           FORGEJO_API: http://nas.homelab.internal:9003/api/v1
           REPO: soulwhisper/homelab-tickets
           LLM_API_BASE: https://api.noirprime.com/v1

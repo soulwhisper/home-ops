@@ -1,0 +1,55 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+# Ingress is default-deny once any rule exists; every caller of the relay is
+# enumerated below. The tickets route is protected by network identity (only
+# robusta pods may reach it) instead of a shared token — nothing to leak into
+# logs.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: webhook-relay-ingress
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/name": webhook-relay
+  ingress:
+    # kubelet health probes (/healthz, /readyz) come from the node, not a pod
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - { port: "8080", protocol: TCP }
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring-system
+            "app.kubernetes.io/name": vmalertmanager
+      toPorts:
+        - ports:
+            - { port: "8080", protocol: TCP }
+          rules:
+            http:
+              - { method: POST, path: /hooks/alertmanager }
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring-system
+          matchExpressions:
+            - key: app
+              operator: In
+              values: [robusta-runner, robusta-forwarder, holmes, holmes-operator]
+      toPorts:
+        - ports:
+            - { port: "8080", protocol: TCP }
+          rules:
+            http:
+              - { method: POST, path: /hooks/robusta }
+              - { method: POST, path: /hooks/robusta-tickets }
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": security-system
+            "app.kubernetes.io/name": authentik
+      toPorts:
+        - ports:
+            - { port: "8080", protocol: TCP }
+          rules:
+            http:
+              - { method: POST, path: /hooks/authentik }

@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   # app
   - ./helmrelease.yaml
+  - ./ciliumnetworkpolicy.yaml
   # utils
   - ./configmap.yaml
   - ./externalsecret.yaml

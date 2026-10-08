@@ -33,14 +33,8 @@ spec:
           name: tickets-relay
           url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta-tickets"
           format: json
-          # relay gates this route on verify.token (Authorization header)
-          authorization: "{{ env.TICKETS_RELAY_SECRET }}"
 
     runner:
-      additional_env_vars:
-        - name: TICKETS_RELAY_SECRET
-          valueFrom:
-            secretKeyRef: { name: robusta, key: TICKETS_RELAY_SECRET }
       resources:
         requests:
           cpu: 50m

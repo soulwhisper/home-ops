@@ -82,14 +82,10 @@ data:
       # Robusta runner -> Forgejo homelab-tickets (fed by the second sink at
       # /hooks/robusta-tickets). Ticket floor MEDIUM+; Forgejo has no
       # idempotency, so dedupe on aggregation_key is the consumer's (omp) job.
-      # verify.token: this route spends the relay's Forgejo PAT — only the
-      # robusta runner (sink authorization header) may trigger it.
+      # Access is enforced by network identity: the relay ingress CNP admits
+      # this path only from robusta pods.
       robusta-tickets:
         whenExpr: 'payload.severity in ["MEDIUM", "HIGH"]'
-        verify:
-          token:
-            header: Authorization
-            secret: '{{ env "ROBUSTA_TICKETS_SECRET" }}'
         target:
           - forgejo-tickets
         message: |-
