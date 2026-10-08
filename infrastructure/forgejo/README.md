@@ -14,14 +14,11 @@ the tickets repo and are covered by NAS backup, never by this repository.
 
 ## Sync
 
-This repo is the source of truth; push to the tickets repo on change:
+This repo is the source of truth; after edits, push `skills/` and `workflows/`
+into the tickets repo by hand (clone → rsync both dirs → commit → push,
+authenticated with `forgejo.pat_tickets`). The tickets repo holds no other
+tracked content.
 
-```bash
-just infra forgejo-sync   # rsync skills/ + workflows/ into homelab-tickets, commit, push
-```
-
-(The recipe clones the tickets repo to a temp dir, rsyncs both dirs, and
-commits as the operator. The tickets repo holds no other tracked content.)
 
 ## Runner
 
