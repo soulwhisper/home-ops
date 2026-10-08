@@ -11,6 +11,10 @@ services:
     cap_add:
       - SYS_ADMIN
       - SYS_RAWIO
+    environment:
+      # omnibus influxdb 2.9 upgrade preflight gate: data dir is covered by a
+      # btrfs snapshot of /volume3/docker (docker-snap-pre-doco-cd)
+      - "SCRUTINY_INFLUXDB_29_BACKUP_CONFIRMED=true"
     ports:
       - "9204:8080" # webui
       # - "8086:8086" # influxDB admin
