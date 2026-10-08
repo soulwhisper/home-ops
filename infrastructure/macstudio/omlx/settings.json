@@ -34,7 +34,7 @@
     "hide_helper_models": false
   },
   "memory": {
-    "prefill_memory_guard": false,
+    "prefill_memory_guard": true,
     "memory_guard_tier": "balanced",
     "memory_guard_custom_ceiling_gb": 0.0,
     "soft_threshold": 0.85,
@@ -45,7 +45,7 @@
   "scheduler": {
     "max_concurrent_requests": 8,
     "embedding_batch_size": 32,
-    "chunked_prefill": false,
+    "chunked_prefill": true,
     "prefill_priority": "context",
     "decode_fairness": true
   },
@@ -143,6 +143,6 @@
     "usage_history": true
   },
   "idle_timeout": {
-    "idle_timeout_seconds": null
+    "idle_timeout_seconds": 1800
   }
 }
