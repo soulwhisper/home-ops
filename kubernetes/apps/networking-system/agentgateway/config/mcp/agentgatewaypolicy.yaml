@@ -1,6 +1,6 @@
 ---
 # The MCP route is exposed to the intranet via the agentgateway-intranet
-# HTTPRoute; require the same API key as the LLM route (was unauthenticated).
+# HTTPRoute; require the same API key as the LLM route.
 # Covers the three chat-tier endpoints (/mcp/ro|rw|ext) on
 # agentgateway-mcp-route; /mcp/aiops has its own route + credential below.
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json

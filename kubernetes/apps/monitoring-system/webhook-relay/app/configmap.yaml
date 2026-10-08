@@ -12,7 +12,7 @@ data:
       feishu:
         apprise:
           url: 'feishu://{{ env "FEISHU_TOKEN" }}'
-      # pushover: disabled 2026-09-26 — feishu proved sufficient; re-enable by
+      # pushover: disabled — feishu proved sufficient; re-enable by
       # uncommenting here, in the alertmanager route target list, and params.
       # pushover:
       #   apprise:
@@ -20,11 +20,9 @@ data:
       # ai-ops ticket fan-out: Forgejo homelab-tickets issues (create via REST;
       # token from FORGEJO_TICKETS_TOKEN, see externalsecret prerequisite).
       # Cleartext HTTP to the NAS is an accepted risk: wired VLAN 100 LAN only,
-      # same posture as mcp-forgejo/NFS/RGW; TLS termination on Forgejo is a
-      # NAS-side follow-up. Duplicate sources by design: alertmanager
-      # repeat_interval (12h) re-notifies and chaski retries after 5xx —
-      # consumer-side merge on aggregation_key handles both until a stateful
-      # create-or-comment consumer replaces this route.
+      # same posture as mcp-forgejo/NFS/RGW. Duplicate sources by design:
+      # alertmanager repeat_interval (12h) re-notifies and chaski retries
+      # after 5xx — consumer-side merge on aggregation_key handles both.
       forgejo-tickets:
         http:
           url: http://nas.homelab.internal:9003/api/v1/repos/soulwhisper/homelab-tickets/issues

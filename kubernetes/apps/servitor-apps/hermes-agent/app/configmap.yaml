@@ -9,7 +9,7 @@ metadata:
   name: hermes-agent-config
 data:
   # default profile (left functionally untouched: gateway/multiplex + aux lanes
-  # are additive; model config mirrors what was previously set via 1Password)
+  # are additive)
   config.yaml: |
     model:
       default: agent
@@ -93,7 +93,7 @@ data:
     FRIGATE_WEBHOOK_SECRET=$${FRIGATE_WEBHOOK_SECRET}
     EOF
 
-    # remove retired profiles on upgrade — multiplex_profiles=true keeps any
+    # remove leftover profiles on upgrade — multiplex_profiles=true keeps any
     # leftover dir live (incl. its API key + model config); seed only owns ops
     rm -rf /opt/data/profiles/chat
 

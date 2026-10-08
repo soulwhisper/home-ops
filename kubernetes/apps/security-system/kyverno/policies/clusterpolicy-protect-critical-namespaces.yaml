@@ -3,7 +3,7 @@
 # Hard protection against accidental/malicious deletion of namespaces whose
 # loss is unrecoverable or cluster-breaking. ENFORCE from day one: every
 # legitimate namespace deleter in this cluster is cluster-admin (flux
-# controllers, system:masters) — verified via RBAC audit 2026-10 — so the
+# controllers, system:masters) — so the
 # exemption costs nothing and there is no legit traffic to break. The
 # namespace-controller finalizes via finalizer updates, not DELETE calls, so
 # normal namespace teardown by admins still works.

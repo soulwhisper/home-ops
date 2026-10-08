@@ -27,8 +27,6 @@ spec:
 # (temp/omlx-optimization.md): repeat-call loops, training-time date anchors,
 # truncation blindness, LogsQL unfamiliarity. Static text only; Holmes' native
 # current-time injection stays authoritative for timestamps.
-# NOTE: v1.6.0 shape is backend.ai.prompt; main moved this to
-# traffic.ai.promptEnrichment — revisit on the next agentgateway bump.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:

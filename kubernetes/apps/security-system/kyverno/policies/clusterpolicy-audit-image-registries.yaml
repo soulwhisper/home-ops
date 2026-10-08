@@ -1,7 +1,7 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kyverno.io/clusterpolicy_v1.json
 # Image provenance visibility (AUDIT). Flags containers whose image registry
-# is outside the allowlist observed in-cluster 2026-10 (ghcr/quay/
+# is outside the observed in-cluster allowlist (ghcr/quay/
 # registry.k8s.io/docker hub + the few vendor CRs in use). An image is
 # treated as registry-qualified only when its first path segment contains
 # '.' or ':' — bare names are docker.io by definition.

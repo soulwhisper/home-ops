@@ -79,4 +79,3 @@ versity mode:
       exit 1
     fi
   done
-

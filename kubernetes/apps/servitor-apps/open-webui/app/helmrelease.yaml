@@ -18,8 +18,8 @@ spec:
       # Reap dead backend sockets fast. Cilium silently drops packets to a
       # stale backend IP after postgres/dragonfly reschedules; without
       # keepalive the app's pool/pubsub sockets never see an RST and storm
-      # POLICY_DENIED drops for the pod's lifetime (AgentEgressDenied pages,
-      # 2026-09-17 + 2026-10-01). 300+3x30 = ~6.5m worst case, under the
+      # POLICY_DENIED drops for the pod's lifetime (AgentEgressDenied pages).
+      # 300+3x30 = ~6.5m worst case, under the
       # alert's 15m `for:` window.
       securityContext:
         sysctls:

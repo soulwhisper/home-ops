@@ -15,14 +15,13 @@ spec:
     # OSS classic mode: no platform account (account_id/signing_key stay empty).
     # Platform features (UI / smart grouping / Slack bot) are SaaS-gated and
     # deliberately out of scope.
-    # Holmes is unified INTO this release (subchart, same 0.42.0 chart as the
-    # retired standalone servitor-apps/holmesgpt): runner AI analysis requires
-    # enableHolmesGPT, and the subchart has no enabled kill-switch — so the
-    # embedded topology is the only sane one. Holmes service: robusta-holmes.
+    # Holmes runs unified in this release as a subchart: runner AI analysis
+    # requires enableHolmesGPT, and the subchart has no enabled kill-switch —
+    # so the embedded topology is the only sane one. Holmes service: robusta-holmes.
     enableHolmesGPT: true
 
     sinksConfig:
-      # feishu via the existing webhook-relay (route added in this PR)
+      # feishu via the existing webhook-relay
       - webhook_sink:
           name: feishu-relay
           url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta"
@@ -59,10 +58,8 @@ spec:
         # -> agentgateway 404s the unknown lane
         - { name: MODEL, value: agent }
       modelList:
-        # agent lane = Qwen-AgentWorld-35B-A3B (oQ4) on the studio — measured
-        # 3-25x faster than qwen3.8-27b on tool-calling workloads. temperature
-        # 0.6 follows the model's tuned sampling (0.6/0.95/top_k 20), not the
-        # previous 27b-lane convention of 0.
+        # agent lane (studio-hosted). temperature 0.6 follows the model's
+        # tuned sampling (0.6/0.95/top_k 20).
         agent:
           model: openai/agent
           api_base: envRef:OPENAI_API_BASE
