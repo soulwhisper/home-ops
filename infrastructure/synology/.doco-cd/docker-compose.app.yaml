@@ -1,17 +1,17 @@
 ---
 # This file is not managed by doco-cd because it can't manage itself
-# Located at /opt/docker-compose.yml
+# Manual deploy on NAS: /volume3/docker/doco-cd/docker-compose.yml
 
 secrets:
   sops_token:
-    file: /opt/sops_token
+    file: /volume3/docker/sops_token
 services:
   app:
     container_name: doco-cd
     environment:
       LOG_LEVEL: info
       POLL_CONFIG: |-
-        - url: https://gh-proxy.org/https://github.com/soulwhisper/home-ops.git
+        - url: https://github.com/soulwhisper/home-ops.git
           reference: refs/heads/main
           interval: 300
       DEPLOY_CONFIG_BASE_DIR: ./infrastructure/synology
