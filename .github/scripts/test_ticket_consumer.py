@@ -113,9 +113,9 @@ class TicketLifecycleTest(unittest.TestCase):
 
     def test_changed_finding_and_resolution_share_timeline_without_auto_close(self):
         self.deliver()
-        repeat = self.finding | {"id": "event-2", "creation_date": 2}
-        self.deliver(repeat)
-        resolution = repeat | {"id": "event-3", "failure": False, "ends_at": "2026-10-09T00:10:00Z"}
+        refire = self.finding | {"id": "event-2", "starts_at": "2026-10-09T01:00:00Z"}
+        self.deliver(refire)
+        resolution = refire | {"id": "event-3", "failure": False, "ends_at": "2026-10-09T01:10:00Z"}
         self.deliver(resolution)
         self.deliver(resolution)
         self.assertEqual(len(self.issues), 1)
@@ -123,12 +123,30 @@ class TicketLifecycleTest(unittest.TestCase):
         self.assertIn("**Event:** resolved", self.comments[1][-1]["body"])
         self.assertEqual(self.issues[0]["state"], "open")
 
+    def test_renotification_of_same_state_is_suppressed(self):
+        # Alertmanager repeat_interval re-sends a firing alert; Robusta mints a
+        # new finding id, creation_date and fresh enrichments every time.
+        self.deliver()
+        renotify = self.finding | {
+            "id": "event-9", "creation_date": 99,
+            "enrichments": [{"blocks": [{"text": "Diagnosis: still failing"}]}],
+        }
+        self.assertEqual(self.deliver(renotify)["action"], "duplicate")
+        self.assertEqual(self.comments, {})
+
+    def test_alert_instances_with_same_alertname_get_separate_incidents(self):
+        self.deliver()
+        other_pod = self.finding | {"fingerprint": "other-pod", "id": "event-2"}
+        self.assertEqual(self.deliver(other_pod)["action"], "created")
+        self.assertEqual(len(self.issues), 2)
+
     def test_exact_replay_does_not_undo_human_close_but_new_failure_reopens(self):
         self.deliver()
         self.issues[0]["state"] = "closed"
         self.deliver()
         self.assertEqual(self.issues[0]["state"], "closed")
-        self.deliver(self.finding | {"id": "new-failure", "creation_date": 3})
+        refire = self.finding | {"id": "new-failure", "starts_at": "2026-10-10T00:00:00Z"}
+        self.assertEqual(self.deliver(refire)["action"], "reopened")
         self.assertEqual(self.issues[0]["state"], "open")
         self.assertEqual(len(self.issues), 1)
 
@@ -152,7 +170,7 @@ class TicketLifecycleTest(unittest.TestCase):
     def test_issue_and_comment_pagination_preserves_dedupe(self):
         self.issues.extend({"number": n + 1, "body": "other incident", "state": "open"} for n in range(50))
         self.deliver()
-        changed = self.finding | {"id": "later-event"}
+        changed = self.finding | {"id": "later-event", "starts_at": "2026-10-09T05:00:00Z"}
         self.comments[51] = [{"body": "older comment"} for _ in range(50)]
         self.deliver(changed)
         self.deliver(changed)
@@ -160,12 +178,69 @@ class TicketLifecycleTest(unittest.TestCase):
         self.assertEqual(len(self.comments[51]), 51)
 
     def test_missing_identity_is_rejected_without_creating_issue(self):
-        invalid = copy.deepcopy(self.finding)
-        invalid.pop("aggregation_key")
-        with self.assertRaises(HTTPError) as error:
-            self.deliver(invalid)
-        self.assertEqual(error.exception.code, 400)
+        for field in ("aggregation_key", "fingerprint"):
+            invalid = copy.deepcopy(self.finding)
+            invalid.pop(field)
+            with self.assertRaises(HTTPError) as error:
+                self.deliver(invalid)
+            self.assertEqual(error.exception.code, 400)
         self.assertEqual(self.issues, [])
+
+
+class HolmesInvestigationTest(unittest.TestCase):
+    def setUp(self):
+        self.asks = []
+        self.comments = []
+        self.reply = {"analysis": "## Root cause\nstartup probe too short"}
+        owner = self
+
+        class API(BaseHTTPRequestHandler):
+            def log_message(self, format, *args):
+                return
+
+            def do_POST(self):
+                payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                if self.path == "/api/chat":
+                    owner.asks.append(payload["ask"])
+                    status, body = (200, owner.reply) if owner.reply else (500, {})
+                else:
+                    owner.comments.append((self.path, payload["body"]))
+                    status, body = 201, payload
+                data = json.dumps(body).encode()
+                self.send_response(status)
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+
+        self.api = HTTPServer(("127.0.0.1", 0), API)
+        threading.Thread(target=self.api.serve_forever, daemon=True).start()
+        base = f"http://127.0.0.1:{self.api.server_port}"
+        self.investigator = TICKETS.Investigator(base, TICKETS.Forgejo(base, "fixture-token"), timeout=5)
+        threading.Thread(target=self.investigator.run, daemon=True).start()
+        self.finding = {"source": "PROMETHEUS", "aggregation_key": "PodUnhealthy", "title": "Pod unhealthy",
+                        "subject": {"kind": "Pod", "name": "example", "namespace": "default"}}
+
+    def tearDown(self):
+        self.api.shutdown()
+        self.api.server_close()
+
+    def test_analysis_is_posted_to_the_ticket(self):
+        self.investigator.submit(7, self.finding)
+        self.investigator.queue.join()
+        self.assertIn("#7", self.asks[0])
+        self.assertEqual(self.comments[0][0], "/issues/7/comments")
+        self.assertIn("startup probe too short", self.comments[0][1])
+        self.assertIn(TICKETS.HOLMES_MARKER, self.comments[0][1])
+
+    def test_holmes_failure_posts_nothing_and_keeps_worker_alive(self):
+        self.reply = None
+        self.investigator.submit(7, self.finding)
+        self.investigator.queue.join()
+        self.assertEqual(self.comments, [])
+        self.reply = {"analysis": "recovered"}
+        self.investigator.submit(8, self.finding)
+        self.investigator.queue.join()
+        self.assertEqual(self.comments[0][0], "/issues/8/comments")
 
 
 if __name__ == "__main__":

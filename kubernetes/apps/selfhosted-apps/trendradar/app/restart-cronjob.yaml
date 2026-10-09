@@ -1,0 +1,70 @@
+# Daily restart of trendradar to bound the mcp sidecar's memory growth.
+# Why: wantcat/trendradar-mcp 4.1.0 grows ~15 MiB/h linearly under the
+# toolhive proxy's streamable-http sessions (429 -> 1024 MiB over 10/02-10/04;
+# OOMKilled at the 1Gi limit 3x in 7 days, last 2026-10-08 23:01Z). A larger
+# limit only delays the kill. Restarting daily caps the sidecar near ~400 MiB.
+# Delete this file once an upstream release stops leaking.
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: trendradar-restarter
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: trendradar-restarter
+rules:
+  # rollout restart = GET + PATCH on the deployment's pod template
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["trendradar"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: trendradar-restarter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: trendradar-restarter
+subjects:
+  - kind: ServiceAccount
+    name: trendradar-restarter
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: trendradar-restarter
+spec:
+  # 10 min after hindsight-restarter; both off the Renovate/backup windows
+  schedule: "30 4 * * *"
+  timeZone: "Asia/Shanghai"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          serviceAccountName: trendradar-restarter
+          automountServiceAccountToken: true
+          securityContext:
+            # kubectl image defaults to root; pin non-root instead of
+            # runAsNonRoot, which would reject the container outright
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: kubectl
+              image: registry.k8s.io/kubectl:v1.37.1
+              command:
+                - kubectl
+                - rollout
+                - restart
+                - deploy/trendradar
+                - --namespace=selfhosted-apps
+          restartPolicy: Never

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Serialize Robusta findings into one Forgejo issue per source/aggregation key."""
+"""Serialize Robusta findings into one Forgejo issue per alert instance."""
 import hashlib
 import json
 import logging
 import os
+import queue
 import signal
 import sys
 import threading
@@ -12,7 +13,8 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 MAX_PAYLOAD = 1024 * 1024
-MAX_BODY = 16000
+MAX_BODY = 60000
+HOLMES_MARKER = "<!-- aiops-holmes -->"
 LOG = logging.getLogger("tickets")
 
 
@@ -50,13 +52,22 @@ class Forgejo:
     def deliver(self, finding):
         source = finding.get("source")
         key = finding.get("aggregation_key")
-        if not isinstance(source, str) or not source or not isinstance(key, str) or not key:
-            raise ValueError("source and aggregation_key are required")
-        identity = json.dumps([source, key], separators=(",", ":"))
+        fingerprint = finding.get("fingerprint")
+        if not all(isinstance(v, str) and v for v in (source, key, fingerprint)):
+            raise ValueError("source, aggregation_key and fingerprint are required")
+        # Prometheus findings use the alert name as aggregation_key; the
+        # Alertmanager fingerprint separates instances (namespace/pod/...).
+        identity = json.dumps([source, key, fingerprint], separators=(",", ":"))
         marker = f"<!-- aiops-incident:{hashlib.sha256(identity.encode()).hexdigest()} -->"
-        event = json.dumps(finding, sort_keys=True, separators=(",", ":"))
-        event_marker = f"<!-- aiops-event:{hashlib.sha256(event.encode()).hexdigest()} -->"
         resolved = finding.get("failure") is False or bool(finding.get("ends_at"))
+        # One event per state transition. Robusta mints a fresh id,
+        # creation_date and enrichments on every Alertmanager re-notification
+        # (repeat_interval), so those must not count as a new observation.
+        occurrence = json.dumps(
+            [identity, resolved, finding.get("starts_at"), finding.get("ends_at")],
+            separators=(",", ":"),
+        )
+        event_marker = f"<!-- aiops-event:{hashlib.sha256(occurrence.encode()).hexdigest()} -->"
         title = f"[{finding.get('severity', 'INFO')}] {finding.get('title', 'Robusta finding')}"[:250]
         body = format_finding(finding, resolved)[:MAX_BODY] + f"\n\n{event_marker}"
         issue = next(
@@ -74,13 +85,85 @@ class Forgejo:
             event_marker in (comment.get("body") or "")
             for comment in self.pages(f"/issues/{number}/comments")
         )
+        if duplicate:
+            return {"action": "duplicate", "number": number}
         # A new failure reopens the incident before recording its event. Exact
         # replays must not undo a later human close. Resolution never auto-closes.
-        if not duplicate:
-            if not resolved and issue["state"] == "closed":
-                self.request("PATCH", f"/issues/{number}", {"state": "open"})
-            self.request("POST", f"/issues/{number}/comments", {"body": body})
-        return {"action": "duplicate" if duplicate else "commented", "number": number}
+        action = "commented"
+        if not resolved and issue["state"] == "closed":
+            self.request("PATCH", f"/issues/{number}", {"state": "open"})
+            action = "reopened"
+        self.request("POST", f"/issues/{number}/comments", {"body": body})
+        return {"action": action, "number": number}
+
+
+class Investigator:
+    """Ask Holmes about new/reopened incidents and post the answer as a comment.
+
+    Runs off the delivery lock: an LLM investigation takes minutes and must not
+    stall chaski deliveries. The queue is in memory; a restart drops pending
+    investigations, never tickets.
+    """
+
+    def __init__(self, holmes_url, forgejo, timeout=600):
+        self.chat_url = holmes_url.rstrip("/") + "/api/chat"
+        self.forgejo = forgejo
+        self.timeout = timeout
+        self.queue = queue.Queue(maxsize=20)
+
+    def submit(self, number, finding):
+        try:
+            self.queue.put_nowait((number, finding))
+        except queue.Full:
+            LOG.warning("investigation queue full; skipped issue=%s", number)
+
+    def run(self):
+        while True:
+            number, finding = self.queue.get()
+            try:
+                analysis = self.ask(number, finding)
+                body = ("**Holmes investigation** (automated, unverified — "
+                        "check the evidence before acting)\n\n"
+                        + analysis[:MAX_BODY] + "\n\n" + HOLMES_MARKER)
+                self.forgejo.request("POST", f"/issues/{number}/comments", {"body": body})
+                LOG.info("investigation posted issue=%s", number)
+            except (HTTPError, URLError, TimeoutError, OSError, ValueError, KeyError, TypeError):
+                LOG.error("Holmes investigation failed issue=%s", number)
+            finally:
+                self.queue.task_done()
+
+    def ask(self, number, finding):
+        request = Request(
+            self.chat_url,
+            data=json.dumps({"ask": investigation_prompt(number, finding)}).encode(),
+            headers={"Content-Type": "application/json", "Accept": "application/json"},
+            method="POST",
+        )
+        with urlopen(request, timeout=self.timeout) as response:
+            analysis = json.loads(response.read())["analysis"]
+        if not isinstance(analysis, str) or not analysis.strip():
+            raise ValueError("empty analysis")
+        return analysis
+
+
+def investigation_prompt(number, finding):
+    subject = finding.get("subject") or {}
+    labels = subject.get("labels") or {}
+    return "\n".join([
+        f"Investigate homelab incident ticket #{number}: {finding.get('title', '')}",
+        f"Source: {finding.get('source')} | alert/key: {finding.get('aggregation_key')}",
+        f"Subject: {subject.get('kind', '?')} {subject.get('name', '?')} "
+        f"(namespace {subject.get('namespace') or '-'}, node {subject.get('node') or '-'})",
+        f"Started: {finding.get('starts_at') or '-'}",
+        f"Labels: {json.dumps(labels, sort_keys=True)[:2000]}",
+        f"Description: {(finding.get('description') or '')[:4000]}",
+        "",
+        "Find the root cause with the metrics and logs tools. Reply in markdown with:",
+        "## Root cause (state confidence: verified or suspected)",
+        "## Evidence (each query you ran and what it showed)",
+        "## Proposed fix (a GitOps change to the home-ops repo; never kubectl mutations)",
+        "## Verification (the query or check that proves the fix worked)",
+    ])
 
 
 def format_finding(finding, resolved):
@@ -109,6 +192,7 @@ def format_finding(finding, resolved):
 
 class Handler(BaseHTTPRequestHandler):
     forgejo = None
+    investigator = None
     delivery_lock = threading.Lock()
 
     def log_message(self, format, *args):
@@ -141,6 +225,8 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(503, {"error": "Forgejo delivery failed"})
             return
         LOG.info("delivery action=%s number=%s", result["action"], result.get("number", "-"))
+        if self.investigator and result["action"] in ("created", "reopened"):
+            self.investigator.submit(result["number"], finding)
         self.respond(200, result)
 
     def respond(self, status, payload):
@@ -156,6 +242,10 @@ def main():
     logging.basicConfig(level=logging.INFO)
     signal.signal(signal.SIGTERM, lambda _signum, _frame: sys.exit(0))
     Handler.forgejo = Forgejo(os.environ["FORGEJO_REPO_URL"], os.environ["FORGEJO_TICKETS_TOKEN"])
+    holmes_url = os.environ.get("HOLMES_URL")
+    if holmes_url:
+        Handler.investigator = Investigator(holmes_url, Handler.forgejo)
+        threading.Thread(target=Handler.investigator.run, daemon=True).start()
     # No Service/remote listener: only chaski in this Pod can reach the consumer.
     # Serialize writes without blocking health probes on slow Forgejo requests.
     # 8081 belongs to chaski's metrics server.

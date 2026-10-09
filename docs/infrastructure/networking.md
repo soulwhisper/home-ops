@@ -158,6 +158,7 @@ Cilium runs as the sole CNI with full kube-proxy replacement on a `netkit` datap
 | Service CIDR          | `10.100.128.0/17`                                          |
 | IPAM                  | Kubernetes host-scope                                      |
 | kube-proxy            | Replaced (`kubeProxyReplacement: true`)                    |
+| Socket LB termination | TCP + UDP (`lb-sock-terminate-all-protos`): sockets to deleted backends are destroyed so clients reconnect |
 | Bandwidth management  | BBR congestion control, enabled                            |
 | BIGTCP                | Disabled (`i40e` lacks BIG TCP support)                      |
 | BPF clock probe       | Enabled                                                    |

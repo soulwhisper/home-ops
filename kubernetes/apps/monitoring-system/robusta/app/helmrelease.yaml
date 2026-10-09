@@ -20,19 +20,30 @@ spec:
     # so the embedded topology is the only sane one. Holmes service: robusta-holmes.
     enableHolmesGPT: true
 
+    globalConfig:
+      # Robusta's default map sends warning -> LOW, which the ticket route
+      # (MEDIUM/HIGH) drops — 178 of 289 rules, including etcd, ESO, kopiur
+      # and CrashLoop. MEDIUM parses back to HIGH; map warning to MEDIUM so it
+      # is ticketed while info/none stay below the gate.
+      custom_severity_map:
+        warning: medium
+
     sinksConfig:
       # feishu via the existing webhook-relay
       - webhook_sink:
           name: feishu-relay
           url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta"
           format: json # default is text; chaski parses a JSON payload
-      # findings delivery: feishu via webhook-relay (json, validated) + ticket
-      # fan-out to Forgejo homelab-tickets via the relay's HTTP target
-      # (route robusta-tickets gates MEDIUM+; both sinks fire per finding)
+          size_limit: 16384
+      # ticket intake: relay route robusta-tickets gates MEDIUM+ into the
+      # serialized Forgejo consumer. size_limit default (4096) truncates the
+      # payload field-by-field and drops enrichments — the diagnosis — first;
+      # chaski accepts up to 1 MiB.
       - webhook_sink:
           name: tickets-relay
           url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta-tickets"
           format: json
+          size_limit: 262144
 
     runner:
       resources:

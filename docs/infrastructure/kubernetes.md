@@ -570,6 +570,7 @@ Talos provides:
 - **API-driven management** — all configuration changes flow through the Talos API
 - **Automatic upgrades** — System Upgrade Controller (managed by Flux in `gitops-system`) handles Talos version upgrades via `talosctl upgrade-k8s` plans
 - **NVMe storage** — M.2 NVMe SSDs across all nodes provide high-performance local storage for Rook-Ceph
+- **Image pulls capped** — kubelet `maxParallelImagePulls: 2`; EPHEMERAL and etcd share the system NVMe, and unbounded pull waves stalled etcd fsync into leader-election restarts
 
 The cluster uses Cilium as the CNI in native routing mode (no overlay), leveraging Talos's default network configuration and BGP peering via FRR-K8s for LoadBalancer service IP advertisement.
 
@@ -583,4 +584,4 @@ The cluster uses Cilium as the CNI in native routing mode (no overlay), leveragi
 - **Bootstrap chart versions** in `helmfile.yaml`
 - **Talos version** in System Upgrade Controller plans
 
-When updates are detected, Renovate opens pull requests. Merging triggers Flux reconciliation, which applies the new versions automatically. This keeps the entire cluster — from the OS to individual application containers — continuously updated without manual intervention.
+When updates are detected, Renovate opens pull requests. Merging triggers Flux reconciliation, which applies the new versions automatically. This keeps the entire cluster — from the OS to individual application containers — continuously updated without manual intervention. Automerge is Renovate-side (`platformAutomerge: false`): at most one PR merges per run, so rollouts and image pulls don't land as one wave.

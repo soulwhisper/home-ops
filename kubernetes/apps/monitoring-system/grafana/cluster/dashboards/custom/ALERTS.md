@@ -69,7 +69,10 @@ signal path is unaffected.
   Collector-side `excludeFilter` is metadata-only and would drop ERROR logs
   too — rejected.
 - **etcd flips SLO / 24h variants**: covered by `etcdHighNumberOfLeaderChanges`;
-  the board panel is the trend view of that alert, not a new one.
+  the board panel is the trend view of that alert, not a new one. The
+  short-spike gap it left (2026-10-08: ~5m fsync stalls cost leadership but
+  never met the 10m `etcdHighFsyncDurations` window) is covered by
+  `EtcdFsyncLatencySpike` and the downstream `PodRestartStorm`, not an SLO.
 - **Backup 48h-stale variant**: covered by `KopiurBackupStale`; a second,
   longer window is alert spam, not coverage.
 - **Per-app SLOs (`*-apps`)**: never. Alerts cover the app plane; renovate

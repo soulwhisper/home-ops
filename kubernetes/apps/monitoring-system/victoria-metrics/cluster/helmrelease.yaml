@@ -125,13 +125,19 @@ spec:
               matchers:
                 - alertname =~ "CephNodeDiskspaceWarning|CephOSDDownHigh|PrometheusJobExporterMissing|CephNodeNetworkPacketDrops|CephNodeNetworkPacketErrors"
                 - type = "ceph_default"
+            # unacknowledged critical alerts re-page every 2h instead of 12h
+            # (2026-10-08: a critical fired 27h with one notification)
+            - receiver: "default"
+              matchers:
+                - severity = "critical"
+              repeat_interval: 2h
             # info/none are dashboard-tier (KubeletTooManyPods ~17h/3d,
             # RecordingRulesNoData): keep them off feishu. severity=error
             # still falls through to the default receiver (flux alerts
             # proved their worth catching drift)
             - receiver: "default"
               matchers:
-                - severity =~ "warning|critical"
+                - severity = "warning"
         inhibit_rules:
           - equal: ["alertname", "namespace"]
             source_matchers:

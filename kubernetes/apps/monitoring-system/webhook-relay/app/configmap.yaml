@@ -76,10 +76,10 @@ data:
           {{- end }}
           {{- end }}
           {{- end }}
-      # Robusta runner -> local ticket consumer. Exact retries are suppressed;
-      # changed findings append to the same source/aggregation_key incident.
-      # Access is enforced by network identity: the relay ingress CNP admits
-      # this path only from robusta pods.
+      # Robusta runner -> local ticket consumer: one issue per alert instance
+      # (source + aggregation_key + fingerprint); re-notifications of the same
+      # state are suppressed, transitions append. Access is enforced by network
+      # identity: the relay ingress CNP admits this path only from robusta pods.
       robusta-tickets:
         whenExpr: 'payload.severity in ["MEDIUM", "HIGH"]'
         target:
