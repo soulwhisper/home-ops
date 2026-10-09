@@ -4,7 +4,7 @@ Storage spans three complementary layers: **distributed Ceph** for replicated bl
 
 ### Rook-Ceph Cluster
 
-The [Rook](https://rook.io) operator manages a 3-node Ceph cluster across `exarch-01`, `exarch-02`, and `exarch-03`. Each node contributes one **SK Hynix P41 2TB NVMe** device, partitioned into **2 OSDs per device** for balanced placement-group distribution. Every pool uses a **replication factor of 3** with **`failureDomain: host`**, tolerating the loss of an entire node without data unavailability.
+The [Rook](https://rook.io) operator manages a 3-node Ceph cluster across `exarch-01`, `exarch-02`, and `exarch-03`. Each node contributes one **SK Hynix P41 2TB NVMe** device, partitioned into **2 OSDs per device** for balanced placement-group distribution. Durable pools use a **replication factor of 3** with **`failureDomain: host`**, tolerating the loss of an entire node without data unavailability; the rewarmable cache pool is the deliberate exception.
 
 The operator ships with the [ceph-csi-drivers](https://github.com/ceph/ceph-csi-operator) Helm chart, which registers four CSI driver prefixes under `storage-system.*.csi.ceph.com` — `rbd`, `cephfs`, `nfs`, and `nvmeof`.
 
@@ -19,10 +19,18 @@ Ceph-level tuning:
 
 The Ceph dashboard is exposed internally with TLS termination via kgateway `BackendConfigPolicy` and its admin password sourced from 1Password through an `ExternalSecret`.
 
-The `ceph-cache` pool also uses three replicas across hosts. Cache data remains
-rewarmable, but an OSD stop must not make its PGs unavailable or require a
-cluster-wide upgrade-check bypass. Rook requires normal health checks before
-daemon upgrades; `POOL_NO_REDUNDANCY` is not muted.
+The `ceph-cache` StorageClass uses `ceph-cachepool` with `size: 1`,
+`failureDomain: osd`, and `requireSafeReplicaSize: false`. It replaced the previous
+local-PV mover cache to resolve kopiur mover I/O issues while avoiding three-copy
+write amplification. This is rewarmable Kopia cache, not the backup repository or
+durable application data; loss is acceptable and an OSD stop can temporarily make
+cache PVCs and their movers unavailable.
+
+The existing `POOL_NO_REDUNDANCY` mute and
+`continueUpgradeAfterChecksEvenIfNotHealthy: true` remain intentional exceptions
+for this single-copy pool. Both exceptions affect cluster-level safety checks:
+verify durable pools remain healthy before upgrades; do not treat muted health as
+proof that every pool is redundant. There is no planned migration back to local-PV.
 
 #### CephBlockPool: `ceph-block`
 
@@ -91,7 +99,7 @@ Base path:     /var/mnt/local-hostpath
 Replicas:      2 (controller)
 ```
 
-OpenEBS LocalPV also keeps temporary snapshot caches on fast local storage rather than consuming Ceph capacity (kopiur mover cache defaults).
+OpenEBS LocalPV remains available for node-local workloads, but kopiur mover cache defaults now use `ceph-cache`, replacing the earlier local-PV cache because of mover I/O issues.
 
 ### CSI Driver NFS — Synology Integration
 
@@ -112,7 +120,7 @@ Both classes use `subDir: ${pvc.metadata.name}` to isolate PVCs under the share,
 
 A single cluster-scoped repository plus per-app resources generated from the `backup/` component:
 
-1. **`ClusterRepository`** (`nas`, in `storage-system`): the shared kopia repository as a first-class CR — S3 backend (dedicated `kopiur` bucket, repository at the bucket root), encryption password from 1Password, operator-managed maintenance (quick hourly, full daily 03:00, `Asia/Shanghai`), and `moverDefaults.cache`: a persistent warm kopia cache PVC (`ceph-block`, 10Gi) inherited by every mover. Apps are separated logically by kopia identity (`<policy>@<namespace>:/pvc/<name>`), not by bucket path.
+1. **`ClusterRepository`** (`nas`, in `storage-system`): the shared kopia repository as a first-class CR — S3 backend (dedicated `kopiur` bucket, repository at the bucket root), encryption password from 1Password, operator-managed maintenance (quick hourly, full daily 03:00, `Asia/Shanghai`), and `moverDefaults.cache`: a persistent warm Kopia cache PVC (`ceph-cache`, 10Gi) per policy, inherited by every mover. Apps are separated logically by Kopia identity (`<policy>@<namespace>:/pvc/<name>`), not by bucket path.
 
 2. **`SnapshotPolicy`** (`${APP}`) + **`SnapshotSchedule`**: the recipe (`repository: {kind: ClusterRepository, name: nas}`, CSI `copyMethod: Snapshot` via `ceph-block-snapshot`, `zstd-fastest`, keep-daily 14) and its cron invocation (every 6 hours, configurable via `KOPIUR_SCHEDULE`).
 
@@ -225,7 +233,7 @@ Each MS-01 node boots from a 256 GB SSD with the following Talos volume partitio
 | `local-hostpath` | 140 GiB | (Talos-managed) | OpenEBS LocalPV base path (`/var/mnt/local-hostpath`) |
 | `local-cache` | dedicated NVMe | **XFS** | High-performance scratch space on a separate NVMe device |
 
-The `local-cache` volume is a `UserVolumeConfig` that selects a dedicated NVMe device (`/dev/disk/by-path/pci-0000:59:00.0-nvme-1`) and formats it with XFS. This provides fast, isolated storage for workloads that benefit from a dedicated device — such as kopiur mover cache PVCs or temporary processing — without competing with the Ceph OSD NVMe or the system disk.
+The `local-cache` volume is a `UserVolumeConfig` that selects a dedicated NVMe device (`/dev/disk/by-path/pci-0000:59:00.0-nvme-1`) and formats it with XFS. It remains available for node-local scratch workloads without competing with the Ceph OSD NVMe or the system disk; it is not the current kopiur mover cache default.
 
 The `local-hostpath` volume lives on the system disk alongside `EPHEMERAL`, pinched to a maximum of 140 GiB to leave headroom for the Talos system partitions.
 
@@ -243,6 +251,7 @@ local-cache:     disk (/dev/disk/by-path/pci-0000:59:00.0-nvme-1), XFS
 | StorageClass | Default | Access | Provisioner | Backend |
 |-------------|:-------:|:------:|------------|---------|
 | `ceph-block` | yes | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (3-replica) |
+| `ceph-cache` | no | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (intentional single-copy, rewarmable cache) |
 | `ceph-filesystem` | no | RWX | `storage-system.cephfs.csi.ceph.com` | CephFS (3-replica) |
 | `openebs-hostpath` | no | RWO | `local-hostpath` | Node-local NVMe |
 | `synology-volume1` | no | RWX | `nfs.csi.k8s.io` | NAS `/volume1` |
