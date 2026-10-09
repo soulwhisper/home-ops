@@ -40,7 +40,7 @@
 | App           | Purpose                                           |
 | ------------- | ------------------------------------------------- |
 | Kgateway      | Envoy Gateway API (internal + external)           |
-| Agent Gateway | AI LLM routing (uncensored/agent/omni/micro) + MCP gateway |
+| Agent Gateway | AI LLM routing (uncensored/agent/omni) + MCP gateway |
 | External DNS  | AdGuardHome DNS automation                        |
 | Kgateway CRDs | CRDs for the kgateway control plane               |
 

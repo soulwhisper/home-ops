@@ -19,7 +19,7 @@ flowchart TB
     end
 
     subgraph LLM["LLM Providers"]
-        Studio["MacStudio oMLX<br/>Qwen3.8-27B + Qwen-AgentWorld-35B-A3B + MiniCPM-o 4.5 + MiniCPM5-2B<br/>(MLX 4bit, 10.10.0.210)"]
+        Studio["MacStudio oMLX<br/>Qwen3.8-27B + Qwen-AgentWorld-35B-A3B + MiniCPM-o 4.5<br/>(MLX 4bit, 10.10.0.210)"]
     end
 
     subgraph MCP["MCP Gateway (ToolHive)"]
@@ -59,7 +59,6 @@ name:
 | `uncensored` | none (open lane) | `llm-backend-complex` | Qwen3.8-27B Uncensored (`qwen3.8-27b`, MLX 4bit) — pure chat only |
 | `agent` | **guarded** | `llm-backend-agent` | Qwen-AgentWorld-35B-A3B (`qwen-agentworld-35b-a3b`, MLX oQ4) — AI-ops automation |
 | `omni` | **guarded** | `llm-backend-omni` | MiniCPM-O-4.5 (`minicpm-o-4.5`, text+vision+audio-in) |
-| `micro` | **guarded** | `llm-backend-micro` | MiniCPM5-2B (`minicpm5-2b`) |
 
 Consumer base URLs
 are `.../v1` — OpenAI/litellm clients append `/chat/completions`
@@ -67,8 +66,8 @@ themselves; raw-HTTP consumers must use the full path.
 
 There is no catch-all: an unknown or missing model id matches no rule and
 the gateway answers `404`. `uncensored` is the only unguarded model — the
-single uncensored brain. `omni` and
-`micro` are reachable exclusively guarded. All backends
+single uncensored brain. `omni` is reachable exclusively
+guarded. All backends
 speak the OpenAI-compatible API on `studio.homelab.internal:8000` and
 inject the oMLX server key via `policies.auth.secretRef`
 (`studio-api-auth`). Consumers authenticate with ExternalSecret-managed
@@ -78,12 +77,9 @@ API keys; there is no cloud fallback — the studio is a deliberate SPOF.
 MCP has no open route (see MCP Backend).
 
 
-Lane-fit guidance: `micro` fits classification, tagging, title/routing decisions, short structured extraction (MiniCPM5-2B is text-only — never a vision candidate). `omni` covers everything fidelity-sensitive: summarization, compression, session search, memory writes, OCR/vision (MiniCPM5-2B's long-context recall AA-LCR 59% and abstention bias make it unsafe for those). `agent` for AI-ops automation: alert RCA, ScheduledHealthChecks, MCP batch tool workloads. `uncensored` for pure human chat (RP/creative/open-ended) only.
+Lane-fit guidance: `omni` covers everything fidelity-sensitive: summarization, compression, session search, memory writes, OCR/vision, plus classification, tagging, title/routing decisions and short structured extraction. `agent` for AI-ops automation: alert RCA, ScheduledHealthChecks, MCP batch tool workloads. `uncensored` for pure human chat (RP/creative/open-ended) only.
 
-`micro` uses **MiniCPM5-2B** (Apache-2.0, 2.6B dense, official 4-bit MLX port `openbmb/MiniCPM5-2B-MLX`, ~2.6 GB resident on the studio) for cheap, low-latency work: classification, extraction, tagging, short summaries, and as the classifier for semantic routing. Serve it with thinking disabled (`chat_template_kwargs: {"enable_thinking": false}`) and constrained JSON output for label safety. Served on the studio as folder id `minicpm5-2b`; the `micro` lane maps to it (see Studio Model Registry).
-
-`omni` uses **MiniCPM-O-4.5** (Apache-2.0, 9B omni: Qwen3-8B backbone + vision/audio encoders; OpenCompass 77.6, OCRBench 876) served on the studio (studio id `minicpm-o-4.5`, ~7 GB at MLX 4bit). All `fast`/`memory`/`vision` consumers (firecrawl, karakeep text+image, home-assistant-sgcc OCR, hindsight memory, trendradar digest, frigate event descriptions (native GenAI), hermes aux side-tasks) use `omni`. Not on omni: `agent` (automation main brain), `uncensored` (pure-chat brain), `micro` (stays — a 2.6 GB classifier/router shouldn't cost a 9B call), embeddings/reranker (studio ids `qwen3-embedding-0.6b`/`qwen3-reranker-0.6b`). ASR: no deployment — no current consumer; when one appears, pick a lane deliberately.
-
+`omni` uses **MiniCPM-O-4.5** (Apache-2.0, 9B omni: Qwen3-8B backbone + vision/audio encoders; OpenCompass 77.6, OCRBench 876) served on the studio (studio id `minicpm-o-4.5`, ~7 GB at MLX 4bit). All `fast`/`memory`/`vision` consumers (firecrawl, karakeep text+image, home-assistant-sgcc OCR, hindsight memory, trendradar digest, frigate event descriptions (native GenAI), hermes aux side-tasks) use `omni`. Not on omni: `agent` (automation main brain), `uncensored` (pure-chat brain), embeddings/reranker (studio ids `qwen3-embedding-0.6b`/`qwen3-reranker-0.6b`). ASR: no deployment — no current consumer; when one appears, pick a lane deliberately.
 
 ### Intranet exposure
 
@@ -101,18 +97,18 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 
 | App                  | Lane              | Model              | Notes                                                        |
 | -------------------- | ----------------- | ------------------ | ------------------------------------------------------------ |
-| hermes-agent         | `agent`           | Qwen-AgentWorld-35B-A3B | Agent brain: automation / KB QA / ops batching; aux side-tasks on `omni`/`micro` (GitOps configmap) |
+| hermes-agent         | `agent`           | Qwen-AgentWorld-35B-A3B | Agent brain: automation / KB QA / ops batching; aux side-tasks on `omni` (GitOps configmap) |
 | robusta (holmes)     | `agent`           | Qwen-AgentWorld-35B-A3B | Alert RCA + ScheduledHealthChecks; 3-25x faster than 27b on tool workloads (measured 2026-10); temperature 0.6 per model tuning |
 | hindsight            | `omni`            | MiniCPM-o 4.5      | Extraction-dominant (single-model constraint); embeddings + reranker via gateway media routes |
 | firecrawl            | `omni`            | MiniCPM-o 4.5      | Batch page extraction/summarization                          |
 | karakeep             | `omni`            | MiniCPM-o 4.5      | Text + image tagging (unified); embeddings via `/v1/embeddings` (model `embedding`, 1024d) |
-| trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`; `micro` fallback); egress-isolated MCP group member |
+| trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); egress-isolated MCP group member |
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | SillyTavern          | `uncensored`      | Qwen3.8-27B        | Creative/RP; UI-configured, no repo-level config |
 | open-notebook        | UI-configured     | suggest `uncensored` | Research synthesis; no repo-level config                     |
-| open-webui           | `/v1`             | `uncensored` (open) / `agent`·`omni`·`micro` (guarded) | Human chat portal; native tools via the guarded tiered `/mcp/*` (bearer key) |
+| open-webui           | `/v1`             | `uncensored` (open) / `agent`·`omni` (guarded) | Human chat portal; native tools via the guarded tiered `/mcp/*` (bearer key) |
 
-All `omni`/`micro` consumers (extractors + hermes aux) ride the **guarded**
+All `omni` consumers (extractors + hermes aux) ride the **guarded**
 `/v1` lane; their prompts carry scraped web content, so a low rate of
 promptGuard false-positive rejections (403) is expected and watched — see
 the TODO table.
@@ -139,7 +135,7 @@ access is cilium-restricted to the gateway federation and vmagent metrics.
 
 ## LLM Inference — Local
 
-All lanes run on the MacStudio inference host (`uncensored` Qwen3.8-27B, `agent` Qwen-AgentWorld-35B-A3B, `omni` MiniCPM-o 4.5, `micro` MiniCPM5-2B). The in-cluster llama.cpp deployment (`llama-qwen3`) was archived 2026-08-28; its 50Gi CephFS PVC `llama` is retained for manual cleanup. Qwen3.5-4B was retired 2026-09-09 with the `fast`/`memory`/`vision` lane removal.
+All lanes run on the MacStudio inference host (`uncensored` Qwen3.8-27B, `agent` Qwen-AgentWorld-35B-A3B, `omni` MiniCPM-o 4.5). The in-cluster llama.cpp deployment (`llama-qwen3`) was archived 2026-08-28; its 50Gi CephFS PVC `llama` is retained for manual cleanup. Qwen3.5-4B was retired 2026-09-09 with the `fast`/`memory`/`vision` lane removal.
 
 ---
 
@@ -162,14 +158,14 @@ All lanes run on the MacStudio inference host (`uncensored` Qwen3.8-27B, `agent`
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
   - `ops` — the batching brain: cron/Feishu/automation workload lives here (read-only-first posture, ToolHive tiers as today); Feishu home channel for cron results
   - `default` — fallback/scratch; the retired `chat` profile was removed 2026-10 when open-webui became the human interface (it talks to the gateway directly)
-  Model/provider config (`model.provider: custom` → agent gateway, `model.default: agent`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression` → `omni`, `title_generation` → `micro`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. Requires 1Password `hermes-agent` field: `api_server_key_root` (>=16 chars)
+  Model/provider config (`model.provider: custom` → agent gateway, `model.default: agent`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression`/`title_generation` → `omni`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. Requires 1Password `hermes-agent` field: `api_server_key_root` (>=16 chars)
 
 ---
 
 ### Open WebUI
 
 - Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui`. Lives in **servitor-apps** (with hermes/toolhive, not selfhosted-apps). Storage is externalized: shared CNPG `postgres` (app data + `VECTOR_DB=pgvector`; role/db via `postgres-init`, plain `vector` ext self-created by migrations — vchord N/A: open-webui hardcodes pgvector DDL), app `Dragonfly` (`REDIS_URL`), app ceph bucket `open-webui` (`STORAGE_PROVIDER=s3`, `STORAGE_LOCAL_CACHE=False`) — data dir is emptyDir cache, no PVC
-- **LLM provider**: single agentgateway entry (`OPENAI_API_BASE_URLS` = `agentgateway-proxy:80/v1`, one key from `llm-api.agentgateway_api_auth`) on the unified OpenAI surface. Lane choice is a model name: `uncensored` (unguarded main brain — the portal default), `agent`/`omni`/`micro` (guarded; title generation → `micro`, select per-task in Admin Settings). The gateway is the only AI egress.
+- **LLM provider**: single agentgateway entry (`OPENAI_API_BASE_URLS` = `agentgateway-proxy:80/v1`, one key from `llm-api.agentgateway_api_auth`) on the unified OpenAI surface. Lane choice is a model name: `uncensored` (unguarded main brain — the portal default), `agent`/`omni` (guarded; title generation → `omni`, select per-task in Admin Settings). The gateway is the only AI egress.
 - **MCP**: native MCP tool servers via `TOOL_SERVER_CONNECTIONS` = the three tiered, sidecar-guarded gateway endpoints (`agentgateway-proxy:80/mcp/ro|rw|ext`) with `auth_type: "bearer"` and the key expanded from `$GATEWAY_API_KEY` (kubelet dependent-env expansion; bearer auth in `build_tool_server_headers` is native upstream). Same guarded endpoints hermes uses — MCP has no open lane.
 - Ingress: `chat.noirprime.com` via kgateway-internal; **auth is authentik forward-auth at the gateway** (components/authentik, provider `open-webui-proxy-provider`, homelab-admin group); open-webui's own login disabled (`WEBUI_AUTH=False`)
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (sole AI egress: LLM + MCP), open-webui-terminals:3000, open-webui-oikb:8080, postgres-rw:5432, open-webui-dragonfly:6379, ceph RGW:80, kube-dns, world-except-private (RAG web fetching)
@@ -268,7 +264,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 ### TrendRadar
 
-- AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`, fallback `micro`)
+- AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`)
 - Delivery: Feishu custom group robot (`FEISHU_WEBHOOK_URL` from 1Password `feishu.newsbot_webhook`); HTML report at `news.noirprime.com` (SSO)
 - MCP server (:3333) registered as `trendradar` in internal-ro — hermes/agents can query stored news
 - Config fully in ConfigMap (`config.yaml` + `frequency_words.txt` + `ai_interests.txt`); output on 1Gi ceph-block PVC
@@ -337,8 +333,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 
 The host-side contract. oMLX serves each model under its **folder name**
 in `~/models/` — the folder name IS the API-visible model id (there is no
-oMLX-side alias layer). Chat lane names (`uncensored`/`agent`/`omni`/
-`micro`) map to folder ids via each backend's `openai.model` override
+oMLX-side alias layer). Chat lane names (`uncensored`/`agent`/`omni`) map to folder ids via each backend's `openai.model` override
 (`kubernetes/apps/networking-system/agentgateway/config/llm/`). Media
 lanes: clients send `embedding` / `reranker` and the media backends'
 `custom.model` override rewrites them to folder ids; the audio lane is a
@@ -358,10 +353,9 @@ Alignment table (keep in sync with the bootstrap downloads):
 | 1     | `uncensored` | `qwen3.8-27b`           | Qwen3.8-27B Uncensored       | `orcarouter/Qwen3.8-27B-Uncensored-MLX`     | MLX 4bit, ~15.7G | oMLX :8000 |
 | 2     | `agent`     | `qwen-agentworld-35b-a3b` | Qwen-AgentWorld-35B-A3B    | `mlx-community/Qwen-AgentWorld-35B-A3B-oQ4` | MLX oQ4, ~19.9G | oMLX :8000 |
 | 3     | `omni`      | `minicpm-o-4.5`          | MiniCPM-O-4.5                | `mlx-community/MiniCPM-o-4_5-4bit`          | MLX 4bit, ~7G   | oMLX :8000 |
-| 4     | `micro`     | `minicpm5-2b`            | MiniCPM5-2B                  | `openbmb/MiniCPM5-2B-MLX`                   | MLX 4bit, ~2.6G | oMLX :8000 |
-| 5     | `embedding` | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d) | `mlx-community/Qwen3-Embedding-0.6B-4bit-DWQ` | MLX, ~1.3G    | oMLX :8000 (`/v1/embeddings`) |
-| 6     | `reranker`  | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B          | `mlx-community/Qwen3-Reranker-0.6B-4bit`    | MLX, ~1.3G      | oMLX :8000 (`/v1/rerank`) |
-| 7     | `audio`     | `voxcpm2`                | VoxCPM2                      | `mlx-community/VoxCPM2-4bit`              | MLX 4bit        | oMLX :8000 (`/v1/audio/speech`) |
+| 4     | `embedding` | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d) | `mlx-community/Qwen3-Embedding-0.6B-4bit-DWQ` | MLX, ~1.3G    | oMLX :8000 (`/v1/embeddings`) |
+| 5     | `reranker`  | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B          | `mlx-community/Qwen3-Reranker-0.6B-4bit`    | MLX, ~1.3G      | oMLX :8000 (`/v1/rerank`) |
+| 6     | `audio`     | `voxcpm2`                | VoxCPM2                      | `mlx-community/VoxCPM2-4bit`              | MLX 4bit        | oMLX :8000 (`/v1/audio/speech`) |
 
 Downloaded but **parked — no lane, no consumers** (re-add deliberately
 when a consumer appears; see Media lanes):

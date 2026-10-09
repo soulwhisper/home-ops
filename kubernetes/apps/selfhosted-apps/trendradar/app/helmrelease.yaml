@@ -33,7 +33,7 @@ spec:
               IMMEDIATE_RUN: "true"
               AI_ANALYSIS_ENABLED: "true"
               # AI lane (base/model/key) comes from the trendradar secret
-              # (envFrom below; `micro` is the documented fallback)
+              # (envFrom below)
               # delivery channels: add NTFY_*/DINGTALK_WEBHOOK_URL/FEISHU_WEBHOOK_URL env when chosen
             envFrom:
               - secretRef:

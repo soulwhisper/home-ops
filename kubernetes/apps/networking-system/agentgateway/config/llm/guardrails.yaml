@@ -15,10 +15,6 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: agentgateway-llm-route
-      sectionName: micro
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: agentgateway-llm-route
       sectionName: omni
   backend:
     ai:

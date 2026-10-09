@@ -44,7 +44,7 @@ data:
       title_generation:
         enabled: true
         provider: main
-        model: micro
+        model: omni
         timeout: 30
         extra_body:
           chat_template_kwargs: { enable_thinking: false }

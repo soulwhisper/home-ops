@@ -51,21 +51,6 @@ spec:
           name: llm-backend-agent
       timeouts:
         request: 300s
-    - name: micro
-      matches:
-        - path:
-            type: PathPrefix
-            value: /v1/chat/completions
-          headers:
-            - type: Exact
-              name: x-model
-              value: "micro"
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: llm-backend-micro
-      timeouts:
-        request: 120s
     - name: omni
       matches:
         - path:

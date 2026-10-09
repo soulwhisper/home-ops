@@ -42,23 +42,6 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: llm-backend-micro
-spec:
-  ai:
-    provider:
-      openai:
-        model: "minicpm5-2b"
-      host: studio.homelab.internal
-      port: 8000
-  policies:
-    auth:
-      secretRef:
-        name: studio-api-auth
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
-apiVersion: agentgateway.dev/v1alpha1
-kind: AgentgatewayBackend
-metadata:
   name: llm-backend-omni
 spec:
   ai:
