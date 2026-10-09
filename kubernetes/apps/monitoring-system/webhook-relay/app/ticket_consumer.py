@@ -5,17 +5,43 @@ import json
 import logging
 import os
 import queue
+import re
 import signal
 import sys
 import threading
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.error import HTTPError, URLError
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 MAX_PAYLOAD = 1024 * 1024
 MAX_BODY = 60000
 HOLMES_MARKER = "<!-- aiops-holmes -->"
+HOLMES_COOLDOWN = timedelta(hours=6)
+# Deployment pods are <workload>-<replicaset hash>-<pod hash>; StatefulSet
+# pods (<name>-<ordinal>) are stable and keep their name.
+POD_HASH = re.compile(r"-[a-z0-9]{6,10}-[a-z0-9]{5}$")
+# Labels that identify *where* the condition is, as opposed to scrape plumbing
+# (instance/pod IP/endpoint) or per-rule detail that would split one incident
+# into dozens of tickets (e.g. one AlertingRulesError per rule group).
+IDENTITY_LABELS = (
+    "namespace", "exported_namespace", "workload", "deployment", "statefulset",
+    "daemonset", "job_name", "cronjob", "pod", "container", "node",
+    "persistentvolumeclaim", "name", "service",
+)
 LOG = logging.getLogger("tickets")
+
+
+def incident_scope(finding):
+    """Stable scope for one incident: alert-level labels, pods folded to workload."""
+    labels = (finding.get("subject") or {}).get("labels") or {}
+    scope = {}
+    for key in IDENTITY_LABELS:
+        value = labels.get(key)
+        if isinstance(value, str) and value:
+            scope[key] = POD_HASH.sub("", value) if key == "pod" else value
+    return scope
 
 
 class Forgejo:
@@ -49,41 +75,54 @@ class Forgejo:
                 return
             page += 1
 
+    def find_issue(self, marker_hash):
+        """Locate the incident issue; the search index is a hint, never the authority."""
+        hint = self.request(
+            "GET", f"/issues?state=all&type=issues&limit=50&q={quote('aiops-incident:' + marker_hash)}"
+        )
+        prefix = f"<!-- aiops-incident:{marker_hash} -->\n"
+        match = next((i for i in hint or [] if (i.get("body") or "").startswith(prefix)), None)
+        if match is not None:
+            return match
+        # Indexer lag or a cold index must not create a duplicate incident.
+        return next(
+            (item for item in self.pages("/issues?state=all&type=issues")
+             if (item.get("body") or "").startswith(prefix)),
+            None,
+        )
+
     def deliver(self, finding):
         source = finding.get("source")
         key = finding.get("aggregation_key")
-        fingerprint = finding.get("fingerprint")
-        if not all(isinstance(v, str) and v for v in (source, key, fingerprint)):
-            raise ValueError("source, aggregation_key and fingerprint are required")
-        # Prometheus findings use the alert name as aggregation_key; the
-        # Alertmanager fingerprint separates instances (namespace/pod/...).
-        identity = json.dumps([source, key, fingerprint], separators=(",", ":"))
-        marker = f"<!-- aiops-incident:{hashlib.sha256(identity.encode()).hexdigest()} -->"
+        if not isinstance(source, str) or not source or not isinstance(key, str) or not key:
+            raise ValueError("source and aggregation_key are required")
+        # One incident per alert + affected workload. Alertmanager fingerprints
+        # change with every pod name and every per-rule label, so a rollout or
+        # a rule-evaluation storm would otherwise open a ticket per pod/group.
+        identity = json.dumps([source, key, incident_scope(finding)], separators=(",", ":"), sort_keys=True)
+        marker_hash = hashlib.sha256(identity.encode()).hexdigest()
+        marker = f"<!-- aiops-incident:{marker_hash} -->"
         resolved = finding.get("failure") is False or bool(finding.get("ends_at"))
-        # One event per state transition. Robusta mints a fresh id,
+        # One event per instance state transition. Robusta mints a fresh id,
         # creation_date and enrichments on every Alertmanager re-notification
         # (repeat_interval), so those must not count as a new observation.
         occurrence = json.dumps(
-            [identity, resolved, finding.get("starts_at"), finding.get("ends_at")],
+            [identity, finding.get("fingerprint"), resolved, finding.get("starts_at"), finding.get("ends_at")],
             separators=(",", ":"),
         )
         event_marker = f"<!-- aiops-event:{hashlib.sha256(occurrence.encode()).hexdigest()} -->"
         title = f"[{finding.get('severity', 'INFO')}] {finding.get('title', 'Robusta finding')}"[:250]
         body = format_finding(finding, resolved)[:MAX_BODY] + f"\n\n{event_marker}"
-        issue = next(
-            (item for item in self.pages("/issues?state=all&type=issues")
-             if (item.get("body") or "").startswith(marker + "\n")),
-            None,
-        )
+        issue = self.find_issue(marker_hash)
         if issue is None:
             if resolved:
                 return {"action": "unmatched-resolution"}
             issue = self.request("POST", "/issues", {"title": title, "body": marker + "\n" + body})
             return {"action": "created", "number": issue["number"]}
         number = issue["number"]
+        comments = list(self.pages(f"/issues/{number}/comments"))
         duplicate = event_marker in (issue.get("body") or "") or any(
-            event_marker in (comment.get("body") or "")
-            for comment in self.pages(f"/issues/{number}/comments")
+            event_marker in (comment.get("body") or "") for comment in comments
         )
         if duplicate:
             return {"action": "duplicate", "number": number}
@@ -94,7 +133,25 @@ class Forgejo:
             self.request("PATCH", f"/issues/{number}", {"state": "open"})
             action = "reopened"
         self.request("POST", f"/issues/{number}/comments", {"body": body})
-        return {"action": action, "number": number}
+        return {"action": action, "number": number, "investigated_at": last_investigation(comments)}
+
+
+def last_investigation(comments):
+    stamps = [c.get("created_at") for c in comments if HOLMES_MARKER in (c.get("body") or "")]
+    return max((s for s in stamps if s), default=None)
+
+
+def investigation_due(result, now=None):
+    """Investigate new incidents, and reopened ones not investigated recently."""
+    if result["action"] == "created":
+        return True
+    if result["action"] != "reopened":
+        return False
+    stamp = result.get("investigated_at")
+    if not stamp:
+        return True
+    last = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+    return (now or datetime.now(timezone.utc)) - last >= HOLMES_COOLDOWN
 
 
 class Investigator:
@@ -225,9 +282,11 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(503, {"error": "Forgejo delivery failed"})
             return
         LOG.info("delivery action=%s number=%s", result["action"], result.get("number", "-"))
-        if self.investigator and result["action"] in ("created", "reopened"):
+        # Cooldown: a flapping incident reopens repeatedly; one investigation
+        # per HOLMES_COOLDOWN is enough and keeps LLM load bounded.
+        if self.investigator and investigation_due(result):
             self.investigator.submit(result["number"], finding)
-        self.respond(200, result)
+        self.respond(200, {k: v for k, v in result.items() if k != "investigated_at"})
 
     def respond(self, status, payload):
         body = json.dumps(payload).encode()

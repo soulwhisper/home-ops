@@ -24,6 +24,8 @@ class TicketLifecycleTest(unittest.TestCase):
         self.issues = []
         self.comments = {}
         self.fail_after_create = False
+        self.index_lag = False  # simulate a search index that has not caught up
+        self.searches = 0
         owner = self
 
         class API(BaseHTTPRequestHandler):
@@ -39,9 +41,15 @@ class TicketLifecycleTest(unittest.TestCase):
 
             def do_GET(self):
                 parts = urlsplit(self.path)
+                query = parse_qs(parts.query)
+                if "q" in query:
+                    owner.searches += 1
+                    hits = [] if owner.index_lag else [
+                        i for i in owner.issues if query["q"][0].split(":")[-1] in (i.get("body") or "")]
+                    self.reply(200, hits)
+                    return
                 items = (owner.comments.get(int(parts.path.split("/")[2]), [])
                          if parts.path.endswith("/comments") else owner.issues)
-                query = parse_qs(parts.query)
                 page, limit = int(query["page"][0]), int(query["limit"][0])
                 self.reply(200, items[(page - 1) * limit:page * limit])
 
@@ -77,7 +85,9 @@ class TicketLifecycleTest(unittest.TestCase):
             "title": "Pod unhealthy", "severity": "HIGH", "failure": True,
             "fingerprint": "fixture", "id": "event-1", "creation_date": 1,
             "starts_at": "2026-10-09T00:00:00Z", "ends_at": None,
-            "subject": {"kind": "Pod", "name": "example", "namespace": "default"},
+            "subject": {"kind": "Pod", "name": "example", "namespace": "default",
+                        "labels": {"alertname": "PodUnhealthy", "namespace": "default",
+                                   "pod": "example-7d9f8b6c5d-x2k9q", "instance": "10.100.0.9:8080"}},
             "description": "Readiness failure",
             "enrichments": [{"blocks": [{"text": "Diagnosis: startup failed"}]}],
         }
@@ -134,11 +144,64 @@ class TicketLifecycleTest(unittest.TestCase):
         self.assertEqual(self.deliver(renotify)["action"], "duplicate")
         self.assertEqual(self.comments, {})
 
-    def test_alert_instances_with_same_alertname_get_separate_incidents(self):
+    def labelled(self, **labels):
+        finding = copy.deepcopy(self.finding)
+        finding["subject"]["labels"] |= labels
+        return finding
+
+    def test_rollout_pods_of_one_workload_share_an_incident(self):
         self.deliver()
-        other_pod = self.finding | {"fingerprint": "other-pod", "id": "event-2"}
-        self.assertEqual(self.deliver(other_pod)["action"], "created")
-        self.assertEqual(len(self.issues), 2)
+        new_pod = self.labelled(pod="example-5c6b7a8f9d-p3m4n", instance="10.100.1.7:8080")
+        new_pod |= {"fingerprint": "new-pod", "starts_at": "2026-10-09T02:00:00Z"}
+        self.assertEqual(self.deliver(new_pod)["action"], "commented")
+        self.assertEqual(len(self.issues), 1)
+
+    def test_different_workloads_get_separate_incidents(self):
+        self.deliver()
+        other = self.labelled(pod="other-7d9f8b6c5d-x2k9q") | {"fingerprint": "other"}
+        self.assertEqual(self.deliver(other)["action"], "created")
+        statefulset = self.labelled(pod="postgres-1") | {"fingerprint": "pg-1"}
+        self.assertEqual(self.deliver(statefulset)["action"], "created")
+        self.assertEqual(len(self.issues), 3)
+
+    def test_per_rule_labels_do_not_split_one_alert(self):
+        # AlertingRulesError carries one series per rule group/file.
+        groups = [self.labelled(group=g, file=f"/rules/{g}.yaml", pod="vmalert-685d4c6c9-wwfmm")
+                  | {"fingerprint": g, "starts_at": f"2026-10-09T00:0{n}:00Z"}
+                  for n, g in enumerate(["etcd", "osd", "vmagent"])]
+        for finding in groups:
+            self.deliver(finding)
+        self.assertEqual(len(self.issues), 1)
+        self.assertEqual(len(self.comments[1]), 2)
+
+    def test_concurrent_instances_resolve_independently(self):
+        # Two pods of one workload fail at once; resolving one is not a replay of the other.
+        self.deliver()
+        second = self.labelled(pod="example-7d9f8b6c5d-zz9yy") | {"fingerprint": "second"}
+        self.deliver(second)
+        for fp, finding in (("fixture", self.finding), ("second", second)):
+            self.deliver(finding | {"fingerprint": fp, "failure": False, "ends_at": "2026-10-09T03:00:00Z"})
+        resolutions = [c for c in self.comments[1] if "**Event:** resolved" in c["body"]]
+        self.assertEqual(len(resolutions), 2)
+
+    def test_search_index_lag_falls_back_to_full_scan(self):
+        self.deliver()
+        self.index_lag = True
+        refire = self.finding | {"starts_at": "2026-10-09T04:00:00Z"}
+        self.assertEqual(self.deliver(refire)["action"], "commented")
+        self.assertEqual(len(self.issues), 1)
+
+    def test_indexed_lookup_avoids_scanning_unrelated_issues(self):
+        self.issues.extend({"number": n + 1, "body": "other incident", "state": "open"} for n in range(120))
+        self.deliver()
+        scans = []
+        original = TICKETS.Forgejo.pages
+        TICKETS.Forgejo.pages = lambda inst, path: (scans.append(path), original(inst, path))[1]
+        try:
+            self.assertEqual(self.deliver()["action"], "duplicate")
+        finally:
+            TICKETS.Forgejo.pages = original
+        self.assertFalse(any(p.startswith("/issues?") for p in scans))
 
     def test_exact_replay_does_not_undo_human_close_but_new_failure_reopens(self):
         self.deliver()
@@ -168,6 +231,7 @@ class TicketLifecycleTest(unittest.TestCase):
         self.assertEqual(len(self.issues), 1)
 
     def test_issue_and_comment_pagination_preserves_dedupe(self):
+        self.index_lag = True
         self.issues.extend({"number": n + 1, "body": "other incident", "state": "open"} for n in range(50))
         self.deliver()
         changed = self.finding | {"id": "later-event", "starts_at": "2026-10-09T05:00:00Z"}
@@ -178,13 +242,30 @@ class TicketLifecycleTest(unittest.TestCase):
         self.assertEqual(len(self.comments[51]), 51)
 
     def test_missing_identity_is_rejected_without_creating_issue(self):
-        for field in ("aggregation_key", "fingerprint"):
+        for field in ("source", "aggregation_key"):
             invalid = copy.deepcopy(self.finding)
             invalid.pop(field)
             with self.assertRaises(HTTPError) as error:
                 self.deliver(invalid)
             self.assertEqual(error.exception.code, 400)
         self.assertEqual(self.issues, [])
+
+
+class InvestigationCooldownTest(unittest.TestCase):
+    now = TICKETS.datetime(2026, 10, 9, 12, tzinfo=TICKETS.timezone.utc)
+
+    def test_new_incident_is_investigated(self):
+        self.assertTrue(TICKETS.investigation_due({"action": "created"}, self.now))
+
+    def test_reopen_within_cooldown_is_skipped_and_after_is_investigated(self):
+        recent = {"action": "reopened", "investigated_at": "2026-10-09T08:00:00Z"}
+        stale = {"action": "reopened", "investigated_at": "2026-10-09T05:59:00Z"}
+        self.assertFalse(TICKETS.investigation_due(recent, self.now))
+        self.assertTrue(TICKETS.investigation_due(stale, self.now))
+        self.assertTrue(TICKETS.investigation_due({"action": "reopened", "investigated_at": None}, self.now))
+
+    def test_plain_comments_never_trigger_investigation(self):
+        self.assertFalse(TICKETS.investigation_due({"action": "commented"}, self.now))
 
 
 class HolmesInvestigationTest(unittest.TestCase):

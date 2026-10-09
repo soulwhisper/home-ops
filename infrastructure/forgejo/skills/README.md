@@ -9,17 +9,19 @@ fixer agent) works them. This file is the law — synced from
 - **Title**: `[SEV] <finding title>`.
 - **Body**: source, `aggregation_key`, fingerprint, subject
   (kind/name/namespace), observation and fire/resolve timestamps, and enrichment.
-  The consumer's leading incident marker hashes source + `aggregation_key` +
-  fingerprint: one ticket per alert instance (Prometheus findings use the
-  alert name as `aggregation_key`; the fingerprint separates pods/namespaces).
-- **Comments**: state transitions (fire, resolve, re-fire) extend the incident
-  timeline. Re-notifications of an unchanged state are suppressed; only a new
+  The consumer's leading incident marker hashes source + alert name + scope
+  (namespace/workload/node/container labels, Deployment pod hashes stripped):
+  one ticket per alert and affected workload. A rollout's replacement pods
+  and a rule-error storm across many rule groups share a ticket. Only
+  Alertmanager-sourced findings are ticketed.
+- **Comments**: per-instance state transitions (fire, resolve, re-fire) extend
+  the incident timeline. Re-notifications of an unchanged state are suppressed; only a new
   failure can reopen a closed ticket. Resolution is evidence, never automatic
   permission to close. The operator may add `flap` when the timeline shows
   repeated transitions.
-- **Holmes investigation**: one automated comment on create/reopen (root
-  cause, evidence, proposed fix, verification). A hypothesis to confirm, not a
-  verdict; absent if Holmes timed out.
+- **Holmes investigation**: an automated comment on create, and on reopen at
+  most once per 6h (root cause, evidence, proposed fix, verification). A
+  hypothesis to confirm, not a verdict; absent if Holmes timed out.
 
 ## Lifecycle
 

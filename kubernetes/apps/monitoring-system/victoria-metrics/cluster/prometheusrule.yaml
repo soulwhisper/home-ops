@@ -59,6 +59,28 @@ spec:
           for: 10m
           labels:
             severity: warning
+        # Ticket intake is fire-and-forget from Robusta's side: chaski retries
+        # 3x then drops. A failed send means an incident has no ticket.
+        - alert: TicketDeliveryFailing
+          annotations:
+            summary: "webhook-relay failed {{ $value | humanize }} ticket deliveries in 15m ({{ $labels.outcome }})"
+            description: >-
+              The ticket consumer (webhook-relay `tickets` container) rejected
+              or could not reach Forgejo; incidents in this window may have no
+              ticket. Check `kubectl -n monitoring-system logs deploy/webhook-relay -c tickets`
+              and Forgejo on nas:9003.
+          expr: |
+            sum by (outcome) (increase(chaski_target_sends_total{target="forgejo-tickets", outcome!="success"}[15m])) > 0
+          labels:
+            severity: warning
+        - alert: TicketRelayMetricsAbsent
+          annotations:
+            summary: webhook-relay metrics are not being scraped; ticket delivery is unmonitored
+          expr: |
+            absent(up{job="webhook-relay", namespace="monitoring-system"} == 1)
+          for: 30m
+          labels:
+            severity: warning
     - name: platform.rules
       rules:
         # upstream rule, VictoriaMetrics v1.151 (alerts-health.yml)

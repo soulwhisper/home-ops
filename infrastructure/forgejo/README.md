@@ -14,19 +14,26 @@ the tickets repo and are covered by NAS backup, never by this repository.
 
 Ticket intake is implemented by the webhook-relay's single, serialized consumer
 (`kubernetes/apps/monitoring-system/webhook-relay/app/ticket_consumer.py`), not a
-direct POST-per-finding sink. Durable incident/event markers provide paginated
-lookup and exact-replay suppression. Human merge, verification, closure, and
-manual lessons dispatch remain required; no auto-fixer or complete API audit
-history is implied.
+direct POST-per-finding sink. It is runtime code, so it stays with its Pod and
+CI tests here; the tickets repo only holds static docs and workflows. Durable
+incident/event markers provide indexed (search-hint, full-scan fallback)
+lookup and replay suppression. Human merge, verification, closure, and manual
+lessons dispatch remain required; no auto-fixer or complete API audit history
+is implied.
 
 ## Sync
 
-This repo is the source of truth; after edits, push `skills/` and `workflows/`
-into the tickets repo by hand (clone → rsync both dirs → commit → push,
-authenticated with `forgejo.pat_tickets`). Besides those two dirs the tickets
-repo also tracks `learnings/` — but those files are written by the lessons
-workflow, never by this sync: do not rsync, delete, or "clean up" files there
-you did not write.
+This repo is the source of truth; after editing `skills/` or `workflows/`, run
+`just forgejo sync`. It mirrors both dirs into the tickets repo (`skills/`,
+`.forgejo/workflows/`) and pushes one commit, authenticating with
+`$FORGEJO_TOKEN_FILE` (default `~/forgejo_tickets.key`) or 1Password
+`forgejo.pat_tickets`. GitHub CI cannot reach the intranet NAS, so sync is an
+operator step. The tickets repo also tracks `learnings/` — written by the
+lessons workflow, never by sync; the recipe does not touch it.
+
+The lessons workflow needs two repository Actions secrets in the tickets repo:
+`FORGEJO_TOKEN` (`pat_tickets`) and `LLM_API_KEY`
+(`llm-api.agentgateway_api_auth`).
 
 ## Runner
 

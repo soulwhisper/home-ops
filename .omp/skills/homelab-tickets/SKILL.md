@@ -7,10 +7,12 @@ description: Use whenever the request involves ai-ops tickets — checking, tria
 
 The ai-ops work queue lives in Forgejo `soulwhisper/homelab-tickets` on
 `http://nas.homelab.internal:9003` (intranet-only, plain HTTP, public repo —
-both accepted). The **law** for tickets is the repo's `skills/` dir, sourced
-from `infrastructure/forgejo/skills/` here: read `README.md` (anatomy,
-lifecycle) and `acceptance.md` (per-class verification bar) before working a
-ticket. This skill is the operator procedure; on conflict, the law wins.
+both accepted). The **law** for tickets is `infrastructure/forgejo/skills/` in
+this repo — read `README.md` (anatomy, lifecycle) and `acceptance.md`
+(per-class verification bar) locally before working a ticket. The tickets
+repo holds a synced copy (`just forgejo sync`) for its own workflows; if the
+two differ, this repo is authoritative and the copy is stale. This skill is
+the operator procedure; on conflict, the law wins.
 
 Pair with `homelab-gitops` for every cluster read/change.
 
@@ -20,15 +22,20 @@ Pair with `homelab-gitops` for every cluster read/change.
   (MEDIUM/HIGH; `warning` alerts arrive as HIGH via `custom_severity_map`) →
   serialized consumer
   (`kubernetes/apps/monitoring-system/webhook-relay/app/ticket_consumer.py`).
-- **One issue per alert instance**: first body line is
-  `<!-- aiops-incident:<sha256(source, aggregation_key, fingerprint)> -->`.
-  Never edit or remove it — the consumer matches on it.
-- **Comments** are state transitions (fire / resolve / re-fire). 12h
-  re-notifications of the same state are suppressed. A new failure reopens a
-  closed issue; a resolution never closes one.
-- **Holmes** posts one `**Holmes investigation**` comment (marker
-  `<!-- aiops-holmes -->`) on create/reopen. It is a hypothesis: confirm its
-  evidence yourself; it may be absent if Holmes timed out.
+- **One issue per alert + affected workload**: first body line is
+  `<!-- aiops-incident:<sha256(source, alertname, scope)> -->`, where scope is
+  the namespace/workload/node/container labels with Deployment pod hashes
+  stripped. A rollout's new pods and a rule-error storm across many rule
+  groups land on the same ticket. Never edit or remove the marker.
+- Only Alertmanager-sourced (`PROMETHEUS`) findings are ticketed; Robusta's
+  builtin OOM/CrashLoop/ImagePull/Evicted findings go to Feishu only.
+- **Comments** are per-instance state transitions (fire / resolve /
+  re-fire). 12h re-notifications of the same state are suppressed. A new
+  failure reopens a closed issue; a resolution never closes one.
+- **Holmes** posts a `**Holmes investigation**` comment (marker
+  `<!-- aiops-holmes -->`) on create, and on reopen at most once per 6h. It is
+  a hypothesis: confirm its evidence yourself; it may be absent if Holmes
+  timed out.
 - Labels in the repo: none by default. Only add `flap` (repeated transitions)
   — don't invent a taxonomy.
 
@@ -94,7 +101,8 @@ A 404 bank means nothing retained yet — not an error.
 
 Apply `acceptance.md` for the ticket's class. Minimum for alert tickets:
 
-1. The raw rule expression is normal for the **same** labels/fingerprint.
+1. The raw rule expression is normal for the ticket's scope (same alert,
+   namespace and workload; every instance, not just one pod).
 2. A `**Event:** resolved` comment from the consumer exists (or explain why
    the alert cannot resolve yet, e.g. `for:` window).
 3. Alert/kyverno classes: re-check after 24h before calling it durable.

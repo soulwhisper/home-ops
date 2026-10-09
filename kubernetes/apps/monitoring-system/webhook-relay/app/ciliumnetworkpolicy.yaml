@@ -53,3 +53,14 @@ spec:
           rules:
             http:
               - { method: POST, path: /hooks/authentik }
+    # vmagent scrapes chaski /metrics (TicketDeliveryFailing)
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring-system
+            "app.kubernetes.io/name": vmagent
+      toPorts:
+        - ports:
+            - { port: "8081", protocol: TCP }
+          rules:
+            http:
+              - { method: GET, path: /metrics }

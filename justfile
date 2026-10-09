@@ -3,6 +3,7 @@ set quiet
 set script-interpreter := ['bash', '-euo', 'pipefail']
 set shell := ['bash', '-euo', 'pipefail', '-c']
 
+mod forgejo ".justfiles/forgejo.just"
 mod infra ".justfiles/infra.just"
 mod k8s ".justfiles/k8s.just"
 mod talos ".justfiles/talos.just"

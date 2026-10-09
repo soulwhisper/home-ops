@@ -11,6 +11,10 @@ metadata:
   name: audit-image-registries
 spec:
   background: false
+  # Audit-only: a down or slow single-replica admission controller must not
+  # block Pod creation cluster-wide (webhook default is Fail).
+  webhookConfiguration:
+    failurePolicy: Ignore
   rules:
     - name: non-allowlisted-registry
       match:

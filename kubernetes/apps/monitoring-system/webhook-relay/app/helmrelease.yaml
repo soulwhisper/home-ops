@@ -98,6 +98,14 @@ spec:
         ports:
           http:
             port: *port
+          metrics:
+            port: 8081
+    serviceMonitor:
+      app:
+        endpoints:
+          - port: metrics
+            path: /metrics
+            interval: 1m
 
     persistence:
       config:

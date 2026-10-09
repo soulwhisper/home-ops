@@ -76,12 +76,17 @@ data:
           {{- end }}
           {{- end }}
           {{- end }}
-      # Robusta runner -> local ticket consumer: one issue per alert instance
-      # (source + aggregation_key + fingerprint); re-notifications of the same
-      # state are suppressed, transitions append. Access is enforced by network
-      # identity: the relay ingress CNP admits this path only from robusta pods.
+      # Robusta runner -> local ticket consumer: one issue per alert + affected
+      # workload; re-notifications of the same state are suppressed,
+      # transitions append. Only Alertmanager-sourced findings are ticketed:
+      # Robusta's builtin playbooks (PodOOMKill, CrashLoopBackOff,
+      # ImagePullBackOff, PodEvicted) emit KUBERNETES_API_SERVER findings for
+      # the same events the OOMKilled/KubePodCrashLooping rules already cover,
+      # which would open a second ticket per incident. Those still reach Feishu.
+      # Access is enforced by network identity: the relay ingress CNP admits
+      # this path only from robusta pods.
       robusta-tickets:
-        whenExpr: 'payload.severity in ["MEDIUM", "HIGH"]'
+        whenExpr: 'payload.source == "PROMETHEUS" && payload.severity in ["MEDIUM", "HIGH"]'
         target:
           - forgejo-tickets
         message: '{{ .payload | toJSON }}'

@@ -12,6 +12,10 @@ metadata:
   name: audit-rbac-escalation
 spec:
   background: false
+  # Audit-only: a down or slow single-replica admission controller must not
+  # block RBAC writes, including Flux's, cluster-wide (webhook default is Fail).
+  webhookConfiguration:
+    failurePolicy: Ignore
   rules:
     - name: binding-to-cluster-admin
       match:

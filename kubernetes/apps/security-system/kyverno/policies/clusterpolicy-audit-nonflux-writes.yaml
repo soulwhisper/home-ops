@@ -11,6 +11,10 @@ metadata:
   name: audit-nonflux-writes
 spec:
   background: false
+  # Audit-only: a down or slow single-replica admission controller must not
+  # block writes cluster-wide (webhook default is Fail).
+  webhookConfiguration:
+    failurePolicy: Ignore
   rules:
     - name: human-write-outside-git
       match:
