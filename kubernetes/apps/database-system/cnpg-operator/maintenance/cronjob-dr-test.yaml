@@ -15,9 +15,9 @@ spec:
     # Verification script. NOTE: `barman-cloud-check-wal-archive` is a
     # *pre-flight* check for NEW servers — it fails unless the WAL archive is
     # empty — so it can never pass against this live, archiving cluster.
-    # This script instead verifies the backup chain is restorable:
-    # a base backup exists, its begin_wal is archived, and per-timeline WAL
-    # sequences have no gaps.
+    # This script checks the latest base backup's required begin-to-end WAL
+    # range in the archive. Object presence is not content validation, a
+    # restore test, or proof of PITR beyond the backup's end_wal.
     configMaps:
       scripts:
         enabled: true
@@ -34,7 +34,6 @@ spec:
             SERVER = "postgres-v1"
 
             WAL_RE = re.compile(r"^([0-9A-F]{24})(\.partial)?(\.[a-z0-9]+)?$")
-            HISTORY_RE = re.compile(r"^[0-9A-F]{8}\.history(\.[a-z0-9]+)?$")
 
             s3 = boto3.client("s3", endpoint_url=ENDPOINT)
             errors = []
@@ -53,10 +52,19 @@ spec:
                     token = resp["NextContinuationToken"]
 
 
+            def wal_position(wal, segments_per_log):
+                if not wal or not re.fullmatch(r"[0-9A-F]{24}", wal):
+                    raise ValueError(f"missing/invalid WAL segment name: {wal!r}")
+                timeline = wal[:8]
+                logid, segno = int(wal[8:16], 16), int(wal[16:24], 16)
+                if int(timeline, 16) == 0 or segno >= segments_per_log:
+                    raise ValueError(f"invalid WAL segment: {wal}")
+                return timeline, logid * segments_per_log + segno
+
+
             backup_keys = sorted(
                 k for k in list_keys(f"{SERVER}/base/") if k.endswith("/backup.info")
             )
-            begin_tli = begin_pos = None
             if not backup_keys:
                 errors.append(f"no base backups found under s3://{BUCKET}/{SERVER}/base/")
             else:
@@ -65,58 +73,73 @@ spec:
                 fields = dict(
                     line.split("=", 1) for line in info.splitlines() if "=" in line
                 )
-                begin_wal = fields.get("begin_wal")
-                if not begin_wal or not re.fullmatch(r"[0-9A-F]{24}", begin_wal):
-                    errors.append(f"{latest}: missing/invalid begin_wal in backup.info")
-                else:
-                    begin_tli, begin_pos = begin_wal[:8], int(begin_wal[8:], 16)
-                    print(f"latest backup: {latest.split('/')[-2]} begin_wal={begin_wal}")
+                try:
+                    # Barman records PostgreSQL wal_segment_size in bytes as
+                    # xlog_segment_size (normally 16777216). Require the field
+                    # rather than assuming the default for an unknown backup.
+                    segment_size = int(fields["xlog_segment_size"])
+                    if (
+                        not (1 << 20) <= segment_size <= (1 << 30)
+                        or segment_size & (segment_size - 1)
+                    ):
+                        raise ValueError("invalid xlog_segment_size")
+                    segments_per_log = (1 << 32) // segment_size
+                    begin_wal, end_wal = fields.get("begin_wal"), fields.get("end_wal")
+                    begin_tli, begin_pos = wal_position(begin_wal, segments_per_log)
+                    end_tli, end_pos = wal_position(end_wal, segments_per_log)
+                    if begin_tli != end_tli or end_pos < begin_pos:
+                        raise ValueError("incoherent begin_wal/end_wal range")
+                except (KeyError, TypeError, ValueError) as exc:
+                    errors.append(f"{latest}: invalid backup.info: {exc}")
 
-            timelines = {}
-            for key in list_keys(f"{SERVER}/wals/"):
-                name = key.rsplit("/", 1)[-1]
-                if HISTORY_RE.match(name):
-                    continue
-                m = WAL_RE.match(name)
-                if not m or m.group(2):  # skip .partial segments
-                    continue
-                seg = m.group(1)
-                # position within timeline: logid * 256 segments/log + segno
-                pos = int(seg[8:16], 16) * 0x100 + int(seg[16:24], 16)
-                timelines.setdefault(seg[:8], []).append(pos)
+                if not errors:
+                    print(
+                        f"latest backup: {latest.split('/')[-2]} "
+                        f"begin_wal={begin_wal} end_wal={end_wal} "
+                        f"xlog_segment_size={segment_size}"
+                    )
+                    positions = set()
+                    for key in list_keys(f"{SERVER}/wals/"):
+                        name = key.rsplit("/", 1)[-1]
+                        m = WAL_RE.fullmatch(name)
+                        if not m or m.group(2):  # partial WAL cannot fill a gap
+                            continue
+                        seg = m.group(1)
+                        if seg[:8] != begin_tli:
+                            continue  # old timelines and history are unrelated
+                        try:
+                            _, pos = wal_position(seg, segments_per_log)
+                        except ValueError:
+                            continue
+                        if begin_pos <= pos <= end_pos:
+                            positions.add(pos)
 
-            if not timelines:
-                errors.append(f"WAL archive s3://{BUCKET}/{SERVER}/wals/ is empty")
-            else:
-                for tli in sorted(timelines):
-                    positions = sorted(set(timelines[tli]))
+                    for label, wal, pos in (
+                        ("begin_wal", begin_wal, begin_pos),
+                        ("end_wal", end_wal, end_pos),
+                    ):
+                        if pos not in positions:
+                            errors.append(f"latest backup {label} is not archived: {wal}")
+
+                    ordered = sorted(positions)
                     gaps = [
                         (a, b)
-                        for a, b in zip(positions, positions[1:])
+                        for a, b in zip(ordered, ordered[1:])
                         if b - a != 1
                     ]
                     if gaps:
                         a, b = gaps[0]
+                        logid, segno = divmod(a + 1, segments_per_log)
                         errors.append(
-                            f"timeline {int(tli, 16)}: {len(gaps)} WAL gap(s), "
-                            f"first: {tli}{a:016X} -> {tli}{b:016X}"
+                            f"timeline {int(begin_tli, 16)}: {len(gaps)} WAL gap(s) "
+                            f"inside backup range; first missing: "
+                            f"{begin_tli}{logid:08X}{segno:08X}"
                         )
-                    print(
-                        f"timeline {int(tli, 16)}: {len(positions)} WAL segments "
-                        f"(continuous: {not gaps})"
-                    )
-
-            # latest backup must be recoverable: its begin WAL must be archived
-            if begin_tli is not None and timelines:
-                if begin_tli not in timelines:
-                    errors.append(
-                        f"latest backup timeline {int(begin_tli, 16)} has no archived WALs"
-                    )
-                elif min(timelines[begin_tli]) > begin_pos:
-                    errors.append(
-                        f"archive for timeline {int(begin_tli, 16)} starts after the "
-                        f"latest backup's begin_wal; PITR of that backup is impossible"
-                    )
+                    if not errors:
+                        print(
+                            f"required WAL range: {len(positions)} complete archived "
+                            "segments; contents and restore not tested"
+                        )
 
             for err in errors:
                 print(f"VERIFICATION FAILED: {err}")

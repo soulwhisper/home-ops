@@ -179,7 +179,6 @@ spec:
       retries: -1 # retry indefinitely until success
   rollback:
     cleanupOnFail: true
-    recreate: true
   upgrade:
     cleanupOnFail: true
     crds: CreateReplace

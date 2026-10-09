@@ -19,6 +19,16 @@ spec:
     compressor: zstd-fastest
   upload:
     maxParallelFileReads: 2
+  verification:
+    # Read all backed-up file contents; never restore over the application PVC.
+    # This is repository integrity verification, not an application restore drill.
+    quick:
+      schedule:
+        cron: "${KOPIUR_VERIFY_SCHEDULE:-0 4 * * 0}"
+        jitter: 6h
+      parallel: 2
+      fileParallelism: 2
+    verifyFilesPercent: 100
   mover:
     # app files have arbitrary ownership (root-run apps, 0600 owner-only files);
     # only uid 0 + DAC_OVERRIDE reads every file reliably, and only root
