@@ -96,7 +96,6 @@ spec:
                       retries: -1
                   rollback:
                     cleanupOnFail: true
-                    recreate: true
                   upgrade:
                     cleanupOnFail: true
                     crds: CreateReplace

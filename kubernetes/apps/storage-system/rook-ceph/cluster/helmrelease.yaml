@@ -53,16 +53,14 @@ spec:
           # never unsets cephConfig keys).
           mon_clock_drift_allowed: "0.1"
       healthCheck:
-        # ceph-cachepool is size=1 by design (rewarmable scratch, see the pool
-        # comment below); POOL_NO_REDUNDANCY would otherwise hold HEALTH_WARN
-        # and re-page CephHealthWarning forever.
+        # Intentional single-copy, rewarmable cache; durable pools remain size=3.
         muteHealthWarning:
           POOL_NO_REDUNDANCY:
             policy: mute
-      # Temporary: proceed with OSD updates even when `osd ok-to-stop` fails.
-      # ceph-cachepool is size=1, so stopping any OSD makes its PGs inactive
-      # and rook's OSD updater deadlocks. Revert to false once the cache pool
-      # is migrated to openebs-localpv (remove pool first, then this flag).
+      # Retained exception: size=1 cache PGs go inactive during an OSD stop.
+      # ceph-cache replaced local-PV to avoid kopiur mover I/O issues, not vice
+      # versa. This bypass is cluster-wide: check durable-pool health before
+      # upgrades and expect temporary cache/mover unavailability.
       continueUpgradeAfterChecksEvenIfNotHealthy: true
       cleanupPolicy:
         wipeDevicesFromOtherClusters: true
@@ -139,7 +137,7 @@ spec:
             csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
             csi.storage.k8s.io/node-stage-secret-namespace: *cluster_namespace
             csi.storage.k8s.io/fstype: ext4
-      # Cache/scratch pool: size=1 for rewarmable data
+      # Rewarmable kopiur cache: replaces local-PV without 3x write amplification.
       - name: ceph-cachepool
         spec:
           failureDomain: osd

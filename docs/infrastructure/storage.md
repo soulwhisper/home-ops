@@ -38,7 +38,9 @@ CSI secrets (`rook-csi-rbd-provisioner`, `rook-csi-rbd-node`) are auto-generated
 
 #### CephBlockPool: `ceph-cachepool`
 
-A single-replica scratch pool (`size: 1`, `failureDomain: osd`, `requireSafeReplicaSize: false`) for **rewarmable** cache/scratch data — jellyfin transcode, stirling-pdf and scrypted caches (via the `components/cache` PVC component), and the kopiur mover cache. The 3× replication write amplification of `ceph-block` buys nothing for data that rewarms; data loss on OSD failure is acceptable. `POOL_NO_REDUNDANCY` is muted in the cluster health check by design. Never use for durable data.
+A single-replica scratch pool (`size: 1`, `failureDomain: osd`, `requireSafeReplicaSize: false`) for **rewarmable** cache/scratch data — jellyfin transcode, stirling-pdf and scrypted caches (via the `components/cache` PVC component), and the kopiur mover cache. The 3× replication write amplification of `ceph-block` buys nothing for data that rewarms; data loss on OSD failure is acceptable, and an OSD stop can temporarily make cache PVCs and their movers unavailable. Never use for durable data.
+
+It replaced the previous local-PV mover cache to resolve kopiur mover I/O issues; there is no planned migration back. The `POOL_NO_REDUNDANCY` mute and `continueUpgradeAfterChecksEvenIfNotHealthy: true` remain intentional exceptions for this pool. Both affect cluster-level safety checks: verify durable pools remain healthy before upgrades; do not treat muted health as proof that every pool is redundant.
 
 ```yaml
 StorageClass:  ceph-cache
@@ -87,6 +89,7 @@ The snapshot-controller operator is deployed with `installCRDs: true` and provid
 
 Snapshots are used by kopiur's `copyMethod: Snapshot` to create consistent, instant point-in-time copies before backup.
 
+
 ### CSI Driver NFS — Synology Integration
 
 The [CSI NFS Driver](https://github.com/kubernetes-csi/csi-driver-nfs) mounts Synology NAS exports directly into pods, providing RWX access to bulk data that lives on spinning disk rather than cluster-local NVMe. Two StorageClasses correspond to the NAS's two volumes:
@@ -106,7 +109,7 @@ Both classes use `subDir: ${pvc.metadata.name}` to isolate PVCs under the share,
 
 A single cluster-scoped repository plus per-app resources generated from the `backup/` component:
 
-1. **`ClusterRepository`** (`nas`, in `storage-system`): the shared kopia repository as a first-class CR — S3 backend (dedicated `kopiur` bucket, repository at the bucket root), encryption password from 1Password, operator-managed maintenance (quick hourly, full daily 03:00, `Asia/Shanghai`), and `moverDefaults.cache`: a persistent warm kopia cache PVC (`ceph-cache`, 10Gi) inherited by every mover. Apps are separated logically by kopia identity (`<policy>@<namespace>:/pvc/<name>`), not by bucket path.
+1. **`ClusterRepository`** (`nas`, in `storage-system`): the shared kopia repository as a first-class CR — S3 backend (dedicated `kopiur` bucket, repository at the bucket root), encryption password from 1Password, operator-managed maintenance (quick hourly, full daily 03:00, `Asia/Shanghai`), and `moverDefaults.cache`: a persistent warm Kopia cache PVC (`ceph-cache`, 10Gi) per policy, inherited by every mover. Apps are separated logically by Kopia identity (`<policy>@<namespace>:/pvc/<name>`), not by bucket path.
 
 2. **`SnapshotPolicy`** (`${APP}`) + **`SnapshotSchedule`**: the recipe (`repository: {kind: ClusterRepository, name: nas}`, CSI `copyMethod: Snapshot` via `ceph-block-snapshot`, `zstd-fastest`, keep-daily 14) and its cron invocation (every 6 hours, configurable via `KOPIUR_SCHEDULE`).
 
@@ -134,6 +137,15 @@ retention:
 ```
 
 Snapshots run every 6 hours; daily snapshots are kept for 14 days.
+
+Each policy schedules quick repository verification on Sunday at 04:00
+(`Asia/Shanghai`, inherited from the repository), with up to six hours of
+deterministic jitter to spread NAS reads. `KOPIUR_VERIFY_SCHEDULE` overrides the
+cron per application. Verification reads 100% of backed-up file contents with
+two parallel workers and two file readers; it never overwrites the working PVC.
+`.status.lastVerified` records content-integrity verification, not an application
+restore drill. Isolated restore and application checks require a separate,
+approved operation.
 
 #### S3 Destination
 
@@ -176,7 +188,7 @@ plugins:
       serverName: postgres-v1
 ```
 
-S3 credentials live in the `cloudnative-pg` Kubernetes Secret (populated via ExternalSecret from 1Password). A `ScheduledBackup` resource triggers periodic full backups through the barman-cloud plugin, and a weekly `postgres-backup-verify` CronJob (Sunday 04:00) runs a custom `verify-backup-chain.py` script that verifies the backup chain is restorable — `barman-cloud-check-wal-archive` is a pre-flight check for new servers and is deliberately not used against this live, archiving cluster. Prometheus alerts fire if the last backup is older than 36 hours or the weekly verify job fails or goes missing.
+S3 credentials live in the `cloudnative-pg` Kubernetes Secret (populated via ExternalSecret from 1Password). A `ScheduledBackup` triggers periodic full backups through the barman-cloud plugin. The weekly `postgres-backup-verify` CronJob checks the latest backup's `backup.info`, including `xlog_segment_size`, and requires complete archived WAL objects from `begin_wal` through `end_wal` with no gaps. It ignores unrelated retained ranges and timelines. This checks object presence, not base-backup contents, an actual PostgreSQL restore, or PITR beyond `end_wal`; `barman-cloud-check-wal-archive` is a new-server pre-flight check and is not used here. Prometheus alerts cover failed verification, stale verification, and entirely missing completion metrics.
 
 ### Synology NAS Services
 
@@ -214,6 +226,7 @@ Each MS-01 node boots from a 256 GB industrial SSD. Production Talos configs pin
 | StorageClass | Default | Access | Provisioner | Backend |
 |-------------|:-------:|:------:|------------|---------|
 | `ceph-block` | yes | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (3-replica) |
+| `ceph-cache` | no | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (intentional single-copy, rewarmable cache) |
 | `ceph-filesystem` | no | RWX | `storage-system.cephfs.csi.ceph.com` | CephFS (3-replica) |
 | `ceph-cache` | no | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (single-replica scratch) |
 | `synology-volume1` | no | RWX | `nfs.csi.k8s.io` | NAS `/volume1` |

@@ -60,11 +60,12 @@ repos:
           - "-schema-location=https://soulwhisper.github.io/k8s-schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
         language: system
         files: ^kubernetes/.*\.ya?ml$
-        # bootstrap/ holds helmfile state files and templates, not k8s manifests.
+        # bootstrap/ is helmfile state; components/ requires Flux substitutions.
+        # Validate rendered component consumers, not their raw ${...} templates.
         # **/blueprints/ holds authentik blueprint entries — ConfigMap data with
         # no kind/apiVersion, never applied as k8s resources.
         # **/ks.yaml Flux Kustomizations omit interval/prune/sourceRef by design
         # (kubernetes/flux/cluster/cluster.yaml patches them in at reconcile
         # time), so the strict CRD schema can never pass pre-injection; CI
         # validates the rendered manifests instead.
-        exclude: ^kubernetes/bootstrap/|/blueprints/|/ks\.yaml$
+        exclude: ^kubernetes/(bootstrap|components)/|/blueprints/|/ks\.yaml$
