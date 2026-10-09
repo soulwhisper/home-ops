@@ -3,7 +3,7 @@
 apiVersion: toolhive.stacklok.dev/v1alpha1
 kind: MCPToolConfig
 metadata:
-  name: mcp-hindsight-aiops # incident-memory bank, single-bank mode
+  name: mcp-hindsight-ops # incident-memory bank, single-bank mode
 spec:
   toolsFilter:
     - retain

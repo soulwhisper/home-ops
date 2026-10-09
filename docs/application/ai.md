@@ -26,7 +26,7 @@ flowchart TB
         VMCP-RO["internal-ro<br/>(7 servers: monitoring/k8s)"]
         VMCP-RW["internal-rw<br/>(3 servers: home/smart)"]
         VMCP-EXT["external<br/>(3 servers: web/search)"]
-        VMCP-AIOPS["aiops<br/>(1 server: incident memory)"]
+        VMCP-OPS["internal-ops<br/>(1 server: incident memory)"]
     end
 
     subgraph Obs["Observability"]
@@ -39,7 +39,7 @@ flowchart TB
     AG-MCP --> VMCP-RO
     AG-MCP --> VMCP-RW
     AG-MCP --> VMCP-EXT
-    AG-MCP --> VMCP-AIOPS
+    AG-MCP --> VMCP-OPS
     Clients --> Obs
 ```
 
@@ -88,7 +88,7 @@ The gateway API surface is exposed to the intranet via `kgateway-internal` (10.1
 - `/v1/chat/completions` — LLM lanes (strict API key; promptGuard on all but `uncensored`)
 - `/v1/models` — gateway-synthesized lane discovery (`studio-models` directResponse; keep in sync with Studio Model Registry)
 - `/v1/embeddings`, `/v1/rerank`, `/v1/audio/*` — media lanes via LLM-pipeline backends (strict API key)
-- `/mcp/ro`, `/mcp/rw`, `/mcp/ext`, `/mcp/aiops` — tiered MCP routing (strict API key, mcp-guardrails ExtMCP on every tier, FailClosed)
+- `/mcp/ro`, `/mcp/rw`, `/mcp/ext`, `/mcp/ops` — tiered MCP routing (strict API key, mcp-guardrails ExtMCP on every tier, FailClosed)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)
 
 TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirprime.com`); external-dns auto-creates the AdGuardHome record. Machine clients authenticate with agentgateway API keys — no SSO extAuth on API paths. Reachable from trusted VLANs (10/100/200); IoT VLAN 210 is ACL-blocked from RFC1918.
@@ -121,7 +121,7 @@ to the canonical `/mcp` upstream):
 - `/mcp/ro` → `vmcp-internal-ro` — read-only monitoring/k8s tools
 - `/mcp/rw` → `vmcp-internal-rw` — read-write home/smart tools
 - `/mcp/ext` → `vmcp-external` — external web/search tools
-- `/mcp/aiops` → `vmcp-aiops` — ai-ops incident memory (hindsight aiops bank)
+- `/mcp/ops` → `vmcp-internal-ops` — ops incident memory (hindsight aiops bank)
 
 All four backends carry the mcp-guardrails ExtMCP sidecar (agentgateway
 `mcp.guardrails`): `tools/call` is scanned request+response, `tools/list` /
@@ -235,11 +235,11 @@ user access; no PAT was provisioned or broadened.
 | firecrawl | Streamable HTTP :8080 | Local Firecrawl instance |
 | context7  | stdio :3000           | Context7 API             |
 
-#### aiops (isolated incident/RCA memory)
+#### internal-ops (isolated incident/RCA memory)
 
 | Server          | Transport             | Notes                                       |
 | --------------- | --------------------- | ------------------------------------------- |
-| hindsight-aiops | Streamable HTTP :8080 (proxy→:8888) | Hindsight `aiops` bank; isolated tier, no chat-tier consumers |
+| hindsight-ops | Streamable HTTP :8080 (proxy→:8888) | Hindsight `aiops` bank; isolated tier, no chat-tier consumers |
 
 #### Obsidian facts workflow
 
@@ -395,7 +395,7 @@ items:
             ├─ omni         (guarded) ─► minicpm-o-4.5
 /v1/embeddings /v1/rerank /v1/audio/*  (media: alias ─► override ─► folder id; audio: direct)
 
-/mcp/ro /mcp/rw /mcp/ext /mcp/aiops  (all tiers: mcp-guardrails ExtMCP, FailClosed) ── every MCP client
+/mcp/ro /mcp/rw /mcp/ext /mcp/ops  (all tiers: mcp-guardrails ExtMCP, FailClosed) ── every MCP client
 ```
 
 All routing is internal via the agent gateway. No app has direct LLM or MCP server access — the gateway is the single choke point for auth, routing, guardrails, and observability.

@@ -48,13 +48,13 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: mcp-backend-aiops
+  name: mcp-backend-ops
 spec:
   mcp:
     targets:
-      - name: vmcp-aiops
+      - name: vmcp-internal-ops
         static:
-          host: vmcp-aiops.servitor-apps.svc.cluster.local
+          host: vmcp-internal-ops.servitor-apps.svc.cluster.local
           path: /mcp
           port: 4483
           protocol: StreamableHTTP

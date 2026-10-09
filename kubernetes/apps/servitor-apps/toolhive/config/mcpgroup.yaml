@@ -28,6 +28,6 @@ spec:
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPGroup
 metadata:
-  name: aiops
+  name: internal-ops
 spec:
-  description: "AI-ops isolation tier. Incident and RCA memory bank; separate from chat-tier consumers to prevent memory leakage into conversational context."
+  description: "Ops isolation tier. Incident and RCA memory bank; separate from chat-tier consumers to prevent memory leakage into conversational context."

@@ -221,7 +221,7 @@ The two kgateway gateways use the `kgateway` GatewayClass with TLS termination v
 | `/mcp/ro`  | internal read-only            |
 | `/mcp/rw`  | internal read-write           |
 | `/mcp/ext` | external                      |
-| `/mcp/aiops` | internal AI-ops             |
+| `/mcp/ops` | internal ops                 |
 
 All four tiers are FailClosed — each backend carries the mcp-guardrails sidecar regardless of the LLM lane the client used.
 

@@ -9,8 +9,8 @@ resources:
   - ./forgejo/ks.yaml
   - ./github/ks.yaml
   - ./grafana/ks.yaml
-  - ./hindsight-aiops/ks.yaml
   - ./hindsight-homelab/ks.yaml
+  - ./hindsight-ops/ks.yaml
   - ./home-assistant/ks.yaml
   - ./kubernetes/ks.yaml
   - ./trendradar/ks.yaml

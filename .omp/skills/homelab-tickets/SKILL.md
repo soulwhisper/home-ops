@@ -80,8 +80,8 @@ Duplicates: comment `duplicate of #<survivor>` and close the loser
 ## 3. Recall before diagnosing
 
 Ask incident memory whether this was seen before (aiops bank, isolated from
-chat memory). Prefer the `hindsight-aiops` MCP `reflect`/`recall` tools via
-`https://api.noirprime.com/mcp/aiops` when available; otherwise REST:
+chat memory). Prefer the `hindsight-ops` MCP `reflect`/`recall` tools via
+`https://api.noirprime.com/mcp/ops` when available; otherwise REST:
 
 ```bash
 kubectl -n selfhosted-apps port-forward svc/hindsight 18888:8888 &

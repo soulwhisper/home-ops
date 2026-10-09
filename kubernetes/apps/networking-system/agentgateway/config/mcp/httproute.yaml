@@ -7,7 +7,7 @@
 # MCP has no open lane: every tier carries the mcp-guardrails ExtMCP sidecar
 # (FailClosed) via the backend policy, regardless of which LLM lane the client
 # used. Auth: mcp-api-auth (strict API key, shared chat-tier credential).
-# /mcp/aiops is NOT here — it lives on its own route below with a distinct
+# /mcp/ops is NOT here — it lives on its own route below with a distinct
 # credential so chat-tier key holders cannot reach incident memory.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -63,13 +63,13 @@ spec:
           name: mcp-backend-ext
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
-# ai-ops isolation tier on a separate route: the mcp-aiops-auth policy binds a
+# ops isolation tier on a separate route: the mcp-ops-auth policy binds a
 # distinct credential (never issued to chat-tier apps), so the shared
 # llm-api-auth key cannot reach incident memory through this path.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: agentgateway-mcp-aiops-route
+  name: agentgateway-mcp-ops-route
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
@@ -79,7 +79,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /mcp/aiops
+            value: /mcp/ops
       filters:
         - type: URLRewrite
           urlRewrite:
@@ -89,4 +89,4 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: mcp-backend-aiops
+          name: mcp-backend-ops

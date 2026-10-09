@@ -1,6 +1,6 @@
 # Application Catalog
 
-79 applications and 14 MCP servers across 12 namespaces, managed via Flux GitOps.
+79 applications, 13 backend MCP servers, and 4 ToolHive VirtualMCP tiers across 12 namespaces, managed via Flux GitOps.
 
 ## kube-system — Cluster Infrastructure (10)
 
@@ -131,8 +131,8 @@
 | ------------- | ------------------------------------------------------------------------------------------- |
 | Hermes Agent  | AI agent suite (Feishu, cron/automation)                                                    |
 | Open WebUI    | AI chat frontend (native MCP via ToolHive tiers; oikb + terminals companions)               |
-| ToolHive      | MCP gateway (4 VirtualMCP tiers: internal-ro/internal-rw/external/aiops, semantic search)   |
-| MCP Servers   | context/firecrawl/fluxcd/forgejo/github/grafana/hindsight-aiops/hindsight-homelab/home-assistant/kubernetes/trendradar/victoria-logs/victoria-metrics |
+| ToolHive      | MCP gateway (4 VirtualMCP tiers: internal-ro/internal-rw/external/internal-ops, semantic search)   |
+| MCP Servers   | context/firecrawl/fluxcd/forgejo/github/grafana/hindsight-homelab/hindsight-ops/home-assistant/kubernetes/trendradar/victoria-logs/victoria-metrics |
 
 ## gaming-apps — Gaming (3)
 
