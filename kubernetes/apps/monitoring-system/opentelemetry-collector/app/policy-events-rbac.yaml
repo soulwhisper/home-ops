@@ -1,0 +1,29 @@
+---
+apiVersion: coordination.k8s.io/v1
+kind: Lease
+metadata:
+  name: opentelemetry-policy-events
+# Flux creates the lease; the collector may only read/update this one lease.
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: opentelemetry-policy-events
+rules:
+  - apiGroups: [coordination.k8s.io]
+    resources: [leases]
+    resourceNames: [opentelemetry-policy-events]
+    verbs: [get, update, patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: opentelemetry-policy-events
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: opentelemetry-policy-events
+subjects:
+  - kind: ServiceAccount
+    name: opentelemetry-collector
+    namespace: monitoring-system

@@ -12,17 +12,14 @@ data:
       feishu:
         apprise:
           url: 'feishu://{{ env "FEISHU_TOKEN" }}'
-      # ai-ops ticket fan-out: Forgejo homelab-tickets issues (create via REST;
-      # token from FORGEJO_TICKETS_TOKEN, see externalsecret prerequisite).
-      # Cleartext HTTP to the NAS is an accepted risk: wired VLAN 100 LAN only,
-      # same posture as mcp-forgejo/NFS/RGW. Duplicate sources by design:
-      # alertmanager repeat_interval (12h) re-notifies and chaski retries
-      # after 5xx — consumer-side merge on aggregation_key handles both.
+      # Serialized, repo-backed dedupe: chaski sends findings to the local
+      # consumer; only that consumer holds the Forgejo PAT and calls the NAS.
+      # NAS HTTP is an accepted wired-LAN risk, not transport encryption.
       forgejo-tickets:
         http:
-          url: http://nas.homelab.internal:9003/api/v1/repos/soulwhisper/homelab-tickets/issues
+          url: http://127.0.0.1:8082/findings
+          timeout: 120s
           headers:
-            Authorization: 'token {{ env "FORGEJO_TICKETS_TOKEN" }}'
             Content-Type: application/json
 
     routes:
@@ -79,26 +76,15 @@ data:
           {{- end }}
           {{- end }}
           {{- end }}
-      # Robusta runner -> Forgejo homelab-tickets (fed by the second sink at
-      # /hooks/robusta-tickets). Ticket floor MEDIUM+; Forgejo has no
-      # idempotency, so dedupe on aggregation_key is the consumer's (omp) job.
+      # Robusta runner -> local ticket consumer. Exact retries are suppressed;
+      # changed findings append to the same source/aggregation_key incident.
       # Access is enforced by network identity: the relay ingress CNP admits
       # this path only from robusta pods.
       robusta-tickets:
         whenExpr: 'payload.severity in ["MEDIUM", "HIGH"]'
         target:
           - forgejo-tickets
-        message: |-
-          {{- $sev := .payload.severity | default "INFO" -}}
-          {{- $sub := .payload.subject | default dict -}}
-          {{- $title := printf "[%s] %s" $sev (.payload.title | default "robusta finding") -}}
-          {{- $body := printf "**Source:** %s | **Aggregation key:** `%s` | **Fingerprint:** `%s`\n**Subject:** %s `%s` (ns `%s`)\n\n%s"
-                (.payload.source | default "unknown")
-                (.payload.aggregation_key | default "n/a")
-                (.payload.fingerprint | default "n/a")
-                ($sub.kind | default "?") ($sub.name | default "?") ($sub.namespace | default "-")
-                (.payload.description | default "no description") -}}
-          {{ dict "title" $title "body" $body | toJSON }}
+        message: '{{ .payload | toJSON }}'
       # authentik system notifications (blueprints/core/notifications.yaml)
       authentik:
         target:

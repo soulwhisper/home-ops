@@ -1,10 +1,10 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kyverno.io/clusterpolicy_v1.json
 # Decision-gate detector for the AI-ops executor (P2 precursor). AUDIT ONLY:
-# failureAction: Audit records PolicyReports, blocks nothing. It answers the
-# question "who besides the expected actors deletes pods in app namespaces?"
-# — the evidence base for later writing the enforce-mode allow-list without
-# breaking legit flows (flux recreates, node drains, operator restarts).
+# failureAction: Audit blocks nothing. DELETE reports may disappear with the
+# Pod; OTel exports PolicyViolation events (including actor/target in the note)
+# to VictoriaLogs for the observation window. Event TTL/collector gaps still
+# preclude claiming a complete API audit trail.
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:

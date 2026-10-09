@@ -9,3 +9,9 @@ resources:
   # utils
   - ./configmap.yaml
   - ./externalsecret.yaml
+configMapGenerator:
+  - name: webhook-relay-tickets
+    files:
+      - ticket_consumer.py
+generatorOptions:
+  disableNameSuffixHash: true

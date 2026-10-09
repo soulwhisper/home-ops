@@ -9,3 +9,4 @@ resources:
   # utils
   - ./referencegrant.yaml
   - ./externalsecret.yaml
+  - ./policy-events-rbac.yaml

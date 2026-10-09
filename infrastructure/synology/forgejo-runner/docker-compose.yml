@@ -10,13 +10,16 @@ services:
     image: "code.forgejo.org/forgejo/runner:13.2.0"
     container_name: "forgejo-runner"
     restart: "unless-stopped"
+    working_dir: /data
+    # NAS socket/data access uses root; full host control is accepted below.
+    user: "0:0"
     cpus: 2.0
     mem_limit: 3g
     mem_reservation: 512m
     environment:
       - "DOCKER_HOST=unix:///var/run/docker.sock"
       # passed through from the NAS-side compose env; required for first
-      # registration, unused afterwards (config.yml persists the runner)
+      # registration, unused afterwards (.runner persists the runner identity)
       - "FORGEJO_RUNNER_TOKEN=${FORGEJO_RUNNER_TOKEN}"
       - "FORGEJO_INSTANCE_URL=http://nas.homelab.internal:9003"
       - "FORGEJO_RUNNER_NAME=nas-docker"
@@ -30,16 +33,15 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/volume3/docker/forgejo-runner:/data"
-    command: >
-      sh -ec 'if [ ! -s /data/config.yml ]; then
-                forgejo-runner register --no-interactive
-                  --instance "$${FORGEJO_INSTANCE_URL}"
-                  --token "$${FORGEJO_RUNNER_TOKEN}"
-                  --name "$${FORGEJO_RUNNER_NAME}"
-                  --labels "$${FORGEJO_RUNNER_LABELS}"
-                  --config /data/config.yml;
+    command: |
+      sh -ec 'if [ ! -s /data/.runner ]; then
+                forgejo-runner register --no-interactive \
+                  --instance "$${FORGEJO_INSTANCE_URL}" \
+                  --token "$${FORGEJO_RUNNER_TOKEN}" \
+                  --name "$${FORGEJO_RUNNER_NAME}" \
+                  --labels "$${FORGEJO_RUNNER_LABELS}";
               fi;
-              exec forgejo-runner daemon --config /data/config.yml'
+              exec forgejo-runner daemon'
     healthcheck:
       test: ["CMD", "forgejo-runner", "--version"]
       interval: 60s

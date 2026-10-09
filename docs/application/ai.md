@@ -226,7 +226,14 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | -------------- | -------------------- | ---------------------- |
 | home-assistant | HTTP (FastMCP) :8086 | Home Assistant         |
 | hindsight      | HTTP proxy :8080     | Hindsight MCP endpoint |
-| forgejo        | Streamable HTTP :8080 | Forgejo on nas:9003 via forgejo-mcp; read+write via forwarded user PAT |
+| forgejo        | Streamable HTTP :8080 | Forgejo on nas:9003 via forgejo-mcp; forwarded repo-scoped `pat_tickets`, with MCP tools allowlisted to ticket writes and repository reads in `homelab-tickets` |
+
+Forgejo's shared PAT retains repository-write scope for the manual lessons
+workflow, but the model-facing `MCPToolConfig` excludes file/branch/workflow
+writes, action dispatch, and administration. ToolHive rejects direct calls to
+excluded tools, not just their discovery. This keeps the NAS-root-capable runner's
+workflow definitions operator-controlled. It does not restore draftbox or broad
+user access; no PAT was provisioned or broadened.
 
 #### external (full egress)
 

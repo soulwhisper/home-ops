@@ -22,6 +22,9 @@ spec:
       hostUsers: false
     controllers:
       *name :
+        # A second live consumer could race the repo-backed check/create.
+        replicas: 1
+        strategy: Recreate
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
@@ -32,9 +35,11 @@ spec:
             env:
               CHASKI_CONFIG: /config/chaski.yaml
               CHASKI_PORT: &port 8080
-            envFrom:
-              - secretRef:
-                  name: *name
+              FEISHU_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: *name
+                    key: FEISHU_TOKEN
             probes:
               liveness: &probes
                 enabled: true
@@ -53,6 +58,37 @@ spec:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
+          tickets:
+            image:
+              repository: docker.io/library/python
+              tag: 3.13.9-alpine3.22
+            command: ["python3", "-B", "/tickets/ticket_consumer.py"]
+            probes:
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command: ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8082/healthz"]
+                  timeoutSeconds: 2
+                  periodSeconds: 10
+            env:
+              FORGEJO_REPO_URL: http://nas.homelab.internal:9003/api/v1/repos/soulwhisper/homelab-tickets
+              FORGEJO_TICKETS_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: *name
+                    key: FORGEJO_TICKETS_TOKEN
+            resources:
+              requests: { cpu: 10m, memory: 32Mi }
+              limits: { memory: 128Mi }
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 65534
+              runAsGroup: 65534
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              readOnlyRootFilesystem: true
     service:
       app:
         ports:
@@ -66,3 +102,11 @@ spec:
         defaultMode: 0775
         globalMounts:
           - readOnly: true
+      tickets:
+        type: configMap
+        name: webhook-relay-tickets
+        advancedMounts:
+          webhook-relay:
+            tickets:
+              - path: /tickets
+                readOnly: true
