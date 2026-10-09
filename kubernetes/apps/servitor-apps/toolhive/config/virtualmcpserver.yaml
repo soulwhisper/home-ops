@@ -168,7 +168,7 @@ spec:
       semanticDistanceThreshold: "0.8"
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
-# ops isolation tier: only ops-domain backends (hindsight aiops bank).
+# ops isolation tier: only ops-domain backends (hindsight ops bank).
 # Separate group so chat-tier consumers (open-webui /mcp/ro|rw|ext) can never
 # retain into incident memory; reached via agentgateway /mcp/ops only.
 apiVersion: toolhive.stacklok.dev/v1beta1

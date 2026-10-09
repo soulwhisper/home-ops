@@ -1,6 +1,6 @@
 ---
 name: homelab-tickets
-description: Use whenever the request involves ai-ops tickets — checking, triaging or working Forgejo homelab-tickets issues, fixing/verifying/closing an incident, writing a lesson (learnings/), or recalling/retaining incident memory (hindsight aiops bank). Trigger for "check tickets", "work the ticket queue", "what's open in homelab-tickets", "close #N", "write the lesson", "did we see this before".
+description: Use whenever the request involves ai-ops tickets — checking, triaging or working Forgejo homelab-tickets issues, fixing/verifying/closing an incident, writing a lesson (learnings/), or recalling/retaining incident memory (hindsight ops bank). Trigger for "check tickets", "work the ticket queue", "what's open in homelab-tickets", "close #N", "write the lesson", "did we see this before".
 ---
 
 # homelab-tickets: check → fix → verify → learn → remember
@@ -79,13 +79,13 @@ Duplicates: comment `duplicate of #<survivor>` and close the loser
 
 ## 3. Recall before diagnosing
 
-Ask incident memory whether this was seen before (aiops bank, isolated from
+Ask incident memory whether this was seen before (ops bank, isolated from
 chat memory). Prefer the `hindsight-ops` MCP `reflect`/`recall` tools via
 `https://api.noirprime.com/mcp/ops` when available; otherwise REST:
 
 ```bash
 kubectl -n selfhosted-apps port-forward svc/hindsight 18888:8888 &
-curl -fsS -X POST http://127.0.0.1:18888/v1/default/banks/aiops/memories/recall \
+curl -fsS -X POST http://127.0.0.1:18888/v1/default/banks/ops/memories/recall \
   -H 'Content-Type: application/json' \
   -d '{"query":"<alertname> <namespace>/<workload> <symptom>","max_tokens":2000}' | jq '.results'
 ```
@@ -142,11 +142,11 @@ comment on the existing lesson's ticket instead of a new lesson.
 
 ## 8. Remember (incident memory)
 
-Retain one distilled entry per closed incident into the aiops bank — facts
+Retain one distilled entry per closed incident into the ops bank — facts
 only, no secrets, no raw log dumps:
 
 ```bash
-curl -fsS -X POST http://127.0.0.1:18888/v1/default/banks/aiops/memories \
+curl -fsS -X POST http://127.0.0.1:18888/v1/default/banks/ops/memories \
   -H 'Content-Type: application/json' -d '{"items":[{
     "content":"<alertname> on <ns>/<workload>: root cause <...>; fixed by home-ops#<PR>; verify with <query>.",
     "context":"homelab-tickets#<N>",

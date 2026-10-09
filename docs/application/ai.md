@@ -121,7 +121,7 @@ to the canonical `/mcp` upstream):
 - `/mcp/ro` → `vmcp-internal-ro` — read-only monitoring/k8s tools
 - `/mcp/rw` → `vmcp-internal-rw` — read-write home/smart tools
 - `/mcp/ext` → `vmcp-external` — external web/search tools
-- `/mcp/ops` → `vmcp-internal-ops` — ops incident memory (hindsight aiops bank)
+- `/mcp/ops` → `vmcp-internal-ops` — ops incident memory (hindsight ops bank)
 
 All four backends carry the mcp-guardrails ExtMCP sidecar (agentgateway
 `mcp.guardrails`): `tools/call` is scanned request+response, `tools/list` /
@@ -239,7 +239,7 @@ user access; no PAT was provisioned or broadened.
 
 | Server          | Transport             | Notes                                       |
 | --------------- | --------------------- | ------------------------------------------- |
-| hindsight-ops | Streamable HTTP :8080 (proxy→:8888) | Hindsight `aiops` bank; isolated tier, no chat-tier consumers |
+| hindsight-ops | Streamable HTTP :8080 (proxy→:8888) | Hindsight `ops` bank; isolated tier, no chat-tier consumers |
 
 #### Obsidian facts workflow
 
