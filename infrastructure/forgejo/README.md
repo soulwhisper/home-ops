@@ -32,8 +32,8 @@ operator step. The tickets repo also tracks `learnings/` — written by the
 lessons workflow, never by sync; the recipe does not touch it.
 
 The lessons workflow needs two repository Actions secrets in the tickets repo:
-`FORGEJO_TOKEN` (`pat_tickets`) and `LLM_API_KEY`
-(`llm-api.agentgateway_api_auth`).
+`TICKETS_TOKEN` (`pat_tickets`; Forgejo reserves the `FORGEJO_`/`GITEA_`
+prefixes) and `LLM_API_KEY` (`llm-api.agentgateway_api_auth`).
 
 ## Runner
 
