@@ -44,6 +44,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Run backup verifier regressions
+        run: python3 -m unittest discover -s .github/scripts -p test_backup_verifier.py
+
       - name: Install flate
         uses: home-operations/flate/action@v0.6.5
         with:

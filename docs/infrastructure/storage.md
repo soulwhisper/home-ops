@@ -19,6 +19,11 @@ Ceph-level tuning:
 
 The Ceph dashboard is exposed internally with TLS termination via kgateway `BackendConfigPolicy` and its admin password sourced from 1Password through an `ExternalSecret`.
 
+The `ceph-cache` pool also uses three replicas across hosts. Cache data remains
+rewarmable, but an OSD stop must not make its PGs unavailable or require a
+cluster-wide upgrade-check bypass. Rook requires normal health checks before
+daemon upgrades; `POOL_NO_REDUNDANCY` is not muted.
+
 #### CephBlockPool: `ceph-block`
 
 The default block pool backs RWO (`ReadWriteOnce`) PVCs across all namespaces. It is the cluster's **default StorageClass**.
@@ -136,6 +141,15 @@ retention:
 
 Snapshots run every 6 hours; daily snapshots are kept for 14 days.
 
+Each policy schedules quick repository verification on Sunday at 04:00
+(`Asia/Shanghai`, inherited from the repository), with up to six hours of
+deterministic jitter to spread NAS reads. `KOPIUR_VERIFY_SCHEDULE` overrides the
+cron per application. Verification reads 100% of backed-up file contents with
+two parallel workers and two file readers; it never overwrites the working PVC.
+`.status.lastVerified` records content-integrity verification, not an application
+restore drill. Isolated restore and application checks require a separate,
+approved operation.
+
 #### S3 Destination
 
 All backups target the Synology-hosted **VersityGW** S3 gateway at `http://nas.homelab.internal:9000`, in the dedicated `s3://kopiur` bucket (provisioned by `just versity init`). S3 credentials are sourced from 1Password via the `secret/` component — an `ExternalSecret` per consumer namespace materializing `kopiur-repository-secret`, which backup movers read in their own namespace:
@@ -177,7 +191,7 @@ plugins:
       serverName: postgres-v1
 ```
 
-S3 credentials live in the `cloudnative-pg` Kubernetes Secret (populated via ExternalSecret from 1Password). A `ScheduledBackup` resource triggers periodic full backups through the barman-cloud plugin, and a weekly `CronJob` runs `barman-cloud-check-wal-archive` to verify the backup chain integrity. Prometheus alerts fire if the last backup is older than 36 hours or the WAL archive check fails.
+S3 credentials live in the `cloudnative-pg` Kubernetes Secret (populated via ExternalSecret from 1Password). A `ScheduledBackup` triggers periodic full backups through the barman-cloud plugin. The weekly `postgres-backup-verify` CronJob checks the latest backup's `backup.info`, including `xlog_segment_size`, and requires complete archived WAL objects from `begin_wal` through `end_wal` with no gaps. It ignores unrelated retained ranges and timelines. This checks object presence, not base-backup contents, an actual PostgreSQL restore, or PITR beyond `end_wal`; `barman-cloud-check-wal-archive` is a new-server pre-flight check and is not used here. Prometheus alerts cover failed verification, stale verification, and entirely missing completion metrics.
 
 ### Synology NAS Services
 

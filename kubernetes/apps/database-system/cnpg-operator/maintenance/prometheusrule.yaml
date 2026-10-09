@@ -58,14 +58,16 @@ spec:
               The weekly backup-chain verification job has reported a failure.
               The S3 backup chain may be broken — recent backups might not be
               restorable. Check the job logs for the failing condition
-              (no backups, WAL gaps, or missing begin_wal for latest backup).
+              (no backups, invalid backup metadata, WAL gaps, or missing begin/end WAL).
         - alert: PostgresBackupVerifyMissing
           expr: |
             (time() - max(kube_job_status_completion_time{namespace="database-system",job_name=~"postgres-backup-verify-.*"})) > 60 * 60 * 24 * 10
+            or absent(kube_job_status_completion_time{namespace="database-system",job_name=~"postgres-backup-verify-.*"})
           for: 1h
           labels: { severity: warning }
           annotations:
             summary: Postgres backup verification has not run in 10 days
             description: |
               No successful run of postgres-backup-verify in the last 10 days
-              (expected weekly). CronJob may be suspended or pod scheduling blocked.
+              (or completion metrics are missing; expected weekly).
+              CronJob may be suspended or pod scheduling blocked.

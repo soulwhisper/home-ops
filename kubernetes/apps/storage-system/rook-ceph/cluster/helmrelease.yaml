@@ -52,18 +52,8 @@ spec:
           # 3-mon homelab; revert by setting "0.05" explicitly (rook sets but
           # never unsets cephConfig keys).
           mon_clock_drift_allowed: "0.1"
-      healthCheck:
-        # ceph-cachepool is size=1 by design (rewarmable scratch, see the pool
-        # comment below); POOL_NO_REDUNDANCY would otherwise hold HEALTH_WARN
-        # and re-page CephHealthWarning forever.
-        muteHealthWarning:
-          POOL_NO_REDUNDANCY:
-            policy: mute
-      # Temporary: proceed with OSD updates even when `osd ok-to-stop` fails.
-      # ceph-cachepool is size=1, so stopping any OSD makes its PGs inactive
-      # and rook's OSD updater deadlocks. Revert to false once the cache pool
-      # is migrated to openebs-localpv (remove pool first, then this flag).
-      continueUpgradeAfterChecksEvenIfNotHealthy: true
+      # Require normal Ceph health checks before upgrading daemons.
+      continueUpgradeAfterChecksEvenIfNotHealthy: false
       cleanupPolicy:
         wipeDevicesFromOtherClusters: true
       dashboard:
@@ -139,13 +129,12 @@ spec:
             csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
             csi.storage.k8s.io/node-stage-secret-namespace: *cluster_namespace
             csi.storage.k8s.io/fstype: ext4
-      # Cache/scratch pool: size=1 for rewarmable data
+      # Cache/scratch data also spans hosts so maintenance can stop an OSD safely.
       - name: ceph-cachepool
         spec:
-          failureDomain: osd
+          failureDomain: host
           replicated:
-            size: 1
-            requireSafeReplicaSize: false
+            size: 3
           parameters:
             compression_mode: none
         storageClass:
