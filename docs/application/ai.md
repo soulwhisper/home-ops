@@ -135,9 +135,6 @@ passing it unguarded). There is deliberately **no** unguarded MCP route —
 open-webui and hermes consume the same guarded endpoints; only the LLM
 content lanes differ. Auth: strict API key (`mcp-api-auth`). Direct vmcp
 access is cilium-restricted to the gateway federation and vmagent metrics.
-
-`mcp-reflex` (member of `internal-ro`, image `ghcr.io/soulwhisper/reflex`) is a **System-1 routing advisor** (laya typed decisions — no generation, MacStudio-independent): `route_mcp`/`route_tool`/`route_profile` suggest which backend/tool/profile fits a request. Advisory only; nothing enforces its output. Every decision emits one OTEL span (`gen_ai.system=reflex`, `OTEL_TRACES_SAMPLER=always_on` because toolhive proxy parents sample at 5%) → `traces/servitor` → langfuse; exported spans are the shadow dataset for the fine-tune path. Policy criteria live in `mcp/reflex/app/configmap.yaml`, seeded from the live internal-ro tool surface.
-
 ---
 
 ## LLM Inference — Local
@@ -218,7 +215,6 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | fluxcd        | HTTP :9090            | Flux (read-only SA)           |
 | trendradar    | Streamable HTTP :8080 (proxy→:3333) | TrendRadar news DB |
 | victoria-metrics | Streamable HTTP :8081 | VictoriaMetrics         |
-| reflex      | Streamable HTTP :9000 | System-1 routing advisor (laya) |
 
 #### internal-rw (read-write, no egress)
 
