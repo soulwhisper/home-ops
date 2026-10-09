@@ -106,7 +106,7 @@ spec:
               # OpenVINO on the Iris Xe iGPU (13900H): accelerates Smart
               # Search / Face Detection, offloads CPU. Docs note higher RAM
               # use vs CPU — limit raised accordingly.
-              tag: v3.3.0-openvino
+              tag: v3.3.1-openvino
             env:
               TRANSFORMERS_CACHE: /cache
             envFrom: *envFrom
