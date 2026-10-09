@@ -261,7 +261,7 @@ spec:
     namespace: gitops-system
 ```
 
-This cross-namespace reference is used by 40 HelmReleases across 8 namespaces:
+This cross-namespace reference is used by 39 HelmReleases across 8 namespaces:
 
 | Namespace         | Count | Example Apps                                                                                                                                                         |
 | ----------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

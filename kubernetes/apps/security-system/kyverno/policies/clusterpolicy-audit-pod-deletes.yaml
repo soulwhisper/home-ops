@@ -33,12 +33,16 @@ spec:
       exclude:
         any:
           # expected actors: built-in kube-system controllers (rs/sts/job/gc
-          # delete pods on every rollout), kyverno cleanup, in-namespace
-          # operators, the future executor (robusta runner), and flux
-          # (drift correction); cluster-admin users via clusterRoles below
+          # delete pods on every rollout), kubelets (status manager issues the
+          # final grace-period-0 DELETE after every termination), kyverno
+          # cleanup, in-namespace operators, the future executor (robusta
+          # runner), and flux (drift correction); cluster-admin users via
+          # clusterRoles below
           - subjects:
               - kind: Group
                 name: "system:serviceaccounts:kube-system"
+              - kind: Group
+                name: "system:nodes"
               - kind: ServiceAccount
                 name: kyverno-cleanup-controller
                 namespace: security-system

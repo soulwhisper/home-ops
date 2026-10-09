@@ -45,10 +45,18 @@ Reads need no token (public repo):
 
 ```bash
 F=http://nas.homelab.internal:9003/api/v1/repos/soulwhisper/homelab-tickets
-curl -fsS "$F/issues?state=open&type=issues&limit=50" |
-  jq -r '.[] | [.number, .updated_at[:16], .comments, .title] | @tsv'
+# paginate: Forgejo caps pages at 50; loop until a short page
+for p in $(seq 1 100); do
+  page=$(curl -fsS "$F/issues?state=open&type=issues&limit=50&page=$p")
+  echo "$page" | jq -r '.[] | [.number, .updated_at[:16], .comments, .title] | @tsv'
+  [ "$(echo "$page" | jq length)" -lt 50 ] && break
+done
 curl -fsS "$F/issues/<N>" | jq -r .body                 # finding + markers
-curl -fsS "$F/issues/<N>/comments?limit=50" | jq -r '.[] | .created_at[:16] + "\n" + .body + "\n---"'
+for p in $(seq 1 100); do                                # full comment timeline
+  page=$(curl -fsS "$F/issues/<N>/comments?limit=50&page=$p")
+  echo "$page" | jq -r '.[] | .created_at[:16] + "\n" + .body + "\n---"'
+  [ "$(echo "$page" | jq length)" -lt 50 ] && break
+done
 ```
 
 Triage order: HIGH before MEDIUM, then oldest. For each, decide in one line:

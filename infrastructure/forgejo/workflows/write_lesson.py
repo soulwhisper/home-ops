@@ -36,6 +36,17 @@ def post_json(url, headers, body):
         return json.load(r)
 
 
+def get_all(url, headers, limit=50):
+    """GET every page of a Forgejo list endpoint (server caps page size at 50)."""
+    items, page = [], 1
+    while True:
+        batch = get_json(f"{url}?limit={limit}&page={page}", headers)
+        items.extend(batch)
+        if len(batch) < limit:
+            return items
+        page += 1
+
+
 def slugify(title):
     """Lowercase, filesystem-safe slug of the ticket title (max 60 chars)."""
     slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
@@ -44,7 +55,9 @@ def slugify(title):
 
 forgejo = {"Authorization": f"token {TOKEN}", "Accept": "application/json"}
 issue = get_json(f"{FORGEJO_API}/repos/{REPO}/issues/{TICKET}", forgejo)
-comments = get_json(f"{FORGEJO_API}/repos/{REPO}/issues/{TICKET}/comments", forgejo)
+# Every page: later comments carry the Holmes investigation, resolution and
+# closing evidence the lesson must be distilled from.
+comments = get_all(f"{FORGEJO_API}/repos/{REPO}/issues/{TICKET}/comments", forgejo)
 
 with open("skills/lessons.md", encoding="utf-8") as f:
     fmt = f.read()

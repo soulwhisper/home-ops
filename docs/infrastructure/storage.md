@@ -228,7 +228,6 @@ Each MS-01 node boots from a 256 GB industrial SSD. Production Talos configs pin
 | `ceph-block` | yes | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (3-replica) |
 | `ceph-cache` | no | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (intentional single-copy, rewarmable cache) |
 | `ceph-filesystem` | no | RWX | `storage-system.cephfs.csi.ceph.com` | CephFS (3-replica) |
-| `ceph-cache` | no | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (single-replica scratch) |
 | `synology-volume1` | no | RWX | `nfs.csi.k8s.io` | NAS `/volume1` |
 | `synology-volume2` | no | RWX | `nfs.csi.k8s.io` | NAS `/volume2` |
 | `ceph-bucket` | no | — | `storage-system.ceph.rook.io/bucket` | Ceph RGW (S3) |

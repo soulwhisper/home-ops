@@ -69,6 +69,9 @@ config:
   # Renovate merge waves pushed WAL fsync p99 to 1.4-1.8s, triggering etcd
   # leader changes and ~20 leader-election controller restarts. Two concurrent
   # pulls keep rollouts parallel without starving etcd fsync.
+  # serializeImagePulls must be false for the cap to apply (already the live
+  # value; pinned here so the cap never silently stops working).
+  serializeImagePulls: false
   maxParallelImagePulls: 2
 ---
 apiVersion: v1alpha1
