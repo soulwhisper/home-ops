@@ -28,10 +28,10 @@
       separateMinorPatch: true,
     },
     {
-      description: "ghcr tag-list rate limits (44k+ tags): look up immich versions via GitHub releases",
-      matchPackageNames: ["/immich-(server|machine-learning)/"],
-      datasource: "github-releases",
-      packageName: "immich-app/immich",
+      description: "ghcr tag-list rate limits (31k+ tags, v3.3.0 on last page): look up immich-server via GitHub releases. machine-learning stays on docker: its -openvino suffix only exists as a ghcr tag",
+      matchPackageNames: ["ghcr.io/immich-app/immich-server"],
+      overrideDatasource: "github-releases",
+      overridePackageName: "immich-app/immich",
     },
   ],
 }

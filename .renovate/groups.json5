@@ -43,10 +43,10 @@
       minimumGroupSize: 1,
     },
     {
-      description: "Immich Group",
+      description: "Immich Group (server now resolves via github-releases override)",
       groupName: "Immich",
-      matchDatasources: ["docker"],
-      matchPackageNames: ["/immich-server/", "/immich-machine-learning/"],
+      matchDatasources: ["docker", "github-releases"],
+      matchPackageNames: ["/immich-server/", "/immich-machine-learning/", "immich-app/immich"],
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
