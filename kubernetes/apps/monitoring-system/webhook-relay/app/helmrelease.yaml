@@ -61,7 +61,7 @@ spec:
           tickets:
             image:
               repository: docker.io/library/python
-              tag: 3.13.9-alpine3.22
+              tag: 3.14.5-alpine3.22
             command: ["python3", "-B", "/tickets/ticket_consumer.py"]
             probes:
               readiness:
