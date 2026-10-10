@@ -1,0 +1,90 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/policies.kyverno.io/validatingpolicy_v1.json
+# Decision-gate detector for the AI-ops executor (P2 precursor). AUDIT ONLY:
+# validationActions: [Audit] blocks nothing. DELETE reports may disappear with
+# the Pod; OTel exports PolicyViolation events (including actor/target in the
+# note) to VictoriaLogs for the observation window. Event TTL/collector gaps
+# still preclude claiming a complete API audit trail.
+# Migrated from ClusterPolicy v1 (deprecated in kyverno v1.19). The old
+# `exclude.clusterRoles: [cluster-admin]` has no CEL equivalent — admission
+# CEL sees userInfo, not role bindings — so the check runs as a live
+# SubjectAccessReview for full wildcard rights, which is what cluster-admin
+# is in this cluster (verified against ClusterRoleBindings 2026-10-10).
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: audit-unexpected-pod-deletes
+spec:
+  evaluation:
+    background:
+      enabled: false
+  # Audit-only: a down or slow single-replica admission controller must not
+  # block Pod deletes (drains, rollouts) cluster-wide (webhook default is Fail).
+  failurePolicy: Ignore
+  validationActions:
+    - Audit
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ['']
+        apiVersions: ['v1']
+        operations: ['DELETE']
+        resources: ['pods']
+  matchConditions:
+    - name: watched-namespaces
+      # DELETE admission: object is null, the pod lives in oldObject
+      expression: >-
+        oldObject.metadata.namespace in
+        ['servitor-apps', 'smarthome-apps', 'media-apps', 'selfhosted-apps',
+         'monitoring-system', 'storage-system', 'database-system']
+    # expected actors: built-in kube-system controllers (rs/sts/job/gc
+    # delete pods on every rollout), kubelets (status manager issues the
+    # final grace-period-0 DELETE after every termination), kyverno
+    # cleanup, in-namespace operators, the future executor (robusta
+    # runner), and flux (drift correction)
+    - name: not-kube-system-controllers
+      expression: "!request.userInfo.username.startsWith('system:serviceaccount:kube-system:')"
+    - name: not-nodes
+      expression: "!('system:nodes' in request.userInfo.groups)"
+    - name: not-known-operators
+      expression: >-
+        !(request.userInfo.username in [
+          'system:serviceaccount:security-system:kyverno-cleanup-controller',
+          'system:serviceaccount:database-system:cnpg-operator',
+          'system:serviceaccount:database-system:clickhouse-operator-controller-manager',
+          'system:serviceaccount:database-system:dragonfly-operator-controller-manager',
+          'system:serviceaccount:storage-system:rook-ceph-system',
+          'system:serviceaccount:monitoring-system:robusta-runner',
+          'system:serviceaccount:gitops-system:kustomize-controller',
+          'system:serviceaccount:gitops-system:helm-controller'
+        ])
+  variables:
+    # Live wildcard-rights check standing in for the old clusterRoles exclude;
+    # evaluated lazily, only for actors not already excluded above.
+    - name: wildcardAccess
+      expression: >-
+        resource.Post("authorization.k8s.io/v1", "subjectaccessreviews", {
+          "kind": dyn("SubjectAccessReview"),
+          "apiVersion": dyn("authorization.k8s.io/v1"),
+          "spec": dyn({
+            "user": dyn(request.userInfo.username),
+            "groups": dyn(request.userInfo.groups),
+            "resourceAttributes": dyn({"group": "*", "resource": "*", "verb": "*"})
+          })
+        })
+    - name: isClusterAdmin
+      expression: >-
+        has(variables.wildcardAccess.status)
+        && variables.wildcardAccess.status.allowed == true
+  validations:
+    - expression: variables.isClusterAdmin
+      messageExpression: >-
+        "unexpected pod delete by " + request.userInfo.username + " on "
+        + oldObject.metadata.namespace + "/" + oldObject.metadata.name
+        + " — candidate for the executor allow-list or a policy exception"
+---
+# P2 enforce-mode template (commented until audit data justifies it):
+# same match, same excludes, validationActions: [Deny] — then ONLY
+# cluster-admin actors plus the executor SA (robusta-runner) may delete pods
+# in those namespaces, and every remediation action is forced through the
+# alertname->action playbook allow-list upstream of it. Flip deliberately,
+# never by default.

@@ -1,0 +1,92 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/policies.kyverno.io/validatingpolicy_v1.json
+# Pod Security baseline for pure-app namespaces (AUDIT): privileged
+# containers, host namespaces, host ports, unsafe capabilities. Scoped to
+# namespaces that have no legitimate host-level workload — storage-system
+# (ceph OSD privileged), monitoring-system (node-exporter hostNetwork) and
+# kube-system are deliberately out of scope. Protects against an injected
+# executor/agent launching host-level pods in app namespaces.
+# Migrated from ClusterPolicy v1 (deprecated in kyverno v1.19): the
+# podSecurity keyword has no CEL equivalent, so the five upstream Baseline
+# controls (HostProcess, HostNamespaces, Privileged, Capabilities, HostPorts)
+# are written out as explicit validations over
+# containers+initContainers+ephemeralContainers.
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: audit-pod-security-baseline
+spec:
+  evaluation:
+    background:
+      enabled: false
+  # Audit-only: a down or slow single-replica admission controller must not
+  # block Pod creation cluster-wide (webhook default is Fail).
+  failurePolicy: Ignore
+  validationActions:
+    - Audit
+  autogen:
+    podControllers:
+      controllers:
+        - deployments
+        - daemonsets
+        - statefulsets
+        - replicasets
+        - replicationcontrollers
+        - jobs
+        - cronjobs
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ['']
+        apiVersions: ['v1']
+        operations: ['CREATE', 'UPDATE']
+        resources: ['pods']
+  matchConditions:
+    - name: pure-app-namespaces
+      expression: >-
+        object.metadata.namespace in
+        ['servitor-apps', 'smarthome-apps', 'media-apps', 'selfhosted-apps',
+         'gaming-apps']
+  variables:
+    - name: allContainers
+      expression: >-
+        object.spec.containers
+        + object.spec.?initContainers.orValue([])
+        + object.spec.?ephemeralContainers.orValue([])
+  validations:
+    - expression: >-
+        !object.spec.?hostNetwork.orValue(false)
+        && !object.spec.?hostPID.orValue(false)
+        && !object.spec.?hostIPC.orValue(false)
+      messageExpression: >-
+        "pod " + object.metadata.namespace + "/" + object.metadata.name
+        + " violates pod-security baseline: host namespaces are not expected in app namespaces"
+    - expression: >-
+        variables.allContainers.all(c,
+          !c.?securityContext.?privileged.orValue(false))
+      messageExpression: >-
+        "pod " + object.metadata.namespace + "/" + object.metadata.name
+        + " violates pod-security baseline: privileged containers are not expected in app namespaces"
+    # upstream Baseline allows this 13-capability set (NET_BIND_SERVICE-only
+    # is the Restricted rule)
+    - expression: >-
+        variables.allContainers.all(c,
+          c.?securityContext.?capabilities.?add.orValue([]).all(cap,
+            cap in ['AUDIT_WRITE', 'CHOWN', 'DAC_OVERRIDE', 'FOWNER',
+                    'FSETID', 'KILL', 'MKNOD', 'NET_BIND_SERVICE', 'SETFCAP',
+                    'SETGID', 'SETPCAP', 'SETUID', 'SYS_CHROOT']))
+      messageExpression: >-
+        "pod " + object.metadata.namespace + "/" + object.metadata.name
+        + " violates pod-security baseline: added capabilities outside the Baseline set"
+    - expression: >-
+        variables.allContainers.all(c,
+          c.?ports.orValue([]).all(p, p.?hostPort.orValue(0) == 0))
+      messageExpression: >-
+        "pod " + object.metadata.namespace + "/" + object.metadata.name
+        + " violates pod-security baseline: host ports are not expected in app namespaces"
+    - expression: >-
+        !object.spec.?securityContext.?windowsOptions.?hostProcess.orValue(false)
+        && variables.allContainers.all(c,
+          !c.?securityContext.?windowsOptions.?hostProcess.orValue(false))
+      messageExpression: >-
+        "pod " + object.metadata.namespace + "/" + object.metadata.name
+        + " violates pod-security baseline: Windows HostProcess containers"

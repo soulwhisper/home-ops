@@ -27,6 +27,9 @@ spec:
 # (temp/omlx-optimization.md): repeat-call loops, training-time date anchors,
 # truncation blindness, LogsQL unfamiliarity. Static text only; Holmes' native
 # current-time injection stays authoritative for timestamps.
+# role MUST be lowercase `system`: passed verbatim to the upstream chat
+# template; `SYSTEM` 400s every request with "Chat template error:
+# Unexpected message role" (post-merge smoke 2026-10-10).
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
@@ -40,7 +43,7 @@ spec:
     ai:
       prompt:
         prepend:
-          - role: SYSTEM
+          - role: system
             content: >-
               Tool-use discipline: never repeat an identical tool call with
               identical arguments; if a call failed or returned the same data,

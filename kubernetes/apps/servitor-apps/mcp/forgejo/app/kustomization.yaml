@@ -6,4 +6,3 @@ resources:
   - ./mcpserver.yaml
   - ./externalsecret.yaml
   - ./mcpexternalauthconfig.yaml
-  - ./mcptoolconfig.yaml

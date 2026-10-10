@@ -1,0 +1,54 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/policies.kyverno.io/validatingpolicy_v1.json
+# Image provenance visibility (AUDIT). Flags containers whose image registry
+# is outside the observed in-cluster allowlist (ghcr/quay/
+# registry.k8s.io/docker hub + the few vendor CRs in use). Migrated from
+# ClusterPolicy v1 (deprecated in kyverno v1.19) to CEL: the image library
+# normalizes bare names to docker.io, which the old regex pair encoded by
+# hand; unparseable references pass, matching the old bare-name branch.
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: audit-image-registries
+spec:
+  evaluation:
+    background:
+      enabled: false
+  # Audit-only: a down or slow single-replica admission controller must not
+  # block Pod creation cluster-wide (webhook default is Fail).
+  failurePolicy: Ignore
+  validationActions:
+    - Audit
+  autogen:
+    podControllers:
+      controllers:
+        - deployments
+        - daemonsets
+        - statefulsets
+        - replicasets
+        - replicationcontrollers
+        - jobs
+        - cronjobs
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ['']
+        apiVersions: ['v1']
+        operations: ['CREATE', 'UPDATE']
+        resources: ['pods']
+  variables:
+    - name: allContainers
+      expression: >-
+        object.spec.containers
+        + object.spec.?initContainers.orValue([])
+        + object.spec.?ephemeralContainers.orValue([])
+    - name: allowedRegistries
+      expression: "['ghcr.io', 'quay.io', 'registry.k8s.io', 'docker.io', 'registry.gitlab.com', 'gsoci.azurecr.io', 'cr.kgateway.dev', 'cr.agentgateway.dev', 'docker.stirlingpdf.com', 'docker.dragonflydb.io', 'git.b4mad.industries']"
+  validations:
+    - expression: >-
+        variables.allContainers.all(c,
+          !isImage(c.image) ||
+          image(c.image).registry() in variables.allowedRegistries)
+      messageExpression: >-
+        "container image from a non-allowlisted registry in "
+        + object.metadata.namespace + "/" + object.metadata.name
+        + " — review provenance"

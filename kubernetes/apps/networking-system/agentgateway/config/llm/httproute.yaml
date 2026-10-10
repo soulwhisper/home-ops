@@ -49,8 +49,13 @@ spec:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
           name: llm-backend-agent
+      # qwen-agentworld-35b-a3b is is_pinned=false with ttl_seconds=3600 on
+      # oMLX, and its consumers (HealthChecks 6h cadence, alert RCA) arrive
+      # colder than the TTL — nearly every request is a cold 35B load,
+      # potentially after evicting a resident model to make room. 300s is
+      # not enough headroom for that; automation lane, no interactivity cost.
       timeouts:
-        request: 300s
+        request: 900s
     - name: omni
       matches:
         - path:

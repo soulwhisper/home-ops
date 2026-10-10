@@ -218,14 +218,17 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | -------------- | -------------------- | ---------------------- |
 | home-assistant | HTTP (FastMCP) :8086 | Home Assistant         |
 | hindsight      | HTTP proxy :8080     | Hindsight MCP endpoint |
-| forgejo        | Streamable HTTP :8080 | Forgejo on nas:9003 via forgejo-mcp; forwarded repo-scoped `pat_tickets`, with MCP tools allowlisted to ticket writes and repository reads in `homelab-tickets` |
+| forgejo        | Streamable HTTP :8080 | Forgejo on nas:9003 via forgejo-mcp; forwarded repo-scoped `pat_tickets` — the Forgejo-side token scope is the security boundary (no tool allowlist; see below) |
 
-Forgejo's shared PAT retains repository-write scope for the manual lessons
-workflow, but the model-facing `MCPToolConfig` excludes file/branch/workflow
-writes, action dispatch, and administration. ToolHive rejects direct calls to
-excluded tools, not just their discovery. This keeps the NAS-root-capable runner's
-workflow definitions operator-controlled. It does not restore draftbox or broad
-user access; no PAT was provisioned or broadened.
+Forgejo's `pat_tickets` retains repository-write scope for the manual lessons
+workflow, so the guard is the token's Forgejo-side permission scope itself.
+A model-facing `MCPToolConfig` allowlist was tried and removed the same day
+(2026-10-10): toolhive v0.51.4's filter middleware re-encodes `tools/list`
+through a lossy struct that strips the SEP-2322 `resultType` envelope, which
+vmcp rejects for Modern-era backends — the forgejo backend circuit-broke out
+of `internal-rw` until the filter was dropped. Re-add an allowlist only after
+upstream preserves the envelope. No draftbox or broad user PAT was
+provisioned.
 
 #### external (full egress)
 
