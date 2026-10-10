@@ -199,7 +199,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
   - OTEL telemetry (5% sampling)
 - **Ingress restricted**: only agentgateway-proxy (MCP protocol, tiered `/mcp/*`) and vmagent (metrics scrape) can connect; chat frontends reach tools through the gateway, never directly
 
-### MCP Servers (14 total)
+### MCP Servers (13 total)
 
 #### internal-ro (read-only, no egress)
 

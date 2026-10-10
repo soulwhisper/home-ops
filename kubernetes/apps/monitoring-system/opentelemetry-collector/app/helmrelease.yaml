@@ -152,7 +152,9 @@ spec:
         otlp_http/policy-events:
           logs_endpoint: http://victoria-logs-server.monitoring-system.svc.cluster.local:9428/insert/opentelemetry/v1/logs
           headers:
-            VL-Msg-Field: object.note
+            # k8s_objects watch mode wraps the event as {type, object}; the
+            # event itself (with `note`) is nested under body.object
+            VL-Msg-Field: body.object.note
           sending_queue:
             enabled: true
             queue_size: 1000
