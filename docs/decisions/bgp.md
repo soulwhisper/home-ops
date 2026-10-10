@@ -48,12 +48,13 @@ spec:
             bfdProfile: default
             ebgpMultiHop: false
             enableGracefulRestart: false # bfd instead
+            holdTime: 180s
+            keepaliveTime: 60s
             toAdvertise:
               allowed:
                 mode: all
         prefixes:
-          - "10.100.0.0/17" # Pod
-          - "10.10.0.128/27" # LoadBalancer
+          - "10.10.0.128/27" # LoadBalancer (L2 announcements cover VIPs; cilium bgpControlPlane disabled)
     bfdProfiles:
       - name: default
         receiveInterval: 400
@@ -65,7 +66,7 @@ spec:
         minimumTtl: 1
 ```
 
-- bird2 extension since talos v1.12.0
+- bird2 extension bundled with Talos
 
 ```yaml
 ---

@@ -1,0 +1,43 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name kyverno
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: security-system
+  path: "./kubernetes/apps/security-system/kyverno/app"
+  # kyverno-policies needs the chart's CRDs + admission webhook; wait for ready
+  wait: true
+  postBuild:
+    substitute:
+      APP: *name
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name kyverno-policies
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: security-system
+  path: "./kubernetes/apps/security-system/kyverno/policies"
+  dependsOn:
+    - name: kyverno
+      namespace: security-system
+  postBuild:
+    substitute:
+      APP: *name

@@ -1,7 +1,8 @@
 ---
 # The MCP route is exposed to the intranet via the agentgateway-intranet
-# HTTPRoute; require the same API key as the LLM route (was unauthenticated).
-# Covers all three tiered endpoints (/mcp/ro|rw|ext).
+# HTTPRoute; require the same API key as the LLM route.
+# Covers the three chat-tier endpoints (/mcp/ro|rw|ext) on
+# agentgateway-mcp-route; /mcp/ops has its own route + credential below.
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
@@ -15,5 +16,24 @@ spec:
   traffic:
     apiKeyAuthentication:
       mode: Strict
-      secretRef: 
+      secretRef:
         name: llm-api-auth
+---
+# ops tier: distinct credential, issued only to ops agents. A chat-tier
+# key (llm-api-auth) is NOT valid here, which is what actually isolates
+# incident/RCA memory from conversational consumers.
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-ops-auth
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-mcp-ops-route
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      secretRef:
+        name: mcp-ops-auth

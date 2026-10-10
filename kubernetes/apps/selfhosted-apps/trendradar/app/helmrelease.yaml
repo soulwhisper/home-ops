@@ -33,7 +33,7 @@ spec:
               IMMEDIATE_RUN: "true"
               AI_ANALYSIS_ENABLED: "true"
               # AI lane (base/model/key) comes from the trendradar secret
-              # (envFrom below; `micro` is the documented fallback)
+              # (envFrom below)
               # delivery channels: add NTFY_*/DINGTALK_WEBHOOK_URL/FEISHU_WEBHOOK_URL env when chosen
             envFrom:
               - secretRef:
@@ -85,6 +85,7 @@ spec:
               limits:
                 # OOMKilled 2026-09-17 at 512Mi after ~39h of MCP query
                 # serving over /app/output; 1Gi matches the app container.
+                # Growth is a linear leak, bounded by restart-cronjob.yaml.
                 memory: 1Gi
             securityContext:
               allowPrivilegeEscalation: false

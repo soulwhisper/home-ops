@@ -6,7 +6,7 @@ metadata:
   name: &name llm-api-auth
 spec:
   # Consumer API-key auth: strict on the unified /v1 lane (all rules, incl.
-  # complex-raw) and the media route.
+  # uncensored) and the media route.
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
@@ -19,3 +19,35 @@ spec:
       mode: Strict
       secretRef:
         name: *name
+
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+# AgentWorld harness, scoped by backend (only the agent lane consumes
+# llm-backend-agent). Encodes the weaknesses measured in the oMLX PoC
+# (temp/omlx-optimization.md): repeat-call loops, training-time date anchors,
+# truncation blindness, LogsQL unfamiliarity. Static text only; Holmes' native
+# current-time injection stays authoritative for timestamps.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: llm-agent-harness
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: llm-backend-agent
+  backend:
+    ai:
+      prompt:
+        prepend:
+          - role: SYSTEM
+            content: >-
+              Tool-use discipline: never repeat an identical tool call with
+              identical arguments; if a call failed or returned the same data,
+              change approach or conclude with what you have. When a query
+              involves dates or relative times, anchor on the system time of
+              your runtime environment, never on training-data time. Tool
+              results may be truncated — treat them as partial evidence and
+              say so instead of inferring completeness. VictoriaLogs uses
+              LogsQL, not PromQL: `_time:<range> <filters>`,
+              `| stats count()`, `| sort by (_time desc) | limit N`.

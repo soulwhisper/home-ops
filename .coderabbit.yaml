@@ -83,6 +83,15 @@ reviews:
           homelab, shared physical layer collapses those failure domains anyway
           (see infrastructure/switch/README.md). Node-level failures are the
           only real domain.
+        - Cluster-injected defaults: app ks.yaml Flux Kustomizations
+          intentionally omit interval, timeout, sourceRef, and prune —
+          kubernetes/flux/cluster/cluster.yaml patches them in at reconcile
+          time (annotationSelector config.home-ops.io/managed=true; baseline
+          dependsOn for labelSelector config.home-ops.io/deps=infra). Never
+          flag these fields as missing, and never ask for them to be made
+          explicit. `wait` is deliberately NOT injected: an explicit
+          `wait: true` in a ks.yaml is the supported readiness-ordering
+          mechanism and takes effect as written.
 
     - path: "infrastructure/**"
       instructions: |

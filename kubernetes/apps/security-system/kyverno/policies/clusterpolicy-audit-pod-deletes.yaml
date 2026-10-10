@@ -1,0 +1,83 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kyverno.io/clusterpolicy_v1.json
+# Decision-gate detector for the AI-ops executor (P2 precursor). AUDIT ONLY:
+# failureAction: Audit blocks nothing. DELETE reports may disappear with the
+# Pod; OTel exports PolicyViolation events (including actor/target in the note)
+# to VictoriaLogs for the observation window. Event TTL/collector gaps still
+# preclude claiming a complete API audit trail.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: audit-unexpected-pod-deletes
+spec:
+  background: false
+  # Audit-only: a down or slow single-replica admission controller must not
+  # block Pod deletes (drains, rollouts) cluster-wide (webhook default is Fail).
+  webhookConfiguration:
+    failurePolicy: Ignore
+  rules:
+    - name: unexpected-pod-delete
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              operations: ["DELETE"]
+              namespaces:
+                - servitor-apps
+                - smarthome-apps
+                - media-apps
+                - selfhosted-apps
+                - monitoring-system
+                - storage-system
+                - database-system
+      exclude:
+        any:
+          # expected actors: built-in kube-system controllers (rs/sts/job/gc
+          # delete pods on every rollout), kubelets (status manager issues the
+          # final grace-period-0 DELETE after every termination), kyverno
+          # cleanup, in-namespace operators, the future executor (robusta
+          # runner), and flux (drift correction); cluster-admin users via
+          # clusterRoles below
+          - subjects:
+              - kind: Group
+                name: "system:serviceaccounts:kube-system"
+              - kind: Group
+                name: "system:nodes"
+              - kind: ServiceAccount
+                name: kyverno-cleanup-controller
+                namespace: security-system
+              - kind: ServiceAccount
+                name: cnpg-operator
+                namespace: database-system
+              - kind: ServiceAccount
+                name: clickhouse-operator-controller-manager
+                namespace: database-system
+              - kind: ServiceAccount
+                name: dragonfly-operator-controller-manager
+                namespace: database-system
+              - kind: ServiceAccount
+                name: rook-ceph-system
+                namespace: storage-system
+              - kind: ServiceAccount
+                name: robusta-runner
+                namespace: monitoring-system
+              - kind: ServiceAccount
+                name: kustomize-controller
+                namespace: gitops-system
+              - kind: ServiceAccount
+                name: helm-controller
+                namespace: gitops-system
+          - clusterRoles: ["cluster-admin"]
+      validate:
+        failureAction: Audit
+        message: >-
+          unexpected pod delete by {{ request.userInfo.username }}
+          on {{ request.namespace }}/{{ request.name }} —
+          candidate for the executor allow-list or a policy exception
+        deny: {}
+---
+# P2 enforce-mode template (commented until audit data justifies it):
+# same match, same excludes, failureAction: Enforce — then ONLY robusta-runner
+# (the executor SA) may delete pods in those namespaces, and every remediation
+# action is forced through the alertname->action playbook allow-list upstream
+# of it. Flip deliberately, never by default.

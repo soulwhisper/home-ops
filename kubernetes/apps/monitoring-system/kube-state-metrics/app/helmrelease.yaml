@@ -48,6 +48,16 @@ spec:
           verbs:
             - list
             - watch
+        # Holmes ScheduledHealthCheck results live only in CR status; export
+        # them so failed checks alert (HolmesHealthCheckFailed) instead of
+        # waiting for someone to read the CRs.
+        - apiGroups:
+            - holmesgpt.dev
+          resources:
+            - scheduledhealthchecks
+          verbs:
+            - list
+            - watch
     customResourceState:
       enabled: true
       config:
@@ -389,3 +399,29 @@ spec:
                     webhook_path:
                       - status
                       - webhookPath
+            - groupVersionKind:
+                group: holmesgpt.dev
+                version: v1alpha1
+                kind: ScheduledHealthCheck
+              metricNamePrefix: holmes_scheduledhealthcheck
+              labelsFromPath:
+                name:
+                  - metadata
+                  - name
+                exported_namespace:
+                  - metadata
+                  - namespace
+              metrics:
+                - name: last_result
+                  help: Result of the last Holmes ScheduledHealthCheck run.
+                  each:
+                    type: StateSet
+                    stateSet:
+                      labelName: result
+                      path:
+                        - status
+                        - lastResult
+                      list:
+                        - pass
+                        - fail
+                        - error

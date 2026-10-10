@@ -31,7 +31,11 @@ spec:
   dependsOn:
     - name: flux-repositories
   patches:
-    - # Add Kustomization defaults to all app ks.yaml
+    - # Add Kustomization defaults to all app ks.yaml.
+      # NOTE: strategic-merge patch scalars OVERRIDE values already set in
+      # ks.yaml — only list fields the ks.yaml files must never predefine.
+      # `wait` is deliberately absent: unset falls back to the CRD default
+      # (false), while explicit `wait: true` in a ks.yaml stays effective.
       patch: |-
         apiVersion: kustomize.toolkit.fluxcd.io/v1
         kind: Kustomization
@@ -45,7 +49,6 @@ spec:
             name: gitops-system
             namespace: gitops-system
           prune: true
-          wait: false
       target:
         group: kustomize.toolkit.fluxcd.io
         kind: Kustomization

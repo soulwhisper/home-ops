@@ -20,15 +20,17 @@ spec:
         name: studio-api-auth
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+# AI-ops automation lane (alert RCA / ScheduledHealthChecks / MCP batch).
+# AgentWorld serves this lane; 27b serves `uncensored`.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: llm-backend-micro
+  name: llm-backend-agent
 spec:
   ai:
     provider:
       openai:
-        model: "minicpm5-2b"
+        model: "qwen-agentworld-35b-a3b"
       host: studio.homelab.internal
       port: 8000
   policies:

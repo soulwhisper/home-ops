@@ -18,6 +18,69 @@ spec:
           for: 10m
           labels:
             severity: critical
+        # KubePodCrashLooping only sees CrashLoopBackOff; a control-plane stall
+        # instead restarts many leader-election controllers once each
+        # (2026-10-08 18:20Z / 10-09 00:16Z: ~20 pods, "leader election lost").
+        # Node reboots are excluded; they legitimately restart everything.
+        - alert: PodRestartStorm
+          annotations:
+            summary: "{{ $value }} pods restarted within 15m (not caused by a node reboot)"
+            description: >-
+              Correlated restarts usually mean apiserver/etcd stalls (leader
+              election lost). Check etcd WAL fsync latency, leader changes and
+              system-disk utilisation for the same window.
+          expr: |
+            (
+              count(count by (namespace, pod) (increase(kube_pod_container_status_restarts_total[15m]) > 0)) >= 5
+            ) unless on () (min(time() - node_boot_time_seconds) < 1800)
+          labels:
+            severity: warning
+        # etcdHighFsyncDurations needs 10m above 0.5s; the incident spikes were
+        # ~5m at 1.4-1.8s and still cost leadership.
+        - alert: EtcdFsyncLatencySpike
+          annotations:
+            summary: "etcd {{ $labels.instance }} WAL fsync p99 {{ $value | humanizeDuration }}"
+            description: >-
+              Short fsync stalls on the shared system NVMe cause leader changes.
+              Look for concurrent image pulls or other EPHEMERAL writes.
+          expr: |
+            histogram_quantile(0.99, sum by (instance, le) (rate(etcd_disk_wal_fsync_duration_seconds_bucket[2m]))) > 0.5
+          for: 2m
+          labels:
+            severity: warning
+        - alert: HolmesHealthCheckFailed
+          annotations:
+            summary: "Holmes health check {{ $labels.name }} last result: {{ $labels.result }}"
+            description: >-
+              Read the finding in the CR status:
+              kubectl -n {{ $labels.exported_namespace }} get scheduledhealthcheck {{ $labels.name }} -o jsonpath='{.status.history[0].message}'
+          expr: |
+            max by (exported_namespace, name, result) (holmes_scheduledhealthcheck_last_result{result=~"fail|error"}) == 1
+          for: 10m
+          labels:
+            severity: warning
+        # Ticket intake is fire-and-forget from Robusta's side: chaski retries
+        # 3x then drops. A failed send means an incident has no ticket.
+        - alert: TicketDeliveryFailing
+          annotations:
+            summary: "webhook-relay failed {{ $value | humanize }} ticket deliveries in 15m ({{ $labels.outcome }})"
+            description: >-
+              The ticket consumer (webhook-relay `tickets` container) rejected
+              or could not reach Forgejo; incidents in this window may have no
+              ticket. Check `kubectl -n monitoring-system logs deploy/webhook-relay -c tickets`
+              and Forgejo on nas:9003.
+          expr: |
+            sum by (outcome) (increase(chaski_target_sends_total{target="forgejo-tickets", outcome!="success"}[15m])) > 0
+          labels:
+            severity: warning
+        - alert: TicketRelayMetricsAbsent
+          annotations:
+            summary: webhook-relay metrics are not being scraped; ticket delivery is unmonitored
+          expr: |
+            absent(up{job="webhook-relay", namespace="monitoring-system"} == 1)
+          for: 30m
+          labels:
+            severity: warning
     - name: platform.rules
       rules:
         # upstream rule, VictoriaMetrics v1.151 (alerts-health.yml)

@@ -1,0 +1,29 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-victoria-metrics
+spec:
+  groupRef:
+    name: internal-ro
+  # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victoriametrics
+  image: ghcr.io/victoriametrics/mcp-victoriametrics:v1.20.2
+  env:
+    - name: VM_INSTANCE_ENTRYPOINT
+      value: "http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428"
+    - name: VM_INSTANCE_TYPE # required alongside ENTRYPOINT; endpoint is vmsingle
+      value: "single"
+    - name: MCP_SERVER_MODE
+      value: "http"
+    - name: MCP_LISTEN_ADDR
+      value: ":8081"
+  transport: streamable-http
+  mcpPort: 8081
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

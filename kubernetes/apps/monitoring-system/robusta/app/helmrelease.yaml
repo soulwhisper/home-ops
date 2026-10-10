@@ -1,0 +1,96 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name robusta
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: robusta
+
+  values:
+    clusterName: main
+    # OSS classic mode: no platform account (account_id/signing_key stay empty).
+    # Platform features (UI / smart grouping / Slack bot) are SaaS-gated and
+    # deliberately out of scope.
+    # Holmes runs unified in this release as a subchart: runner AI analysis
+    # requires enableHolmesGPT, and the subchart has no enabled kill-switch —
+    # so the embedded topology is the only sane one. Holmes service: robusta-holmes.
+    enableHolmesGPT: true
+
+    globalConfig:
+      # Robusta's default map sends warning -> LOW, which the ticket route
+      # (MEDIUM/HIGH) drops — 178 of 289 rules, including etcd, ESO, kopiur
+      # and CrashLoop. MEDIUM parses back to HIGH; map warning to MEDIUM so it
+      # is ticketed while info/none stay below the gate.
+      custom_severity_map:
+        warning: medium
+
+    sinksConfig:
+      # feishu via the existing webhook-relay
+      - webhook_sink:
+          name: feishu-relay
+          url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta"
+          format: json # default is text; chaski parses a JSON payload
+          size_limit: 16384
+      # ticket intake: relay route robusta-tickets gates MEDIUM+ into the
+      # serialized Forgejo consumer. size_limit default (4096) truncates the
+      # payload field-by-field and drops enrichments — the diagnosis — first;
+      # chaski accepts up to 1 MiB.
+      - webhook_sink:
+          name: tickets-relay
+          url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta-tickets"
+          format: json
+          size_limit: 262144
+
+    runner:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 256Mi
+        limits:
+          memory: 1Gi
+
+    # ---- unified holmes (values carried over from servitor-apps/holmesgpt) ----
+    holmes:
+      extraEnvVarsSecrets:
+        - robusta-holmes # OPENAI_API_BASE + OPENAI_API_KEY (ExternalSecret)
+      additionalEnvVars:
+        # default model for requests that don't name one (HealthChecks!):
+        # without it holmes falls back to "gpt-5.4" when OPENAI_API_KEY is set
+        # -> agentgateway 404s the unknown lane
+        - { name: MODEL, value: agent }
+      modelList:
+        # agent lane (studio-hosted). temperature 0.6 follows the model's
+        # tuned sampling (0.6/0.95/top_k 20).
+        agent:
+          model: openai/agent
+          api_base: envRef:OPENAI_API_BASE
+          api_key: envRef:OPENAI_API_KEY
+          temperature: 0.6
+      toolsets:
+        internet:
+          enabled: false # no Internet egress for this pod (see CNP)
+        robusta:
+          enabled: false # requires a Robusta SaaS account; not used
+        prometheus/metrics:
+          enabled: true
+          config:
+            subtype: victoriametrics
+            prometheus_url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428
+        victorialogs:
+          enabled: true
+          config:
+            api_url: http://victoria-logs-server.monitoring-system.svc.cluster.local:9428
+      # operator mode (alpha upstream): HealthCheck CRDs; no destinations —
+      # results read from CR status
+      operator:
+        enabled: true
+      resources:
+        requests:
+          cpu: 100m
+          memory: 1Gi
+        limits:
+          memory: 2Gi

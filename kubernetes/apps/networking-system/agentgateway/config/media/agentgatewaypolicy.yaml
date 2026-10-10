@@ -23,10 +23,9 @@ spec:
           value: '"application/json"'
       body: |
         {"object":"list","data":[
-          {"id":"complex-raw","object":"model","owned_by":"omlx"},
-          {"id":"complex","object":"model","owned_by":"omlx"},
+          {"id":"uncensored","object":"model","owned_by":"omlx"},
+          {"id":"agent","object":"model","owned_by":"omlx"},
           {"id":"omni","object":"model","owned_by":"omlx"},
-          {"id":"micro","object":"model","owned_by":"omlx"},
           {"id":"embedding","object":"model","owned_by":"omlx"},
           {"id":"reranker","object":"model","owned_by":"omlx"},
           {"id":"voxcpm2","object":"model","owned_by":"omlx"}

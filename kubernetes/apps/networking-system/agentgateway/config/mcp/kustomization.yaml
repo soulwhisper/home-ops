@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   # app
   - ./agentgatewaybackend.yaml
+  - ./externalsecret.yaml
   # utils
   - ./helmrelease.yaml
   - ./guardrails.yaml

@@ -14,6 +14,11 @@ spec:
     fullnameOverride: *name
     mode: deployment
     replicaCount: 2
+    clusterRole:
+      rules:
+        - apiGroups: [events.k8s.io]
+          resources: [events]
+          verbs: [get, list, watch]
     image:
       repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
     command:
@@ -71,6 +76,10 @@ spec:
       extensions:
         health_check:
           endpoint: 0.0.0.0:13133
+        k8s_leader_elector/policy-events:
+          auth_type: serviceAccount
+          lease_name: opentelemetry-policy-events
+          lease_namespace: monitoring-system
         # langfuse /api/public/otel requires project basic auth (pk:sk);
         # without it every batch 401s and spans drop permanently (found
         # 2026-09-23: the langfuse leg had silently never worked)
@@ -79,6 +88,18 @@ spec:
             username: ${env:LANGFUSE_PUBLIC_KEY}
             password: ${env:LANGFUSE_SECRET_KEY}
       receivers:
+        k8s_objects:
+          auth_type: serviceAccount
+          k8s_leader_elector: k8s_leader_elector/policy-events
+          # Recover still-live events after collector restarts; query event UID
+          # and event/series timestamps, not raw delivery counts.
+          include_initial_state: true
+          objects:
+            - name: events
+              mode: watch
+              group: events.k8s.io
+              field_selector: reason=PolicyViolation
+              exclude_watch_type: [DELETED]
         otlp:
           protocols:
             grpc:
@@ -125,8 +146,21 @@ spec:
               # guardrail verdicts correlate with the LLM calls that triggered
               # them (langfuse is the analysis surface; alerting stays on
               # vmalert + vlogs LogsQL)
-              - 'attributes["gen_ai.system"] == nil and resource.attributes["service.name"] != "mcp-guardrails"'
+              - >-
+                  attributes["gen_ai.system"] == nil and resource.attributes["service.name"] != "mcp-guardrails"
       exporters:
+        otlp_http/policy-events:
+          logs_endpoint: http://victoria-logs-server.monitoring-system.svc.cluster.local:9428/insert/opentelemetry/v1/logs
+          headers:
+            # k8s_objects watch mode wraps the event as {type, object}; the
+            # event itself (with `note`) is nested under body.object
+            VL-Msg-Field: body.object.note
+          sending_queue:
+            enabled: true
+            queue_size: 1000
+          retry_on_failure:
+            enabled: true
+            max_elapsed_time: 300s
         otlp_http/victoria-traces:
           endpoint: "http://victoria-traces.monitoring-system.svc.cluster.local:10428/insert/opentelemetry"
           tls:
@@ -156,7 +190,7 @@ spec:
             max_interval: 30s
             max_elapsed_time: 300s
       service:
-        extensions: [health_check, basicauth/client]
+        extensions: [health_check, basicauth/client, k8s_leader_elector/policy-events]
         telemetry:
           metrics:
             readers:
@@ -169,6 +203,10 @@ spec:
             level: warn
             encoding: json
         pipelines:
+          logs:
+            receivers: [k8s_objects]
+            processors: [memory_limiter, redaction/credentials, batch]
+            exporters: [otlp_http/policy-events]
           traces/app:
             receivers: [otlp]
             processors:

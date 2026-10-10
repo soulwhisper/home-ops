@@ -2,7 +2,7 @@
 
 ## OIDC via Authentik
 
-14 applications use Authentik OIDC for SSO, managed declaratively via Blueprints (ConfigMap + Secret).
+10 applications use Authentik OIDC for SSO, managed declaratively via Blueprints (ConfigMap + Secret).
 
 | App                  | OIDC Provider | Notes                                                                 |
 | -------------------- | :-----------: | --------------------------------------------------------------------- |
@@ -25,29 +25,20 @@ These apps use their own authentication — no OIDC needed:
 
 | App                 | Auth Method                                             |
 | ------------------- | ------------------------------------------------------- |
-| Bambuddy            | Bambu Lab account                                       |
 | Crafty Controller   | Default admin credentials (retrieve via `kubectl exec`) |
 | Dispatcharr         | Built-in user system                                    |
-| Fast-Note-Sync      | Built-in user system                                    |
 | FoundryVTT          | Built-in user system                                    |
 | MoviePilot          | Built-in user system                                    |
 | Navidrome           | Built-in user system                                    |
 | Rook-Ceph Dashboard | Built-in auth (or SAML2 via manual setup)               |
 | Scrypted            | Sign up as `admin`, ForwardAuth compatible              |
 
-## No Authentication
-
-| App            | Reason                                                                       |
-| -------------- | ---------------------------------------------------------------------------- |
-| MeTube         | Single-user download tool                                                    |
-| God's Eye View | No built-in auth by design; protected by authentik forward-auth at the gateway |
-
 ## Forward Auth (embedded outpost)
 
-Apps without built-in auth sit behind the authentik embedded outpost via `components/authentik` (ext-authz TrafficPolicy + `/outpost.goauthentik.io` route). Adding one takes **two** blueprint changes — both are required:
+Apps without built-in auth sit behind the authentik embedded outpost via `components/authentik` (ext-authz TrafficPolicy + `/outpost.goauthentik.io` route). This covers MeTube (single-user download tool) and Bambuddy (Bambu Lab account auth only). Adding one takes **two** blueprint changes — both are required:
 
 1. `blueprints/forward/<app>.yaml` — creates the app's `forward_domain` proxy provider (`external_host` = app URL, `cookie_domain: noirprime.com`).
-2. `blueprints/core/outpost-proxy.yaml` — bind the new provider to the Embedded Outpost's `providers` list. The outpost maps host → provider via `x-forwarded-host`; an unbound provider makes the outpost fall back to an arbitrary bound provider, so logins redirect to a *different* app's domain (observed 2026-09 with `gods-eye-view`: spy.noirprime.com bounced to ai/traces/hubble/z2m).
+2. `blueprints/core/outpost-proxy.yaml` — bind the new provider to the Embedded Outpost's `providers` list. The outpost maps host → provider via `x-forwarded-host`; an unbound provider makes the outpost fall back to an arbitrary bound provider, so logins redirect to a *different* app's domain.
 
 The outpost route and TrafficPolicy are injected per-app by the kustomize component; no per-app wiring is needed beyond the flux `components:` entry and `APP_HOST` substitution.
 

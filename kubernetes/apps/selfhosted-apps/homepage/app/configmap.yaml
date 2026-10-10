@@ -62,9 +62,6 @@ data:
         - Cloudflare:
             - icon: cloudflare.svg
               href: https://dash.cloudflare.com
-        - Pushover:
-            - icon: pushover.svg
-              href: https://client.pushover.net/
     - Icons:
         - Homepage Dashboard:
             - icon: si-jpeg

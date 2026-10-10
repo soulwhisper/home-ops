@@ -166,3 +166,53 @@ spec:
       maxToolsToReturn: 10
       hybridSearchSemanticRatio: "0.6"
       semanticDistanceThreshold: "0.8"
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
+# ops isolation tier: only ops-domain backends (hindsight ops bank).
+# Separate group so chat-tier consumers (open-webui /mcp/ro|rw|ext) can never
+# retain into incident memory; reached via agentgateway /mcp/ops only.
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: VirtualMCPServer
+metadata:
+  name: &name internal-ops
+spec:
+  incomingAuth:
+    type: anonymous
+  podTemplateSpec:
+    spec:
+      containers:
+        - name: vmcp
+          env:
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: llm-api-auth
+                  key: OPENAI_API_KEY
+  groupRef:
+    name: *name
+  telemetryConfigRef:
+    name: shared-otel
+    serviceName: *name
+  config:
+    aggregation:
+      conflictResolution: prefix
+      conflictResolutionConfig:
+        prefixFormat: "{workload}_"
+    operational:
+      failureHandling:
+        partialFailureMode: best_effort
+        healthCheckInterval: 30s
+        healthCheckTimeout: 15s
+        unhealthyThreshold: 2
+        circuitBreaker:
+          enabled: true
+          failureThreshold: 3
+          timeout: 30s
+    optimizer:
+      embeddingProvider: openai
+      embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
+      embeddingModel: embedding
+      embeddingServiceTimeout: 15s
+      maxToolsToReturn: 10
+      hybridSearchSemanticRatio: "0.6"
+      semanticDistanceThreshold: "0.8"

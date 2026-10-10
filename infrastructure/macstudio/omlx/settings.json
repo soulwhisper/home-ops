@@ -1,0 +1,148 @@
+{
+  "version": "1.0",
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "log_level": "info",
+    "cors_origins": [
+      "*"
+    ],
+    "server_aliases": [
+      "localhost",
+      "127.0.0.1",
+      "soulwhisper-studio",
+      "soulwhisper-studio.local",
+      "10.10.0.210"
+    ],
+    "sse_keepalive_mode": "chunk",
+    "auto_start_on_launch": true,
+    "burst_decode_mode": "balanced",
+    "preserve_mid_system_cache": true,
+    "qwen4_gdn_decode_wide_proj": false,
+    "distributed_inference_enabled": false,
+    "max_audio_upload_size": "100MB",
+    "max_image_upload_size": "50MB",
+    "max_image_side_length": 2048,
+    "gpu_keep_warm_interval": 0.5
+  },
+  "model": {
+    "model_dirs": [
+      "/Users/soulwhisper/models"
+    ],
+    "model_dir": "/Users/soulwhisper/models",
+    "model_fallback": false,
+    "hide_helper_models": false
+  },
+  "memory": {
+    "prefill_memory_guard": true,
+    "memory_guard_tier": "balanced",
+    "memory_guard_custom_ceiling_gb": 0.0,
+    "soft_threshold": 0.85,
+    "hard_threshold": 0.95,
+    "prefill_safe_zone_ratio": 0.8,
+    "prefill_min_chunk_tokens": 32
+  },
+  "scheduler": {
+    "max_concurrent_requests": 8,
+    "embedding_batch_size": 32,
+    "chunked_prefill": true,
+    "prefill_priority": "context",
+    "decode_fairness": true
+  },
+  "cache": {
+    "enabled": true,
+    "hot_cache_only": false,
+    "gdn_ssd_split_enabled": true,
+    "gdn_snapshot_storage": "auto",
+    "gdn_ssd_pending_max_size": "512MB",
+    "gdn_sidecar_precision": "fp32",
+    "ssd_cache_dir": null,
+    "ssd_cache_max_size": "auto",
+    "hot_cache_max_size": "0",
+    "hot_cache_write_through": false,
+    "ane_compile_cache": false,
+    "initial_cache_blocks": 256
+  },
+  "auth": {
+    "api_key": "INJECT_AT_DEPLOY",
+    "secret_key": "INJECT_AT_DEPLOY",
+    "skip_api_key_verification": false,
+    "allow_unauthenticated_inference": false,
+    "sub_keys": [
+      {
+        "key": "INJECT_AT_DEPLOY",
+        "name": "default",
+        "created_at": "2026-10-05T10:18:16.206123+00:00"
+      }
+    ]
+  },
+  "mcp": {
+    "config_path": null,
+    "expose_tools": true
+  },
+  "huggingface": {
+    "endpoint": "",
+    "hf_cache_enabled": false
+  },
+  "modelscope": {
+    "endpoint": ""
+  },
+  "network": {
+    "http_proxy": "",
+    "https_proxy": "",
+    "no_proxy": "",
+    "ca_bundle": ""
+  },
+  "sampling": {
+    "max_context_window": 32768,
+    "max_context_window_policy": null,
+    "max_tokens": 32768,
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "top_k": 0,
+    "repetition_penalty": 1.0
+  },
+  "logging": {
+    "log_dir": null,
+    "retention_days": 7
+  },
+  "claude_code": {
+    "mode": "cloud",
+    "opus_model": null,
+    "sonnet_model": null,
+    "haiku_model": null
+  },
+  "integrations": {
+    "codex_model": null,
+    "opencode_model": null,
+    "openclaw_model": null,
+    "hermes_model": null,
+    "pi_model": null,
+    "copilot_model": null,
+    "dsh_model": null,
+    "openclaw_tools_profile": "coding",
+    "markitdown_enabled": true,
+    "markitdown_expose_model": false,
+    "markitdown_max_file_size_mb": 25,
+    "markitdown_max_files_per_request": 5,
+    "markitdown_pdf_processing_engine": "markitdown",
+    "web_search_provider": "ddgs",
+    "web_search_brave_api_key": "",
+    "web_search_searxng_url": "",
+    "web_search_ddgs_backends": "",
+    "web_search_max_results": 3,
+    "web_search_content_mode": "snippet",
+    "web_search_content_truncate": true,
+    "web_search_content_max_chars": 20000
+  },
+  "ui": {
+    "language": "zh",
+    "dashboard_layout": null
+  },
+  "usage": {
+    "usage_history": true
+  },
+  "idle_timeout": {
+    "idle_timeout_seconds": 1800
+  }
+}

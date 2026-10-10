@@ -5,6 +5,13 @@ kind: Kustomization
 resources:
   # app
   - ./helmrelease.yaml
+  - ./ciliumnetworkpolicy.yaml
   # utils
   - ./configmap.yaml
   - ./externalsecret.yaml
+configMapGenerator:
+  - name: webhook-relay-tickets
+    files:
+      - ticket_consumer.py
+generatorOptions:
+  disableNameSuffixHash: true

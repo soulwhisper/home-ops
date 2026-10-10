@@ -59,8 +59,8 @@ just talos generate prod
    resolving 1Password references to produce cluster secrets (IDs, tokens, CA
    certs and keys). The resolved YAML is piped to `talosctl gen config`.
 
-   `secret.yaml` is compatible with Talos 1.14 unchanged: the secrets bundle
-   schema is identical across 1.13/1.14, and the 1.14 cluster-ID encoding
+   `secret.yaml` is compatible with current Talos unchanged: the secrets bundle
+   schema is stable across recent releases, and the cluster-ID encoding
    alignment (URL-safe → standard base64) is a non-issue because Talos never
    decodes the cluster ID — it is used as an opaque identifier string.
 
@@ -74,16 +74,16 @@ just talos generate prod
 
    | Order | File | What it configures |
    |-------|------|--------------------|
-   | 00 | `00-schematic.yaml` | Schematic ID (Image Factory extension set) |
-   | 10 | `10-general.yaml` | Multi-document config: discovery, install, DNS, kubelet/node, scheduler, sysctls, CRI, NUT, NTP, volumes |
-   | 20 | `20-mount-hostpath.yaml` | Secondary NVMe disk as `local-cache` XFS volume |
+   | 10 | `10-general.yaml` | Multi-document config: discovery, install, DNS, kubelet/node, scheduler, sysctls, CRI, NUT, NTP |
    | 30 | `30-private-mirrors.yaml` | Registry mirrors routing through NAS cache (`nas.homelab.internal:9002`) |
    | — | `nodes/<hostname>.yaml` | Hostname, bond configuration (802.3ad, 10G, MTU 9000), static IP |
+
+   Numbered shared patches (`[1-9][0-9]-*.yaml`) and each node's `nodes/<hostname>.yaml` file are applied to the machineconfig. `00-schematic.yaml` is consumed exclusively by the Talos Image Factory (Phase 1) to resolve the schematic ID, which `generate` then injects into the installer image — it is never a machineconfig patch.
 
    The result is `clusterconfig/main-<hostname>.yaml` per node. The
    `talosconfig` is copied to `~/.talos/config`.
 
-**Key `10-general.yaml` decisions** (Talos 1.14 multi-document model):
+**Key `10-general.yaml` decisions** (multi-document model):
 
 - Flannel document is deleted (Cilium is installed later via Helm).
 - `KubeCoreDNSConfig` disabled (replaced by Cilium-managed CoreDNS).
@@ -114,9 +114,9 @@ identity):
 
 | Behavior | Detail |
 |----------|--------|
-| Retry count | 5 attempts per node |
-| Retry interval | 3 seconds |
-| Failure policy | Warns and continues — node may already be booted or rebooting |
+| Retry count | 12 attempts per node |
+| Retry interval | 5 seconds |
+| Failure policy | Hard fail (`exit 1`) after 12 attempts; a node answering "certificate required" is already configured and skipped |
 
 ```shell
 # Under the hood:
@@ -187,21 +187,24 @@ Two steps, run sequentially:
    --server-side`.
 
 2. **Helmfile sync**: `kubernetes/bootstrap/helmfile.yaml` installs the
-   cluster's foundation in dependency order with 5 retries (10s interval):
+   cluster's foundation as a `needs`-DAG with 5 retries (10s interval):
 
-   | Order | Release | Namespace | Purpose |
-   |-------|---------|-----------|---------|
-   | 1 | `prometheus-crds` | `monitoring-system` | Prometheus Operator CRDs |
-   | 2 | `cilium` | `kube-system` | CNI, networking, BGP |
-   | 3 | `coredns` | `kube-system` | Cluster DNS |
-   | 4 | `spegel` | `kube-system` | P2P image distribution |
-   | 5 | `gateway-api-crds` | `kube-system` | Gateway API CRDs |
-   | 6 | `external-secrets` | `security-system` | 1Password-backed secrets |
-   | 7 | `flux-operator` | `gitops-system` | Flux controller manager |
-   | 8 | `flux-instance` | `gitops-system` | Flux Kustomization controllers |
+   | Release | Namespace | Needs | Purpose |
+   |---------|-----------|-------|---------|
+   | `prometheus-crds` | `monitoring-system` | — | Prometheus Operator CRDs |
+   | `coredns` | `kube-system` | `prometheus-crds` | Cluster DNS (must exist before cilium renders hubble-relay) |
+   | `cilium` | `kube-system` | `coredns` | CNI, networking, BGP |
+   | `spegel` | `kube-system` | `cilium` | P2P image distribution |
+   | `gateway-api-crds` | `kube-system` | `spegel` | Gateway API CRDs |
+   | `kgateway-crds` | `networking-system` | `gateway-api-crds` | kgateway CRDs |
+   | `external-secrets` | `security-system` | `gateway-api-crds` | 1Password-backed secrets |
+   | `cert-manager` | `security-system` | `gateway-api-crds` | Certificate management |
+   | `onepassword-connect` | `security-system` | `external-secrets` | 1Password Connect API |
+   | `k8tz` | `kube-system` | `cert-manager` | Timezone injection |
+   | `flux-operator` | `gitops-system` | `external-secrets` | Flux controller manager |
+   | `flux-instance` | `gitops-system` | `flux-operator` | Flux Kustomization controllers |
 
-   Each release waits for the previous one to become healthy before
-   proceeding. Total timeout per release: 600s.
+   Each release waits to become healthy before its dependents proceed, except `coredns`, which uses `wait: false` so Cilium can render Hubble Relay before CoreDNS is ready. Total timeout per release: 600s.
 
 ---
 
@@ -296,9 +299,8 @@ just talos apply exarch-01    # uses test configs
 | HTTP proxy | None | `http://172.19.82.10:1080` (transparent proxy on edge router) |
 | NTP / DNS / NUT | `10.10.0.254` (prod edge router) | `172.19.82.10` (test infra host) |
 | Discovery service | `10.10.0.100:9300` | `172.19.82.10:9300` |
-| Ephemeral volume | 80 GiB | 512 GiB |
-| local-hostpath volume | 140 GiB (shared NVMe) | 256 GiB (virtual disk) |
-| local-cache volume | Secondary NVMe via `pci-0000:59:00.0-nvme-1` | Not provisioned |
+| Ephemeral volume | Not pinned (Talos default) | 512 GiB |
+| local-hostpath volume | Not provisioned | 256 GiB (virtual disk) |
 
 The test cluster is designed to validate configuration changes before they
 reach production. The simpler networking (active-backup bond, no private

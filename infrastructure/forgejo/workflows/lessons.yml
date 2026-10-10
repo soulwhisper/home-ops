@@ -1,0 +1,45 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# yamllint disable rule:truthy
+# Distills a closed ticket into learnings/ — manual dispatch only (no cron,
+# no auto-fixers; the human decides when a ticket is worth a lesson).
+# Secrets (set once in the tickets repo's Actions settings):
+#   TICKETS_TOKEN — forgejo `pat_tickets` (API read + git push). Forgejo
+#                   rejects secret names starting with FORGEJO_/GITEA_.
+#   LLM_API_KEY   — llm-api `agentgateway_api_auth` (agent lane consumer key)
+name: lessons
+
+on:
+  workflow_dispatch:
+    inputs:
+      ticket:
+        description: "Ticket number to distill into a lesson"
+        required: true
+        type: number
+
+jobs:
+  write-lesson:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Distill ticket into learnings/
+        env:
+          FORGEJO_TOKEN: ${{ secrets.TICKETS_TOKEN }}
+          # cleartext HTTP to the NAS is an accepted risk: wired VLAN 100 LAN
+          # only, same posture as the cluster-internal Forgejo clients
+          FORGEJO_API: http://nas.homelab.internal:9003/api/v1
+          REPO: soulwhisper/homelab-tickets
+          LLM_API_BASE: https://api.noirprime.com/v1
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: agent
+          TICKET: ${{ inputs.ticket }}
+        run: python3 .forgejo/workflows/write_lesson.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "ai-ops[bot]"
+          git config user.email "ai-ops@noirprime.com"
+          git add learnings/
+          git diff --cached --quiet || git commit -m "learn: ticket #${{ inputs.ticket }}"
+          git push

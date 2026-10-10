@@ -100,6 +100,12 @@ spec:
         enabled: true
         trustCRDsExist: true
     rollOutCiliumPods: true
+    # Socket-LB only reaps UDP sockets to deleted backends by default; TCP needs
+    # this (hidden) agent flag. Without it a reply-less pooled/pubsub socket to
+    # a rescheduled pod keeps retransmitting into POLICY_DENIED (2026-10-08:
+    # open-webui -> old dragonfly IP for 27h). Kernel has INET_DIAG_DESTROY.
+    extraConfig:
+      lb-sock-terminate-all-protos: "true"
     routingMode: native
     securityContext:
       capabilities:

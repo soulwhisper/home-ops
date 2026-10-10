@@ -6,20 +6,12 @@ metadata:
   name: llm-guardrails
 spec:
   # Guards the guarded rules of the unified /v1 lane (sectionName picks
-  # rules); the `raw` rule (complex-raw) is deliberately excluded.
+  # rules); the `uncensored` rule is deliberately excluded.
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: agentgateway-llm-route
-      sectionName: complex
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: agentgateway-llm-route
-      sectionName: priority
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: agentgateway-llm-route
-      sectionName: micro
+      sectionName: agent
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: agentgateway-llm-route

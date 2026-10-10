@@ -12,18 +12,21 @@ data:
       feishu:
         apprise:
           url: 'feishu://{{ env "FEISHU_TOKEN" }}'
-      # pushover: disabled 2026-09-26 — feishu proved sufficient; re-enable by
-      # uncommenting here, in the alertmanager route target list, and params.
-      # pushover:
-      #   apprise:
-      #     url: 'pover://{{ env "PUSHOVER_USER_KEY" }}@{{ env "PUSHOVER_TOKEN" }}'
+      # Serialized, repo-backed dedupe: chaski sends findings to the local
+      # consumer; only that consumer holds the Forgejo PAT and calls the NAS.
+      # NAS HTTP is an accepted wired-LAN risk, not transport encryption.
+      forgejo-tickets:
+        http:
+          url: http://127.0.0.1:8082/findings
+          timeout: 120s
+          headers:
+            Content-Type: application/json
 
     routes:
       # Alertmanager -> feishu
       alertmanager:
         target:
           - feishu
-          # - pushover
         title: '[{{ .payload.status | toUpper }}{{ if eq .payload.status "firing" }}:{{ len .payload.alerts }}{{ end }}] {{ .payload.commonLabels.alertname | default "Alertmanager" }}'
         # Per alert: description/summary plus curated context labels only —
         # dumping .labels produced a ~20-line wall per alert in feishu
@@ -51,11 +54,42 @@ data:
           node: {{ . }}
           {{- end }}
           {{- end }}
-        # params were pushover-only (priority/sound); feishu ignores unknown
-        # query keys. Uncomment with the pushover target if re-enabled.
-        # params:
-        #   priority: '{{ ternary "1" "0" (eq .payload.status "firing") }}'
-        #   sound: gamelan
+      # Robusta runner -> feishu (enriched alerts + findings)
+      robusta:
+        target:
+          - feishu
+        title: '[{{ .payload.severity | default "info" | toUpper }}] {{ .payload.title | default "robusta" }}'
+        # enrichments carry the actual enrichment blocks (markdown/header text,
+        # list items, json); absent when the sink's size_limit trims them
+        message: |-
+          {{ .payload.description | default (.payload.message | default "") }}
+          {{- range $e := .payload.enrichments }}
+          {{- range $b := $e.blocks }}
+          {{- if $b.text }}
+          {{ $b.text }}
+          {{- else if $b.items }}
+          {{- range $b.items }}
+          - {{ . }}
+          {{- end }}
+          {{- else if $b.json_str }}
+          {{ $b.json_str }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+      # Robusta runner -> local ticket consumer: one issue per alert + affected
+      # workload; re-notifications of the same state are suppressed,
+      # transitions append. Only Alertmanager-sourced findings are ticketed:
+      # Robusta's builtin playbooks (PodOOMKill, CrashLoopBackOff,
+      # ImagePullBackOff, PodEvicted) emit KUBERNETES_API_SERVER findings for
+      # the same events the OOMKilled/KubePodCrashLooping rules already cover,
+      # which would open a second ticket per incident. Those still reach Feishu.
+      # Access is enforced by network identity: the relay ingress CNP admits
+      # this path only from robusta pods.
+      robusta-tickets:
+        whenExpr: 'payload.source == "PROMETHEUS" && payload.severity in ["MEDIUM", "HIGH"]'
+        target:
+          - forgejo-tickets
+        message: '{{ .payload | toJSON }}'
       # authentik system notifications (blueprints/core/notifications.yaml)
       authentik:
         target:

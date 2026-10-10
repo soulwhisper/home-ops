@@ -43,3 +43,18 @@ spec:
           path: /mcp
           port: 4483
           protocol: StreamableHTTP
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: mcp-backend-ops
+spec:
+  mcp:
+    targets:
+      - name: vmcp-internal-ops
+        static:
+          host: vmcp-internal-ops.servitor-apps.svc.cluster.local
+          path: /mcp
+          port: 4483
+          protocol: StreamableHTTP

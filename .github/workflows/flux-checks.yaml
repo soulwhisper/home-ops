@@ -53,6 +53,9 @@ jobs:
           cache: true
           token: ""
 
+      - name: Test incident ticket lifecycle
+        run: python3 -m unittest discover -s .github/scripts -p test_ticket_consumer.py
+
       - name: Run flate test
         env:
           BASE_BRANCH: ${{ github.event.repository.default_branch }}

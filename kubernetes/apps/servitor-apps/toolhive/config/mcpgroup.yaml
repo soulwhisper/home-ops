@@ -22,3 +22,12 @@ metadata:
   name: external
 spec:
   description: "External egress. Full outbound network, no upstream credentials. For crawlers (Firecrawl/Context); isolated for rate limiting and audit."
+
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPGroup
+metadata:
+  name: internal-ops
+spec:
+  description: "Ops isolation tier. Incident and RCA memory bank; separate from chat-tier consumers to prevent memory leakage into conversational context."

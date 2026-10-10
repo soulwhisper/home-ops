@@ -3,17 +3,16 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  # These mcp servers dependsOn toolhive and original apps
-  # servers
   - ./context/ks.yaml
   - ./firecrawl/ks.yaml
-  - ./forgejo/ks.yaml
   - ./fluxcd/ks.yaml
+  - ./forgejo/ks.yaml
   - ./github/ks.yaml
   - ./grafana/ks.yaml
-  - ./hindsight/ks.yaml
+  - ./hindsight-homelab/ks.yaml
+  - ./hindsight-ops/ks.yaml
   - ./home-assistant/ks.yaml
   - ./kubernetes/ks.yaml
-  - ./reflex/ks.yaml
   - ./trendradar/ks.yaml
   - ./victoria-logs/ks.yaml
+  - ./victoria-metrics/ks.yaml

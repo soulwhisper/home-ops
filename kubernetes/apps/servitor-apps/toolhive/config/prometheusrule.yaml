@@ -39,14 +39,18 @@ spec:
         - alert: AgentEgressDenied
           annotations:
             summary: >-
-              CNP denied egress from {{ $labels.source_workload }} (intent/behaviour divergence).
+              CNP denied egress from {{ $labels.source_workload }} to
+              {{ $labels.destination_namespace }}/{{ $labels.destination_workload }}
+              (empty = world/unidentified IP; intent/behaviour divergence).
           expr: |
-            sum by (source_workload, destination_namespace) (increase(hubble_drop_total{reason="POLICY_DENIED", source_namespace="servitor-apps"}[5m])) > 0
+            sum by (source_workload, destination_namespace, destination_workload) (increase(hubble_drop_total{reason="POLICY_DENIED", source_namespace="servitor-apps"}[5m])) > 0
           # require sustained drops: backend restarts cause short reconnect
-          # storms to stale pod IPs (denied by the private-CIDR except) that
-          # self-heal on pod reschedule; a real intent/behaviour divergence
-          # persists. 2026-09-17: open-webui paged on a ~30min redis
-          # reconnect storm after the dragonfly restart, 0 drops since.
+          # storms to stale pod IPs (denied by the private-CIDR except). Cilium
+          # now terminates TCP sockets to deleted backends (cilium helmrelease
+          # lb-sock-terminate-all-protos), so a storm persisting past 15m is
+          # real divergence or a socket Cilium did not load-balance.
+          # 2026-10-08: open-webui -> deleted dragonfly IP fired for 27h before
+          # TCP termination was enabled.
           for: 15m
           labels:
             severity: critical

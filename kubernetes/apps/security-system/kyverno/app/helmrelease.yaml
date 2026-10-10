@@ -1,0 +1,36 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name kyverno
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: kyverno
+
+  values:
+    # single-instance homelab: one replica per controller, modest resources.
+    # Policies ship separately (../policies, dependsOn this release) and start
+    # in Audit mode — nothing is enforced until deliberately flipped.
+    admissionController:
+      replicas: 1
+      resources:
+        requests: { cpu: 100m, memory: 256Mi }
+        limits: { memory: 1Gi }
+    backgroundController:
+      replicas: 1
+      resources:
+        requests: { cpu: 50m, memory: 128Mi }
+        limits: { memory: 512Mi }
+    cleanupController:
+      replicas: 1
+      resources:
+        requests: { cpu: 50m, memory: 128Mi }
+        limits: { memory: 512Mi }
+    reportsController:
+      replicas: 1
+      resources:
+        requests: { cpu: 50m, memory: 128Mi }
+        limits: { memory: 512Mi }
