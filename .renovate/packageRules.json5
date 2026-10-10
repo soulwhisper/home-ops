@@ -8,6 +8,18 @@
       allowedVersions: "!/^0\\.37\\..*$/",
     },
     {
+      description: "Hold github-mcp-server on 1.x: v2.0.x emits nullable-union type arrays (['null','object']) in every tool outputSchema on the MCP Modern (2026-07-28) path; toolhive-core mcpcompat decodes schemas into a strict Type string, so vmcp tools/list fails to decode and circuit-breaks the backend. Revisit when a toolhive release carries the union-tolerant schema fix.",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/github/github-mcp-server"],
+      allowedVersions: "!/^v?2\\..*$/",
+    },
+    {
+      description: "Block mcp-victoriametrics 1.120.x: upstream mispublish (VictoriaMetrics server versioning leaked into the MCP image tags); the real MCP line continues at 1.21+",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/victoriametrics/mcp-victoriametrics"],
+      allowedVersions: "!/^v?1\\.120\\..*$/",
+    },
+    {
       description: "Pin Postgres version to 18",
       matchDatasources: ["docker"],
       matchPackagePatterns: [

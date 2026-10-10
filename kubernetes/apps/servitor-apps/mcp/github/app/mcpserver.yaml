@@ -7,7 +7,13 @@ metadata:
 spec:
   groupRef:
     name: external
-  image: ghcr.io/github/github-mcp-server:v2.0.2
+  # Pinned at v1.14.0: v2.0.2 emits nullable-union `type: ["null","object"]`
+  # in every tool's outputSchema on the Modern (2026-07-28) path, and
+  # toolhive-core mcpcompat decodes schemas into a strict `Type string`
+  # field — vmcp tools/list decode fails and the circuit opens (degraded
+  # 2026-10-09/10, reproduced byte-level). Unpin when a toolhive release
+  # carries the union-tolerant schema fix.
+  image: ghcr.io/github/github-mcp-server:v1.14.0
   args: ["http"]
   env:
     - name: GITHUB_READ_ONLY
