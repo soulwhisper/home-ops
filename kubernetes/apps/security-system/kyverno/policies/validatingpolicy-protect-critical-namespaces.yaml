@@ -32,8 +32,9 @@ spec:
         resources: ['namespaces']
   matchConditions:
     - name: critical-namespaces-only
+      # DELETE admission: object is null, the namespace lives in oldObject
       expression: >-
-        object.metadata.name in
+        oldObject.metadata.name in
         ['kube-system', 'gitops-system', 'networking-system', 'security-system',
          'storage-system', 'database-system', 'monitoring-system']
   variables:

@@ -49,18 +49,24 @@ spec:
         resources: ['kustomizations']
   matchConditions:
     - name: gitops-managed-namespaces
+      # request.namespace survives DELETE (object is null there); all matched
+      # kinds are namespaced
       expression: >-
-        object.metadata.namespace in
+        request.namespace in
         ['servitor-apps', 'smarthome-apps', 'selfhosted-apps', 'gaming-apps',
          'monitoring-system', 'storage-system', 'database-system']
     # all machine actors: flux, operators, controllers — the remaining
     # signal is human users only
     - name: human-users-only
       expression: "!('system:serviceaccounts' in request.userInfo.groups)"
+  variables:
+    # DELETE admission has object=null and the resource in oldObject
+    - name: target
+      expression: "oldObject != null ? oldObject : object"
   validations:
     - expression: 'false'
       messageExpression: >-
         "out-of-band " + request.operation + " on "
-        + object.metadata.namespace + "/" + object.metadata.name + " by "
+        + request.namespace + "/" + variables.target.metadata.name + " by "
         + request.userInfo.username
         + " — gitops-managed namespace; route the change through git or record the exception"

@@ -31,8 +31,9 @@ spec:
         resources: ['pods']
   matchConditions:
     - name: watched-namespaces
+      # DELETE admission: object is null, the pod lives in oldObject
       expression: >-
-        object.metadata.namespace in
+        oldObject.metadata.namespace in
         ['servitor-apps', 'smarthome-apps', 'media-apps', 'selfhosted-apps',
          'monitoring-system', 'storage-system', 'database-system']
     # expected actors: built-in kube-system controllers (rs/sts/job/gc
@@ -78,7 +79,7 @@ spec:
     - expression: variables.isClusterAdmin
       messageExpression: >-
         "unexpected pod delete by " + request.userInfo.username + " on "
-        + object.metadata.namespace + "/" + object.metadata.name
+        + oldObject.metadata.namespace + "/" + oldObject.metadata.name
         + " — candidate for the executor allow-list or a policy exception"
 ---
 # P2 enforce-mode template (commented until audit data justifies it):

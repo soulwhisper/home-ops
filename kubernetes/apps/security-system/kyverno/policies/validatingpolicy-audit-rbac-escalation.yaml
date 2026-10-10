@@ -64,7 +64,7 @@ spec:
         || !(object.roleRef.name in ['cluster-admin', 'cluster-reconciler-gitops-system'])
       messageExpression: >-
         request.operation + " of " + object.kind + " "
-        + object.metadata.namespace + "/" + object.metadata.name
+        + object.metadata.?namespace.orValue('') + "/" + object.metadata.name
         + " grants cluster-admin (or a cluster-admin-equivalent role) by "
         + request.userInfo.username + " — verify intent"
     - expression: >-
