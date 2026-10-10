@@ -65,8 +65,13 @@ spec:
       # populated for every operation incl. DELETE (object is null there) —
       # an oldObject/object ternary variable lost its metadata key in
       # messageExpression evaluation (observed live 2026-10-10).
+      # request.name is empty for generateName creates; object is null on
+      # DELETE (request.name always set there), so the fallback never
+      # dereferences a null object.
       messageExpression: >-
         "out-of-band " + request.operation + " on "
-        + request.namespace + "/" + request.name + " by "
-        + request.userInfo.username
+        + request.namespace + "/"
+        + (request.name != '' ? request.name
+           : object.metadata.?generateName.orValue('<generated>') + '*')
+        + " by " + request.userInfo.username
         + " — gitops-managed namespace; route the change through git or record the exception"
