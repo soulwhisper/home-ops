@@ -9,8 +9,12 @@ metadata:
 spec:
   groupRef:
     name: internal-rw
-  toolConfigRef:
-    name: mcp-forgejo-tickets
+  # No toolConfigRef: the pat_tickets token is permission-scoped at Forgejo,
+  # so a tool allowlist is redundant — and toolhive v0.51.4's filter
+  # middleware re-encodes tools/list through a lossy struct that strips the
+  # SEP-2322 resultType envelope, which vmcp (Modern-era backend) rejects
+  # ("Legacy-shaped body"), circuit-breaking the whole backend
+  # (post-merge incident 2026-10-10).
   # renovate: datasource=docker depName=git.b4mad.industries/agentic-forges/forgejo-mcp
   image: git.b4mad.industries/agentic-forges/forgejo-mcp:v3.2.0
   transport: streamable-http

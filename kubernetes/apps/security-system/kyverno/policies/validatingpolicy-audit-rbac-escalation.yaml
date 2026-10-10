@@ -1,0 +1,79 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/policies.kyverno.io/validatingpolicy_v1.json
+# Privilege-escalation tripwire. Two checks, both AUDIT:
+# 1) any new/edited binding to cluster-admin (excluding the known-good
+#    cluster-admin creators: flux, system:masters internals)
+# 2) any new/edited ClusterRole containing wildcard resource+verb grants
+# An injected agent or supply-chain payload that wants persistence must
+# escalate first — this is where it shows up.
+# Migrated from ClusterPolicy v1 (deprecated in kyverno v1.19). The old
+# `exclude.clusterRoles: [cluster-admin]` has no CEL equivalent, so the actor
+# gate is: the current cluster-admin ClusterRoleBinding subjects by name
+# (cheap short-circuit — flux applies the bulk of RBAC), then a live
+# SubjectAccessReview for wildcard rights to catch binding drift.
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: audit-rbac-escalation
+spec:
+  evaluation:
+    background:
+      enabled: false
+  # Audit-only: a down or slow single-replica admission controller must not
+  # block RBAC writes, including Flux's, cluster-wide (webhook default is Fail).
+  failurePolicy: Ignore
+  validationActions:
+    - Audit
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ['rbac.authorization.k8s.io']
+        apiVersions: ['v1']
+        operations: ['CREATE', 'UPDATE']
+        resources: ['clusterrolebindings', 'rolebindings', 'clusterroles']
+  variables:
+    # Cheap gate first: the enumerated cluster-admin subjects
+    # (ClusterRoleBindings as of 2026-10-10). The SAR behind isClusterAdmin
+    # only runs for other actors — lazily, once per request.
+    - name: isKnownAdmin
+      expression: >-
+        request.userInfo.username in [
+          'system:serviceaccount:gitops-system:kustomize-controller',
+          'system:serviceaccount:gitops-system:helm-controller',
+          'system:serviceaccount:gitops-system:flux-operator'
+        ] || 'system:masters' in request.userInfo.groups
+    - name: wildcardAccess
+      expression: >-
+        resource.Post("authorization.k8s.io/v1", "subjectaccessreviews", {
+          "kind": dyn("SubjectAccessReview"),
+          "apiVersion": dyn("authorization.k8s.io/v1"),
+          "spec": dyn({
+            "user": dyn(request.userInfo.username),
+            "groups": dyn(request.userInfo.groups),
+            "resourceAttributes": dyn({"group": "*", "resource": "*", "verb": "*"})
+          })
+        })
+    - name: isClusterAdmin
+      expression: >-
+        variables.isKnownAdmin
+        || (has(variables.wildcardAccess.status)
+            && variables.wildcardAccess.status.allowed == true)
+  validations:
+    - expression: >-
+        !(object.kind in ['ClusterRoleBinding', 'RoleBinding'])
+        || variables.isClusterAdmin
+        || !(object.roleRef.name in ['cluster-admin', 'cluster-reconciler-gitops-system'])
+      messageExpression: >-
+        request.operation + " of " + object.kind + " "
+        + object.metadata.namespace + "/" + object.metadata.name
+        + " grants cluster-admin (or a cluster-admin-equivalent role) by "
+        + request.userInfo.username + " — verify intent"
+    - expression: >-
+        object.kind != 'ClusterRole'
+        || variables.isClusterAdmin
+        || !object.?rules.orValue([]).exists(r,
+          r.?resources.orValue([]).exists(x, x == '*')
+          || r.?verbs.orValue([]).exists(x, x == '*'))
+      messageExpression: >-
+        request.operation + " of ClusterRole " + object.metadata.name
+        + " with wildcard '*' rules by " + request.userInfo.username
+        + " — verify intent; prefer scoped roles"

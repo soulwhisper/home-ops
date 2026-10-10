@@ -1,0 +1,61 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/policies.kyverno.io/validatingpolicy_v1.json
+# Hard protection against accidental/malicious deletion of namespaces whose
+# loss is unrecoverable or cluster-breaking. ENFORCE from day one: every
+# legitimate namespace deleter in this cluster is cluster-admin (flux
+# controllers, system:masters) — so the exemption costs nothing and there is
+# no legit traffic to break. The namespace-controller finalizes via finalizer
+# updates, not DELETE calls, so normal namespace teardown by admins still
+# works.
+# Migrated from ClusterPolicy v1 (deprecated in kyverno v1.19). The old
+# `exclude.clusterRoles: [cluster-admin]` becomes: system:masters cheap path,
+# then a live SubjectAccessReview for wildcard rights (flux controllers hold
+# cluster-admin by binding, invisible to admission CEL otherwise).
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: protect-critical-namespaces
+spec:
+  evaluation:
+    background:
+      enabled: false
+  # Enforce: keep the webhook default (Fail) — a kyverno outage must fail
+  # closed on this one.
+  failurePolicy: Fail
+  validationActions:
+    - Deny
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ['']
+        apiVersions: ['v1']
+        operations: ['DELETE']
+        resources: ['namespaces']
+  matchConditions:
+    - name: critical-namespaces-only
+      expression: >-
+        object.metadata.name in
+        ['kube-system', 'gitops-system', 'networking-system', 'security-system',
+         'storage-system', 'database-system', 'monitoring-system']
+  variables:
+    - name: wildcardAccess
+      expression: >-
+        resource.Post("authorization.k8s.io/v1", "subjectaccessreviews", {
+          "kind": dyn("SubjectAccessReview"),
+          "apiVersion": dyn("authorization.k8s.io/v1"),
+          "spec": dyn({
+            "user": dyn(request.userInfo.username),
+            "groups": dyn(request.userInfo.groups),
+            "resourceAttributes": dyn({"group": "*", "resource": "*", "verb": "*"})
+          })
+        })
+    - name: isClusterAdmin
+      expression: >-
+        'system:masters' in request.userInfo.groups
+        || (has(variables.wildcardAccess.status)
+            && variables.wildcardAccess.status.allowed == true)
+  validations:
+    - expression: variables.isClusterAdmin
+      message: >-
+        deleting this namespace is blocked by policy
+        (protect-critical-namespaces). Only cluster-admin actors may do
+        this; if you are an admin, use a cluster-admin credential.
