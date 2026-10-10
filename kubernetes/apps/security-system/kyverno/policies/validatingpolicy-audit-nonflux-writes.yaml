@@ -59,14 +59,14 @@ spec:
     # signal is human users only
     - name: human-users-only
       expression: "!('system:serviceaccounts' in request.userInfo.groups)"
-  variables:
-    # DELETE admission has object=null and the resource in oldObject
-    - name: target
-      expression: "oldObject != null ? oldObject : object"
   validations:
     - expression: 'false'
+      # request.* only: AdmissionRequest name/namespace/operation/userInfo are
+      # populated for every operation incl. DELETE (object is null there) —
+      # an oldObject/object ternary variable lost its metadata key in
+      # messageExpression evaluation (observed live 2026-10-10).
       messageExpression: >-
         "out-of-band " + request.operation + " on "
-        + request.namespace + "/" + variables.target.metadata.name + " by "
+        + request.namespace + "/" + request.name + " by "
         + request.userInfo.username
         + " — gitops-managed namespace; route the change through git or record the exception"
