@@ -30,7 +30,7 @@ spec:
 
     sinksConfig:
       # no feishu sink: alert delivery stays on alertmanager -> webhook-relay;
-      # robusta's duplicate push lane was disabled at the relay (2026-10-11)
+      # robusta's duplicate push lane is disabled at the relay
       # ticket intake: relay route robusta-tickets gates MEDIUM+ into the
       # serialized Forgejo consumer. size_limit default (4096) truncates the
       # payload field-by-field and drops enrichments — the diagnosis — first;

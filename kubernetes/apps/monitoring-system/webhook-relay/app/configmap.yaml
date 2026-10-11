@@ -54,9 +54,9 @@ data:
           node: {{ . }}
           {{- end }}
           {{- end }}
-      # DISABLED (2026-10-11): Robusta runner -> feishu push lane. Feishu
-      # delivery of alerts stays on the original alertmanager -> /hooks/
-      # alertmanager path; robusta's sink duplicates every notification.
+      # DISABLED: Robusta runner -> feishu push lane. Feishu delivery of
+      # alerts stays on the original alertmanager -> /hooks/alertmanager
+      # path; robusta's sink duplicates every notification.
       # robusta-tickets below (ticket intake) is unaffected.
       # robusta:
       #   target:
