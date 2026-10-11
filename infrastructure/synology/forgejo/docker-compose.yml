@@ -6,6 +6,13 @@
 
 services:
   forgejo:
+    # nas.homelab.internal alias on forgejo-net: same-host docker clients
+    # (forgejo-runner + its job containers) hit the container directly —
+    # the LAN name resolves to a fake-ip/hairpin that docker cannot use
+    networks:
+      forgejo-net:
+        aliases:
+          - nas.homelab.internal
     image: "codeberg.org/forgejo/forgejo:16.0.5"
     container_name: "forgejo"
     restart: "unless-stopped"
@@ -37,3 +44,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+networks:
+  forgejo-net:
+    name: forgejo-net
