@@ -19,7 +19,8 @@ spec:
     # kubewatch api access; holmes kubernetes toolsets; operator CRD watches
     - toEntities:
         - kube-apiserver
-    # kubewatch forwarder -> runner event delivery (/api/handle)
+    # kubewatch forwarder -> runner event delivery (/api/handle).
+    # Backend port 5000 is scoped to the forwarder in robusta-forwarder-egress below.
     - toServices:
         - k8sService:
             serviceName: robusta-runner
@@ -64,7 +65,8 @@ spec:
       toPorts:
         - ports:
             - { port: "8080", protocol: TCP }
-    # holmes operator -> holmes API (in-namespace)
+    # holmes operator -> holmes API (in-namespace).
+    # Backend port 5050 is scoped to the operator in holmes-operator-egress below.
     - toServices:
         - k8sService:
             serviceName: robusta-holmes
@@ -81,3 +83,43 @@ spec:
         - ports:
             - { port: "53", protocol: TCP }
             - { port: "53", protocol: UDP }
+
+---
+# Caller-scoped backend ports. This cilium matches L4 rules against the
+# post-DNAT (backend) port, so the service-port rules in robusta-egress never
+# match the translated flows. Grant each backend port only to its caller.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: robusta-forwarder-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app: robusta-forwarder
+  egress:
+    # forwarder -> runner :80 -> :5000
+    - toServices:
+        - k8sService:
+            serviceName: robusta-runner
+            namespace: monitoring-system
+      toPorts:
+        - ports:
+            - { port: "5000", protocol: TCP }
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: holmes-operator-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app: holmes-operator
+  egress:
+    # operator -> holmes :80 -> :5050
+    - toServices:
+        - k8sService:
+            serviceName: robusta-holmes
+            namespace: monitoring-system
+      toPorts:
+        - ports:
+            - { port: "5050", protocol: TCP }

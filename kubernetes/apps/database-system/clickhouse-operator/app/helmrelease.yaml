@@ -15,3 +15,12 @@ spec:
       enabled: true
     prometheus:
       enabled: true
+    manager:
+      # default 128Mi limit OOMs on reconcile spikes (~91Mi steady, homelab-tickets#11)
+      resources:
+        limits:
+          cpu: 500m
+          memory: 256Mi
+        requests:
+          cpu: 10m
+          memory: 64Mi
