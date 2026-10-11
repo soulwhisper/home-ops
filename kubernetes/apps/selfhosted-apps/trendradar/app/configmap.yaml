@@ -97,6 +97,40 @@ data:
       mode: "follow_report"
     notification:
       push_window: {}         # 推送时间窗留空 = 不限制
+  # timeline.yaml is REQUIRED by the v6.x scheduler: without it the presets
+  # dict is empty, schedule.preset defaults to "always_on", and every run dies
+  # with 未知的预设模板: 'always_on' BEFORE HTML generation -> /app/output has
+  # no html/ and the webserver falls back to a directory listing (broken since
+  # the 6.10.0 deploy). schedule.enabled=false is NOT a workaround:
+  # Scheduler._build_timeline runs before the enabled check.
+  # Values below mirror config.yaml: incremental report, follow_report AI,
+  # unrestricted push — i.e. pre-scheduler behavior, 24/7.
+  timeline.yaml: |
+    presets:
+      always_on:
+        name: "全天监控"
+        description: "全天候监控，有新增立即推送；AI 跟随报告分析。"
+        default:
+          collect: true
+          analyze: true            # AI_ANALYSIS_ENABLED=true is the master switch
+          ai_mode: "follow_report" # matches config.yaml ai_analysis.mode
+          push: true
+          report_mode: "incremental" # matches config.yaml report.mode
+          once:
+            analyze: false
+            push: false
+        periods: {}
+        day_plans:
+          all_day:
+            periods: []
+        week_map:
+          1: "all_day"
+          2: "all_day"
+          3: "all_day"
+          4: "all_day"
+          5: "all_day"
+          6: "all_day"
+          7: "all_day"
   frequency_words.txt: |
     # 词组 = 主题分组；空行分隔；行首 + = 必须包含，! = 过滤词
     # 科技 — aiera/expreview 及科技平台内容归入此组
