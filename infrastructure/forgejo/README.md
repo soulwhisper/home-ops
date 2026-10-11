@@ -38,11 +38,13 @@ prefixes) and `LLM_API_KEY` (`llm-api.agentgateway_api_auth`).
 ## Runner
 
 The actions runner that executes these workflows is deployed on the NAS via
-doco-cd: `infrastructure/synology/forgejo-runner/`. Registration token and
-secrets live in 1Password (`forgejo` item), injected NAS-side — never
-committed. Its working directory is `/data`; successful registration persists
-`/data/.runner`, which gates re-registration. No nonexistent `config.yml` is
-passed to the runner. NAS HTTP and the Docker socket's host-control privilege
+doco-cd: `infrastructure/synology/forgejo-runner/`. The live `register` flow
+never completed on the NAS, so the pre-registered runner identity
+(`FORGEJO_RUNNER_UUID`/`FORGEJO_RUNNER_TOKEN`) lives in
+`forgejo-runner.sops.env` (age key: doco-cd's NAS-side `sops_token`); the
+compose command writes `/data/.runner` from it on every start — git is the
+source of truth. If Forgejo's DB is rebuilt, re-register a runner and update
+the sops file. NAS HTTP and the Docker socket's host-control privilege
 remain explicit accepted risks; a read-only socket mount is not isolation.
 
 The container explicitly runs as root for NAS socket/data access; only trusted,
