@@ -4,7 +4,7 @@
 # Identity (FORGEJO_RUNNER_UUID/TOKEN) comes from forgejo-runner.sops.env —
 # the live `register` flow never worked, so the pre-registered runner identity
 # is authored in git (sops) and written to /data/.runner on every start.
-# Limits: single concurrent job, hard RAM/CPU caps — NAS stays responsive.
+# Limits: single concurrent job, hard RAM cap (no CPU cap — see below).
 
 services:
   forgejo-runner:
@@ -15,7 +15,8 @@ services:
     working_dir: /data
     # NAS socket/data access uses root; full host control is accepted below.
     user: "0:0"
-    cpus: 2.0
+    # no `cpus` cap: the Synology kernel lacks CPU CFS scheduler support and
+    # the daemon rejects NanoCPUs at container create
     mem_limit: 3g
     mem_reservation: 512m
     env_file:
