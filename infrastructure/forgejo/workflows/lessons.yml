@@ -44,7 +44,11 @@ jobs:
           git diff --cached --quiet || git commit -m "learn: ticket #${{ inputs.ticket }}"
           # concurrent dispatches race on main: rebase onto whatever landed
           # first and retry (lesson filenames differ per ticket, no conflicts)
+          pushed=0
           for i in 1 2 3; do
-            git push && break
+            git push && { pushed=1; break; }
             git pull --rebase origin main || exit 1
           done
+          # CodeRabbit: without this, three failed pushes + one clean rebase
+          # exits 0 and silently loses the unpushed lesson
+          [ "$pushed" = 1 ] || exit 1
