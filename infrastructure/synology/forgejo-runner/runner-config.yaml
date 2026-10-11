@@ -1,0 +1,8 @@
+---
+# forgejo-runner daemon config (-c). Server connection comes from /data/.runner
+# (git-sops identity, see docker-compose.yml) — keep a `server:` section OUT of
+# this file or the daemon fails with a connection conflict.
+# Job containers join forgejo-net so nas.homelab.internal resolves to the
+# forgejo container (same-host hairpin/fake-ip DNS is unusable from docker).
+container:
+  network: forgejo-net
