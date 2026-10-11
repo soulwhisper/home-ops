@@ -29,12 +29,8 @@ spec:
         warning: medium
 
     sinksConfig:
-      # feishu via the existing webhook-relay
-      - webhook_sink:
-          name: feishu-relay
-          url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta"
-          format: json # default is text; chaski parses a JSON payload
-          size_limit: 16384
+      # no feishu sink: alert delivery stays on alertmanager -> webhook-relay;
+      # robusta's duplicate push lane is disabled at the relay
       # ticket intake: relay route robusta-tickets gates MEDIUM+ into the
       # serialized Forgejo consumer. size_limit default (4096) truncates the
       # payload field-by-field and drops enrichments — the diagnosis — first;

@@ -41,7 +41,6 @@ spec:
             - { port: "8080", protocol: TCP }
           rules:
             http:
-              - { method: POST, path: /hooks/robusta }
               - { method: POST, path: /hooks/robusta-tickets }
     - fromEndpoints:
         - matchLabels:
