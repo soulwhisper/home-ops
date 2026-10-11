@@ -10,3 +10,12 @@ resources:
   - ./externalsecret.yaml
   - ./ciliumnetworkpolicy.yaml
   - ./holmes-certmanager-rbac.yaml
+
+configMapGenerator:
+  # stable name: the HR references it by name (kustomize can't rewrite inside
+  # HelmRelease values), so no hash suffix; holmes restarts via HR reconcile
+  - name: holmes-checks-patch
+    options:
+      disableNameSuffixHash: true
+    files:
+      - checks.py=holmes-checks-0.42.0.py
