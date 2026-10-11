@@ -55,6 +55,9 @@ spec:
 
     # ---- unified holmes (values carried over from servitor-apps/holmesgpt) ----
     holmes:
+      # chart default points SENTRY_DSN at robusta's hosted sentry; the CNP
+      # blocks internet egress -> retry spam every minute drowning real logs
+      sentryDSN: ""
       extraEnvVarsSecrets:
         - robusta-holmes # OPENAI_API_BASE + OPENAI_API_KEY (ExternalSecret)
       additionalEnvVars:
