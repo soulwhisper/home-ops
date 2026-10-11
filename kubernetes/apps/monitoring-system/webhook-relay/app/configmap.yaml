@@ -54,28 +54,31 @@ data:
           node: {{ . }}
           {{- end }}
           {{- end }}
-      # Robusta runner -> feishu (enriched alerts + findings)
-      robusta:
-        target:
-          - feishu
-        title: '[{{ .payload.severity | default "info" | toUpper }}] {{ .payload.title | default "robusta" }}'
-        # enrichments carry the actual enrichment blocks (markdown/header text,
-        # list items, json); absent when the sink's size_limit trims them
-        message: |-
-          {{ .payload.description | default (.payload.message | default "") }}
-          {{- range $e := .payload.enrichments }}
-          {{- range $b := $e.blocks }}
-          {{- if $b.text }}
-          {{ $b.text }}
-          {{- else if $b.items }}
-          {{- range $b.items }}
-          - {{ . }}
-          {{- end }}
-          {{- else if $b.json_str }}
-          {{ $b.json_str }}
-          {{- end }}
-          {{- end }}
-          {{- end }}
+      # DISABLED (2026-10-11): Robusta runner -> feishu push lane. Feishu
+      # delivery of alerts stays on the original alertmanager -> /hooks/
+      # alertmanager path; robusta's sink duplicates every notification.
+      # robusta-tickets below (ticket intake) is unaffected.
+      # robusta:
+      #   target:
+      #     - feishu
+      #   title: '[{{ .payload.severity | default "info" | toUpper }}] {{ .payload.title | default "robusta" }}'
+      #   # enrichments carry the actual enrichment blocks (markdown/header text,
+      #   # list items, json); absent when the sink's size_limit trims them
+      #   message: |-
+      #     {{ .payload.description | default (.payload.message | default "") }}
+      #     {{- range $e := .payload.enrichments }}
+      #     {{- range $b := $e.blocks }}
+      #     {{- if $b.text }}
+      #     {{ $b.text }}
+      #     {{- else if $b.items }}
+      #     {{- range $b.items }}
+      #     - {{ . }}
+      #     {{- end }}
+      #     {{- else if $b.json_str }}
+      #     {{ $b.json_str }}
+      #     {{- end }}
+      #     {{- end }}
+      #     {{- end }}
       # Robusta runner -> local ticket consumer: one issue per alert + affected
       # workload; re-notifications of the same state are suppressed,
       # transitions append. Only Alertmanager-sourced findings are ticketed:
