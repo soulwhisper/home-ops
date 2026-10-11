@@ -38,9 +38,12 @@ prefixes) and `LLM_API_KEY` (`llm-api.agentgateway_api_auth`).
 ## Runner
 
 The actions runner that executes these workflows is deployed on the NAS via
-doco-cd: `infrastructure/synology/forgejo-runner/`. The live `register` flow
-never completed on the NAS, so the pre-registered runner identity
-(`FORGEJO_RUNNER_UUID`/`FORGEJO_RUNNER_TOKEN`) lives in
+doco-cd as part of the forgejo stack: `infrastructure/synology/forgejo/`
+(one compose project — the runner and its job containers share the stack
+network, where the forgejo service carries the `nas.homelab.internal` alias;
+same-host docker clients cannot use the LAN hairpin/fake-ip path). The live
+`register` flow never completed on the NAS, so the pre-registered runner
+identity (`FORGEJO_RUNNER_UUID`/`FORGEJO_RUNNER_TOKEN`) lives in
 `forgejo-runner.sops.env` (age key: doco-cd's NAS-side `sops_token`); the
 compose command writes `/data/.runner` from it on every start — git is the
 source of truth. If Forgejo's DB is rebuilt, re-register a runner and update
