@@ -52,5 +52,8 @@ services:
       start_period: 30s
 
 networks:
+  # shared with the forgejo stack; explicit name + non-external in BOTH stacks
+  # so whichever doco-cd deploys first creates it and the other reuses it
+  # (doco-cd deploys stacks concurrently — external:true raced and failed)
   forgejo-net:
-    external: true # created by the forgejo stack; a race on first deploy self-heals on the next 300s doco-cd poll
+    name: forgejo-net
