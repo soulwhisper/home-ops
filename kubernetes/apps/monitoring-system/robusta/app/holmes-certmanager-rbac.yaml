@@ -1,0 +1,30 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/rbac.authorization.k8s.io/clusterrole_v1.json
+# The holmes subchart's built-in ClusterRole covers core/batch reads but not
+# cert-manager CRs — cert-expiry-watch failed with "certificates.cert-manager.io
+# is forbidden" for robusta-holmes-service-account (homelab-tickets#12).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: holmes-certmanager-read
+rules:
+  - apiGroups: ["cert-manager.io"]
+    resources:
+      - certificates
+      - certificaterequests
+      - issuers
+      - clusterissuers
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: holmes-certmanager-read
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: holmes-certmanager-read
+subjects:
+  - kind: ServiceAccount
+    name: robusta-holmes-service-account
+    namespace: monitoring-system

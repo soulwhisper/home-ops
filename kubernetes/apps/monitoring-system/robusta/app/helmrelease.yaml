@@ -62,6 +62,11 @@ spec:
         # without it holmes falls back to "gpt-5.4" when OPENAI_API_KEY is set
         # -> agentgateway 404s the unknown lane
         - { name: MODEL, value: agent }
+        # the agent lane caps at 64K total context; holmes' output floor of
+        # max(64K, 12% of window) would eat the whole window, so cap output
+        # explicitly and compact earlier (80% of 64K + 8K output < 64K)
+        - { name: OVERRIDE_MAX_OUTPUT_TOKEN, value: "8192" }
+        - { name: CONTEXT_WINDOW_COMPACTION_THRESHOLD_PCT, value: "80" }
       modelList:
         # agent lane (studio-hosted). temperature 0.6 follows the model's
         # tuned sampling (0.6/0.95/top_k 20).
@@ -70,6 +75,11 @@ spec:
           api_base: envRef:OPENAI_API_BASE
           api_key: envRef:OPENAI_API_KEY
           temperature: 0.6
+          # holmes assumes 200K when the model is unknown to litellm; the lane
+          # rejects prompts >64K ("Prompt too long"). Tell holmes the truth so
+          # it compacts instead of erroring.
+          custom_args:
+            max_context_size: 65536
       toolsets:
         internet:
           enabled: false # no Internet egress for this pod (see CNP)

@@ -9,3 +9,4 @@ resources:
   # utils
   - ./externalsecret.yaml
   - ./ciliumnetworkpolicy.yaml
+  - ./holmes-certmanager-rbac.yaml
