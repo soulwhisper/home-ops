@@ -29,12 +29,8 @@ spec:
         warning: medium
 
     sinksConfig:
-      # feishu via the existing webhook-relay
-      - webhook_sink:
-          name: feishu-relay
-          url: "http://webhook-relay.monitoring-system.svc.cluster.local:8080/hooks/robusta"
-          format: json # default is text; chaski parses a JSON payload
-          size_limit: 16384
+      # no feishu sink: alert delivery stays on alertmanager -> webhook-relay;
+      # robusta's duplicate push lane is disabled at the relay
       # ticket intake: relay route robusta-tickets gates MEDIUM+ into the
       # serialized Forgejo consumer. size_limit default (4096) truncates the
       # payload field-by-field and drops enrichments — the diagnosis — first;
@@ -60,6 +56,22 @@ spec:
       sentryDSN: ""
       extraEnvVarsSecrets:
         - robusta-holmes # OPENAI_API_BASE + OPENAI_API_KEY (ExternalSecret)
+      # LOCAL PATCH: mount a patched checks.py forcing two-phase check execution
+      # on the agent lane (response_format+tools incompatible). Pin tracks the
+      # holmes image tag; drop when HolmesGPT/holmesgpt#2581 ships (homelab-tickets#7)
+      additionalVolumes:
+        - name: holmes-checks-patch
+          configMap:
+            name: holmes-checks-patch
+      additionalVolumeMounts:
+        - name: holmes-checks-patch
+          mountPath: /app/holmes/checks/checks.py
+          subPath: checks.py
+          readOnly: true
+      podAnnotations:
+        # bump when holmes-checks-0.42.0.py changes: subPath mounts never
+        # propagate ConfigMap updates to running pods (coderabbit)
+        home-ops/checks-patch-rev: "1"
       additionalEnvVars:
         # default model for requests that don't name one (HealthChecks!):
         # without it holmes falls back to "gpt-5.4" when OPENAI_API_KEY is set
