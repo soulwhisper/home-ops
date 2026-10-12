@@ -127,29 +127,18 @@ data:
             href: https://10.0.0.10
             icon: /icons/vmware-esxi.svg
             weight: 80              # pinned bottom of the sidebar
-            # vmware_exporter metrics via vmsingle instant queries (one
-            # customapi widget per field: one endpoint per widget)
-            widgets:
-              - type: customapi
-                url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/query?query=max((time()%20-%20vmware_host_boot_timestamp_seconds)%20%2F%203600)
-                refreshInterval: 60000
-                mappings:
-                  - { field: data.result.0.value.1, label: "Uptime (h)", format: number }
-              - type: customapi
-                url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/query?query=max(vmware_host_cpu_usage)%20%2F%20max(vmware_host_cpu_max)
-                refreshInterval: 60000
-                mappings:
-                  - { field: data.result.0.value.1, label: "CPU", format: percent }
-              - type: customapi
-                url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/query?query=max(vmware_host_memory_usage)%20%2F%20max(vmware_host_memory_max)
-                refreshInterval: 60000
-                mappings:
-                  - { field: data.result.0.value.1, label: "Mem", format: percent }
-              - type: customapi
-                url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/query?query=count(vmware_vm_boot_timestamp_seconds)
-                refreshInterval: 60000
-                mappings:
-                  - { field: data.result.0.value.1, label: "VMs", format: number }
+            # one customapi widget (fields render as a single block row like
+            # qbittorrent's): one vmsingle instant query unions all four
+            # metrics via label_replace into a stable operand order
+            widget:
+              type: customapi
+              url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/query?query=label_replace%28max%28%28time%28%29%20-%20vmware_host_boot_timestamp_seconds%29%20/%203600%29%2C%20%22m%22%2C%20%22a_uptime_h%22%2C%20%22%22%2C%20%22%22%29%20or%20label_replace%28count%28vmware_vm_boot_timestamp_seconds%29%2C%20%22m%22%2C%20%22b_vms%22%2C%20%22%22%2C%20%22%22%29%20or%20label_replace%28max%28vmware_host_cpu_usage%29%20/%20max%28vmware_host_cpu_max%29%2C%20%22m%22%2C%20%22c_cpu%22%2C%20%22%22%2C%20%22%22%29%20or%20label_replace%28max%28vmware_host_memory_usage%29%20/%20max%28vmware_host_memory_max%29%2C%20%22m%22%2C%20%22d_mem%22%2C%20%22%22%2C%20%22%22%29
+              refreshInterval: 60000
+              mappings:
+                - { field: data.result.0.value.1, label: "Uptime (h)", format: number }
+                - { field: data.result.1.value.1, label: "VMs", format: number }
+                - { field: data.result.2.value.1, label: "CPU", format: percent }
+                - { field: data.result.3.value.1, label: "Mem", format: percent }
   widgets.yaml: |
     - search:
         provider: custom
