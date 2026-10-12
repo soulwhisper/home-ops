@@ -70,6 +70,9 @@ spec:
           gethomepage.dev/widget.type: jellyfin
           gethomepage.dev/widget.url: http://jellyfin.media-apps.svc.cluster.local:8096
           gethomepage.dev/widget.key: '{{ "{{HOMEPAGE_VAR_JELLYFIN_API_KEY}}" }}' # yamllint disable-line rule:quoted-strings
+          # jellyfin 12 removed legacy /emby/* routes and api_key query auth;
+          # version 2 uses unprefixed endpoints + MediaBrowser header auth
+          gethomepage.dev/widget.version: "2"
           gethomepage.dev/widget.enableBlocks: "true"
           gethomepage.dev/widget.enableNowPlaying: "true"
           gethomepage.dev/widget.enableMediaControl: "false"

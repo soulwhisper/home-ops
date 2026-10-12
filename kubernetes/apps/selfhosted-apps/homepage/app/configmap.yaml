@@ -95,7 +95,8 @@ data:
             icon: openwrt.svg
             widget:
               type: openwrt
-              url: http://10.10.0.254/cgi-bin/luci/
+              # widget appends /ubus (JSON-RPC); a path here 404s the session login
+              url: http://10.10.0.254
               username: {{HOMEPAGE_VAR_OPENWRT_USERNAME}}
               password: {{HOMEPAGE_VAR_OPENWRT_PASSWORD}}
               interfaceName: wan
