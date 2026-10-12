@@ -78,7 +78,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: /icons/crafty-controller.svg
           gethomepage.dev/name: Crafty
-          gethomepage.dev/group: Service
+          gethomepage.dev/group: Status
           gethomepage.dev/widget.type: minecraft
           gethomepage.dev/widget.url: "udp://10.10.0.143:25565"
         parentRefs:

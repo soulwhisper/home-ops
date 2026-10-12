@@ -23,67 +23,54 @@ data:
     quicklaunch:
       searchDescriptions: true
       hideInternetSearch: true
+    # group order = page placement; custom.css pins the first group (Status)
+    # as a full-height left sidebar and flows the rest into two tracks
     layout:
-      Calendar:
-        header: false
-        style: columns
-      Download:
-        style: columns
+      Status:                 # widget sidebar: jellyfin/immich/qbittorrent/crafty
+        style: column
       Media:
-        style: row
-        columns: 2
+        style: column
       Service:
         style: row
         columns: 2
-      Observability:
-        style: row
-        columns: 2
       SmartHome:
-        style: columns
-      Storage:
-        style: columns
-      Infrastructure:
-        style: columns
-      Networking:
-        style: columns
-  custom.css: ""
+        style: column
+      Download:
+        style: column
+      Observability:
+        style: column
+      Infrastructure:         # below the fold by design
+        style: column
+      # Calendar:             # re-enable together with the services.yaml entry
+      #   header: false
+      #   style: column
+  custom.css: |
+    /* wide screens: first layout group (Status) = full-height left sidebar,
+       remaining groups flow into two tracks. hooks #layout-groups /
+       .services-group are semantic; re-verify on homepage upgrades. */
+    @media (min-width: 1280px) {
+      #layout-groups { display: grid !important; grid-template-columns: minmax(320px, 400px) 1fr 1fr; align-items: start; }
+      /* span 3, not 1/-1: with zero explicit rows, -1 resolves to line 1 and
+         the sidebar would collapse to one row; bump if right-side rows grow */
+      #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / span 3; }
+    }
   custom.js: ""
-  bookmarks.yaml: |
-    - Social:
-        - Discord:
-            - icon: /icons/discord.svg
-              href: https://discord.com/app
-        - Outlook:
-            - icon: /icons/microsoft-outlook.svg
-              href: https://outlook.live.com/mail/0/
-    - Cloud:
-        - Cloudflare:
-            - icon: /icons/cloudflare.svg
-              href: https://dash.cloudflare.com
-    - Icons:
-        - Homepage Dashboard:
-            - icon: /icons/si-jpeg.svg
-              href: https://dashboardicons.com/
-        - Homepage MDI:
-            - icon: /icons/si-materialdesign.svg
-              href: https://pictogrammers.com/library/mdi/
-        - Homepage SI:
-            - icon: /icons/si-simpleicons.svg
-              href: https://simpleicons.org/
+  bookmarks.yaml: ""
   services.yaml: |
-    - Calendar:
-        - Calendar:
-            widget:
-              type: calendar
-              firstDayInWeek: monday
-              view: agenda
-              maxEvents: 10
-              showTime: true
-              timezone: Asia/Shanghai
-              integrations:
-                - type: ical
-                  name: Ticktick
-                  url: {{HOMEPAGE_VAR_TICKTICK_ICAL}}
+    # Calendar widget deactivated; uncomment here AND in settings.yaml layout
+    # - Calendar:
+    #     - Calendar:
+    #         widget:
+    #           type: calendar
+    #           firstDayInWeek: monday
+    #           view: agenda
+    #           maxEvents: 10
+    #           showTime: true
+    #           timezone: Asia/Shanghai
+    #           integrations:
+    #             - type: ical
+    #               name: Ticktick
+    #               url: {{HOMEPAGE_VAR_TICKTICK_ICAL}}
     - Infrastructure:
         - ESXi:
             href: https://10.0.0.10
@@ -100,7 +87,6 @@ data:
               # widget indexes the ubus network.device dump by DEVICE name;
               # the WAN is PPPoE -> pppoe-wan (no device is named "wan")
               interfaceName: pppoe-wan
-    - Networking:
         - Unifi:
             href: https://10.10.0.200:9801
             icon: /icons/unifi.svg
@@ -109,7 +95,6 @@ data:
               url: https://10.10.0.200:9801
               username: {{HOMEPAGE_VAR_UNIFI_USERNAME}}
               password: {{HOMEPAGE_VAR_UNIFI_PASSWORD}}
-    - Storage:
         - NAS:
             href: https://10.10.0.100:5001
             icon: /icons/synology.svg

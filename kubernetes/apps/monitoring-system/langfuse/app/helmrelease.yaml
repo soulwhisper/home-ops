@@ -84,7 +84,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: /icons/si-langflow.svg
           gethomepage.dev/name: LangFuse
-          gethomepage.dev/group: Service
+          gethomepage.dev/group: Observability
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
