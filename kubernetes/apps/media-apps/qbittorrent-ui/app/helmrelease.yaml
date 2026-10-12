@@ -79,7 +79,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: /icons/qbittorrent.svg
           gethomepage.dev/name: qBittorrent-ui
-          gethomepage.dev/group: Download
+          gethomepage.dev/group: Media
         parentRefs:
           - name: kgateway-internal
             namespace: networking-system
