@@ -102,7 +102,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: /icons/qbittorrent.svg
           gethomepage.dev/name: qBittorrent
-          gethomepage.dev/group: Download
+          gethomepage.dev/group: Status
           gethomepage.dev/widget.type: qbittorrent
           gethomepage.dev/widget.url: http://qbittorrent-app.media-apps.svc.cluster.local:8080
         parentRefs:
