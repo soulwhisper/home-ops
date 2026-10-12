@@ -24,27 +24,28 @@ data:
       searchDescriptions: true
       hideInternetSearch: true
     # group order = page placement; with the column-flow grid below:
-    # Status = sidebar col, then Media/Observability fill col 2 top-to-bottom,
-    # Service/SmartHome fill col 3
+    # Status = sidebar col, then Media/SmartHome fill col 2 top-to-bottom,
+    # Service/Observability fill col 3 (observability below the fold)
     layout:
       Status:                 # ALL widget apps + ESXi (weights in services.yaml
         style: column         # and route annotations); column stack, natural heights
       Media:
         style: column
-      Observability:
+      SmartHome:
         style: column
       Service:
         style: row
         columns: 2
-      SmartHome:
-        style: column
+      Observability:
+        style: row
+        columns: 2
       # Calendar:             # re-enable together with the services.yaml entry
       #   header: false
       #   style: column
   custom.css: |
     /* wide screens: first layout group (Status) = full-height left sidebar,
-       rest flow column-wise into two tracks (col2: Media+Observability,
-       col3: Service+SmartHome). grid-template-rows makes 1/-1 valid and
+       rest flow column-wise into two tracks (col2: Media+SmartHome,
+       col3: Service+Observability). grid-template-rows makes 1/-1 valid and
        enables column wrapping. hooks #layout-groups / .services-group are
        semantic; re-verify on homepage upgrades. */
     @media (min-width: 1280px) {
