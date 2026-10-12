@@ -32,7 +32,9 @@ spec:
               # fails regardless). ACCEPTED RISK: no TLS verification toward
               # the host — wired VLAN only, read-only account, same posture as
               # the router/NAS plaintext paths documented elsewhere.
-              VSPHERE_IGNORE_SSL: "1"
+              # get_bool_env() only accepts the literal "true" — "1" silently
+              # parses to False and the scrape died on certificate verify
+              VSPHERE_IGNORE_SSL: "true"
             envFrom:
               - secretRef:
                   name: *name
