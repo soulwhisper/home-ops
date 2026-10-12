@@ -23,12 +23,13 @@ data:
     quicklaunch:
       searchDescriptions: true
       hideInternetSearch: true
-    # group order = page placement; with the column-flow grid below:
-    # Status = sidebar col, then Media/SmartHome fill col 2 top-to-bottom,
-    # Service/Observability fill col 3 (observability below the fold)
+    # group order = column order on wide screens (custom.css below):
+    # Status | Media | SmartHome | Service | Observability
     layout:
-      Status:                 # ALL widget apps + ESXi (weights in services.yaml
-        style: column         # and route annotations); column stack, natural heights
+      Status:                 # ALL widget apps + ESXi; 2 internal columns like
+        style: row            # Service/Observability (weights pair the rows:
+        columns: 2            # jellyfin+immich / qbit+crafty / nas+openwrt /
+                              # unifi+esxi)
       Media:
         style: column
       SmartHome:
@@ -43,12 +44,15 @@ data:
       #   header: false
       #   style: column
   custom.css: |
-    /* wide screens: first layout group (Status) = full-height left sidebar,
-       rest flow column-wise into two tracks (col2: Media+SmartHome,
-       col3: Service+Observability). grid-template-rows makes 1/-1 valid and
-       enables column wrapping. hooks #layout-groups / .services-group are
-       semantic; re-verify on homepage upgrades. */
-    @media (min-width: 1280px) {
+    /* >=1900px (27-32" 1440p/4K@150%): flat 5-column page, one group per
+       column; double-width tracks for the internally-2-col groups.
+       1280-1899px: 3-track fallback with Status as left sidebar.
+       hooks #layout-groups / .services-group are semantic; re-verify on
+       homepage upgrades. */
+    @media (min-width: 1900px) {
+      #layout-groups { display: grid !important; grid-template-columns: 1.2fr 0.8fr 0.8fr 1.2fr 1.2fr; align-items: start; }
+    }
+    @media (min-width: 1280px) and (max-width: 1899px) {
       #layout-groups { display: grid !important; grid-template-columns: minmax(320px, 400px) 1fr 1fr; grid-template-rows: repeat(2, auto); grid-auto-flow: column; align-items: start; }
       #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / -1; }
     }
