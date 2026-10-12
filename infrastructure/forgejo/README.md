@@ -55,7 +55,7 @@ operator-authored workflows belong on it. The Forgejo MCP allowlist permits
 ticket writes and repository reads, not workflow changes or dispatch, despite
 the shared PAT's repository-write scope for the manual lessons workflow.
 
-## Access paths (2026-10)
+## Access paths
 
 - **Canonical: `https://git.noirprime.com`** — TLS terminates at the internal
   gateway (`networking-system/forgejo-proxy`: selectorless Service + static
