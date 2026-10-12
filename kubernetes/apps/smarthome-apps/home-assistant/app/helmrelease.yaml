@@ -74,7 +74,7 @@ spec:
         annotations:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: /icons/home-assistant.svg
-          gethomepage.dev/name: Home-Assistant
+          gethomepage.dev/name: HomeAssistant
           gethomepage.dev/group: SmartHome
         parentRefs:
           - name: kgateway-internal

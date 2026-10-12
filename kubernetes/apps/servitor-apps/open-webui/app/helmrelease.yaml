@@ -130,7 +130,7 @@ spec:
         annotations:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: /icons/open-webui.svg
-          gethomepage.dev/name: Open WebUI
+          gethomepage.dev/name: OpenWebUI
           gethomepage.dev/group: Service
         parentRefs:
           - name: kgateway-internal

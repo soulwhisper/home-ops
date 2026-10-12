@@ -62,7 +62,7 @@ spec:
         annotations:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: /icons/stirling-pdf.svg
-          gethomepage.dev/name: Stirling-PDF
+          gethomepage.dev/name: StirlingPDF
           gethomepage.dev/group: Service
         parentRefs:
           - name: kgateway-internal
