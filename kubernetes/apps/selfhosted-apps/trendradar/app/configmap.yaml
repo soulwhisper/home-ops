@@ -57,8 +57,7 @@ data:
         - { id: "pcbeta", name: "远景论坛" }
         - { id: "sspai", name: "少数派" }
         - { id: "producthunt", name: "ProductHunt" }
-        - { id: "36kr-quick", name: "36氪快讯" }
-        - { id: "36kr-renqi", name: "36氪人气榜" }
+        # 36kr-quick/36kr-renqi dropped: upstream newsnow API 500s every run
         - { id: "coolapk", name: "酷安" }
         # === 其他/工具类 ===
         - { id: "chongbuluo-hot", name: "虫部落最热" }
