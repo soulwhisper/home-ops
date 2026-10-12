@@ -54,3 +54,20 @@ The container explicitly runs as root for NAS socket/data access; only trusted,
 operator-authored workflows belong on it. The Forgejo MCP allowlist permits
 ticket writes and repository reads, not workflow changes or dispatch, despite
 the shared PAT's repository-write scope for the manual lessons workflow.
+
+## Access paths (2026-10)
+
+- **Canonical: `https://git.noirprime.com`** — TLS terminates at the internal
+  gateway (`networking-system/forgejo-proxy`: selectorless Service + static
+  EndpointSlice to `10.10.0.100:9003`); the gateway→NAS hop stays plain HTTP
+  on wired VLAN 100. Cluster consumers (webhook-relay, mcp-forgejo) and the
+  homepage widget use this name; DNS comes from external-dns on the route.
+- **Fallback/direct: `http://nas.homelab.internal:9003`** — always served by
+  the NAS itself; use when the gateway/cluster is down. NAS-side flows
+  (runner via compose network alias, doco-cd, lessons) stay on it regardless.
+- SSH clones: `SSH_DOMAIN=nas.homelab.internal` (gateway has no :9004).
+- **OIDC**: authentik provider/application are GitOps
+  (`authentik/app/blueprints/oidc/forgejo.yaml`); the Forgejo-side auth
+  source is created once by `oidc-auth-source.sh` (no REST API exists for
+  auth sources). Requires ROOT_URL canonical first. Local admin account stays
+  as break-glass.

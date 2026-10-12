@@ -25,7 +25,12 @@ services:
       - "USER_UID=1000"
       - "USER_GID=1000"
       # server
-      - "DOMAIN=nas.homelab.internal"
+      # canonical URL = the cluster gateway HTTPS front (forgejo-proxy);
+      # plain HTTP on :9003 stays live as the direct/fallback path
+      - "DOMAIN=git.noirprime.com"
+      - "ROOT_URL=https://git.noirprime.com/"
+      # SSH clone URLs stay NAS-direct (gateway has no :9004 listener)
+      - "SSH_DOMAIN=nas.homelab.internal"
       - "HTTP_PORT=9003"
       - "SSH_PORT=9004"
       - "DB_TYPE=sqlite3"
