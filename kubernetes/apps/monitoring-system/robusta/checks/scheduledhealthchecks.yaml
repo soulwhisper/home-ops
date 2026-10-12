@@ -8,7 +8,10 @@ spec:
   schedule: "17 */6 * * *"
   # controller default is 30s — real tool-using investigations take minutes
   timeout: 300
-  query: "Check the ceph cluster (namespace storage-system) health: overall HEALTH status, OSD count/in/out state, pool usage vs the ceph-blockpool/ceph-cachepool/ceph-filesystem trend, and any slow or blocked requests. Report concise status and flag anything trending worse."
+  # 2026-10-13: a fail verdict listed nine catastrophic ceph conditions while
+  # the cluster was HEALTH_OK (homelab-tickets#7) — the model asserted state
+  # it never observed. Force the verdict to quote live tool output.
+  query: "Check the ceph cluster (namespace storage-system) health: overall HEALTH status, OSD count/in/out state, pool usage vs the ceph-blockpool/ceph-cachepool/ceph-filesystem trend, and any slow or blocked requests. Base the verdict only on tool output gathered in this run: quote the ceph HEALTH line and the OSD up/in counts verbatim in the rationale. If a tool call fails or returns nothing, report that tool error instead of guessing cluster state. Report concise status and flag anything trending worse."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
