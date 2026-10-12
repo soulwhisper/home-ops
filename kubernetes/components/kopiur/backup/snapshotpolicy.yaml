@@ -30,6 +30,16 @@ spec:
       fileParallelism: 2
     verifyFilesPercent: 100
   mover:
+    # Cap the mover's CPU/memory burst: unthrottled zstd+read bursts on the
+    # shared control-plane nodes have stalled apiserver lease renewals
+    # (leader-election timeouts, PodRestartStorm homelab-tickets#4).
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
     # app files have arbitrary ownership (root-run apps, 0600 owner-only files);
     # only uid 0 + DAC_OVERRIDE reads every file reliably, and only root
     # restores preserve original ownership. Namespace must opt in via
