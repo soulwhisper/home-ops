@@ -14,7 +14,7 @@ services:
       default:
         aliases:
           - nas.homelab.internal
-    image: "codeberg.org/forgejo/forgejo:16.0.5"
+    image: "codeberg.org/forgejo/forgejo:16.0.6"
     container_name: "forgejo"
     restart: "unless-stopped"
     ports:
