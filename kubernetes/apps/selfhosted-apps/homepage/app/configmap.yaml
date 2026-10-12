@@ -109,10 +109,47 @@ data:
               url: https://10.10.0.200:9801
               username: {{HOMEPAGE_VAR_UNIFI_USERNAME}}
               password: {{HOMEPAGE_VAR_UNIFI_PASSWORD}}
+        - Forgejo:
+            href: https://git.noirprime.com
+            icon: /icons/forgejo.svg
+            weight: 75
+            widget:
+              type: customapi
+              # TLS via the internal gateway (forgejo-proxy); PAT from 1Password
+              url: https://git.noirprime.com/api/v1/repos/soulwhisper/homelab-tickets
+              headers:
+                Authorization: "token {{HOMEPAGE_VAR_FORGEJO_PAT}}"
+              refreshInterval: 60000
+              mappings:
+                - { field: open_issues_count, label: "Open Issues", format: number }
+                - { field: open_pr_counter, label: "Open PRs", format: number }
         - ESXi:
             href: https://10.0.0.10
             icon: /icons/vmware-esxi.svg
             weight: 80              # pinned bottom of the sidebar
+            # vmware_exporter metrics via vmsingle instant queries (one
+            # customapi widget per field: one endpoint per widget)
+            widgets:
+              - type: customapi
+                url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/query?query=max((time()%20-%20vmware_host_boot_timestamp_seconds)%20%2F%203600)
+                refreshInterval: 60000
+                mappings:
+                  - { field: data.result.0.value.1, label: "Uptime (h)", format: number }
+              - type: customapi
+                url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/query?query=max(vmware_host_cpu_usage)%20%2F%20max(vmware_host_cpu_max)
+                refreshInterval: 60000
+                mappings:
+                  - { field: data.result.0.value.1, label: "CPU", format: percent }
+              - type: customapi
+                url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/query?query=max(vmware_host_memory_usage)%20%2F%20max(vmware_host_memory_max)
+                refreshInterval: 60000
+                mappings:
+                  - { field: data.result.0.value.1, label: "Mem", format: percent }
+              - type: customapi
+                url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/query?query=count(vmware_vm_boot_timestamp_seconds)
+                refreshInterval: 60000
+                mappings:
+                  - { field: data.result.0.value.1, label: "VMs", format: number }
   widgets.yaml: |
     - search:
         provider: custom

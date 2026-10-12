@@ -13,6 +13,7 @@ resources:
   # core blueprints
   - ./blueprints/core/basic-users.yaml
   # oidc blueprints
+  - ./blueprints/oidc/forgejo.yaml
   - ./blueprints/oidc/grafana.yaml
   - ./blueprints/oidc/headlamp.yaml
   - ./blueprints/oidc/home-assistant.yaml

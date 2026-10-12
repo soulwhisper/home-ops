@@ -1,0 +1,15 @@
+---
+# Selectorless service fronting the NAS-hosted Forgejo (10.10.0.100:9003);
+# endpoints are the static EndpointSlice next to it. Lets the internal
+# gateway serve forgejo over HTTPS (git.noirprime.com) while the NAS keeps
+# serving plain HTTP directly as the independent fallback path.
+apiVersion: v1
+kind: Service
+metadata:
+  name: &name forgejo-proxy
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 9003
+      targetPort: 9003

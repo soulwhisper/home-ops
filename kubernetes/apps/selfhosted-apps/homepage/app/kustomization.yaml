@@ -1,4 +1,3 @@
----
 # yaml-language-server: $schema=https://json.schemastore.org/kustomization
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -26,6 +25,7 @@ configMapGenerator:
       - icons/discord.svg
       - icons/dispatcharr.svg
       - icons/foundry-vtt.svg
+      - icons/forgejo.svg
       - icons/frigate.svg
       - icons/grafana.svg
       - icons/headlamp.svg
