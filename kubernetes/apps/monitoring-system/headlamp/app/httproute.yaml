@@ -6,7 +6,7 @@ metadata:
   name: &name headlamp
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/icon: headlamp.svg
+    gethomepage.dev/icon: /icons/headlamp.svg
     gethomepage.dev/name: Headlamp
     gethomepage.dev/group: Observability
 spec:

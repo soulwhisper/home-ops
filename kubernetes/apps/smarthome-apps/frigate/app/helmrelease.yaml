@@ -85,7 +85,7 @@ spec:
         hostnames: ["frigate.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: frigate.svg
+          gethomepage.dev/icon: /icons/frigate.svg
           gethomepage.dev/name: FrigateNVR
           gethomepage.dev/group: SmartHome
           gethomepage.dev/pod-selector: app.kubernetes.io/name=frigate

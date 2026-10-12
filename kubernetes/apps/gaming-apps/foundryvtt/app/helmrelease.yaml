@@ -78,7 +78,7 @@ spec:
         hostnames: ["fvtt.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: foundry-vtt.png
+          gethomepage.dev/icon: /icons/foundry-vtt.svg
           gethomepage.dev/name: FoundryVTT
           gethomepage.dev/group: Service
         parentRefs:

@@ -64,7 +64,7 @@ spec:
         hostnames: ["movie.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: jellyfin.svg
+          gethomepage.dev/icon: /icons/jellyfin.svg
           gethomepage.dev/name: Jellyfin
           gethomepage.dev/group: Media
           gethomepage.dev/widget.type: jellyfin

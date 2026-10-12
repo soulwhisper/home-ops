@@ -82,7 +82,7 @@ spec:
         hostnames: ["langfuse.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: si-langflow
+          gethomepage.dev/icon: /icons/si-langflow.svg
           gethomepage.dev/name: LangFuse
           gethomepage.dev/group: Service
         parentRefs:

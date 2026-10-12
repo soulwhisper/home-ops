@@ -53,7 +53,7 @@ spec:
         hostnames: ["music.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: navidrome.svg
+          gethomepage.dev/icon: /icons/navidrome.svg
           gethomepage.dev/name: Navidrome
           gethomepage.dev/group: Media
         parentRefs:

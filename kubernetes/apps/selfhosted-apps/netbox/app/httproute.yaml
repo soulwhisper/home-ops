@@ -6,7 +6,7 @@ metadata:
   name: &name netbox
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/icon: netbox.svg
+    gethomepage.dev/icon: /icons/netbox.svg
     gethomepage.dev/name: Netbox
     gethomepage.dev/group: Service
 spec:

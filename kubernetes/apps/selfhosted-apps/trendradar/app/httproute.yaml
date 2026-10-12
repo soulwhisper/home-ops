@@ -6,7 +6,7 @@ metadata:
   name: &name trendradar
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/icon: si-rss
+    gethomepage.dev/icon: /icons/si-rss.svg
     gethomepage.dev/name: TrendRadar
     gethomepage.dev/group: Service
 spec:

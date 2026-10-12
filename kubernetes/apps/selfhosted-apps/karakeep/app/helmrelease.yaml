@@ -102,7 +102,7 @@ spec:
         hostnames: ["bookmarks.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: karakeep.svg
+          gethomepage.dev/icon: /icons/karakeep.svg
           gethomepage.dev/name: Karakeep
           gethomepage.dev/group: Service
         parentRefs:

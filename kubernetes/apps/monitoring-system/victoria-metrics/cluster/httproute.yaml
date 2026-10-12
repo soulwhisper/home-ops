@@ -6,7 +6,7 @@ metadata:
   name: &name vmsingle-victoria-metrics-cluster
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/icon: victoriametrics.svg
+    gethomepage.dev/icon: /icons/victoriametrics.svg
     gethomepage.dev/name: VictoriaMetrics
     gethomepage.dev/group: Observability
     gethomepage.dev/pod-selector: app.kubernetes.io/name=vmsingle
@@ -40,7 +40,7 @@ metadata:
   name: &name vmalertmanager-victoria-metrics-cluster
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/icon: alertmanager.svg
+    gethomepage.dev/icon: /icons/alertmanager.svg
     gethomepage.dev/name: AlertManager
     gethomepage.dev/group: Observability
     gethomepage.dev/pod-selector: app.kubernetes.io/name=vmalertmanager

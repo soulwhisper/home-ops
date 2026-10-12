@@ -12,11 +12,9 @@ data:
     ingress: false
     traefik: false
   settings.yaml: |
-    # https://github.com/homarr-labs/dashboard-icons
-    # https://pictogrammers.com/library/mdi/
-    # https://simpleicons.org/
+    # icons are served locally from /icons (see kustomization.yaml)
     title: Dashboard
-    favicon: https://github.com/homarr-labs/dashboard-icons/tree/main/png/heimdall.svg
+    favicon: /icons/heimdall.svg
     theme: dark
     headerStyle: boxed
     hideVersion: true
@@ -53,24 +51,24 @@ data:
   bookmarks.yaml: |
     - Social:
         - Discord:
-            - icon: discord.svg
+            - icon: /icons/discord.svg
               href: https://discord.com/app
         - Outlook:
-            - icon: microsoft-outlook.svg
+            - icon: /icons/microsoft-outlook.svg
               href: https://outlook.live.com/mail/0/
     - Cloud:
         - Cloudflare:
-            - icon: cloudflare.svg
+            - icon: /icons/cloudflare.svg
               href: https://dash.cloudflare.com
     - Icons:
         - Homepage Dashboard:
-            - icon: si-jpeg
+            - icon: /icons/si-jpeg.svg
               href: https://dashboardicons.com/
         - Homepage MDI:
-            - icon: si-materialdesign
+            - icon: /icons/si-materialdesign.svg
               href: https://pictogrammers.com/library/mdi/
         - Homepage SI:
-            - icon: si-simpleicons
+            - icon: /icons/si-simpleicons.svg
               href: https://simpleicons.org/
   services.yaml: |
     - Calendar:
@@ -89,10 +87,10 @@ data:
     - Infrastructure:
         - ESXi:
             href: https://10.0.0.10
-            icon: vmware-esxi.svg
+            icon: /icons/vmware-esxi.svg
         - OpenWRT:
             href: http://10.10.0.254
-            icon: openwrt.svg
+            icon: /icons/openwrt.svg
             widget:
               type: openwrt
               # widget appends /ubus (JSON-RPC); a path here 404s the session login
@@ -105,7 +103,7 @@ data:
     - Networking:
         - Unifi:
             href: https://10.10.0.200:9801
-            icon: unifi.svg
+            icon: /icons/unifi.svg
             widget:
               type: unifi
               url: https://10.10.0.200:9801
@@ -114,7 +112,7 @@ data:
     - Storage:
         - NAS:
             href: https://10.10.0.100:5001
-            icon: synology.svg
+            icon: /icons/synology.svg
             widget:
               type: diskstation
               url: https://10.10.0.100:5001

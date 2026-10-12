@@ -61,7 +61,7 @@ spec:
         hostnames: ["pdf.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: stirling-pdf.svg
+          gethomepage.dev/icon: /icons/stirling-pdf.svg
           gethomepage.dev/name: Stirling-PDF
           gethomepage.dev/group: Service
         parentRefs:
