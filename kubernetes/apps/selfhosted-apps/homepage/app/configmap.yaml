@@ -23,36 +23,33 @@ data:
     quicklaunch:
       searchDescriptions: true
       hideInternetSearch: true
-    # group order = page placement; custom.css pins the first group (Status)
-    # as a full-height left sidebar and flows the rest into two tracks
+    # group order = page placement; with the column-flow grid below:
+    # Status = sidebar col, then Media/Observability fill col 2 top-to-bottom,
+    # Service/SmartHome fill col 3
     layout:
-      Status:                 # widget sidebar: jellyfin/immich/qbittorrent/crafty
-        style: column
+      Status:                 # ALL widget apps + ESXi (weights in services.yaml
+        style: column         # and route annotations); column stack, natural heights
       Media:
+        style: column
+      Observability:
         style: column
       Service:
         style: row
         columns: 2
       SmartHome:
         style: column
-      Download:
-        style: column
-      Observability:
-        style: column
-      Infrastructure:         # below the fold by design
-        style: column
       # Calendar:             # re-enable together with the services.yaml entry
       #   header: false
       #   style: column
   custom.css: |
     /* wide screens: first layout group (Status) = full-height left sidebar,
-       remaining groups flow into two tracks. hooks #layout-groups /
-       .services-group are semantic; re-verify on homepage upgrades. */
+       rest flow column-wise into two tracks (col2: Media+Observability,
+       col3: Service+SmartHome). grid-template-rows makes 1/-1 valid and
+       enables column wrapping. hooks #layout-groups / .services-group are
+       semantic; re-verify on homepage upgrades. */
     @media (min-width: 1280px) {
-      #layout-groups { display: grid !important; grid-template-columns: minmax(320px, 400px) 1fr 1fr; align-items: start; }
-      /* span 3, not 1/-1: with zero explicit rows, -1 resolves to line 1 and
-         the sidebar would collapse to one row; bump if right-side rows grow */
-      #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / span 3; }
+      #layout-groups { display: grid !important; grid-template-columns: minmax(320px, 400px) 1fr 1fr; grid-template-rows: repeat(2, auto); grid-auto-flow: column; align-items: start; }
+      #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / -1; }
     }
   custom.js: ""
   bookmarks.yaml: ""
@@ -71,13 +68,23 @@ data:
     #             - type: ical
     #               name: Ticktick
     #               url: {{HOMEPAGE_VAR_TICKTICK_ICAL}}
-    - Infrastructure:
-        - ESXi:
-            href: https://10.0.0.10
-            icon: /icons/vmware-esxi.svg
+    # Status sidebar also holds the discovered widget apps (jellyfin/immich/
+    # qbittorrent/crafty via their route annotations, weights 10-40)
+    - Status:
+        - NAS:
+            href: https://10.10.0.100:5001
+            icon: /icons/synology.svg
+            weight: 50
+            widget:
+              type: diskstation
+              url: https://10.10.0.100:5001
+              username: {{HOMEPAGE_VAR_SYNOLOGY_USERNAME}}
+              password: {{HOMEPAGE_VAR_SYNOLOGY_PASSWORD}}
+              volume: volume_2
         - OpenWRT:
             href: http://10.10.0.254
             icon: /icons/openwrt.svg
+            weight: 60
             widget:
               type: openwrt
               # widget appends /ubus (JSON-RPC); a path here 404s the session login
@@ -90,20 +97,16 @@ data:
         - Unifi:
             href: https://10.10.0.200:9801
             icon: /icons/unifi.svg
+            weight: 70
             widget:
               type: unifi
               url: https://10.10.0.200:9801
               username: {{HOMEPAGE_VAR_UNIFI_USERNAME}}
               password: {{HOMEPAGE_VAR_UNIFI_PASSWORD}}
-        - NAS:
-            href: https://10.10.0.100:5001
-            icon: /icons/synology.svg
-            widget:
-              type: diskstation
-              url: https://10.10.0.100:5001
-              username: {{HOMEPAGE_VAR_SYNOLOGY_USERNAME}}
-              password: {{HOMEPAGE_VAR_SYNOLOGY_PASSWORD}}
-              volume: volume_2
+        - ESXi:
+            href: https://10.0.0.10
+            icon: /icons/vmware-esxi.svg
+            weight: 80              # pinned bottom of the sidebar
   widgets.yaml: |
     - search:
         provider: custom
