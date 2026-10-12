@@ -19,9 +19,6 @@ spec:
           # yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
           version: 1
           context:
-            # operator-generated random pair, stored in the 1Password
-            # `authentik` item; the forgejo side gets the same values via
-            # infrastructure/forgejo/oidc-auth-source.sh (manual, once)
             client_id: "{{ .forgejo_oidc_client_id }}"
             client_secret: "{{ .forgejo_oidc_client_secret }}"
           entries:
@@ -46,9 +43,6 @@ spec:
                 client_type: confidential
                 grant_types: ["authorization_code", "refresh_token"]
                 redirect_uris:
-                  # requires forgejo ROOT_URL=https://git.noirprime.com applied
-                  # (infrastructure/synology/forgejo/docker-compose.yml) BEFORE
-                  # the auth source is created on the NAS
                   - url: "https://git.noirprime.com/user/oauth2/authentik/callback"
                     matching_mode: strict
                 sub_mode: user_email
@@ -78,10 +72,4 @@ spec:
                 target: !KeyOf forgejo
                 group: !Find [authentik_core.group, [name, homelab-admin]]
                 order: 0
-              attrs: { enabled: true, timeout: 30 }
-            - model: authentik_policies.policybinding
-              identifiers:
-                target: !KeyOf forgejo
-                group: !Find [authentik_core.group, [name, homelab-internal]]
-                order: 10
               attrs: { enabled: true, timeout: 30 }
