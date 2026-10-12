@@ -100,6 +100,12 @@ spec:
             path: /app/config/services.yaml
           - subPath: settings.yaml
             path: /app/config/settings.yaml
+          # must be mounted or /api/config/custom.css serves empty regardless
+          # of the ConfigMap content (subPath mounts are per-key)
+          - subPath: custom.css
+            path: /app/config/custom.css
+          - subPath: custom.js
+            path: /app/config/custom.js
           - subPath: widgets.yaml
             path: /app/config/widgets.yaml
       # locally-served icons (see kustomization.yaml configMapGenerator);
