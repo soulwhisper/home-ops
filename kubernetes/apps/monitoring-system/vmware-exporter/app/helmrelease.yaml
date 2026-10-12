@@ -1,4 +1,3 @@
----
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
 # Scrapes the standalone ESXi host (10.0.0.10) over the SOAP SDK.
 # Upstream project is dormant (v0.18.4, 2022-10) but the ESXi SOAP API is
@@ -28,7 +27,12 @@ spec:
               tag: "v0.18.4"
             env:
               VSPHERE_HOST: 10.0.0.10
-              VSPHERE_IGNORE_SSL: "1" # self-signed host cert
+              # self-signed host cert; cert pinning doesn't help here
+              # (ESXi default cert CN != 10.0.0.10 IP, so hostname verification
+              # fails regardless). ACCEPTED RISK: no TLS verification toward
+              # the host — wired VLAN only, read-only account, same posture as
+              # the router/NAS plaintext paths documented elsewhere.
+              VSPHERE_IGNORE_SSL: "1"
             envFrom:
               - secretRef:
                   name: *name
