@@ -61,6 +61,7 @@ spec:
         - authentik-blueprints-oidc-netbox
         - authentik-blueprints-oidc-qui
         - authentik-blueprints-oidc-spdf
+        - authentik-blueprints-oidc-forgejo
     server:
       replicas: 2
       topologySpreadConstraints:
