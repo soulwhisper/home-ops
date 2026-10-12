@@ -1,0 +1,17 @@
+---
+# Static endpoints for the selectorless forgejo-proxy service -> NAS forgejo.
+# NOT managed by the endpoint controller (no pod selector); the address is the
+# Synology LAN IP. See infrastructure/synology/forgejo/docker-compose.yml.
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: forgejo-proxy
+  labels:
+    kubernetes.io/service-name: forgejo-proxy
+addressType: IPv4
+endpoints:
+  - addresses:
+      - "10.10.0.100"
+ports:
+  - name: http
+    port: 9003
