@@ -30,7 +30,7 @@ entries:
       name: *name
       provider: !KeyOf qbittorrent-proxy-provider
       meta_launch_url: *domain
-      group: "Download"
+      group: "Status"
       policy_engine_mode: all
   - model: authentik_policies.policybinding
     identifiers:

@@ -65,7 +65,7 @@ spec:
                 name: *name
                 provider: !KeyOf qui-oidc-provider
                 meta_launch_url: "https://qui.noirprime.com"
-                group: "Download"
+                group: "Media"
                 policy_engine_mode: all
             - model: authentik_policies.policybinding
               identifiers:

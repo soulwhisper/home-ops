@@ -30,7 +30,7 @@ entries:
       name: *name
       provider: !KeyOf metube-proxy-provider
       meta_launch_url: *domain
-      group: "Download"
+      group: "Media"
       policy_engine_mode: all
   - model: authentik_policies.policybinding
     identifiers:
