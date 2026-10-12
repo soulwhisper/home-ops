@@ -47,9 +47,12 @@ spec:
                 # role system prompt (你是一个...助手 false-positived
                 # TrendRadar's JSON-repair prompt and would hit any zh app
                 # prompt on the guarded lanes). Now requires a malicious
-                # qualifier within a short window. SillyTavern/Open-WebUI ride
-                # the unguarded `uncensored` lane, unaffected either way.
-                - "(?:你现在是|从现在起你是|你的新身份是|你是(?:一个|一名|一位)|成为|扮演|充当)[^。\\n]{0,20}(?:无限制|没有限制|不受限制|不受约束|越狱|恶意|黑客)"
+                # qualifier within a short window; bare 黑客/恶意 suffixes were
+                # dropped (benign news text like 扮演黑客分析师 must pass).
+                # Residual: 你现在是黑客 w/o restriction words passes — the
+                # lanes serve SSO-internal apps, so FP-freedom wins.
+                # SillyTavern/Open-WebUI ride the unguarded `uncensored` lane.
+                - "(?:你现在是|从现在起你是|你的新身份是|你是(?:一个|一名|一位)|成为|扮演|充当)[^。\\n]{0,20}(?:无限制|没有(?:任何)?限制|无约束|没有(?:任何)?(?:道德|伦理|法律)?约束|不受(?:任何)?(?:限制|约束|规则|底线)|无视(?:任何|所有)?(?:规则|限制|约束)|没有(?:道德|伦理|底线)|越狱)"
                 - "(?:进入|启用|开启|切换到)(?:开发者|调试|测试|管理员|root|超级)(?:模式|权限)"
                 - "(?i)\\b(DAN\\s+(mode|jailbreak)|enable\\s+DAN|activate\\s+DAN|DAN\\s+[0-9]+\\.[0-9]+|STAN\\s+mode|DUDE\\s+mode|AIM\\s+mode|越狱|jailbreak|无限制模式|do\\s*anything\\s*now)"
             response:
