@@ -99,7 +99,9 @@ data:
               url: http://10.10.0.254
               username: {{HOMEPAGE_VAR_OPENWRT_USERNAME}}
               password: {{HOMEPAGE_VAR_OPENWRT_PASSWORD}}
-              interfaceName: wan
+              # widget indexes the ubus network.device dump by DEVICE name;
+              # the WAN is PPPoE -> pppoe-wan (no device is named "wan")
+              interfaceName: pppoe-wan
     - Networking:
         - Unifi:
             href: https://10.10.0.200:9801
