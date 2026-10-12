@@ -101,12 +101,18 @@ spec:
             port: 3333
 
     persistence:
+      # per-file subPath mounts (NOT a whole-dir mount at /app/config): a dir
+      # mount shadows image-shipped defaults — that hid the stock
+      # ai_analysis_prompt.txt and broke AI analysis (empty prompt)
       config:
         type: configMap
         name: *name
         globalMounts:
-          - path: /app/config
-            readOnly: true
+          - { subPath: config.yaml, path: /app/config/config.yaml, readOnly: true }
+          - { subPath: frequency_words.txt, path: /app/config/frequency_words.txt, readOnly: true }
+          - { subPath: ai_interests.txt, path: /app/config/ai_interests.txt, readOnly: true }
+          - { subPath: timeline.yaml, path: /app/config/timeline.yaml, readOnly: true }
+          - { subPath: ai_analysis_prompt.txt, path: /app/config/ai_analysis_prompt.txt, readOnly: true }
       output:
         type: persistentVolumeClaim
         storageClass: ceph-block
