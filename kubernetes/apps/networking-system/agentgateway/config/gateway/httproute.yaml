@@ -6,7 +6,7 @@ metadata:
   name: agentgateway-dashboard
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/icon: si-anthropic
+    gethomepage.dev/icon: /icons/si-anthropic.svg
     gethomepage.dev/name: AgentGateway
     gethomepage.dev/group: Observability
     gethomepage.dev/pod-selector: app.kubernetes.io/name=agentgateway-proxy

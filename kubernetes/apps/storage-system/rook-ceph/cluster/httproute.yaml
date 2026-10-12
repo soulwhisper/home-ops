@@ -6,7 +6,7 @@ metadata:
   name: &name rook-ceph-mgr-dashboard
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/icon: rook.svg
+    gethomepage.dev/icon: /icons/rook.svg
     gethomepage.dev/name: Rook
     gethomepage.dev/group: Storage
     # homepage k8s status looks up pods by app.kubernetes.io/name=<route name>;

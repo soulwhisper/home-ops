@@ -111,7 +111,7 @@ spec:
         hostnames: ["moviepilot.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: movie-pilot.svg
+          gethomepage.dev/icon: /icons/movie-pilot.svg
           gethomepage.dev/name: Moviepilot
           gethomepage.dev/group: Media
         parentRefs:

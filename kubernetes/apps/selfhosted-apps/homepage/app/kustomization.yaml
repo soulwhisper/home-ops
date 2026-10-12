@@ -8,6 +8,60 @@ resources:
   # utils
   - ./configmap.yaml
   - ./externalsecret.yaml
+# icons/ -> ConfigMap homepage-icons, mounted at /app/public/icons so all
+# icon references resolve locally (jsdelivr/simple-icons CDNs are 5-9s or
+# TLS-failing from this LAN). Reloader restarts homepage on CM change;
+# Next only scans public/ at boot, so new icons go live via that restart.
+configMapGenerator:
+  - name: homepage-icons
+    # generator files do not support globs -> explicit list, keep in sync
+    # when adding an icon. SVG only: flux source-controller AND flate's
+    # ignoreFS default-exclude *.png/*.jpg/... raster files (flate#998),
+    # so raster icons ship as SVG wrappers embedding the PNG data URI.
+    files:
+      - icons/alertmanager.svg
+      - icons/cilium.svg
+      - icons/cloudflare.svg
+      - icons/crafty-controller.svg
+      - icons/discord.svg
+      - icons/dispatcharr.svg
+      - icons/foundry-vtt.svg
+      - icons/frigate.svg
+      - icons/grafana.svg
+      - icons/headlamp.svg
+      - icons/heimdall.svg
+      - icons/home-assistant.svg
+      - icons/immich.svg
+      - icons/jellyfin.svg
+      - icons/karakeep.svg
+      - icons/kavita.svg
+      - icons/metabrainz.svg
+      - icons/metube.svg
+      - icons/microsoft-outlook.svg
+      - icons/movie-pilot.svg
+      - icons/navidrome.svg
+      - icons/netbox.svg
+      - icons/open-webui.svg
+      - icons/openwrt.svg
+      - icons/qbittorrent.svg
+      - icons/rook.svg
+      - icons/scrypted.svg
+      - icons/searxng.svg
+      - icons/si-anthropic.svg
+      - icons/si-bambulab.svg
+      - icons/si-hermes.svg
+      - icons/si-jpeg.svg
+      - icons/si-langflow.svg
+      - icons/si-materialdesign.svg
+      - icons/si-rss.svg
+      - icons/si-simpleicons.svg
+      - icons/sillytavern.svg
+      - icons/stirling-pdf.svg
+      - icons/synology.svg
+      - icons/unifi.svg
+      - icons/victoriametrics.svg
+      - icons/vmware-esxi.svg
+      - icons/zigbee2mqtt.svg
 generatorOptions:
   annotations:
     kustomize.toolkit.fluxcd.io/substitute: disabled

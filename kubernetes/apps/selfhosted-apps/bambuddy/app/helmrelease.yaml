@@ -73,7 +73,7 @@ spec:
         hostnames: ["bambuddy.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: si-bambulab
+          gethomepage.dev/icon: /icons/si-bambulab.svg
           gethomepage.dev/name: Bambuddy
           gethomepage.dev/group: Service
         parentRefs:

@@ -6,7 +6,7 @@ metadata:
   name: &name grafana-service
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/icon: grafana.svg
+    gethomepage.dev/icon: /icons/grafana.svg
     gethomepage.dev/name: Grafana
     gethomepage.dev/group: Observability
     gethomepage.dev/pod-selector: app.kubernetes.io/name=grafana

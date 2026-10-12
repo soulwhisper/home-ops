@@ -73,7 +73,7 @@ spec:
         hostnames: ["hass.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: home-assistant.svg
+          gethomepage.dev/icon: /icons/home-assistant.svg
           gethomepage.dev/name: Home-Assistant
           gethomepage.dev/group: SmartHome
         parentRefs:

@@ -102,3 +102,11 @@ spec:
             path: /app/config/settings.yaml
           - subPath: widgets.yaml
             path: /app/config/widgets.yaml
+      # locally-served icons (see kustomization.yaml configMapGenerator);
+      # whole-CM dir mount, served by Next at boot from /app/public/icons
+      icons:
+        type: configMap
+        name: homepage-icons
+        globalMounts:
+          - path: /app/public/icons
+            readOnly: true

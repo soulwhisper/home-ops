@@ -66,7 +66,7 @@ spec:
         hostnames: ["book.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: kavita.svg
+          gethomepage.dev/icon: /icons/kavita.svg
           gethomepage.dev/name: Kavita
           gethomepage.dev/group: Media
         parentRefs:

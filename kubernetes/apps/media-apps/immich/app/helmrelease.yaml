@@ -138,7 +138,7 @@ spec:
         hostnames: ["photo.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: immich.svg
+          gethomepage.dev/icon: /icons/immich.svg
           gethomepage.dev/name: Immich
           gethomepage.dev/group: Media
           gethomepage.dev/widget.type: immich

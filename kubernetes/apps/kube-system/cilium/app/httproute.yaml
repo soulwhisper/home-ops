@@ -6,7 +6,7 @@ metadata:
   name: &name hubble-ui
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/icon: cilium.svg
+    gethomepage.dev/icon: /icons/cilium.svg
     gethomepage.dev/name: hubble
     gethomepage.dev/group: Observability
 spec:

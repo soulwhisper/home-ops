@@ -79,7 +79,7 @@ spec:
         hostnames: ["search.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: searxng.svg
+          gethomepage.dev/icon: /icons/searxng.svg
           gethomepage.dev/name: SearXNG
           gethomepage.dev/group: Service
         parentRefs:

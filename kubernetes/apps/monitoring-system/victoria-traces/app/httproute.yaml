@@ -6,7 +6,7 @@ metadata:
   name: &name victoria-traces
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/icon: victoriametrics.svg
+    gethomepage.dev/icon: /icons/victoriametrics.svg
     gethomepage.dev/name: VictoriaTraces
     gethomepage.dev/group: Observability
     gethomepage.dev/pod-selector: app.kubernetes.io/instance=victoria-traces

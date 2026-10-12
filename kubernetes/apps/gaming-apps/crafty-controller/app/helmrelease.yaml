@@ -76,7 +76,7 @@ spec:
         hostnames: ["crafty.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: crafty-controller.svg
+          gethomepage.dev/icon: /icons/crafty-controller.svg
           gethomepage.dev/name: Crafty
           gethomepage.dev/group: Service
           gethomepage.dev/widget.type: minecraft

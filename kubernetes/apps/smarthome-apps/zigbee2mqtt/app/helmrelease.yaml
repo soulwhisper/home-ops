@@ -104,7 +104,7 @@ spec:
         hostnames: ["z2m.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: zigbee2mqtt.svg
+          gethomepage.dev/icon: /icons/zigbee2mqtt.svg
           gethomepage.dev/name: Zigbee2MQTT
           gethomepage.dev/group: SmartHome
         parentRefs:

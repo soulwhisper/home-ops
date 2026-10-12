@@ -77,7 +77,7 @@ spec:
         hostnames: ["qui.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: qbittorrent.svg
+          gethomepage.dev/icon: /icons/qbittorrent.svg
           gethomepage.dev/name: qBittorrent-ui
           gethomepage.dev/group: Download
         parentRefs:

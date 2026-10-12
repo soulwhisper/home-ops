@@ -72,7 +72,7 @@ spec:
         hostnames: ["memory.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: metabrainz.svg
+          gethomepage.dev/icon: /icons/metabrainz.svg
           gethomepage.dev/name: Hindsight
           gethomepage.dev/group: Service
         parentRefs:

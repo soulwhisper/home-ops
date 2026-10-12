@@ -69,7 +69,7 @@ spec:
         hostnames: ["metube.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: metube.svg
+          gethomepage.dev/icon: /icons/metube.svg
           gethomepage.dev/name: Metube
           gethomepage.dev/group: Download
         parentRefs:
