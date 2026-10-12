@@ -1,0 +1,15 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/operator.victoriametrics.com/vmservicescrape_v1beta1.json
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: vmware-exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vmware-exporter
+  endpoints:
+    - port: http
+      interval: 60s
+      # ESXi SOAP quickstats collection is slow; exporter default timeout is 50s
+      scrapeTimeout: 55s
