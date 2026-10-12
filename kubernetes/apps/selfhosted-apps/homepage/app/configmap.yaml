@@ -44,16 +44,17 @@ data:
       #   header: false
       #   style: column
   custom.css: |
-    /* >=1900px (27-32" 1440p/4K@150%): flat 5-column page, one group per
-       column; double-width tracks for the internally-2-col groups.
-       1280-1899px: 3-track fallback with Status as left sidebar.
-       hooks #layout-groups / .services-group are semantic; re-verify on
-       homepage upgrades. */
+    /* 3-column page: Status sidebar (internally 2-col since #4056) pinned
+       left spanning both rows; column flow fills Media->SmartHome in col 2,
+       Service->Observability in col 3. Flat one-row grids render as 8 narrow
+       card columns — don't. hooks #layout-groups / .services-group are
+       semantic; re-verify on homepage upgrades. */
     @media (min-width: 1900px) {
-      #layout-groups { display: grid !important; grid-template-columns: 1.2fr 0.8fr 0.8fr 1.2fr 1.2fr; align-items: start; }
+      #layout-groups { display: grid !important; grid-template-columns: minmax(560px, 640px) 1fr 1fr; grid-template-rows: repeat(2, auto); grid-auto-flow: column; align-items: start; }
+      #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / -1; }
     }
     @media (min-width: 1280px) and (max-width: 1899px) {
-      #layout-groups { display: grid !important; grid-template-columns: minmax(320px, 400px) 1fr 1fr; grid-template-rows: repeat(2, auto); grid-auto-flow: column; align-items: start; }
+      #layout-groups { display: grid !important; grid-template-columns: minmax(440px, 560px) 1fr 1fr; grid-template-rows: repeat(2, auto); grid-auto-flow: column; align-items: start; }
       #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / -1; }
     }
   custom.js: ""
