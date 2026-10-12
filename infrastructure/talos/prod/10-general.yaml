@@ -73,6 +73,10 @@ config:
   # true; pinned explicitly so the cap never silently stops working).
   serializeImagePulls: false
   maxParallelImagePulls: 2
+  # Default maxPods=110 is too tight when infra singletons pile onto one node:
+  # exarch-03 hit 94-106/110 (homelab-tickets#13). 160 keeps headroom while
+  # staying far below the /17 per-node pod CIDR capacity.
+  maxPods: 160
 ---
 apiVersion: v1alpha1
 kind: KubeNetworkConfig
