@@ -169,41 +169,67 @@ def _execute_ai_check_two_phase(
         },
     ]
 
-    coerce_response = ai.llm.completion(
-        messages=coerce_messages,
-        tools=None,
-        response_format=CHECK_RESPONSE_FORMAT,
-        stream=False,
-        drop_params=True,
-    )
+    # LOCAL PATCH (home-ops, homelab-tickets#7): the lane's structured-output
+    # call degenerates stochastically — the same prompt drew "..." then a full
+    # quoted verdict on consecutive runs (measured rev=7). Retry the coerce
+    # once when the outcome is degenerate (unparseable or gate-rejected).
+    def _coerce(extra_note: str = ""):
+        call_messages = list(coerce_messages)
+        if extra_note:
+            call_messages[1] = {
+                **call_messages[1],
+                "content": call_messages[1]["content"] + extra_note,
+            }
+        resp = ai.llm.completion(
+            messages=call_messages,
+            tools=None,
+            response_format=CHECK_RESPONSE_FORMAT,
+            stream=False,
+            drop_params=True,
+        )
+        try:
+            choice = resp.choices[0]  # type: ignore[union-attr]
+            content = choice.message.content or ""
+        except (AttributeError, IndexError):
+            choice, content = None, ""
+        return resp, choice, content
 
-    try:
-        coerce_choice = coerce_response.choices[0]  # type: ignore[union-attr]
-        coerce_content = coerce_choice.message.content or ""
-    except (AttributeError, IndexError):
-        coerce_choice = None
-        coerce_content = ""
+    def _to_result(resp, choice, content, prior_stats, coerce_calls: int):
+        stats = RequestStats()
+        stats += RequestStats(
+            **{k: getattr(investigation, k) for k in RequestStats.model_fields}
+        )
+        stats += prior_stats
+        stats += RequestStats.from_response(resp)
+        # The returned result is the LAST phase-2 (coerce) content, so report
+        # its finish reason; fall back to the investigation's when omitted.
+        return LLMResult(
+            result=content,
+            tool_calls=investigation.tool_calls,
+            num_llm_calls=(investigation.num_llm_calls or 0) + coerce_calls,
+            messages=investigation.messages,
+            metadata=investigation.metadata,
+            finish_reason=getattr(choice, "finish_reason", None)
+            or investigation.finish_reason,
+            **stats.model_dump(),
+        )
 
-    # The returned result is the phase-2 (coerce) content, so report its finish
-    # reason. Fall back to the investigation's when the coerce response omits it.
-    coerce_finish_reason = getattr(coerce_choice, "finish_reason", None)
-
-    # Sum cost/token stats from both phases (LLMResult is a RequestStats subclass).
-    stats = RequestStats()
-    stats += RequestStats(
-        **{k: getattr(investigation, k) for k in RequestStats.model_fields}
-    )
-    stats += RequestStats.from_response(coerce_response)
-
-    return LLMResult(
-        result=coerce_content,
-        tool_calls=investigation.tool_calls,
-        num_llm_calls=(investigation.num_llm_calls or 0) + 1,
-        messages=investigation.messages,
-        metadata=investigation.metadata,
-        finish_reason=coerce_finish_reason or investigation.finish_reason,
-        **stats.model_dump(),
-    )
+    resp, choice, content = _coerce()
+    result = _to_result(resp, choice, content, RequestStats(), 1)
+    interim = _parse_check_response(result, check)
+    if "Verdict rejected" in interim.rationale or "Failed to parse" in interim.rationale:
+        logging.getLogger(__name__).info(
+            "coerce degenerated on %s; retrying once", getattr(check, "name", "?")
+        )
+        resp2, choice2, content2 = _coerce(
+            "\n\nYour previous answer contained no verbatim quote of the tool "
+            "output and was rejected. Answer again, quoting the actual metric "
+            "names and values from <tool_output>."
+        )
+        result = _to_result(
+            resp2, choice2, content2, RequestStats.from_response(resp), 2
+        )
+    return result
 
 # LOCAL PATCH (home-ops, homelab-tickets#7): evidence gate. Holmes can emit a
 # schema-valid verdict with zero real evidence (observed 2026-10-13: a ceph
