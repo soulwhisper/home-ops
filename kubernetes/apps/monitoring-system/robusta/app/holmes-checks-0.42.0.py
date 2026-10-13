@@ -251,24 +251,31 @@ def _successful_evidence(entries: "list[tuple[str, bool, str]]") -> str:
 _EVIDENCE_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:/-]{7,}")
 
 
-def _rationale_quotes_evidence(rationale: str, evidence: str) -> bool:
+def _rationale_quotes_evidence(
+    rationale: str, evidence: str, query: str = ""
+) -> bool:
     """True when the rationale cites this run's evidence. Two matchers:
     1. text evidence: a >=16-char normalized line quoted verbatim;
     2. any evidence incl. minified JSON: >=2 distinct evidence tokens
-       (>=8 chars), at least one containing a digit, appearing verbatim in
-       the rationale. Natural rationales quote values like `51423721644` or
-       `HEALTH_OK`; nobody quotes 40-char JSON runs (observed: the 40-char
-       window rule made the gate unpassable for JSON-only evidence)."""
+       (>=8 chars, >=1 digit-bearing) appearing verbatim in the rationale,
+       where tokens already present in the check query don't count
+       (namespace/pool names are guessable from the prompt; quoting them
+       proves no evidence contact, and names without values prove no reading).
+       Natural rationales quote values like `ceph_health_status` or
+       `51423721644`, never 40-char runs."""
     normalized_rationale = " ".join((rationale or "").split())
     for line in evidence.splitlines():
         candidate = " ".join(line.split())
         if len(candidate) >= 16 and any(c.isalpha() for c in candidate):
             if candidate in normalized_rationale:
                 return True
-    tokens = set(_EVIDENCE_TOKEN.findall(" ".join(evidence.split())))
     # complete-token match: substring membership would let NOT_HEALTH_OK pass
     # for HEALTH_OK, or 123456789 for 12345678 (coderabbit#4080)
+    query_tokens = set(_EVIDENCE_TOKEN.findall(query))
+    tokens = set(_EVIDENCE_TOKEN.findall(" ".join(evidence.split()))) - query_tokens
     hits = tokens & set(_EVIDENCE_TOKEN.findall(normalized_rationale))
+    # at least one digit-bearing token: metric names alone (no values) are
+    # not evidence of the underlying reading (coderabbit#4081)
     return len(hits) >= 2 and any(any(c.isdigit() for c in t) for t in hits)
 
 
@@ -301,7 +308,7 @@ def _parse_check_response(
         check is not None
         and "verbatim" in check.query
         and not _rationale_quotes_evidence(
-            parsed.rationale or "", _successful_evidence(entries)
+            parsed.rationale or "", _successful_evidence(entries), check.query
         )
     ):
         # LOCAL PATCH (coderabbit#4072): never forward the rejected rationale —
