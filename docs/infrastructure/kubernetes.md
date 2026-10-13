@@ -493,7 +493,7 @@ Two custom labels and an annotation drive the strategic patching and component i
 
 **Type**: Annotation
 **Purpose**: Opts a `Kustomization` into Layer 1 strategic patching (Kustomization defaults).
-**Scope**: Every application `ks.yaml` (93 files — webhook-relay included since its re-label; its hand-specified Layer-1 values were identical to the injected defaults).
+**Scope**: Every application `ks.yaml` (93 files).
 
 Without this annotation, a Kustomization would not receive the automatic `sourceRef`, `prune`, `interval`, and `timeout` defaults. Infrastructure-only Kustomizations (like `flux-repositories`) omit it intentionally.
 

@@ -12,6 +12,3 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: monitoring-system
   path: "./kubernetes/apps/monitoring-system/webhook-relay/app"
-  # Layer-1 patch supplies sourceRef/interval/timeout/prune (identical values,
-  # verified by render diff); it never touches `wait` — keep the deviation.
-  wait: false
