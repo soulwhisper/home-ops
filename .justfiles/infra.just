@@ -34,8 +34,8 @@ garage mode:
   for BUCKET in {{BUCKETS}}; do
     if [ "{{mode}}" = "init" ]; then
       echo "🔐 Fetching credentials for ${BUCKET}..."
-      access_key=$(just _op_get_secret "garage" "${BUCKET}_access_key")
-      secret_key=$(just _op_get_secret "garage" "${BUCKET}_secret_key")
+      access_key=$(just infra _op_get_secret "garage" "${BUCKET}_access_key")
+      secret_key=$(just infra _op_get_secret "garage" "${BUCKET}_secret_key")
       : "${access_key:?Access key is empty}"
       : "${secret_key:?Secret key is empty}"
       echo "🚀 Initializing bucket: ${BUCKET}"
@@ -56,8 +56,8 @@ garage mode:
 [script]
 versity mode:
   echo "🔐 Fetching Admin Credentials..."
-  AWS_ACCESS_KEY_ID=$(just _op_get_secret "app-user" "admin_user")
-  AWS_SECRET_ACCESS_KEY=$(just _op_get_secret "app-user" "admin_pass")
+  AWS_ACCESS_KEY_ID=$(just infra _op_get_secret "app-user" "admin_user")
+  AWS_SECRET_ACCESS_KEY=$(just infra _op_get_secret "app-user" "admin_pass")
   : "${AWS_ACCESS_KEY_ID:?AWS Access Key ID is missing}"
   : "${AWS_SECRET_ACCESS_KEY:?AWS Secret Key is missing}"
   export AWS_ACCESS_KEY_ID

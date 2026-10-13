@@ -16,7 +16,7 @@ image mode:
   IMAGE_VERSION=$(curl --silent --noproxy '*' https://factory.talos.dev/versions \
     | jq --raw-output 'map(select(test("^v[0-9.]+$"))) | sort_by(. | ltrimstr("v") | split(".") | map(tonumber)) | reverse | .[0]' \
     | tail -n1)
-  IMAGE_SCHEMA=$(just _schema {{mode}})
+  IMAGE_SCHEMA=$(just talos _schema {{mode}})
   echo "Latest version: ${IMAGE_VERSION}"
   echo "Image Downloading: talos-{{mode}}-${IMAGE_VERSION}-metal-amd64.iso"
   curl -x "${https_proxy}" --progress-bar -L "https://factory.talos.dev/image/${IMAGE_SCHEMA}/${IMAGE_VERSION}/metal-amd64.iso" \
