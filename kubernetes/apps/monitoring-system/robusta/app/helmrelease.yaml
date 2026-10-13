@@ -71,7 +71,7 @@ spec:
       podAnnotations:
         # bump when holmes-checks-0.42.0.py changes: subPath mounts never
         # propagate ConfigMap updates to running pods (coderabbit)
-        home-ops/checks-patch-rev: "2"
+        home-ops/checks-patch-rev: "3"
       additionalEnvVars:
         # default model for requests that don't name one (HealthChecks!):
         # without it holmes falls back to "gpt-5.4" when OPENAI_API_KEY is set

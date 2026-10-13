@@ -58,7 +58,8 @@ spec:
     # all machine actors: flux, operators, controllers — the remaining
     # signal is human users only
     - name: human-users-only
-      expression: "!('system:serviceaccounts' in request.userInfo.groups)"
+      expression: >-
+        !('system:serviceaccounts' in request.userInfo.groups)
   validations:
     - expression: 'false'
       # request.* only: AdmissionRequest name/namespace/operation/userInfo are

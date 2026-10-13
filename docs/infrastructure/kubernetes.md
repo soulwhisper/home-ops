@@ -39,7 +39,7 @@ flowchart TB
         Kustomization"]
         CA --> NS["12 Namespace
         Kustomizations"]
-        NS --> APPS["94 Application
+        NS --> APPS["93 Application
         Kustomizations"]
     end
 
@@ -108,7 +108,7 @@ The cluster-level `Kustomization` resources live in `kubernetes/flux/cluster/clu
 
 ### Recursive Discovery
 
-`cluster-apps` scans `kubernetes/apps/` recursively. Flux discovers each namespace's top-level `kustomization.yaml`, which references individual application `ks.yaml` files. This yields **12 namespace Kustomizations** and **94 application Kustomizations** (`ks.yaml` leaves).
+`cluster-apps` scans `kubernetes/apps/` recursively. Flux discovers each namespace's top-level `kustomization.yaml`, which references individual application `ks.yaml` files. This yields **12 namespace Kustomizations** and **93 application Kustomizations** (`ks.yaml` leaves).
 
 Each application `ks.yaml` is a leaf `Kustomization` that points to its `app/` subdirectory containing the `HelmRelease`, `OCIRepository`, and any supplementary resources (ConfigMaps, Secrets, etc.).
 
@@ -127,7 +127,7 @@ The Flux controllers are tuned for a 3-node cluster (`kubernetes/apps/gitops-sys
 
 ## Strategic Patching System
 
-The `cluster-apps` Kustomization applies three strategic patches to every child `Kustomization` in the tree. These are defined in `kubernetes/flux/cluster/cluster.yaml` and eliminate boilerplate from all 94 application definitions.
+The `cluster-apps` Kustomization applies three strategic patches to every child `Kustomization` in the tree. These are defined in `kubernetes/flux/cluster/cluster.yaml` and eliminate boilerplate from all 93 application definitions.
 
 ### Layer 1: Kustomization Defaults (managed annotation)
 
@@ -398,7 +398,7 @@ The cluster uses 12 namespaces, ordered by dependency from foundational infrastr
 | 4   | `database-system`   | Database operators                   | CloudNativePG, Dragonfly Operator, ClickHouse Operator                                                                                                                                                                                     |
 | 5   | `networking-system` | Ingress, DNS, API gateway            | kgateway (Envoy Gateway), Agent Gateway (AI agent routing), ExternalDNS                                                                                                                                                                    |
 | 6   | `monitoring-system` | Observability                        | Victoria Metrics (operator + cluster), Victoria Logs, Victoria Traces, Grafana, Prometheus CRDs, kube-state-metrics, node-exporter, blackbox-exporter, Smartctl exporter, OTel Collector, Silence Operator, Langfuse, Robusta, webhook-relay, Headlamp |
-| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, Toolhive, MCP server fleet (14 servers), Open-WebUI                                                                                                                                                                                                        |
+| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, Toolhive, MCP server fleet (13 servers), Open-WebUI                                                                                                                                                                                                        |
 | 8   | `smarthome-apps`    | Home automation                      | Home Assistant (app + SGCC), Frigate NVR (+ frigate-vision), Zigbee2MQTT, Mosquitto MQTT, Scrypted, smarthome-nfs                                                                                                                                                            |
 | 9   | `media-apps`        | Media serving and management         | Jellyfin, Kavita, Navidrome, qBittorrent (+ qbittorrent-ui), Immich, MoviePilot, MeTube, media-nfs                                                                                                                                                                       |
 | 10  | `selfhosted-apps`   | Self-hosted web services             | SearXNG, NetBox, Stirling PDF, SillyTavern, Karakeep, Homepage, Hindsight, Dispatcharr, BambuBuddy, trendradar, Firecrawl                                                                                                 |
@@ -493,7 +493,7 @@ Two custom labels and an annotation drive the strategic patching and component i
 
 **Type**: Annotation
 **Purpose**: Opts a `Kustomization` into Layer 1 strategic patching (Kustomization defaults).
-**Scope**: Every application `ks.yaml` (94 files).
+**Scope**: Every application `ks.yaml` (93 files).
 
 Without this annotation, a Kustomization would not receive the automatic `sourceRef`, `prune`, `interval`, and `timeout` defaults. Infrastructure-only Kustomizations (like `flux-repositories`) omit it intentionally.
 
@@ -501,7 +501,7 @@ Without this annotation, a Kustomization would not receive the automatic `source
 
 **Type**: Label
 **Purpose**: Opts a `Kustomization` into Layer 2 strategic patching (baseline infrastructure dependencies).
-**Scope**: Applications that need TLS certificates, secrets, storage, and backups before starting (54 `ks.yaml` files).
+**Scope**: Applications that need TLS certificates, secrets, storage, and backups before starting (51 `ks.yaml` files).
 
 This label signals "I'm a workload that needs the core infra layer." Infrastructure components themselves (e.g., cert-manager, rook-ceph, cnpg-operator) omit this label — they _are_ the infra, so they only carry `managed: "true"`.
 
@@ -546,12 +546,12 @@ kubernetes/
 ├── components/                    # Reusable Kustomize Components
 │   ├── namespace/                 #   Namespace + alerts (12 consumers)
 │   ├── kopiur/secret/             #   Namespace-level kopia repo credentials (6 consumers)
-│   ├── kopiur/backup/             #   PVC backup pipeline (22 consumers)
+│   ├── kopiur/backup/             #   PVC backup pipeline (20 consumers)
 │   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (4 consumers)
-│   ├── authentik/                 #   SSO traffic policy (15 consumers)
-│   ├── cnpg/                      #   PostgreSQL secret (9 consumers)
+│   ├── authentik/                 #   SSO traffic policy (14 consumers)
+│   ├── cnpg/                      #   PostgreSQL secret (8 consumers)
 │   ├── dragonfly/                 #   Redis-compatible cache (7 consumers)
-│   └── ceph-bucket/               #   S3 object bucket (3 consumers)
+│   └── ceph-bucket/               #   S3 object bucket (2 consumers)
 └── flux/                          # Flux cluster configuration
     ├── cluster/
     │   └── cluster.yaml           #   flux-repositories + cluster-apps Kustomizations
