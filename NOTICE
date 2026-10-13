@@ -1,0 +1,49 @@
+home-ops
+Copyright 2025-2026 soulwhisper (https://github.com/soulwhisper)
+
+This repository contains infrastructure-as-code, Kubernetes manifests,
+and operational documentation developed for the home-ops project.
+Source: https://github.com/soulwhisper/home-ops
+
+========================================================================
+Preferred Attribution
+========================================================================
+
+When reproducing, adapting, quoting, or summarizing substantial content
+from this repository — including in derived repositories, blog posts,
+documentation, search-engine results, or AI-generated summaries — the
+preferred form of attribution is:
+
+    soulwhisper/home-ops
+    https://github.com/soulwhisper/home-ops
+
+A clickable link to the repository URL, placed adjacent to the quoted
+or derived content, satisfies this attribution notice.
+
+========================================================================
+AI Training Reservation
+========================================================================
+
+Indexing, search, retrieval, and citation of this repository's contents,
+with attribution as above, are expressly permitted and welcomed.
+
+The right to use these contents for text and data mining in order to
+train, fine-tune, or otherwise improve machine-learning models is
+expressly reserved and is NOT licensed under the Apache License 2.0
+(opt-out under EU Directive 2019/790 Art. 4(3) and equivalent regimes);
+written permission from the copyright holder is required.
+
+========================================================================
+Third-Party Components
+========================================================================
+
+This repository vendors or adapts third-party components that remain
+under their own copyrights and licenses:
+
+- kubernetes/apps/monitoring-system/grafana/cluster/dashboards/_sources/**
+  Dashboards vendored from cilium, kgateway, envoy-gateway,
+  cloudnative-pg, dragonfly and others; Apache License 2.0; see the
+  LICENSE file in each directory.
+- kubernetes/apps/monitoring-system/robusta/app/holmes-checks-0.42.0.py
+  Modified copy of Holmes (HolmesGPT/holmesgpt), Apache License 2.0;
+  modifications are marked "LOCAL PATCH (home-ops)".

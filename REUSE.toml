@@ -1,0 +1,25 @@
+version = 1
+SPDX-PackageName = "home-ops"
+SPDX-PackageSupplier = "soulwhisper (https://github.com/soulwhisper)"
+SPDX-PackageDownloadLocation = "https://github.com/soulwhisper/home-ops"
+
+# Default: everything in the repo is original Apache-2.0 content.
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025-2026 soulwhisper (https://github.com/soulwhisper)"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Vendored upstream dashboards: their own authors, their own LICENSE files.
+[[annotations]]
+path = "kubernetes/apps/monitoring-system/grafana/cluster/dashboards/_sources/**"
+precedence = "override"
+SPDX-FileCopyrightText = "Upstream dashboard authors (see LICENSE in each directory)"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Modified copy of Holmes (HolmesGPT/holmesgpt): upstream + modifications.
+[[annotations]]
+path = "kubernetes/apps/monitoring-system/robusta/app/holmes-checks-0.42.0.py"
+precedence = "override"
+SPDX-FileCopyrightText = "HolmesGPT contributors; modifications 2026 soulwhisper"
+SPDX-License-Identifier = "Apache-2.0"

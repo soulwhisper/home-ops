@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2025-2026 soulwhisper (https://github.com/soulwhisper)
+# SPDX-License-Identifier: Apache-2.0
 """Compact a flate diff into a per-resource digest (R1 of homeops-rendering).
 
 Reads the flate diff on stdin, prints a markdown digest on stdout:

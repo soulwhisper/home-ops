@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: HolmesGPT contributors (https://github.com/HolmesGPT/holmesgpt)
+# SPDX-FileCopyrightText: 2026 soulwhisper — modifications marked "LOCAL PATCH (home-ops)"
+# SPDX-License-Identifier: Apache-2.0
+#
+# Modified copy of holmes/checks/checks.py from HolmesGPT/holmesgpt v0.42.0,
+# licensed under the Apache License, Version 2.0 (see LICENSE and NOTICE).
 """Health check functionality for Holmes."""
 
 import json
