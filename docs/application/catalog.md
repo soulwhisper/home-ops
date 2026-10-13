@@ -1,6 +1,6 @@
 # Application Catalog
 
-79 applications, 13 backend MCP servers, and 4 ToolHive VirtualMCP tiers across 12 namespaces, managed via Flux GitOps.
+78 applications, 13 backend MCP servers, and 4 ToolHive VirtualMCP tiers across 12 namespaces, managed via Flux GitOps.
 
 ## kube-system — Cluster Infrastructure (10)
 
