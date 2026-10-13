@@ -7,6 +7,7 @@
 """Health check functionality for Holmes."""
 
 import json
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
@@ -247,27 +248,26 @@ def _successful_evidence(entries: "list[tuple[str, bool, str]]") -> str:
     return "\n".join(text for _, succeeded, text in entries if succeeded)
 
 
+_EVIDENCE_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:/-]{7,}")
+
+
 def _rationale_quotes_evidence(rationale: str, evidence: str) -> bool:
-    """True when the rationale contains a substantive verbatim span of this
-    run's evidence: a >=16-char normalized line, or — for single-line/minified
-    JSON evidence where no short line exists — any 40-char alphanumeric-rich
-    window (whitespace-normalized)."""
+    """True when the rationale cites this run's evidence. Two matchers:
+    1. text evidence: a >=16-char normalized line quoted verbatim;
+    2. any evidence incl. minified JSON: >=2 distinct evidence tokens
+       (>=8 chars), at least one containing a digit, appearing verbatim in
+       the rationale. Natural rationales quote values like `51423721644` or
+       `HEALTH_OK`; nobody quotes 40-char JSON runs (observed: the 40-char
+       window rule made the gate unpassable for JSON-only evidence)."""
     normalized_rationale = " ".join((rationale or "").split())
     for line in evidence.splitlines():
         candidate = " ".join(line.split())
         if len(candidate) >= 16 and any(c.isalpha() for c in candidate):
             if candidate in normalized_rationale:
                 return True
-    # Single-line/minified evidence (e.g. JSON): any >=40-char contiguous span
-    # of evidence present in the rationale counts. Scanned from the rationale
-    # side (short) so cost stays flat as evidence grows.
-    normalized_evidence = " ".join(evidence.split())
-    if len(normalized_evidence) >= 40:
-        for offset in range(0, len(normalized_rationale) - 39):
-            window = normalized_rationale[offset : offset + 40]
-            if sum(c.isalnum() for c in window) >= 20 and window in normalized_evidence:
-                return True
-    return False
+    tokens = set(_EVIDENCE_TOKEN.findall(" ".join(evidence.split())))
+    hits = [t for t in tokens if t in normalized_rationale]
+    return len(hits) >= 2 and any(any(c.isdigit() for c in t) for t in hits)
 
 
 def _parse_check_response(
