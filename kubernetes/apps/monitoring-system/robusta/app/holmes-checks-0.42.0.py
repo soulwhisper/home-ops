@@ -266,7 +266,9 @@ def _rationale_quotes_evidence(rationale: str, evidence: str) -> bool:
             if candidate in normalized_rationale:
                 return True
     tokens = set(_EVIDENCE_TOKEN.findall(" ".join(evidence.split())))
-    hits = [t for t in tokens if t in normalized_rationale]
+    # complete-token match: substring membership would let NOT_HEALTH_OK pass
+    # for HEALTH_OK, or 123456789 for 12345678 (coderabbit#4080)
+    hits = tokens & set(_EVIDENCE_TOKEN.findall(normalized_rationale))
     return len(hits) >= 2 and any(any(c.isdigit() for c in t) for t in hits)
 
 
