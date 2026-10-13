@@ -7,6 +7,7 @@
 """Health check functionality for Holmes."""
 
 import json
+import logging
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -144,8 +145,10 @@ def _execute_ai_check_two_phase(
                 # without this instruction the lane model paraphrases and the
                 # check can never pass (observed on the first gated run).
                 "In 'rationale', briefly justify your decision, quoting the "
-                "decisive values verbatim from <tool_output> (copy the exact "
-                "lines). In 'passed', set true if healthy/no problem, false "
+                "decisive values from <tool_output> exactly as printed (same "
+                "metric names, same numbers — never convert units, never "
+                "round, never quote from <investigation_findings>). In "
+                "'passed', set true if healthy/no problem, false "
                 "otherwise. Your rationale and passed value must be consistent."
             ),
         },
@@ -230,7 +233,7 @@ def _collect_tool_evidence(response: LLMResult) -> "tuple[list[tuple[str, bool, 
 
 
 def _evidence_digest(
-    entries: "list[tuple[str, bool, str]]", per_call_cap: int = 4000, total_cap: int = 8000
+    entries: "list[tuple[str, bool, str]]", per_call_cap: int = 4000, total_cap: int = 16000
 ) -> str:
     """Prompt-side digest: each call capped individually so one huge result
     cannot push later calls' evidence (e.g. the ceph HEALTH line) past the
@@ -310,6 +313,22 @@ def _parse_check_response(
             parsed.rationale or "", _successful_evidence(entries)
         )
     ):
+        # LOCAL PATCH (home-ops): operator-local diagnostics (pod logs only,
+        # never notifications) — without this the reject reason is invisible.
+        _gate_evidence = _successful_evidence(entries)
+        _gate_tokens = set(_EVIDENCE_TOKEN.findall(" ".join(_gate_evidence.split())))
+        _gate_hits = _gate_tokens & set(
+            _EVIDENCE_TOKEN.findall(" ".join((parsed.rationale or "").split()))
+        )
+        logging.getLogger(__name__).info(
+            "evidence-gate reject: check=%s hits=%s evidence_tokens=%d "
+            "evidence_head=%.200r rationale_head=%.200r",
+            getattr(check, "name", "?"),
+            sorted(_gate_hits),
+            len(_gate_tokens),
+            _gate_evidence[:200],
+            (parsed.rationale or "")[:200],
+        )
         # LOCAL PATCH (coderabbit#4072): never forward the rejected rationale —
         # it flows into Slack/PagerDuty and could carry a fabricated incident.
         return CheckResponse(
