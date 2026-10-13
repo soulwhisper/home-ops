@@ -43,10 +43,18 @@ metadata:
 spec:
   schedule: "13 9 * * 1"
   timeout: 300
-  # Also carries the acceptance.md "re-check after 24h" duty: re-evaluate
-  # recently-resolved alerts' raw expressions to catch missed heals, and track
-  # loop health (ticket volume, flap rate) instead of a separate dashboard.
-  query: "Review alert and loop health using vmalertmanager and vmsingle (namespace monitoring-system). (1) Quality: which alerts fired most in the past 7 days, which are flapping (fire/resolve repeatedly), and which look like threshold-vs-normal mismatch. (2) Heal recheck: for alerts that fired in the past 7 days and are now resolved, re-evaluate their raw rule expressions now and flag any whose underlying condition is back at or above threshold (missed heal). (3) Loop stats: alert transitions by alertname this week, health-check verdict flips (pass/fail alternation without a config change). Quote the key counts verbatim from tool output. Propose concrete rule adjustments (threshold, for-duration, keep_firing_for, or silence) for the top 3 offenders."
+  query: "Review alert and loop health using vmalertmanager and vmsingle (namespace monitoring-system). (1) Quality: which alerts fired most in the past 7 days, which are flapping (fire/resolve repeatedly), and which look like threshold-vs-normal mismatch. (2) Loop stats: alert transitions by alertname this week, health-check verdict flips (pass/fail alternation without a config change). Quote the key counts verbatim from tool output. Propose concrete rule adjustments (threshold, for-duration, keep_firing_for, or silence) for the top 3 offenders."
+---
+apiVersion: holmesgpt.dev/v1alpha1
+kind: ScheduledHealthCheck
+metadata:
+  name: resolved-alert-recheck-daily
+spec:
+  schedule: "3 9 * * *"
+  timeout: 300
+  # acceptance.md's "re-check after 24h" duty, automated (coderabbit#4074): a
+  # weekly check leaves alerts resolved on a Tuesday unverified for days.
+  query: "Recheck recently healed alerts using vmalertmanager and vmsingle (namespace monitoring-system): list alerts that fired in the last 48 hours and are currently resolved; for each, re-evaluate its raw rule expression right now and flag any whose underlying condition is at or above threshold again (missed heal). Quote the alert names and current expression values verbatim from tool output. Report a small table, or 'all clear'."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
