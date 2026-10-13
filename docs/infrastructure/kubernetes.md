@@ -39,7 +39,7 @@ flowchart TB
         Kustomization"]
         CA --> NS["12 Namespace
         Kustomizations"]
-        NS --> APPS["94 Application
+        NS --> APPS["93 Application
         Kustomizations"]
     end
 
@@ -108,7 +108,7 @@ The cluster-level `Kustomization` resources live in `kubernetes/flux/cluster/clu
 
 ### Recursive Discovery
 
-`cluster-apps` scans `kubernetes/apps/` recursively. Flux discovers each namespace's top-level `kustomization.yaml`, which references individual application `ks.yaml` files. This yields **12 namespace Kustomizations** and **94 application Kustomizations** (`ks.yaml` leaves).
+`cluster-apps` scans `kubernetes/apps/` recursively. Flux discovers each namespace's top-level `kustomization.yaml`, which references individual application `ks.yaml` files. This yields **12 namespace Kustomizations** and **93 application Kustomizations** (`ks.yaml` leaves).
 
 Each application `ks.yaml` is a leaf `Kustomization` that points to its `app/` subdirectory containing the `HelmRelease`, `OCIRepository`, and any supplementary resources (ConfigMaps, Secrets, etc.).
 
@@ -127,7 +127,7 @@ The Flux controllers are tuned for a 3-node cluster (`kubernetes/apps/gitops-sys
 
 ## Strategic Patching System
 
-The `cluster-apps` Kustomization applies three strategic patches to every child `Kustomization` in the tree. These are defined in `kubernetes/flux/cluster/cluster.yaml` and eliminate boilerplate from all 94 application definitions.
+The `cluster-apps` Kustomization applies three strategic patches to every child `Kustomization` in the tree. These are defined in `kubernetes/flux/cluster/cluster.yaml` and eliminate boilerplate from all 93 application definitions.
 
 ### Layer 1: Kustomization Defaults (managed annotation)
 
@@ -493,7 +493,7 @@ Two custom labels and an annotation drive the strategic patching and component i
 
 **Type**: Annotation
 **Purpose**: Opts a `Kustomization` into Layer 1 strategic patching (Kustomization defaults).
-**Scope**: Every application `ks.yaml` (92 files).
+**Scope**: Every application `ks.yaml` (93 files — webhook-relay included since its re-label; its hand-specified Layer-1 values were identical to the injected defaults).
 
 Without this annotation, a Kustomization would not receive the automatic `sourceRef`, `prune`, `interval`, and `timeout` defaults. Infrastructure-only Kustomizations (like `flux-repositories`) omit it intentionally.
 
