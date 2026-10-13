@@ -231,7 +231,7 @@ Each non-trivial application defines its own `OCIRepository` resource in its `ap
 
 The `OCIRepository` fetches only the chart layer via `layerSelector` with `operation: copy`, which extracts the Helm chart tarball from the OCI manifest without pulling unrelated layers.
 
-### App-Template Pattern (40 Cross-Namespace References)
+### App-Template Pattern (37 Cross-Namespace References)
 
 For applications that don't need a custom Helm chart, the **app-template** pattern is used. A single `OCIRepository` is defined in `kubernetes/flux/repositories/app-template.yaml`:
 
@@ -261,12 +261,12 @@ spec:
     namespace: gitops-system
 ```
 
-This cross-namespace reference is used by 39 HelmReleases across 8 namespaces:
+This cross-namespace reference is used by 37 HelmReleases across 8 namespaces:
 
 | Namespace         | Count | Example Apps                                                                                                                                                         |
 | ----------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | media-apps        | 8     | jellyfin, kavita, navidrome, qbittorrent, immich, moviepilot, metube, qbittorrent-ui                                                                                 |
-| selfhosted-apps   | 13    | searxng, sillytavern, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, trendradar, hindsight, open-notebook (app + database), firecrawl (app + database) |
+| selfhosted-apps   | 11    | searxng, sillytavern, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, trendradar, hindsight, firecrawl (app + database) |
 | smarthome-apps    | 7     | home-assistant (app + sgcc), frigate, frigate-vision, zigbee2mqtt, mosquitto, scrypted                                                                                               |
 | servitor-apps     | 4     | hermes-agent, open-webui (app + oikb + terminals)                                                                                                                                                                     |
 | gaming-apps       | 2     | crafty-controller, foundryvtt                                                                                                                                        |

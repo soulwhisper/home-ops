@@ -14,7 +14,6 @@ resources:
   - ./homepage/ks.yaml
   - ./karakeep/ks.yaml
   - ./netbox/ks.yaml
-  - ./open-notebook/ks.yaml
   - ./searxng/ks.yaml
   - ./sillytavern/ks.yaml
   - ./stirling-pdf/ks.yaml
