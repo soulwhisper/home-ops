@@ -257,9 +257,10 @@ def _rationale_quotes_evidence(
     """True when the rationale cites this run's evidence. Two matchers:
     1. text evidence: a >=16-char normalized line quoted verbatim;
     2. any evidence incl. minified JSON: >=2 distinct evidence tokens
-       (>=8 chars) appearing verbatim in the rationale, where tokens already
-       present in the check query don't count (namespace/pool names are
-       guessable from the prompt; quoting them proves no evidence contact).
+       (>=8 chars, >=1 digit-bearing) appearing verbatim in the rationale,
+       where tokens already present in the check query don't count
+       (namespace/pool names are guessable from the prompt; quoting them
+       proves no evidence contact, and names without values prove no reading).
        Natural rationales quote values like `ceph_health_status` or
        `51423721644`, never 40-char runs."""
     normalized_rationale = " ".join((rationale or "").split())
@@ -273,7 +274,9 @@ def _rationale_quotes_evidence(
     query_tokens = set(_EVIDENCE_TOKEN.findall(query))
     tokens = set(_EVIDENCE_TOKEN.findall(" ".join(evidence.split()))) - query_tokens
     hits = tokens & set(_EVIDENCE_TOKEN.findall(normalized_rationale))
-    return len(hits) >= 2
+    # at least one digit-bearing token: metric names alone (no values) are
+    # not evidence of the underlying reading (coderabbit#4081)
+    return len(hits) >= 2 and any(any(c.isdigit() for c in t) for t in hits)
 
 
 def _parse_check_response(
