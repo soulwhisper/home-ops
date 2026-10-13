@@ -247,22 +247,24 @@ def _successful_evidence(entries: "list[tuple[str, bool, str]]") -> str:
     must never satisfy a verbatim-quote requirement."""
     return "\n".join(text for _, succeeded, text in entries if succeeded)
 
+_EVIDENCE_TOKEN = re.compile(
+    r"[A-Za-z0-9][A-Za-z0-9_.:/-]{7,}|"
+    # standalone numeric readings at any length (0, 6, 51423721644, 0.95);
+    # boundary lookarounds keep 12345678 from matching inside 123456789
+    r"(?<![A-Za-z0-9_.:/-])\d+(?:\.\d+)?(?![A-Za-z0-9_.:/-])"
+)
 
-_EVIDENCE_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:/-]{7,}")
 
-
-def _rationale_quotes_evidence(
-    rationale: str, evidence: str, query: str = ""
-) -> bool:
+def _rationale_quotes_evidence(rationale: str, evidence: str) -> bool:
     """True when the rationale cites this run's evidence. Two matchers:
     1. text evidence: a >=16-char normalized line quoted verbatim;
     2. any evidence incl. minified JSON: >=2 distinct evidence tokens
-       (>=8 chars, >=1 digit-bearing) appearing verbatim in the rationale,
-       where tokens already present in the check query don't count
-       (namespace/pool names are guessable from the prompt; quoting them
-       proves no evidence contact, and names without values prove no reading).
-       Natural rationales quote values like `ceph_health_status` or
-       `51423721644`, never 40-char runs."""
+       appearing verbatim in the rationale, at least one purely numeric
+       (long values like 51423721644 or epochs, and short readings like
+       0 or 6 tokenize via a boundary-guarded numeric branch). The numeric
+       clause separates a cited reading from name-dropping (namespace/pool/
+       metric names alone); tokens named in the query still count — the
+       ceph contract instructs quoting ceph_health_status by name."""
     normalized_rationale = " ".join((rationale or "").split())
     for line in evidence.splitlines():
         candidate = " ".join(line.split())
@@ -271,12 +273,9 @@ def _rationale_quotes_evidence(
                 return True
     # complete-token match: substring membership would let NOT_HEALTH_OK pass
     # for HEALTH_OK, or 123456789 for 12345678 (coderabbit#4080)
-    query_tokens = set(_EVIDENCE_TOKEN.findall(query))
-    tokens = set(_EVIDENCE_TOKEN.findall(" ".join(evidence.split()))) - query_tokens
+    tokens = set(_EVIDENCE_TOKEN.findall(" ".join(evidence.split())))
     hits = tokens & set(_EVIDENCE_TOKEN.findall(normalized_rationale))
-    # at least one digit-bearing token: metric names alone (no values) are
-    # not evidence of the underlying reading (coderabbit#4081)
-    return len(hits) >= 2 and any(any(c.isdigit() for c in t) for t in hits)
+    return len(hits) >= 2 and any(t.replace(".", "", 1).isdigit() for t in hits)
 
 
 def _parse_check_response(
@@ -308,7 +307,7 @@ def _parse_check_response(
         check is not None
         and "verbatim" in check.query
         and not _rationale_quotes_evidence(
-            parsed.rationale or "", _successful_evidence(entries), check.query
+            parsed.rationale or "", _successful_evidence(entries)
         )
     ):
         # LOCAL PATCH (coderabbit#4072): never forward the rejected rationale —
