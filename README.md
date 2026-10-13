@@ -30,21 +30,9 @@ All configurations are declared as code, promoting reproducibility and enabling 
 
 ---
 
-## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f64f/512.gif" alt="🙏" width="20" height="20"> Gratitude and Thanks
-
-Thanks to all the people who donate their time to the [Home Operations](https://discord.gg/home-operations) Discord community. Be sure to check out [kubesearch.dev](https://kubesearch.dev/) for ideas on how to deploy applications or get ideas on what you could deploy.
-
-I got help from some cool repo like:
-
-- [bjw-s/home-ops](https://github.com/bjw-s/home-ops)
-- [onedr0p/home-ops](https://github.com/onedr0p/home-ops)
-- [mchestr/home-cluster](https://github.com/mchestr/home-cluster)
-- [rafaribe/home-ops](https://github.com/rafaribe/home-ops)
-- [buroa/k8s-gitops](https://github.com/buroa/k8s-gitops)
-- [joryirving/home-ops](https://github.com/joryirving/home-ops)
-
----
 
 ### 🔏 License
 
-See [LICENSE](https://github.com/soulwhisper/home-ops/blob/main/LICENSE)
+Apache-2.0 — see [LICENSE](LICENSE); attribution, AI-training reservation and
+third-party notices in [NOTICE](NOTICE); citation metadata in
+[CITATION.cff](CITATION.cff).

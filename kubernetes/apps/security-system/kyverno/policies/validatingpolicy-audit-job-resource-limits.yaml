@@ -1,0 +1,57 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/policies.kyverno.io/validatingpolicy_v1.json
+# Burst-control tripwire: every Job/CronJob pod template must declare cpu+memory
+# limits. Unthrottled batch bursts on the shared control-plane nodes stalled
+# apiserver lease renewals twice (unbounded image pulls, fixed #3607; kopiur
+# mover bursts, homelab-tickets#4 + soulwhisper/home-ops#4070). Audit-only for
+# a month, then consider Enforce — policy failures page nobody today.
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: audit-job-resource-limits
+spec:
+  evaluation:
+    background:
+      # inventory scan: existing movers/hooks matter as much as new ones
+      enabled: true
+  # Audit-only: a down or slow admission controller must never block batch
+  # writes cluster-wide.
+  failurePolicy: Ignore
+  validationActions:
+    - Audit
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ['batch']
+        apiVersions: ['v1']
+        operations: ['CREATE', 'UPDATE']
+        resources: ['jobs', 'cronjobs']
+  variables:
+    # Field probe instead of request.kind so background scans evaluate the
+    # same way admission requests do.
+    - name: podSpec
+      expression: >-
+        has(object.spec.jobTemplate)
+          ? object.spec.jobTemplate.spec.template.spec
+          : object.spec.template.spec
+    - name: systemNamespace
+      expression: >-
+        object.metadata.namespace in [
+          'kube-system', 'kube-public', 'kube-node-lease',
+          'gitops-system', 'security-system', 'monitoring-system'
+        ]
+  validations:
+    - expression: >-
+        variables.systemNamespace
+        || variables.podSpec.containers.all(c, has(c.resources) && has(c.resources.limits) && has(c.resources.limits.cpu) && has(c.resources.limits.memory))
+      message: >-
+        Job/CronJob pod template containers must declare resources.limits.cpu
+        and resources.limits.memory: unthrottled bursts on the shared
+        control-plane nodes have stalled apiserver lease renewals
+        (homelab-tickets#4). Audit phase — fix the manifest, not the pod.
+    - expression: >-
+        variables.systemNamespace
+        || !has(variables.podSpec.initContainers)
+        || variables.podSpec.initContainers.all(c, has(c.resources) && has(c.resources.limits) && has(c.resources.limits.cpu) && has(c.resources.limits.memory))
+      message: >-
+        initContainers must also declare resources.limits.cpu and
+        resources.limits.memory (same burst-control rationale as containers).

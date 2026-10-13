@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2025-2026 soulwhisper (https://github.com/soulwhisper)
+# SPDX-License-Identifier: Apache-2.0
 """Distill one homelab-tickets issue into a learnings/ markdown file.
 
 Single-shot LLM call (no tool loop): the ticket body + comments + the

@@ -35,21 +35,25 @@ prune-rs:
     fi
   done
 
-[doc('Render local Flux Kustomization')]
+# no-cd: keep the invocation cwd (repo root by convention) — module recipes
+# otherwise anchor to .justfiles/, which breaks flate's repo-root --path
+# discovery. The whole render-ks -> apply/delete chain carries it so nested
+# calls inherit the root cwd.
+[doc('Render local Flux Kustomization'), no-cd]
 [script]
 render-ks ns ks:
   flate build ks --namespace "{{ ns }}" "{{ ks }}"
 
-[doc('Apply local Flux Kustomization')]
+[doc('Apply local Flux Kustomization'), no-cd]
 [script]
 apply-ks ns ks:
-  just render-ks "{{ ns }}" "{{ ks }}" \
+  just k8s render-ks "{{ ns }}" "{{ ks }}" \
   | kubectl apply --force-conflicts --server-side --field-manager=kustomize-controller -f -
 
-[doc('Delete local Flux Kustomization')]
+[doc('Delete local Flux Kustomization'), no-cd]
 [script]
 delete-ks ns ks:
-  just render-ks "{{ ns }}" "{{ ks }}" \
+  just k8s render-ks "{{ ns }}" "{{ ks }}" \
   | kubectl delete -f -
 
 [doc('Sync single Flux HelmRelease')]
@@ -71,21 +75,21 @@ sync-es ns name:
 [script]
 sync-all-hr:
   kubectl get hr --no-headers -A | while read -r ns name _; do
-    just sync-hr "$ns" "$name"
+    just k8s sync-hr "$ns" "$name"
   done
 
 [doc('Sync all Flux Kustomizations')]
 [script]
 sync-all-ks:
   kubectl get ks --no-headers -A | while read -r ns name _; do
-    just sync-ks "$ns" "$name"
+    just k8s sync-ks "$ns" "$name"
   done
 
 [doc('Sync all ExternalSecrets')]
 [script]
 sync-all-es:
   kubectl get es --no-headers -A | while read -r ns name _; do
-    just sync-es "$ns" "$name"
+    just k8s sync-es "$ns" "$name"
   done
 
 [doc('Snapshot app via kopiur SnapshotPolicy')]
@@ -98,7 +102,7 @@ snapshot ns name:
 [script]
 snapshot-all:
   kubectl get snapshotpolicies.kopiur.home-operations.com --no-headers -A | while read -r ns name _; do
-    just snapshot "$ns" "$name"
+    just k8s snapshot "$ns" "$name"
   done
 
 [doc('List all buckets in Rook-Ceph RGW')]

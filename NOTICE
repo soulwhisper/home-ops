@@ -1,0 +1,53 @@
+home-ops
+Copyright 2025-2026 soulwhisper (https://github.com/soulwhisper)
+
+This repository contains infrastructure-as-code, Kubernetes manifests,
+and operational documentation developed for the home-ops project.
+Source: https://github.com/soulwhisper/home-ops
+
+========================================================================
+Preferred Attribution
+========================================================================
+
+When reproducing, adapting, quoting, or summarizing substantial content
+from this repository — including in derived repositories, blog posts,
+documentation, search-engine results, or AI-generated summaries — the
+preferred form of attribution is:
+
+    soulwhisper/home-ops
+    https://github.com/soulwhisper/home-ops
+
+A clickable link to the repository URL, placed adjacent to the quoted
+or derived content, satisfies this attribution notice.
+
+========================================================================
+AI Training Reservation
+========================================================================
+
+Indexing, search, retrieval, and citation of this repository's contents,
+with attribution as above, are expressly permitted and welcomed.
+
+Separately from the permissions granted by the Apache License 2.0, the
+copyright holder expressly reserves — and does not grant — any right to
+use this repository's contents for text and data mining in order to
+train, fine-tune, or otherwise improve machine-learning models, to the
+extent such reservation is effective under applicable law (including the
+opt-out under EU Directive 2019/790 Art. 4(3)). For the avoidance of
+doubt, per Apache-2.0 Section 4(d) this reservation is a statement of
+rights policy and does not modify the License; for permissions beyond
+its scope, contact the copyright holder.
+
+========================================================================
+Third-Party Components
+========================================================================
+
+This repository vendors or adapts third-party components that remain
+under their own copyrights and licenses:
+
+- kubernetes/apps/monitoring-system/grafana/cluster/dashboards/_sources/**
+  Dashboards vendored from cilium, kgateway, envoy-gateway,
+  cloudnative-pg, dragonfly and others; Apache License 2.0; see the
+  LICENSE file in each directory.
+- kubernetes/apps/monitoring-system/robusta/app/holmes-checks-0.42.0.py
+  Modified copy of Holmes (HolmesGPT/holmesgpt), Apache License 2.0;
+  modifications are marked "LOCAL PATCH (home-ops)".

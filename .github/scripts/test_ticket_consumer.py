@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2025-2026 soulwhisper (https://github.com/soulwhisper)
+# SPDX-License-Identifier: Apache-2.0
 """Exercise the ticket HTTP service against an isolated Forgejo API fixture."""
 import copy
 import importlib.util

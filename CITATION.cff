@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use or reference this repository, please cite it as below."
+title: "home-ops: Talos-based Kubernetes home infrastructure, managed by Flux"
+type: software
+authors:
+  - name: soulwhisper
+    alias: soulwhisper
+url: "https://github.com/soulwhisper/home-ops"
+repository-code: "https://github.com/soulwhisper/home-ops"
+license: Apache-2.0

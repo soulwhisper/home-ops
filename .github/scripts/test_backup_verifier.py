@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2025-2026 soulwhisper (https://github.com/soulwhisper)
+# SPDX-License-Identifier: Apache-2.0
 """Behavioral regressions for the Python shipped in postgres-backup-verify."""
 import contextlib
 import io
