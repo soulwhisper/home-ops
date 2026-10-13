@@ -145,10 +145,10 @@ def _execute_ai_check_two_phase(
                 # without this instruction the lane model paraphrases and the
                 # check can never pass (observed on the first gated run).
                 "In 'rationale', briefly justify your decision, quoting the "
-                "decisive values verbatim from <tool_output> (copy the exact "
-                "lines character for character — never convert units, never "
-                "round numbers, never quote from <investigation_findings>). "
-                "In 'passed', set true if healthy/no problem, false "
+                "decisive values from <tool_output> exactly as printed (same "
+                "metric names, same numbers — never convert units, never "
+                "round, never quote from <investigation_findings>). In "
+                "'passed', set true if healthy/no problem, false "
                 "otherwise. Your rationale and passed value must be consistent."
             ),
         },
