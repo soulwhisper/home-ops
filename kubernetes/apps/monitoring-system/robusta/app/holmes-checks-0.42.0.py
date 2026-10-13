@@ -119,6 +119,12 @@ def _execute_ai_check_two_phase(
                 "A health check PASSES when NO problem is found, and FAILS when "
                 "the problem being checked for is present or cannot be "
                 "evaluated.\n"
+                # LOCAL PATCH (home-ops): judge from the raw tool output, not
+                # just the prose; no evidence means the check cannot pass.
+                "Base the decision on the provided tool output, not on the "
+                "investigation's claims alone. If the tool output is empty or "
+                "shows only errors, the check cannot pass: set passed=false "
+                "and say the evidence was missing.\n"
                 "In 'rationale', briefly justify your decision. In 'passed', set "
                 "true if healthy/no problem, false otherwise. Your rationale and "
                 "passed value must be consistent."
@@ -128,7 +134,11 @@ def _execute_ai_check_two_phase(
             "role": "user",
             "content": (
                 f"Check question:\n{check.query}\n\n"
-                f"Investigation findings:\n{investigation.result or ''}"
+                f"Investigation findings:\n{investigation.result or ''}\n\n"
+                # LOCAL PATCH (home-ops): phase 2 previously saw only prose;
+                # include this run's tool output (capped for small lanes).
+                f"Tool output gathered this run (evidence):\n"
+                f"{_collect_tool_evidence(investigation)[0][:8000]}"
             ),
         },
     ]
@@ -169,15 +179,83 @@ def _execute_ai_check_two_phase(
         **stats.model_dump(),
     )
 
+# LOCAL PATCH (home-ops, homelab-tickets#7): evidence gate. Holmes can emit a
+# schema-valid verdict with zero real evidence (observed 2026-10-13: a ceph
+# fail listing nine catastrophic states while the cluster was HEALTH_OK).
+# Every verdict must rest on this run's tool output.
+def _collect_tool_evidence(response: LLMResult) -> "tuple[str, int, int]":
+    """Return (digest text, successful-with-data count, failed/empty count)."""
+    digest_lines, ok, failed = [], 0, 0
+    for tool_call in response.tool_calls or []:
+        tool_name = getattr(tool_call, "tool_name", "?")
+        result = getattr(tool_call, "result", None)
+        status = getattr(result, "status", None)
+        status_value = getattr(status, "value", status)
+        data = getattr(result, "data", None)
+        if status_value == "success" and data:
+            ok += 1
+            text = data if isinstance(data, str) else json.dumps(data, default=str)
+            digest_lines.append(f"### {tool_name}\n{text}")
+        else:
+            failed += 1
+            digest_lines.append(
+                f"### {tool_name} (status={status_value}, error={getattr(result, 'error', None)})"
+            )
+    return "\n".join(digest_lines), ok, failed
 
-def _parse_check_response(response: LLMResult) -> CheckResponse:
+
+def _rationale_quotes_evidence(rationale: str, evidence: str) -> bool:
+    """True when the rationale contains at least one substantive verbatim
+    line from this run's tool output (whitespace-normalized)."""
+    normalized_rationale = " ".join((rationale or "").split())
+    for line in evidence.splitlines():
+        candidate = " ".join(line.split())
+        if len(candidate) >= 16 and any(c.isalpha() for c in candidate):
+            if candidate in normalized_rationale:
+                return True
+    return False
+
+
+def _parse_check_response(
+    response: LLMResult, check: Optional[Check] = None
+) -> CheckResponse:
+    # LOCAL PATCH (home-ops, homelab-tickets#7): reject unevidenced verdicts.
+    # Zero successful tool output means the model answered from thin air (or
+    # every tool failed) — surface a tool-error fail, never a parsed verdict.
+    evidence, ok, failed = _collect_tool_evidence(response)
+    if ok == 0:
+        return CheckResponse(
+            passed=False,
+            rationale=(
+                "Check produced no successful tool output this run "
+                f"({failed} tool call(s) failed or empty); refusing to emit an "
+                "unevidenced verdict. Investigate the toolchain, not the target."
+            ),
+        )
     try:
         result_json = json.loads(response.result or "{}")
-        return CheckResponse(**result_json)
+        parsed = CheckResponse(**result_json)
     except (json.JSONDecodeError, Exception) as parse_error:
         return CheckResponse(
             passed=False, rationale=f"Failed to parse response: {str(parse_error)}"
         )
+    # Checks whose query demands verbatim quotes (e.g. ceph-health-growth) must
+    # actually contain a verbatim span of this run's tool output.
+    if (
+        check is not None
+        and "verbatim" in check.query
+        and not _rationale_quotes_evidence(parsed.rationale or "", evidence)
+    ):
+        return CheckResponse(
+            passed=False,
+            rationale=(
+                "Verdict rejected: the query requires quoting live tool output "
+                "verbatim, but the rationale contains no verbatim span from "
+                "this run. Original verdict ignored as unverifiable: "
+                f"passed={parsed.passed}, rationale={parsed.rationale[:500]}"
+            ),
+        )
+    return parsed
 
 
 def execute_check(
@@ -219,7 +297,7 @@ def execute_check(
             # Fire the usage recorder. response IS-A LLMResult (RequestStats
             # subclass) so cost/token fields come straight off it.
             record_from_llm_result(recorder_state, response)
-        check_response = _parse_check_response(response)
+        check_response = _parse_check_response(response, check)
         if verbose and console:
             status_str = "PASS" if check_response.passed else "FAIL"
             console.print(f"    Result: {status_str}")
