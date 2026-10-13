@@ -105,7 +105,6 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); egress-isolated MCP group member |
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | SillyTavern          | `uncensored`      | Qwen3.8-27B        | Creative/RP; UI-configured, no repo-level config |
-| open-notebook        | UI-configured     | suggest `uncensored` | Research synthesis; no repo-level config                     |
 | open-webui           | `/v1`             | `uncensored` (open) / `agent`·`omni` (guarded) | Human chat portal; native tools via the guarded tiered `/mcp/*` (bearer key) |
 
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
@@ -292,12 +291,6 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 - Backed by SearXNG, Dragonfly Redis, nuq-postgres
 - Exposed as MCP server + internal endpoint for Hermes
 
-### Open-Notebook
-
-- AI-powered research notebook, `ghcr.io/lfnovo/open-notebook`
-- UI (:8502 Streamlit) + REST API (:5055), SurrealDB backend
-- No public ingress
-
 ### Hindsight
 
 - AI memory / context store (agent long-term memory: retain / recall / reflect)
@@ -383,7 +376,7 @@ items:
 | promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via langfuse/logs; if painful, expose `omni-raw` (one unguarded rule) as the designed escape hatch |
 | hermes MCP server endpoints | Runtime/PVC state, not in GitOps seeds | Point hermes at `/mcp/ro|rw|ext` at rollout; add an MCP section to the seed ConfigMap once the hermes config schema is confirmed |
 | open-terminal sandbox pods → vmcp | Egress allowed, ingress whitelist gap (effectively denies — accidentally enforces the no-open-MCP rule) | Separate PR: add sandbox pods to vmcp-ingress, or drop the egress rule and fix the comment |
-| SillyTavern / open-notebook endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
+| SillyTavern endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
 | mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred, on watch via langfuse decision spans (open-webui and hermes both emit OTEL) | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
 | ASR/TTS model | VoxCPM2-4bit served on the studio via `/v1/audio/*` (`studio-audio` backend) — lane ready, no in-repo consumer | Point a consumer at the lane when one appears; ASR (`/v1/audio/transcriptions`) wired but unused |
 | backend upstream auth | `policies.auth.secretRef: studio-api-auth` on all chat + media backends (oMLX server key, ES item `omlx`) | Verify at rollout: `/v1/chat/completions` and `/v1/embeddings|rerank|audio` answer 200 through the gateway while oMLX 401s keyless direct calls |

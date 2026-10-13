@@ -1,6 +1,6 @@
 # Application Catalog
 
-79 applications, 13 backend MCP servers, and 4 ToolHive VirtualMCP tiers across 12 namespaces, managed via Flux GitOps.
+78 applications, 13 backend MCP servers, and 4 ToolHive VirtualMCP tiers across 12 namespaces, managed via Flux GitOps.
 
 ## kube-system — Cluster Infrastructure (10)
 
@@ -108,7 +108,7 @@
 | MoviePilot    | Media automation (CNPG + Dragonfly + iGPU) |
 | Media-NFS     | Shared media storage                       |
 
-## selfhosted-apps — Self-Hosted Services (12)
+## selfhosted-apps — Self-Hosted Services (11)
 
 | App           | Purpose                                                        |
 | ------------- | -------------------------------------------------------------- |
@@ -119,7 +119,6 @@
 | Homepage      | App dashboard                                                  |
 | Karakeep      | Bookmark manager (Chrome + Meilisearch, omni lane)             |
 | Hindsight     | AI memory (slim image; LLM + embeddings + rerank on MacStudio) |
-| Open-Notebook | AI research notebook (SurrealDB)                               |
 | Firecrawl     | Web scraping pipeline (3 containers, MCP)                        |
 | SillyTavern   | AI character chat (AgentGateway)                               |
 | Bambuddy      | 3D printer monitor (Bambu Lab)                                 |

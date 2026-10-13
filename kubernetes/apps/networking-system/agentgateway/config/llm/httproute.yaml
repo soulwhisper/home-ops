@@ -18,7 +18,7 @@ spec:
       name: agentgateway-proxy
   rules:
     # OPEN lane (rule `uncensored`): the single uncensored model, unguarded.
-    # Pure-chat consumers only (SillyTavern / open-notebook / open-webui);
+    # Pure-chat consumers only (SillyTavern / open-webui);
     # automation rides the guarded `agent` lane.
     - name: uncensored
       matches:
