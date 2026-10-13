@@ -42,9 +42,11 @@ spec:
     # cleanup, in-namespace operators, the future executor (robusta
     # runner), and flux (drift correction)
     - name: not-kube-system-controllers
-      expression: "!request.userInfo.username.startsWith('system:serviceaccount:kube-system:')"
+      expression: >-
+        !request.userInfo.username.startsWith('system:serviceaccount:kube-system:')
     - name: not-nodes
-      expression: "!('system:nodes' in request.userInfo.groups)"
+      expression: >-
+        !('system:nodes' in request.userInfo.groups)
     - name: not-known-operators
       expression: >-
         !(request.userInfo.username in [
