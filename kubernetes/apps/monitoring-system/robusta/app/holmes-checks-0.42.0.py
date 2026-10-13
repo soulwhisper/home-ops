@@ -87,7 +87,9 @@ def _execute_ai_check(check: Check, ai: ToolCallingLLM) -> LLMResult:
     # LOCAL PATCH (home-ops): the openai/agent lane also cannot combine
     # response_format with tool calls (instant empty verdicts). Force the
     # two-phase path. Remove this file+mount when HolmesGPT/holmesgpt#2581
-    # ships and the holmes image is bumped past 0.42.x.
+    # ships and the holmes image is bumped past 0.42.x — but KEEP the
+    # evidence gate (_parse_check_response verbatim/tool-output checks):
+    # upstream has no equivalent and it is what stops hallucinated verdicts.
     if _is_gemini_route(ai.llm.model) or ai.llm.model == "openai/agent":
         return _execute_ai_check_two_phase(check, ai, messages)
 

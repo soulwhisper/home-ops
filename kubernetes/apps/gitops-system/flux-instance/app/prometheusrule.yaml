@@ -52,3 +52,20 @@ spec:
               Kustomization {{ $labels.name }} in {{ $labels.exported_namespace }} is not ready
           labels:
             severity: critical
+        # The vendored flux ruleset that used to fire
+        # FluxOCIRepositoryOciartifactpullfailed is no longer shipped, leaving
+        # OCI pull failures uncovered. Re-add repo-owned with a 10m buffer:
+        # transient upstream-DNS blips self-heal in 3-5m via source-controller
+        # retries (homelab-tickets#15-17) and must not page.
+        - alert: FluxOCIRepositoryNotReady
+          expr: |-
+            gotk_resource_info{customresource_kind="OCIRepository", ready!="True"} == 1
+          for: 10m
+          annotations:
+            summary: >-
+              OCIRepository {{ $labels.name }} in {{ $labels.exported_namespace }} is not ready
+            description: >-
+              Persistent for 10m+ — beyond the self-heal window of transient
+              registry/DNS blips. Check source-controller logs for the reason.
+          labels:
+            severity: critical

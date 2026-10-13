@@ -23,7 +23,7 @@ spec:
   # noirprime-com deliberately runs a 160h duration, so a flat "expiring within
   # 14 days" window can never pass (homelab-tickets#12). Judge renewal health
   # instead: cert-manager exposes status.renewalTime well before notAfter.
-  query: "Check cert-manager managed certificates in this cluster: list any Certificate not in Ready state, and any Certificate whose status.renewalTime is missing, already past, or later than status.notAfter (renewal broken or overdue). Short-lived certificates with a valid future renewalTime before notAfter are healthy, not findings. Report a concise list, or 'all clear'."
+  query: "Check cert-manager managed certificates in this cluster: list any Certificate not in Ready state, and any Certificate whose status.renewalTime is missing, already past, or later than status.notAfter (renewal broken or overdue). Short-lived certificates with a valid future renewalTime before notAfter are healthy, not findings. Quote each flagged certificate's name, namespace, renewalTime and notAfter verbatim from tool output in the rationale. Report a concise list, or 'all clear'."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
@@ -32,7 +32,9 @@ metadata:
 spec:
   schedule: "41 8 * * *"
   timeout: 300
-  query: "Check per-node pod density and resource requests across the exarch nodes: pod count vs the 110 per-node limit, cpu/memory request utilization, and any node trending toward saturation (like the recent exarch-03 pile-up to 106 pods). Report a small table and flag nodes above 80% of any dimension."
+  # maxPods is 160 per node since homelab-tickets#13 (was 110 when the
+  # exarch-03 pile-up fired this check); the 80% flag line moved with it.
+  query: "Check per-node pod density and resource requests across the exarch nodes: pod count vs each node's live allocatable pod capacity (currently 160), cpu/memory request utilization, and any node trending toward saturation. Quote the per-node pod counts verbatim from tool output in the rationale's table. Report a small table and flag nodes above 80% of any dimension."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
@@ -41,7 +43,10 @@ metadata:
 spec:
   schedule: "13 9 * * 1"
   timeout: 300
-  query: "Review alert quality using vmalertmanager and vmsingle (namespace monitoring-system): which alerts fired most in the past 7 days, which are flapping (fire/resolve repeatedly), and which look like threshold-vs-normal mismatch (for example latency-based health checks whose normal latency exceeds the alert threshold). Propose concrete rule adjustments (threshold, for-duration, or silence) for the top 3 offenders."
+  # Also carries the acceptance.md "re-check after 24h" duty: re-evaluate
+  # recently-resolved alerts' raw expressions to catch missed heals, and track
+  # loop health (ticket volume, flap rate) instead of a separate dashboard.
+  query: "Review alert and loop health using vmalertmanager and vmsingle (namespace monitoring-system). (1) Quality: which alerts fired most in the past 7 days, which are flapping (fire/resolve repeatedly), and which look like threshold-vs-normal mismatch. (2) Heal recheck: for alerts that fired in the past 7 days and are now resolved, re-evaluate their raw rule expressions now and flag any whose underlying condition is back at or above threshold (missed heal). (3) Loop stats: alert transitions by alertname this week, health-check verdict flips (pass/fail alternation without a config change). Quote the key counts verbatim from tool output. Propose concrete rule adjustments (threshold, for-duration, keep_firing_for, or silence) for the top 3 offenders."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
@@ -50,4 +55,4 @@ metadata:
 spec:
   schedule: "7 6 * * *"
   timeout: 300
-  query: "Check backup health: kopiur snapshot jobs (namespace storage-system) and the cnpg postgres backup plus DR-test cronjobs (namespace database-system): any failed or missed runs in the last 48 hours, and the oldest successful snapshot age per critical app. Report concise status."
+  query: "Check backup health: kopiur snapshot jobs (namespace storage-system) and the cnpg postgres backup plus DR-test cronjobs (namespace database-system): any failed or missed runs in the last 48 hours, and the oldest successful snapshot age per critical app. Quote the oldest-snapshot ages verbatim from tool output in the rationale. Report concise status."

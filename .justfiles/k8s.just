@@ -1,3 +1,6 @@
+# module recipes run with .justfiles/ as cwd otherwise, which breaks flate's
+# repo-root --path discovery ("no Kustomization named ... in --path")
+set working-directory := ".."
 set lazy
 set positional-arguments
 set quiet
