@@ -314,9 +314,15 @@ def _plain_to_check_json(content: str) -> str:
     m = _PLAIN_ANSWER.search(content or "")
     if not m:
         return ""
+    rationale = m.group("rationale").strip()
+    if not rationale:
+        # empty rationale + passed=true would slip past non-verbatim checks
+        # (no gate there) — count as degenerate so the retry runs
+        # (coderabbit#4085)
+        return ""
     return json.dumps(
         {
-            "rationale": m.group("rationale").strip(),
+            "rationale": rationale,
             "passed": m.group("passed").lower() in ("yes", "true"),
         }
     )
