@@ -52,19 +52,26 @@ spec:
         object.spec.containers
         + object.spec.?initContainers.orValue([])
         + object.spec.?ephemeralContainers.orValue([])
+    - name: targetName
+      # request.* survives autogen rewriting; object.metadata.name is rewritten
+      # to the pod template's absent name on controller variants (kyverno#15591).
+      expression: >-
+        request.name != ''
+          ? request.name
+          : object.metadata.?generateName.orValue('<workload>') + '*'
   validations:
     - expression: >-
         !object.spec.?hostNetwork.orValue(false)
         && !object.spec.?hostPID.orValue(false)
         && !object.spec.?hostIPC.orValue(false)
       messageExpression: >-
-        "pod " + object.metadata.namespace + "/" + object.metadata.name
+        "pod " + object.metadata.namespace + "/" + variables.targetName
         + " violates pod-security baseline: host namespaces are not expected in app namespaces"
     - expression: >-
         variables.allContainers.all(c,
           !c.?securityContext.?privileged.orValue(false))
       messageExpression: >-
-        "pod " + object.metadata.namespace + "/" + object.metadata.name
+        "pod " + object.metadata.namespace + "/" + variables.targetName
         + " violates pod-security baseline: privileged containers are not expected in app namespaces"
     # upstream Baseline allows this 13-capability set (NET_BIND_SERVICE-only
     # is the Restricted rule)
@@ -75,18 +82,18 @@ spec:
                     'FSETID', 'KILL', 'MKNOD', 'NET_BIND_SERVICE', 'SETFCAP',
                     'SETGID', 'SETPCAP', 'SETUID', 'SYS_CHROOT']))
       messageExpression: >-
-        "pod " + object.metadata.namespace + "/" + object.metadata.name
+        "pod " + object.metadata.namespace + "/" + variables.targetName
         + " violates pod-security baseline: added capabilities outside the Baseline set"
     - expression: >-
         variables.allContainers.all(c,
           c.?ports.orValue([]).all(p, p.?hostPort.orValue(0) == 0))
       messageExpression: >-
-        "pod " + object.metadata.namespace + "/" + object.metadata.name
+        "pod " + object.metadata.namespace + "/" + variables.targetName
         + " violates pod-security baseline: host ports are not expected in app namespaces"
     - expression: >-
         !object.spec.?securityContext.?windowsOptions.?hostProcess.orValue(false)
         && variables.allContainers.all(c,
           !c.?securityContext.?windowsOptions.?hostProcess.orValue(false))
       messageExpression: >-
-        "pod " + object.metadata.namespace + "/" + object.metadata.name
+        "pod " + object.metadata.namespace + "/" + variables.targetName
         + " violates pod-security baseline: Windows HostProcess containers"

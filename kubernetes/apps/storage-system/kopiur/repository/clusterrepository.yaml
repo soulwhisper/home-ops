@@ -39,6 +39,15 @@ spec:
       # current repo size), not the sum of all app data.
       metadataCacheSizeMb: 4096
       contentCacheSizeMb: 1024
+    # Base resources for maintenance/verification/restore movers; per-policy
+    # mover resources still override this layer for snapshot uploads.
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
   maintenance:
     schedule:
       quick:

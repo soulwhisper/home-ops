@@ -25,6 +25,13 @@ spec:
         apiVersions: ['v1']
         operations: ['CREATE', 'UPDATE']
         resources: ['jobs', 'cronjobs']
+  matchConditions:
+    - name: exempt-rook-osd-prepare
+      # Rook recommends no memory limit on OSD prepare jobs: provisioning can
+      # burst per device, and a failed prepare risks storage onboarding. These
+      # are rare operator-triggered one-shots; all routine movers stay in scope.
+      expression: >-
+        !object.metadata.name.startsWith('rook-ceph-osd-prepare-')
   variables:
     # Field probe instead of request.kind so background scans evaluate the
     # same way admission requests do.

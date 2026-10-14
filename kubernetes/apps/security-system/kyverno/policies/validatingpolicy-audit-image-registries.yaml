@@ -41,6 +41,13 @@ spec:
         object.spec.containers
         + object.spec.?initContainers.orValue([])
         + object.spec.?ephemeralContainers.orValue([])
+    - name: targetName
+      # request.* survives autogen rewriting; object.metadata.name is rewritten
+      # to the pod template's absent name on controller variants (kyverno#15591).
+      expression: >-
+        request.name != ''
+          ? request.name
+          : object.metadata.?generateName.orValue('<workload>') + '*'
     - name: allowedRegistries
       expression: >-
         ['ghcr.io', 'quay.io', 'registry.k8s.io', 'docker.io', 'registry.gitlab.com', 'gsoci.azurecr.io', 'cr.kgateway.dev', 'cr.agentgateway.dev', 'docker.stirlingpdf.com', 'docker.dragonflydb.io', 'git.b4mad.industries']
@@ -51,5 +58,5 @@ spec:
           image(c.image).registry() in variables.allowedRegistries)
       messageExpression: >-
         "container image from a non-allowlisted registry in "
-        + object.metadata.namespace + "/" + object.metadata.name
+        + object.metadata.namespace + "/" + variables.targetName
         + " — review provenance"
