@@ -11,28 +11,28 @@ spec:
         - alert: AgentNewToolObserved
           annotations:
             summary: >-
-              Agent invoked tool {{ $labels.gen_ai_tool_name }} not seen in the last 7 days.
+              Agent invoked {{ $labels.server }} tool {{ $labels.mcp_resource_id }} not seen in the last 7 days.
           expr: |
-            sum by (gen_ai_tool_name) (increase(agent_calls_total[1h])) > 0
+            sum by (server, mcp_resource_id) (increase(toolhive_mcp_requests_total{mcp_method="tools/call"}[1h])) > 0
             unless
-            sum by (gen_ai_tool_name) (increase(agent_calls_total[7d] offset 1h)) > 0
+            sum by (server, mcp_resource_id) (increase(toolhive_mcp_requests_total{mcp_method="tools/call"}[7d] offset 1h)) > 0
           labels:
             severity: warning
         - alert: AgentToolCallSpike
           annotations:
             summary: >-
-              Tool {{ $labels.gen_ai_tool_name }} call rate is 4x above its 7d baseline (sponge/loop suspect).
+              {{ $labels.server }} tool {{ $labels.mcp_resource_id }} call rate is 4x above its 7d baseline (sponge/loop suspect).
           expr: |
-            sum by (gen_ai_tool_name) (rate(agent_calls_total[15m]))
-            > 4 * sum by (gen_ai_tool_name) (avg_over_time(rate(agent_calls_total[15m])[7d:1h])) > 0
+            sum by (server, mcp_resource_id) (rate(toolhive_mcp_requests_total{mcp_method="tools/call"}[15m]))
+            > 4 * sum by (server, mcp_resource_id) (avg_over_time(rate(toolhive_mcp_requests_total{mcp_method="tools/call"}[15m])[7d:1h])) > 0
           for: 15m
           labels:
             severity: warning
         - alert: AgentRWToolOffHours
           annotations:
-            summary: "internal-rw tool invoked between 02:00-07:00 CST."
+            summary: "internal-rw tool {{ $labels.mcp_resource_id }} invoked between 02:00-07:00 CST."
           expr: |
-            sum(increase(agent_calls_total{gen_ai_tool_name=~"(github|hass)_.*"}[10m])) > 0
+            sum by (mcp_resource_id) (increase(toolhive_mcp_requests_total{job="vmcp-internal-rw", mcp_method="tools/call"}[10m])) > 0
             and on() (hour() >= 18 and hour() <= 23)
           labels:
             severity: critical

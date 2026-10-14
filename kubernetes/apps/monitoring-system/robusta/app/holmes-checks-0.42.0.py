@@ -307,6 +307,8 @@ _PLAIN_ANSWER = re.compile(
     re.S | re.I,
 )
 
+# Punctuation-only values such as "...", "—", and "…" carry no verdict.
+_DEGENERATE_RATIONALE = re.compile(r"^[\W_]*$")
 
 def _plain_to_check_json(content: str) -> str:
     """Convert a RATIONALE:/PASSED: plain-text answer into the CheckResponse
@@ -315,10 +317,9 @@ def _plain_to_check_json(content: str) -> str:
     if not m:
         return ""
     rationale = m.group("rationale").strip()
-    if not rationale:
-        # empty rationale + passed=true would slip past non-verbatim checks
-        # (no gate there) — count as degenerate so the retry runs
-        # (coderabbit#4085)
+    # Punctuation-only rationale is degenerate lane output, not a verdict
+    # (homelab-tickets#19); count it as degenerate so the retry runs.
+    if not rationale or _DEGENERATE_RATIONALE.fullmatch(rationale):
         return ""
     return json.dumps(
         {
@@ -459,6 +460,11 @@ def execute_check(
 
         duration = time.time() - start_time
 
+        execution_failure_prefixes = (
+            "Failed to parse response:",
+            "Check produced no successful tool output",
+            "Verdict rejected:",
+        )
         if check_response.passed:
             result = CheckResult(
                 check_name=check.name,
@@ -467,6 +473,22 @@ def execute_check(
                 query=check.query,
                 duration=duration,
                 rationale=check_response.rationale,
+            )
+        elif check_response.rationale.startswith(execution_failure_prefixes):
+            # The lane/toolchain failed before evaluating the target. ERROR keeps
+            # HolmesHealthCheckFailed firing (result=~"fail|error") without
+            # presenting the target as the diagnosed fault (tickets #13/#19).
+            result = CheckResult(
+                check_name=check.name,
+                status=CheckStatus.ERROR,
+                message=(
+                    "Check errored (execution/evidence failure; target not "
+                    f"evaluated). {check_response.rationale}"
+                ),
+                query=check.query,
+                duration=duration,
+                rationale=check_response.rationale,
+                error=check_response.rationale,
             )
         else:
             result = CheckResult(
@@ -673,7 +695,7 @@ class CheckRunner:
 
                         # Send alerts if needed
                         if (
-                            result.status == CheckStatus.FAIL
+                            result.status in (CheckStatus.FAIL, CheckStatus.ERROR)
                             and check.mode == CheckMode.ALERT
                             and check.destinations
                         ):
@@ -702,7 +724,7 @@ class CheckRunner:
 
                 # Send alerts if needed
                 if (
-                    result.status == CheckStatus.FAIL
+                    result.status in (CheckStatus.FAIL, CheckStatus.ERROR)
                     and check.mode == CheckMode.ALERT
                     and check.destinations
                 ):
@@ -714,7 +736,7 @@ class CheckRunner:
         """Send alerts to configured destinations."""
         issue_status = (
             IssueStatus.OPEN
-            if result.status == CheckStatus.FAIL
+            if result.status in (CheckStatus.FAIL, CheckStatus.ERROR)
             else IssueStatus.CLOSED
         )
         issue = Issue(

@@ -21,6 +21,12 @@ spec:
                 secretKeyRef:
                   name: llm-api-auth
                   key: OPENAI_API_KEY
+          # Operator default cpu limit is 500m; persistent tools/list and
+          # embedding-rerank bursts throttled ~52% of CFS periods. Request stays
+          # unchanged, so scheduling is unaffected.
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: "1", memory: 512Mi }
   groupRef:
     name: *name
   telemetryConfigRef:

@@ -18,6 +18,10 @@ spec:
       value: "http"
     - name: MCP_LISTEN_ADDR
       value: ":8081"
+    # INFO logs dump full tools/resources results; resources/list is ~7.7MiB
+    # and exceeds vlagent's hard 2MiB line limit. Keep warnings/errors.
+    - name: MCP_LOG_LEVEL
+      value: "warn"
   transport: streamable-http
   mcpPort: 8081
   resources:
