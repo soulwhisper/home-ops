@@ -58,8 +58,17 @@ spec:
         containers:
           app:
             image:
-              repository: ghcr.io/soulwhisper/hermes-suite
-              tag: 2026.9.24
+              # upstream image direct (suite retired — it existed to bundle
+              # dashboard+webui; the dashboard is built in since 0.21.x).
+              # Docker Hub ships no plain semver tag, only rc.N-vX.Y.Z
+              # candidates + floating aliases: pin stable by digest, renovate
+              # floats it forward per upstream release (packageRules.json5).
+              repository: nousresearch/hermes-agent
+              tag: stable@sha256:444b42594e7f467425872fc35e077a227d377f0fe0726bc818706d62175fad8b # v0.21.7
+            # bypass the image's s6-overlay entrypoint (needs root + writable
+            # /run); one process per container, k8s-native supervision instead
+            command: ["/opt/hermes/.venv/bin/hermes"]
+            args: ["gateway", "run"]
             # every k8s rollout SIGTERMs the gateway and it broadcasts
             # "Gateway shutting down — task interrupted" to feishu mid-task
             # (10 graceful SIGTERMs/3d, zero crashes). Give in-flight tasks a
@@ -70,7 +79,10 @@ spec:
                 exec:
                   command: ["sh", "-c", "sleep 25"]
             env:
-              HERMES_SERVICES: "dashboard,gateway,webui"
+              # upstream image defaults HOME elsewhere; all state is PVC-backed
+              HOME: /opt/data
+              # feishu plugin deps mirrored onto the PVC by hermes-extras
+              PYTHONPATH: /opt/data/.local/lib/hermes-plugins
               # plugins
               RTK_TELEMETRY_DISABLED: "true"
               # Feishu plugin (websocket mode; credentials via envFrom secret)
@@ -112,6 +124,46 @@ spec:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
+          dashboard:
+            image:
+              repository: nousresearch/hermes-agent
+              tag: stable@sha256:444b42594e7f467425872fc35e077a227d377f0fe0726bc818706d62175fad8b # v0.21.7
+            # same s6-bypass as the gateway container
+            command: ["/opt/hermes/.venv/bin/hermes"]
+            args: ["dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open"]
+            env:
+              HOME: /opt/data
+            probes:
+              # auth gate 302s to /login — a 302 proves the server is up
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 9119
+                  failureThreshold: 30
+                  periodSeconds: 10
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 9119
+                  periodSeconds: 30
+                  failureThreshold: 5
+                  timeoutSeconds: 10
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 512Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              readOnlyRootFilesystem: true
 
     service:
       app:
@@ -121,8 +173,6 @@ spec:
             port: *port
           http:
             port: 9119
-          web:
-            port: 8787
           webhook:
             port: 8644
 

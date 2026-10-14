@@ -8,7 +8,7 @@ Source: Flux manifests in `kubernetes/apps/`.
 ```mermaid
 flowchart TB
     subgraph Clients["AI Clients"]
-        Hermes["Hermes Agent Suite"]
+        Hermes["Hermes Agent"]
         ST["SillyTavern"]
         HS["Hindsight"]
     end
@@ -140,19 +140,23 @@ All lanes run on the MacStudio inference host (`uncensored` Qwen3.8-27B, `agent`
 
 ## AI Agent Platform
 
-### Hermes Agent Suite
+### Hermes Agent
+
+Runs the upstream `nousresearch/hermes-agent` image directly (the bundled
+`hermes-suite` image was retired 2026-10: it existed to add supervisord +
+the external webui; the dashboard is built in since 0.21.x and human chat
+lives on Open WebUI). One pod, two containers: `gateway` + `dashboard`.
 
 | Component | Port | Notes                       |
 | --------- | ---- | --------------------------- |
 | Dashboard | 9119 | SSO-protected               |
 | Gateway   | 8642 | Internal, health: `/health` |
-| Web UI    | 8787 | Deployed, no ingress (chat moved to Open WebUI; SSO route removed 2026-09-09) |
 
 - **Runtime**: user namespaces (`hostUsers: false`) + egress CNP (ADR-03; Kata removed)
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
 - **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP, Agent Gateway LLM
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, world-except-private :443 (Feishu WebSocket). No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
-- **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 + webhook ingest :8644 via kgateway-internal (shared rule), webhook ingest :8644 also from frigate + LAN, profile API :8642/:8787 same-namespace only; `fromEntities: host` keeps kubelet probes working
+- **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 + webhook ingest :8644 via kgateway-internal (shared rule), webhook ingest :8644 also from frigate + LAN, profile API :8642 same-namespace only; `fromEntities: host` keeps kubelet probes working
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
   - `ops` — the batching brain: cron/Feishu/automation workload lives here (read-only-first posture, ToolHive tiers as today); Feishu home channel for cron results

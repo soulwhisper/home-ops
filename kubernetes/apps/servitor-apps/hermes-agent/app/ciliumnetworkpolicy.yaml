@@ -64,7 +64,7 @@ spec:
 # Ingress lockdown (issue #3934): the API server (8642) runs with a local
 # terminal backend — network access to it must be caller-scoped.
 # 9119 dashboard: kgateway-internal only. 8644 webhook ingest: frigate + LAN
-# (NAS scripts, tailnet-forwarded). 8642/8787: same-namespace consumers.
+# (NAS scripts, tailnet-forwarded). 8642: same-namespace consumers.
 # kubelet probes arrive from the node host — fromEntities host is mandatory.
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
 apiVersion: cilium.io/v2
@@ -105,4 +105,3 @@ spec:
       toPorts:
         - ports:
             - { port: "8642", protocol: TCP }
-            - { port: "8787", protocol: TCP }

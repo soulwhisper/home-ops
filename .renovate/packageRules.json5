@@ -45,5 +45,16 @@
       overrideDatasource: "github-releases",
       overridePackageName: "immich-app/immich",
     },
+    {
+      description: "hermes-agent tracks the upstream stable channel by digest: Docker Hub publishes no plain semver tags for nousresearch/hermes-agent (only rc.N-vX.Y.Z candidates + floating aliases), and the shared preset disables docker digest updates globally — re-enable scoped to this image. automerge preserves the previous suite-tag update semantics; platformAutomerge stays off (etcd fsync wave incident 2026-10-08)",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["nousresearch/hermes-agent"],
+      matchUpdateTypes: ["digest"],
+      enabled: true,
+      recreateWhen: "always",
+      automerge: true,
+      automergeType: "pr",
+      platformAutomerge: false,
+    },
   ],
 }
