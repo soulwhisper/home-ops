@@ -695,7 +695,7 @@ class CheckRunner:
 
                         # Send alerts if needed
                         if (
-                            result.status == CheckStatus.FAIL
+                            result.status in (CheckStatus.FAIL, CheckStatus.ERROR)
                             and check.mode == CheckMode.ALERT
                             and check.destinations
                         ):
@@ -724,7 +724,7 @@ class CheckRunner:
 
                 # Send alerts if needed
                 if (
-                    result.status == CheckStatus.FAIL
+                    result.status in (CheckStatus.FAIL, CheckStatus.ERROR)
                     and check.mode == CheckMode.ALERT
                     and check.destinations
                 ):
@@ -736,7 +736,7 @@ class CheckRunner:
         """Send alerts to configured destinations."""
         issue_status = (
             IssueStatus.OPEN
-            if result.status == CheckStatus.FAIL
+            if result.status in (CheckStatus.FAIL, CheckStatus.ERROR)
             else IssueStatus.CLOSED
         )
         issue = Issue(
