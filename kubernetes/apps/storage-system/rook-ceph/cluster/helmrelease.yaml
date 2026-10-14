@@ -86,8 +86,16 @@ spec:
         osd:
           limits:
             memory: 4Gi
-        # One-shot detect-version/cmd-reporter jobs; OSD prepare intentionally
-        # stays unlimited per Rook guidance and is excluded from the audit rule.
+        # Rook applies prepareosd resources to all prepare-job containers. Keep
+        # memory unlimited per Rook guidance, but cap the CPU burst the audit
+        # policy still requires.
+        prepareosd:
+          requests:
+            cpu: 500m
+            memory: 50Mi
+          limits:
+            cpu: 500m
+        # One-shot detect-version/cmd-reporter jobs.
         cmd-reporter:
           requests:
             cpu: 10m
