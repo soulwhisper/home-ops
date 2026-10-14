@@ -20,6 +20,12 @@
       allowedVersions: "!/^v?1\\.120\\..*$/",
     },
     {
+      description: "Block hermes-suite legacy CalVer tags: upstream nousresearch/hermes-agent switched to semver at v0.21.6 and the suite image follows (0.21.7+); old 2026.x date tags remain in ghcr and would otherwise sort newer",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/soulwhisper/hermes-suite"],
+      allowedVersions: "!/^\\d{4}\\.\\d+\\.\\d+$/",
+    },
+    {
       description: "Pin Postgres version to 18",
       matchDatasources: ["docker"],
       matchPackagePatterns: [
