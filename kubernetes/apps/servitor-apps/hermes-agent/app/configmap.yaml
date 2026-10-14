@@ -18,6 +18,11 @@ data:
       api_key: $${OPENAI_API_KEY}
     gateway:
       multiplex_profiles: true
+    # rtk-rewrite: plugin files are image-baked and mirrored by the
+    # entrypoint; the allow-list must live here — runtime `rtk init` would be
+    # reverted by the next seed
+    plugins:
+      enabled: [rtk-rewrite]
     # gateway enforces authentik; this gate only satisfies hermes' refusal to
     # bind non-loopback without an auth provider
     dashboard:
@@ -57,6 +62,9 @@ data:
       provider: custom
       base_url: $${OPENAI_BASE_URL}
       api_key: $${OPENAI_API_KEY}
+    # rtk shell-output compression for the automation loops
+    plugins:
+      enabled: [rtk-rewrite]
     auxiliary:
       vision: { provider: main, model: omni, timeout: 30 }
       web_extract: { provider: main, model: omni, reasoning_effort: low }
