@@ -54,28 +54,13 @@ $patch: delete
 ---
 apiVersion: v1alpha1
 kind: KubeletConfig
-defaultRuntimeSeccompProfileEnabled: true # hardening pin
+defaultRuntimeSeccompProfileEnabled: true
 config:
-  # renovate-driven image churn fills EPHEMERAL long before the default
-  # 85%/80% fs thresholds trigger kubelet image GC (CephNodeDiskspaceWarning
-  # fired 3 days after bring-up at 50% usage). Prune unused images by age and
-  # trigger pressure-based GC earlier. image-warm CI re-uses images every 6h,
-  # so 72h never evicts a warmed image.
   imageMaximumGCAge: 72h0m0s
   imageGCHighThresholdPercent: 70
   imageGCLowThresholdPercent: 60
-  # Unbounded parallel pulls (serializeImagePulls=false, no cap) saturated the
-  # shared system NVMe (EPHEMERAL + etcd): 2026-10-08 18:17Z and 10-09 00:15Z
-  # Renovate merge waves pushed WAL fsync p99 to 1.4-1.8s, triggering etcd
-  # leader changes and ~20 leader-election controller restarts. Two concurrent
-  # pulls keep rollouts parallel without starving etcd fsync.
-  # serializeImagePulls must be false for the cap to apply (k8s default is
-  # true; pinned explicitly so the cap never silently stops working).
   serializeImagePulls: false
   maxParallelImagePulls: 2
-  # Default maxPods=110 is too tight when infra singletons pile onto one node:
-  # exarch-03 hit 94-106/110 (homelab-tickets#13). 160 keeps headroom while
-  # staying far below the /17 per-node pod CIDR capacity.
   maxPods: 160
 ---
 apiVersion: v1alpha1
