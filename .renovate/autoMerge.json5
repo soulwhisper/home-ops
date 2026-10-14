@@ -6,17 +6,13 @@
       matchDatasources: ["docker"],
       pinDigests: false,
     },
-    // platformAutomerge is off on purpose: GitHub-native automerge merged 4-5
-    // PRs within a minute once CI passed together (2026-10-08 18:11Z,
-    // 10-09 00:04Z); the resulting image-pull wave stalled etcd fsync and
-    // caused ~20 controller leader-election restarts. Renovate-side automerge
-    // merges at most one branch per run, spacing rollouts out.
+    // platformAutomerge is on on purpose
     {
       description: "Auto-merge patch updates after CI",
       matchUpdateTypes: ["patch"],
       automerge: true,
       automergeType: "pr",
-      platformAutomerge: false,
+      platformAutomerge: true,
       ignoreTests: false,
     },
     {
@@ -24,7 +20,7 @@
       matchManagers: ["github-actions"],
       automerge: true,
       automergeType: "pr",
-      platformAutomerge: false,
+      platformAutomerge: true,
       matchUpdateTypes: ["minor", "patch"],
       ignoreTests: false,
     },
@@ -40,7 +36,7 @@
       matchUpdateTypes: ["minor"],
       automerge: true,
       automergeType: "pr",
-      platformAutomerge: false,
+      platformAutomerge: true,
       ignoreTests: false,
     },
     {
@@ -70,7 +66,7 @@
       matchUpdateTypes: ["minor"],
       automerge: true,
       automergeType: "pr",
-      platformAutomerge: false,
+      platformAutomerge: true,
       ignoreTests: false,
     },
     {
