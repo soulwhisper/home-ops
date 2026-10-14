@@ -30,10 +30,12 @@ spec:
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         initContainers:
+          # also mirrors the feishu plugin python deps (lark-oapi +
+          # requests-toolbelt) onto the PVC; the app loads them via PYTHONPATH
           hermes-extras:
             image:
               repository: ghcr.io/soulwhisper/hermes-extras
-              tag: "2026.10.08"
+              tag: "2026.10.14"
             command: ["/bin/sh", "/app/install.sh"]
             securityContext:
               allowPrivilegeEscalation: false
