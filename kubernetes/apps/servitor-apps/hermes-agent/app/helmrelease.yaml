@@ -27,17 +27,6 @@ spec:
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         initContainers:
-          # also mirrors the feishu plugin python deps (lark-oapi +
-          # requests-toolbelt) onto the PVC; the app loads them via PYTHONPATH
-          hermes-extras:
-            image:
-              repository: ghcr.io/soulwhisper/hermes-extras
-              tag: "2026.10.14"
-            command: ["/bin/sh", "/app/install.sh"]
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-              readOnlyRootFilesystem: true
           # Seeds config.yaml + ops profile onto the PVC at every boot
           # (authoritative; dashboard edits to these files revert on restart).
           # .env files are rendered from pod env because profile $${VAR} refs
@@ -57,17 +46,11 @@ spec:
         containers:
           app:
             image:
-              # upstream image direct (suite retired — it existed to bundle
-              # dashboard+webui; the dashboard is built in since 0.21.x).
-              # Docker Hub ships no plain semver tag, only rc.N-vX.Y.Z
-              # candidates + floating aliases: pin stable by digest, renovate
-              # floats it forward per upstream release (packageRules.json5).
-              repository: nousresearch/hermes-agent
-              tag: stable@sha256:444b42594e7f467425872fc35e077a227d377f0fe0726bc818706d62175fad8b # v0.21.7
-            # bypass the image's s6-overlay entrypoint (needs root + writable
-            # /run); one process per container, k8s-native supervision instead
-            command: ["/opt/hermes/.venv/bin/hermes"]
-            args: ["gateway", "run"]
+              # soulwhisper build: upstream hermes-agent + baked extras (rtk,
+              # caveman skills, feishu deps) + supervisord (gateway+dashboard
+              # in one container). Tag tracks upstream semver releases.
+              repository: ghcr.io/soulwhisper/hermes-agent
+              tag: 0.21.7
             # every k8s rollout SIGTERMs the gateway and it broadcasts
             # "Gateway shutting down — task interrupted" to feishu mid-task
             # (10 graceful SIGTERMs/3d, zero crashes). Give in-flight tasks a
@@ -78,10 +61,7 @@ spec:
                 exec:
                   command: ["sh", "-c", "sleep 25"]
             env:
-              # upstream image defaults HOME elsewhere; all state is PVC-backed
-              HOME: /opt/data
-              # feishu plugin deps mirrored onto the PVC by hermes-extras
-              PYTHONPATH: /opt/data/.local/lib/hermes-plugins
+              HERMES_SERVICES: "gateway,dashboard"
               # Feishu plugin (websocket mode; credentials via envFrom secret)
               FEISHU_DOMAIN: "feishu"
               FEISHU_CONNECTION_MODE: "websocket"
@@ -117,46 +97,6 @@ spec:
                 memory: 1Gi
               limits:
                 memory: 4Gi
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-              readOnlyRootFilesystem: true
-          dashboard:
-            image:
-              repository: nousresearch/hermes-agent
-              tag: stable@sha256:444b42594e7f467425872fc35e077a227d377f0fe0726bc818706d62175fad8b # v0.21.7
-            # same s6-bypass as the gateway container
-            command: ["/opt/hermes/.venv/bin/hermes"]
-            args: ["dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open"]
-            env:
-              HOME: /opt/data
-            probes:
-              # auth gate 302s to /login — a 302 proves the server is up
-              startup:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /
-                    port: 9119
-                  failureThreshold: 30
-                  periodSeconds: 10
-              liveness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /
-                    port: 9119
-                  periodSeconds: 30
-                  failureThreshold: 5
-                  timeoutSeconds: 10
-            resources:
-              requests:
-                cpu: 50m
-                memory: 256Mi
-              limits:
-                memory: 512Mi
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }

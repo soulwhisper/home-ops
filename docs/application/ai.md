@@ -142,7 +142,9 @@ All lanes run on the MacStudio inference host (`uncensored` Qwen3.8-27B, `agent`
 
 ### Hermes Agent
 
-Runs the upstream `nousresearch/hermes-agent` image directly. One pod, two containers: `gateway` + `dashboard`.
+Runs `ghcr.io/soulwhisper/hermes-agent` — the upstream image plus baked
+extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
+`dashboard` in one container. Tag tracks upstream semver releases.
 
 | Component | Port | Notes                       |
 | --------- | ---- | --------------------------- |
