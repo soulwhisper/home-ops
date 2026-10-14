@@ -91,7 +91,12 @@ data:
     cp /seed/config.yaml /opt/data/config.yaml
 
     # root .env — authoritative; prevents first-boot placeholder seeding from
-    # shadowing pod env (dotenv loads with override=True)
+    # shadowing pod env (dotenv loads with override=True).
+    # FEISHU_* must live here, not only in the pod env: since v0.21.x the
+    # multiplex gateway reloads config under a profile scope whose secret
+    # resolver no longer honors process env — platforms with creds only in
+    # the pod env are silently dropped from the adapter map (feishu outage
+    # 2026-10-14).
     cat > /opt/data/.env <<EOF
     OPENAI_BASE_URL=$${OPENAI_BASE_URL}
     OPENAI_API_KEY=$${OPENAI_API_KEY}
@@ -99,6 +104,16 @@ data:
     API_SERVER_HOST=0.0.0.0
     API_SERVER_KEY=$${API_SERVER_KEY}
     FRIGATE_WEBHOOK_SECRET=$${FRIGATE_WEBHOOK_SECRET}
+    FEISHU_APP_ID=$${FEISHU_APP_ID}
+    FEISHU_APP_SECRET=$${FEISHU_APP_SECRET}
+    FEISHU_DOMAIN=$${FEISHU_DOMAIN}
+    FEISHU_CONNECTION_MODE=$${FEISHU_CONNECTION_MODE}
+    FEISHU_ALLOW_BOTS=$${FEISHU_ALLOW_BOTS}
+    FEISHU_GROUP_POLICY=$${FEISHU_GROUP_POLICY}
+    FEISHU_ALLOWED_USERS=$${FEISHU_ALLOWED_USERS}
+    FEISHU_HOME_CHANNEL=$${FEISHU_HOME_CHANNEL}
+    FEISHU_ENCRYPT_KEY=$${FEISHU_ENCRYPT_KEY}
+    FEISHU_VERIFICATION_TOKEN=$${FEISHU_VERIFICATION_TOKEN}
     EOF
 
     # remove leftover profiles on upgrade — multiplex_profiles=true keeps any
