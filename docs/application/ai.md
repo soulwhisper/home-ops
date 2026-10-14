@@ -142,10 +142,7 @@ All lanes run on the MacStudio inference host (`uncensored` Qwen3.8-27B, `agent`
 
 ### Hermes Agent
 
-Runs the upstream `nousresearch/hermes-agent` image directly (the bundled
-`hermes-suite` image was retired 2026-10: it existed to add supervisord +
-the external webui; the dashboard is built in since 0.21.x and human chat
-lives on Open WebUI). One pod, two containers: `gateway` + `dashboard`.
+Runs the upstream `nousresearch/hermes-agent` image directly. One pod, two containers: `gateway` + `dashboard`.
 
 | Component | Port | Notes                       |
 | --------- | ---- | --------------------------- |
