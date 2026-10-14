@@ -48,6 +48,51 @@ spec:
           for: 2m
           labels:
             severity: warning
+        # The WAL histogram bucket series reset hundreds of times per week, so
+        # bucket subtraction cannot count severe fsync tails reliably. Failed
+        # proposals are reset-stable and capture API-visible etcd stalls.
+        - alert: EtcdProposalsFailing
+          annotations:
+            summary: "etcd {{ $labels.instance }} failed {{ $value | humanize }} proposals in 5m"
+            description: >-
+              Failed proposals mean the Raft loop stalled, even when percentile
+              fsync rules stay silent. Check system-disk latency and etcd logs
+              for the same node and window.
+          expr: |
+            sum by (instance) (increase(etcd_server_proposals_failed_total[5m])) > 0
+          labels:
+            severity: warning
+        # 2026-10-13 23:49Z: exarch-01 averaged >0.2s/write for minutes while
+        # etcd logged multi-second fdatasync and apiserver probes returned 500.
+        # The same expression had no 7d hits when sampled at 30m.
+        - alert: NodeSystemDiskWriteLatency
+          annotations:
+            summary: "system disk writes on {{ $labels.instance }} average {{ $value | humanizeDuration }}"
+            description: >-
+              EPHEMERAL and etcd share the system NVMe. Sustained slow writes
+              can stall etcd before node CPU or filesystem pressure appears.
+              Correlate with image pulls, snapshot movers, and dmesg NVMe errors.
+          expr: |
+            sum by (instance) (rate(node_disk_write_time_seconds_total{device="nvme1n1"}[5m]))
+            / sum by (instance) (rate(node_disk_writes_completed_total{device="nvme1n1"}[5m])) > 0.2
+          for: 2m
+          labels:
+            severity: warning
+        # CephMonClockSkew reports only an opaque cluster health bit. Per-node
+        # timex offsets identify which node is drifting below ceph's 0.1s limit.
+        - alert: NodeClockSpreadNearCephLimit
+          annotations:
+            summary: "node clock spread {{ $value | humanizeDuration }} approaching ceph mon limit 0.1s"
+            description: >-
+              Identify the skewing node with node_timex_offset_seconds{job="node-exporter"},
+              then inspect Talos time.Sync controller logs for clock_offset,
+              jitter, poll_interval, and spike fields in the same window.
+          expr: |
+            max(node_timex_offset_seconds{job="node-exporter"})
+            - min(node_timex_offset_seconds{job="node-exporter"}) > 0.075
+          for: 1m
+          labels:
+            severity: warning
         - alert: HolmesHealthCheckFailed
           annotations:
             summary: "Holmes health check {{ $labels.name }} last result: {{ $labels.result }}"
@@ -91,6 +136,33 @@ spec:
           annotations:
             summary: "{{ $labels.job }} on {{ $labels.instance }} started after an unclean shutdown"
             description: "Previous run did not shut down cleanly. Check logs for OOM/SIGKILL/host failure. Stops firing 10m after startup. https://github.com/VictoriaMetrics/VictoriaMetrics/issues/8443"
+        # vlagent hard-drops reassembled CRI lines >2MiB (no supported size
+        # knob) and counts them here. Fix the producer; suppression is not healing.
+        - alert: VictoriaLogsOversizedLinesDropped
+          expr: sum(increase(vl_too_long_lines_skipped_total[15m])) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "VictoriaLogs dropped {{ $value | humanize }} oversized log lines in 15m"
+            description: >-
+              Whole log entries are being lost. Find the producer in VictoriaLogs
+              from the vlagent warning "skipping log entry from Pod".
+        # vlagent parses some zone-less embedded app timestamps as UTC and
+        # overrides the CRI timestamp; k8tz makes app clocks Asia/Shanghai, so
+        # affected rows are stored up to 8h in the future. Alert until upstream
+        # VictoriaLogs stops preferring ambiguous embedded timestamps.
+        - alert: VictoriaLogsFutureLogTimestamps
+          expr: max(vl_storage_log_max_timestamp_seconds) - time() > 1800
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "VictoriaLogs newest stored log is {{ $value | humanizeDuration }} in the future"
+            description: >-
+              A producer's embedded timestamp is being misread as UTC. Enumerate
+              poisoned streams in VictoriaLogs with a future absolute time range;
+              rolling time windows silently exclude those records.
         # Cilium 1.20 configmap drift detection
         - alert: CiliumConfigMapDrift
           expr: cilium_drift_checker_config_delta > 0

@@ -40,3 +40,17 @@ spec:
     - action: replace
       targetLabel: job
       replacement: *name
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/scrapeconfig_v1alpha1.json
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: &name vmcp-internal-ops
+spec:
+  staticConfigs:
+    - targets: ["vmcp-internal-ops.servitor-apps.svc.cluster.local:4483"]
+  metricsPath: /metrics
+  relabelings:
+    - action: replace
+      targetLabel: job
+      replacement: *name
