@@ -11,9 +11,6 @@ spec:
     name: app-template
     namespace: gitops-system
 
-  # : Init plugins
-  # run 'rtk init --agent hermes' at first time, restart app to load plugins
-
   values:
     defaultPodOptions:
       automountServiceAccountToken: false
@@ -30,15 +27,6 @@ spec:
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         initContainers:
-          hermes-extras:
-            image:
-              repository: ghcr.io/soulwhisper/hermes-extras
-              tag: "2026.10.08"
-            command: ["/bin/sh", "/app/install.sh"]
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-              readOnlyRootFilesystem: true
           # Seeds config.yaml + ops profile onto the PVC at every boot
           # (authoritative; dashboard edits to these files revert on restart).
           # .env files are rendered from pod env because profile $${VAR} refs
@@ -58,8 +46,11 @@ spec:
         containers:
           app:
             image:
-              repository: ghcr.io/soulwhisper/hermes-suite
-              tag: 2026.9.24
+              # soulwhisper build: upstream hermes-agent + baked extras (rtk,
+              # caveman skills, feishu deps) + supervisord (gateway+dashboard
+              # in one container). Tag tracks upstream semver releases.
+              repository: ghcr.io/soulwhisper/hermes-agent
+              tag: 0.21.7
             # every k8s rollout SIGTERMs the gateway and it broadcasts
             # "Gateway shutting down — task interrupted" to feishu mid-task
             # (10 graceful SIGTERMs/3d, zero crashes). Give in-flight tasks a
@@ -70,9 +61,7 @@ spec:
                 exec:
                   command: ["sh", "-c", "sleep 25"]
             env:
-              HERMES_SERVICES: "dashboard,gateway,webui"
-              # plugins
-              RTK_TELEMETRY_DISABLED: "true"
+              HERMES_SERVICES: "gateway,dashboard"
               # Feishu plugin (websocket mode; credentials via envFrom secret)
               FEISHU_DOMAIN: "feishu"
               FEISHU_CONNECTION_MODE: "websocket"
@@ -121,8 +110,6 @@ spec:
             port: *port
           http:
             port: 9119
-          web:
-            port: 8787
           webhook:
             port: 8644
 
