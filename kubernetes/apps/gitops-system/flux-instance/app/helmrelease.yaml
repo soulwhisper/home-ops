@@ -30,15 +30,14 @@ spec:
           app.kubernetes.io/name: flux
       kustomize:
         patches:
-          # https_proxy is needed for flux-instance
-          # Increase the number of workers
           - patch: |
+            # Increase stability
               - op: add
                 path: /spec/template/spec/containers/0/args/-
-                value: --concurrent=10
+                value: --concurrent=4
               - op: add
                 path: /spec/template/spec/containers/0/args/-
-                value: --requeue-dependency=5s
+                value: --requeue-dependency=30s
             target:
               kind: Deployment
               name: (kustomize-controller|helm-controller|source-controller)
