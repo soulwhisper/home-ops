@@ -11,9 +11,6 @@ spec:
     name: app-template
     namespace: gitops-system
 
-  # : Init plugins
-  # run 'rtk init --agent hermes' at first time, restart app to load plugins
-
   values:
     defaultPodOptions:
       automountServiceAccountToken: false
@@ -85,8 +82,6 @@ spec:
               HOME: /opt/data
               # feishu plugin deps mirrored onto the PVC by hermes-extras
               PYTHONPATH: /opt/data/.local/lib/hermes-plugins
-              # plugins
-              RTK_TELEMETRY_DISABLED: "true"
               # Feishu plugin (websocket mode; credentials via envFrom secret)
               FEISHU_DOMAIN: "feishu"
               FEISHU_CONNECTION_MODE: "websocket"
