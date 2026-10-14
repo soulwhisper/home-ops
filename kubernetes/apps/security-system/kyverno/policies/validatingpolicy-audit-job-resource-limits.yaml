@@ -39,19 +39,34 @@ spec:
           'kube-system', 'kube-public', 'kube-node-lease',
           'gitops-system', 'security-system', 'monitoring-system'
         ]
+    # Rook recommends no memory limit on OSD prepare jobs, but CPU burst
+    # containment still applies. Keep this name-scoped exception audit-only.
+    - name: rookOsdPrepare
+      expression: >-
+        object.metadata.namespace == 'storage-system'
+        && !has(object.spec.jobTemplate)
+        && object.metadata.name.startsWith('rook-ceph-osd-prepare-')
   validations:
     - expression: >-
         variables.systemNamespace
-        || variables.podSpec.containers.all(c, has(c.resources) && has(c.resources.limits) && has(c.resources.limits.cpu) && has(c.resources.limits.memory))
+        || (
+          variables.podSpec.containers.all(c, has(c.resources) && has(c.resources.limits) && has(c.resources.limits.cpu))
+          && (variables.rookOsdPrepare || variables.podSpec.containers.all(c, has(c.resources) && has(c.resources.limits) && has(c.resources.limits.memory)))
+        )
       message: >-
         Job/CronJob pod template containers must declare resources.limits.cpu
         and resources.limits.memory: unthrottled bursts on the shared
         control-plane nodes have stalled apiserver lease renewals
-        (homelab-tickets#4). Audit phase — fix the manifest, not the pod.
+        (homelab-tickets#4). Rook OSD prepare jobs are exempt only from the
+        memory limit. Audit phase — fix the manifest, not the pod.
     - expression: >-
         variables.systemNamespace
         || !has(variables.podSpec.initContainers)
-        || variables.podSpec.initContainers.all(c, has(c.resources) && has(c.resources.limits) && has(c.resources.limits.cpu) && has(c.resources.limits.memory))
+        || (
+          variables.podSpec.initContainers.all(c, has(c.resources) && has(c.resources.limits) && has(c.resources.limits.cpu))
+          && (variables.rookOsdPrepare || variables.podSpec.initContainers.all(c, has(c.resources) && has(c.resources.limits) && has(c.resources.limits.memory)))
+        )
       message: >-
         initContainers must also declare resources.limits.cpu and
-        resources.limits.memory (same burst-control rationale as containers).
+        resources.limits.memory (same burst-control rationale as containers;
+        Rook OSD prepare is exempt only from memory).

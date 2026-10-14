@@ -23,6 +23,13 @@ spec:
   failurePolicy: Ignore
   validationActions:
     - Audit
+  # Pods-only by design: ValidatingPolicy autogen is on by default when this
+  # block is absent. Generated controller DELETE variants rewrite
+  # oldObject.metadata.name to the pod template's absent name (kyverno#15591)
+  # and audit controller deletes this policy never targeted. Empty list = off.
+  autogen:
+    podControllers:
+      controllers: []
   matchConstraints:
     resourceRules:
       - apiGroups: ['']
