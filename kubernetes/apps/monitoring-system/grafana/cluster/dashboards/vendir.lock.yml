@@ -12,12 +12,12 @@ directories:
     path: ceph-pools
   path: _sources/ceph
 - contents:
-  - configDigest: e1ed3e60f4fce039a8028e8dbf48a414b3a26bff485e54c664a1d9b9edf93ff7
+  - configDigest: d1e5daf16d9c76c90b1a4274078746c69b3ec934efb6ebd4fcc414189d2b9f4f
     git:
-      commitTitle: Prepare for release v1.20.2...
-      sha: e0dc92bd6dac33d7ba3b5eace82a0448bbb13aac
+      commitTitle: Prepare for release v1.20.3...
+      sha: bf1aba7b34ab6d9c711315d78d8eefbea81962d1
       tags:
-      - v1.20.2
+      - v1.20.3
     path: .
   path: _sources/cilium
 - contents:
