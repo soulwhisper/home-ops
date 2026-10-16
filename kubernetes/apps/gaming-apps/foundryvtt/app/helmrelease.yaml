@@ -25,6 +25,11 @@ spec:
             runAsGroup: 1000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
+            # Same Talos/RBD SELinux fix as victoria-logs: hosted-room-dri's
+            # writes to the unlabeled RBD volume were the #2 AVC source
+            # (RuntimeData/MergeMutate threads). level=s0 -> kubelet relabel.
+            seLinuxOptions:
+              level: "s0"
         containers:
           app:
             image:

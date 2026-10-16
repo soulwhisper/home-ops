@@ -144,13 +144,11 @@ spec:
           volumeBindingMode: WaitForFirstConsumer
           mountOptions:
             - discard
-            # Talos SELinux pins pods to pod_t (seLinuxOptions are ignored) and
-            # CSI volumes stay unlabeled_t -> every dir write logs a permissive
-            # AVC, flooding auditd (audit_lost=67M on exarch-02) and spiking the
-            # etcd system disk (homelab-tickets#28/#29). Talos documents the
-            # StorageClass context mount as the fix (ephemeral_t is RW by pods).
-            # Applies at (re)mount: consumers pick it up on pod restart.
-            - context=system_u:object_r:ephemeral_t:s0
+            # NOTE: no SELinux `context=` here — proven 2026-10-16 that ceph-csi
+            # rbd silently drops it from mountFlags (discard passes, context
+            # never reaches /proc/mounts). The working lever is pod-level
+            # seLinuxOptions.level=s0 (kubelet recursive relabel), e.g.
+            # victoria-logs-server. homelab-tickets#28/#29
           parameters:
             imageFormat: "2"
             imageFeatures: layering,fast-diff,object-map,deep-flatten,exclusive-lock
@@ -179,8 +177,7 @@ spec:
           volumeBindingMode: WaitForFirstConsumer
           mountOptions:
             - discard
-            # See ceph-blockpool above: SELinux context mount for Talos.
-            - context=system_u:object_r:ephemeral_t:s0
+            # See ceph-blockpool above: no SELinux context= (dropped by ceph-csi).
           parameters:
             imageFormat: "2"
             imageFeatures: layering,fast-diff,object-map,deep-flatten,exclusive-lock

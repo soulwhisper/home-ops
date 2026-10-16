@@ -17,6 +17,21 @@ spec:
     server:
       fullnameOverride: *name
       retentionPeriod: 90d
+      # Talos pins pods to pod_t (seLinuxOptions.type ignored — proven
+      # 2026-10-16) and ceph-csi drops SC context= mount flags, so RBD volumes
+      # stay unlabeled_t and every directory write logs a permissive AVC —
+      # victoria-logs is the top flooder (518/676 sampled), driving auditd
+      # bursts that spike the etcd system disk (homelab-tickets#28/#29).
+      # level=s0 triggers kubelet's recursive relabel to a type pod_t may
+      # write; verified zero AVCs with a scratch ceph-block PVC write loop.
+      # Costs a one-time chcon of the 50Gi volume at each pod start.
+      podSecurityContext:
+        enabled: true
+        fsGroup: 2000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seLinuxOptions:
+          level: "s0"
       persistentVolume:
         enabled: true
         storageClassName: ceph-block
