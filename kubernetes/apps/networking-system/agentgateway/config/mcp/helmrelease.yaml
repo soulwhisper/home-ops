@@ -39,6 +39,11 @@ spec:
               # :4318 is the HTTP receiver — plaintext h2c there got HTTP 400
               # ("Failed parsing HTTP/2") and zero spans ever reached langfuse.
               OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4317"
+              # Default 500ms is under the warm onnx-promptguard latency
+              # (501-566ms on 2KB responses; CPU throttling ~0.08/s rules out
+              # starvation). Every timeout is a FailClosed deny — 8 of 12
+              # decisions in 48h, breaking tools/list for all MCP clients.
+              SCANNER_TIMEOUT_MS: "2000"
               # deterministic service.name for the collector's servitor
               # pipeline filter (traces -> langfuse)
               OTEL_SERVICE_NAME: "mcp-guardrails"
