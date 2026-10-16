@@ -88,7 +88,11 @@ spec:
                     key: FORGEJO_TICKETS_TOKEN
             resources:
               requests: { cpu: 10m, memory: 32Mi }
-              limits: { memory: 128Mi }
+              # 128Mi was OOMKilled by unbounded Holmes /api/chat reads
+              # (homelab-tickets#54/#55); read is now capped at 2 MiB in
+              # ticket_consumer.py, so 256Mi is generous headroom over the
+              # observed ~16-22Mi steady state + issue/comment pagination.
+              limits: { memory: 256Mi }
             securityContext:
               runAsNonRoot: true
               runAsUser: 65534
