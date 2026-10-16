@@ -22,6 +22,13 @@ spec:
           emptyDir: {}
       containers:
         - name: mcp
+          # klog stamps local time with no offset (I1016 22:07:46); with the
+          # k8tz-injected TZ=Asia/Shanghai the log pipeline parses those as UTC
+          # and every line lands 8h in the future (VictoriaLogsFutureLogTimestamps,
+          # homelab-tickets#27). TZ=UTC makes klog emit UTC.
+          env:
+            - name: TZ
+              value: "UTC"
           volumeMounts:
             - name: config
               mountPath: /etc/mcp/config.toml
