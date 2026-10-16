@@ -34,7 +34,11 @@ spec:
               repository: ghcr.io/soulwhisper/mcp-guardrails
               tag: 1.0.0
             env:
-              OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
+              # App is OTLP/gRPC-only (guardrails/otel.py proto.grpc exporters,
+              # insecure derived from the http:// scheme). gRPC must go to :4317;
+              # :4318 is the HTTP receiver — plaintext h2c there got HTTP 400
+              # ("Failed parsing HTTP/2") and zero spans ever reached langfuse.
+              OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4317"
               # deterministic service.name for the collector's servitor
               # pipeline filter (traces -> langfuse)
               OTEL_SERVICE_NAME: "mcp-guardrails"
