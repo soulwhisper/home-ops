@@ -7,7 +7,10 @@ metadata:
 spec:
   openTelemetry:
     enabled: true
-    endpoint: opentelemetry-collector.monitoring-system.svc.cluster.local:4318
+    # ToolHive's OTLP client is gRPC (host:port form, scheme stripped by the
+    # operator) — must target the collector's gRPC receiver :4317, not the
+    # HTTP receiver :4318 (plaintext h2c -> HTTP 400, spans silently dropped).
+    endpoint: opentelemetry-collector.monitoring-system.svc.cluster.local:4317
     insecure: true
     # OTEL metrics disabled: the collector runs traces-only pipelines (no
     # otlp metrics pipeline), so every upload 404s and spams "failed to upload

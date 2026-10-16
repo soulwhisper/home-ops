@@ -76,10 +76,16 @@ spec:
               TOOL_SERVER_CONNECTIONS: '[{"type":"mcp","url":"http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/ro","auth_type":"bearer","key":"$(GATEWAY_API_KEY)","info":{"id":"internal-ro","name":"internal-ro","description":"ToolHive internal read-only (fluxcd, grafana, kubernetes, victoria-logs, context, trendradar)"},"config":{"enable":true},"path":""},{"type":"mcp","url":"http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/rw","auth_type":"bearer","key":"$(GATEWAY_API_KEY)","info":{"id":"internal-rw","name":"internal-rw","description":"ToolHive internal read-write (forgejo, home-assistant, hindsight-homelab)"},"config":{"enable":true},"path":""},{"type":"mcp","url":"http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/ext","auth_type":"bearer","key":"$(GATEWAY_API_KEY)","info":{"id":"external","name":"external","description":"ToolHive external egress (github, firecrawl, context7)"},"config":{"enable":true},"path":""}]'  # yamllint disable-line rule:quoted-strings
               ENABLE_OLLAMA_API: "false"
               # OTLP -> opentelemetry-collector; its traces/servitor pipeline
-              # keeps gen_ai spans and exports them to langfuse
+              # keeps gen_ai spans and exports them to langfuse.
+              # OTEL_OTLP_SPAN_EXPORTER=http is REQUIRED: the default grpc
+              # exporter ignores the http:// scheme (OTEL_EXPORTER_OTLP_INSECURE
+              # defaults False) and TLS-dials :4318 -> WRONG_VERSION_NUMBER spam,
+              # zero spans exported. The HTTP exporter takes the endpoint
+              # verbatim (no /v1/traces append), so the path must be inline.
               ENABLE_OTEL: "true"
               ENABLE_OTEL_TRACES: "true"
-              OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318"
+              OTEL_OTLP_SPAN_EXPORTER: "http"
+              OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318/v1/traces"
               OTEL_SERVICE_NAME: "open-webui"
               # durable state is externalized — CNPG (data + pgvector), the
               # app dragonfly (session/rate-limit state), the app ceph bucket
