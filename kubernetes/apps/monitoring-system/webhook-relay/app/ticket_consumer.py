@@ -19,6 +19,10 @@ from urllib.request import Request, urlopen
 
 MAX_PAYLOAD = 1024 * 1024
 MAX_BODY = 60000
+# Holmes /api/chat answers are truncated to MAX_BODY when posted, so anything
+# beyond this is discarded anyway. The unbounded read let a runaway analysis
+# OOMKill the 128Mi tickets container (homelab-tickets#54/#55).
+MAX_ANALYSIS_BYTES = 2 * 1024 * 1024
 HOLMES_MARKER = "<!-- aiops-holmes -->"
 HOLMES_COOLDOWN = timedelta(hours=6)
 # Deployment pods are <workload>-<replicaset hash>-<pod hash>; StatefulSet
@@ -199,11 +203,13 @@ class Investigator:
             method="POST",
         )
         with urlopen(request, timeout=self.timeout) as response:
-            analysis = json.loads(response.read())["analysis"]
+            raw = response.read(MAX_ANALYSIS_BYTES + 1)
+        if len(raw) > MAX_ANALYSIS_BYTES:
+            raise ValueError("Holmes analysis exceeds MAX_ANALYSIS_BYTES")
+        analysis = json.loads(raw)["analysis"]
         if not isinstance(analysis, str) or not analysis.strip():
             raise ValueError("empty analysis")
         return analysis
-
 
 def investigation_prompt(number, finding):
     subject = finding.get("subject") or {}
