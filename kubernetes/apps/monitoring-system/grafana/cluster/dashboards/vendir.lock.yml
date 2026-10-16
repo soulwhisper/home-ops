@@ -35,13 +35,12 @@ directories:
       tags:
       - cluster-v0.0.5
     path: cnpg
-  - configDigest: c3b37278eaa33a9b0fe54ad961fb0694628291c4e9dc8165f47e5874b0cf8d7a
+  - configDigest: df6820c535929c4c71877a8bd11276dcd8aed20d6ea6f468586ab1b33d723fd6
     git:
-      commitTitle: 'feat(release): update manifest files and bump operator version
-        (#597)...'
-      sha: 9a5522426e6ddabb914d167ee82a192c9f682c79
+      commitTitle: 'chore(operator): release version v1.7.1 (#606)...'
+      sha: 7303238002e1afc06f11ca4ae5072da331efa03d
       tags:
-      - v1.7.0
+      - v1.7.1
     path: dragonfly
   path: _sources/database
 - contents:
