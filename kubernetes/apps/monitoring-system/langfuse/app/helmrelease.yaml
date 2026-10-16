@@ -35,11 +35,12 @@ spec:
                   secretKeyRef:
                     name: langfuse-dragonfly
                     key: password
-              LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: &bucket_endpoint
-                valueFrom:
-                  configMapKeyRef:
-                    name: ceph-bucket-langfuse
-                    key: BUCKET_HOST
+              # Full URL required: the JS S3 client parses the endpoint with
+              # new URL() — the OBC configmap's bare BUCKET_HOST (no scheme)
+              # 500s every OTEL ingestion with ERR_INVALID_URL. RGW has no
+              # in-cluster wildcard DNS, so path style is mandatory.
+              LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: &bucket_endpoint "http://rook-ceph-rgw-ceph-objectstore.storage-system.svc:80"
+              LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: &bucket_path_style "true"
               LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: &bucket_access_key_id
                 valueFrom:
                   secretKeyRef:
@@ -52,9 +53,11 @@ spec:
                     name: ceph-bucket-langfuse
                     key: AWS_SECRET_ACCESS_KEY
               LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: *bucket_endpoint
+              LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: *bucket_path_style
               LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: *bucket_access_key_id
               LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: *bucket_secret_access_key
               LANGFUSE_S3_BATCH_EXPORT_ENDPOINT: *bucket_endpoint
+              LANGFUSE_S3_BATCH_EXPORT_FORCE_PATH_STYLE: *bucket_path_style
               LANGFUSE_S3_BATCH_EXPORT_ACCESS_KEY_ID: *bucket_access_key_id
               LANGFUSE_S3_BATCH_EXPORT_SECRET_ACCESS_KEY: *bucket_secret_access_key
             envFrom:
