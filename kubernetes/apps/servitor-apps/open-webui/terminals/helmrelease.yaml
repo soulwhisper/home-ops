@@ -39,7 +39,7 @@ spec:
             image:
               repository: ghcr.io/open-webui/terminals
               # renovate: datasource=docker depName=ghcr.io/open-webui/terminals
-              tag: 0.2.4@sha256:f64b943eebc4290b3f0d69849ef9e78f16c6f8e3939555265e8f488fd5d0c854
+              tag: 0.2.5@sha256:7a18ec74e8386e2d0111465e6ad3fe899aa5912d1c80772f6a4c3aee95805e86
             env:
               # direct Pod+Service+PVC per user — no CRD/operator component
               TERMINALS_BACKEND: "kubernetes"
