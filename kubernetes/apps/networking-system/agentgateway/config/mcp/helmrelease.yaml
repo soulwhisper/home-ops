@@ -39,23 +39,28 @@ spec:
               # :4318 is the HTTP receiver — plaintext h2c there got HTTP 400
               # ("Failed parsing HTTP/2") and zero spans ever reached langfuse.
               OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4317"
-              # Measured on this hardware (2 shared cores): 22M ≈ 1.0s/scan —
-              # the 1000ms set in #4167 still denies (observed 1002ms deny at
-              # 11:04). 3s gives 3x margin while staying FailClosed-meaningful.
-              # The remaining lever for real latency is the 22M quant variant
-              # (LF_ONNX_FILE=model.quant.onnx, same accuracy) — deferred.
+              # 22M fp32 on a 2-core CFS quota measured 1.0-3.1s per scan
+              # (variance tracks node load); under FailClosed a timeout is a
+              # deny, and tools/list broke twice on exactly this. 3s + 4
+              # guaranteed cores (below) removes the quota thrash. If ~1s per
+              # guarded call is still too slow, the 22M quant variant
+              # (LF_ONNX_FILE=model.quant.onnx, same accuracy) needs a 1.2.1.
               SCANNER_TIMEOUT_MS: "3000"
               # deterministic service.name for the collector's servitor
               # pipeline filter (traces -> langfuse)
               OTEL_SERVICE_NAME: "mcp-guardrails"
             resources:
-              # back to pre-band-aid sizing; the 22M needs a fraction of the
-              # 86M's CPU (and ~90MB vs 1.1GB model memory)
+              # cpu requests==limits=4: the CFS quota keeps 4 cores available
+              # regardless of node pressure (requests pin the scheduler
+              # reservation too). NOT Guaranteed QoS — memory req≠limit, and
+              # cpuManagerPolicy is the default "none" anyway, so no exclusive
+              # pinning exists to claim. FailClosed: a throttled guardrail
+              # stalls ALL MCP traffic, hence the full-quota sizing.
               requests:
-                cpu: 250m
+                cpu: "4"
                 memory: 512Mi
               limits:
-                cpu: "2"
+                cpu: "4"
                 memory: 2Gi
             probes:
               liveness:
