@@ -8,6 +8,7 @@ resources:
   - ./externalsecret.yaml
   - ./mcptelemetryconfig.yaml
   - ./prometheusrule.yaml
+  - ./restart-cronjob-vmcp.yaml
   # groups
   # httproute is removed to reduce authentication and authorization complexity
   - ./mcpgroup.yaml
