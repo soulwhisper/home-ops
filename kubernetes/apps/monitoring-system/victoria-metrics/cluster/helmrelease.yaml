@@ -74,9 +74,11 @@ spec:
               - -eu
               - -c
               - |
-                # Marker-file proof of a COMPLETED full walk (see
-                # victoria-logs helmrelease for the failure mode).
+                # Marker-file proof of a COMPLETED full walk; deleted BEFORE
+                # each redo so a mid-walk failure can't leave a stale marker
+                # (see victoria-logs helmrelease for the full failure mode).
                 if [ "$(stat -c %C /victoria-metrics-data)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /victoria-metrics-data/.selinux-relabelled ]; then
+                  rm -f /victoria-metrics-data/.selinux-relabelled
                   chcon -R system_u:object_r:ephemeral_t:s0 /victoria-metrics-data
                   touch /victoria-metrics-data/.selinux-relabelled
                   echo "relabelled data"

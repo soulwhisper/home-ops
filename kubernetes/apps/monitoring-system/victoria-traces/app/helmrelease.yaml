@@ -27,10 +27,11 @@ spec:
             - -eu
             - -c
             - |
-              # Marker-file proof of a COMPLETED full walk: a mid-walk chcon
-              # failure leaves labelled ancestors + stale descendants; the
-              # missing marker forces a redo (see victoria-logs helmrelease).
+              # Marker-file proof of a COMPLETED full walk; deleted BEFORE
+              # each redo so a mid-walk failure can't leave a stale marker
+              # (see victoria-logs helmrelease for the full failure mode).
               if [ "$(stat -c %C /storage)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /storage/.selinux-relabelled ]; then
+                rm -f /storage/.selinux-relabelled
                 chcon -R system_u:object_r:ephemeral_t:s0 /storage
                 touch /storage/.selinux-relabelled
                 echo "relabelled /storage"

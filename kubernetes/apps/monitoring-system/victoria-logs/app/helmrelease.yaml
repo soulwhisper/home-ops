@@ -34,9 +34,12 @@ spec:
             - |
               # Proof of completion, not of root state: a mid-walk chcon
               # failure (e.g. RBD stall) leaves root labelled but deep files
-              # stale. The marker exists only if a full chcon -R completed
-              # (set -eu aborts before the touch on failure).
+              # stale. The marker exists only if a full chcon -R completed —
+              # it is deleted BEFORE each walk, so a failed redo (chcon labels
+              # parents before descendants and can "fix" the root while
+              # failing deeper) cannot leave a stale marker behind.
               if [ "$(stat -c %C /storage)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /storage/.selinux-relabelled ]; then
+                rm -f /storage/.selinux-relabelled
                 chcon -R system_u:object_r:ephemeral_t:s0 /storage
                 touch /storage/.selinux-relabelled
                 echo "relabelled /storage"
