@@ -279,8 +279,12 @@ class Handler(BaseHTTPRequestHandler):
         if self.path != "/findings":
             self.respond(404, {"error": "not found"})
             return
-        # Acquire BEFORE reading the body: waiting threads hold only a socket.
-        Handler.delivery_slots.acquire()
+        # Non-blocking admission: a full semaphore rejects with 503 (relay
+        # retries later) instead of piling blocked threads (CWE-400). Waiting
+        # threads would hold only a socket, but their COUNT stays unbounded.
+        if not Handler.delivery_slots.acquire(blocking=False):
+            self.respond(503, {"error": "busy, retry later"})
+            return
         try:
             length = int(self.headers.get("Content-Length", "0"))
             if length <= 0 or length > MAX_PAYLOAD:
