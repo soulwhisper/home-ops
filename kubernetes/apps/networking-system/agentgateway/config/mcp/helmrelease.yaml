@@ -39,10 +39,12 @@ spec:
               # :4318 is the HTTP receiver — plaintext h2c there got HTTP 400
               # ("Failed parsing HTTP/2") and zero spans ever reached langfuse.
               OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4317"
-              # 22M model (image 1.2.0) lands well under 1s per scan; the
-              # 5000ms band-aid from #4151 is reverted. 1000ms still guards
-              # against a wedged runtime without eating slow-but-fine scans.
-              SCANNER_TIMEOUT_MS: "1000"
+              # Measured on this hardware (2 shared cores): 22M ≈ 1.0s/scan —
+              # the 1000ms set in #4167 still denies (observed 1002ms deny at
+              # 11:04). 3s gives 3x margin while staying FailClosed-meaningful.
+              # The remaining lever for real latency is the 22M quant variant
+              # (LF_ONNX_FILE=model.quant.onnx, same accuracy) — deferred.
+              SCANNER_TIMEOUT_MS: "3000"
               # deterministic service.name for the collector's servitor
               # pipeline filter (traces -> langfuse)
               OTEL_SERVICE_NAME: "mcp-guardrails"
