@@ -49,13 +49,14 @@ spec:
               # pipeline filter (traces -> langfuse)
               OTEL_SERVICE_NAME: "mcp-guardrails"
             resources:
-              # back to pre-band-aid sizing; the 22M needs a fraction of the
-              # 86M's CPU (and ~90MB vs 1.1GB model memory)
+              # Measured scan-latency matrix for the 22M fp32 (1.2.0):
+              # 2 cores -> ~3.0s (deny at the 3s timeout), 4 cores -> ~1.0s.
+              # ONNX threading thrashes under a 2-core quota; 4 is required.
               requests:
-                cpu: 250m
+                cpu: 500m
                 memory: 512Mi
               limits:
-                cpu: "2"
+                cpu: "4"
                 memory: 2Gi
             probes:
               liveness:
