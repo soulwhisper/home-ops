@@ -13,7 +13,7 @@ spec:
   # state it never observed. Verdicts must cite live tool output; the demands
   # track what the sandboxed toolset actually emits (Prometheus metrics, not
   # the ceph CLI text — kubectl exec is approval-gated in this sandbox).
-  query: "Check the ceph cluster (namespace storage-system) health: overall HEALTH status, OSD count/in/out state, pool usage vs the ceph-blockpool/ceph-cachepool/ceph-filesystem trend, and any slow or blocked requests. Base the verdict only on tool output gathered in this run: quote the decisive evidence verbatim in the rationale — metric names with their raw values, e.g. ceph_health_status=0, ceph_osd_up/ceph_osd_in counts, ceph_pool_bytes_used values. If a tool call fails or returns nothing, report that tool error instead of guessing cluster state. Report concise status and flag anything trending worse."
+  query: "Check the ceph cluster (namespace storage-system) health: overall HEALTH status, OSD count/in/out state, pool usage vs the ceph-blockpool/ceph-cachepool/ceph-filesystem trend, and any slow or blocked requests. Base the verdict only on tool output gathered in this run: quote the decisive evidence verbatim in the rationale — metric names with their raw values, e.g. ceph_health_status=0, ceph_osd_up/ceph_osd_in counts, ceph_pool_bytes_used values. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry; report a tool error only when a retry still cannot provide evidence — never guess cluster state. Report concise status and flag anything trending worse."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
@@ -25,7 +25,7 @@ spec:
   # noirprime-com deliberately runs a 160h duration, so a flat "expiring within
   # 14 days" window can never pass (homelab-tickets#12). Judge renewal health
   # instead: cert-manager exposes status.renewalTime well before notAfter.
-  query: "Check cert-manager managed certificates in this cluster: list any Certificate not in Ready state, and any Certificate whose status.renewalTime is missing, already past, or later than status.notAfter (renewal broken or overdue). Short-lived certificates with a valid future renewalTime before notAfter are healthy, not findings. Quote each flagged certificate's name, namespace, renewalTime and notAfter verbatim from tool output in the rationale. Report a concise list, or 'all clear'."
+  query: "Check cert-manager managed certificates in this cluster: list any Certificate not in Ready state, and any Certificate whose status.renewalTime is missing, already past, or later than status.notAfter (renewal broken or overdue). Short-lived certificates with a valid future renewalTime before notAfter are healthy, not findings. Quote each flagged certificate's name, namespace, renewalTime and notAfter verbatim from tool output in the rationale. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Report a concise list, or 'all clear'."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
@@ -36,7 +36,7 @@ spec:
   timeout: 300
   # maxPods is 160 per node since homelab-tickets#13 (was 110 when the
   # exarch-03 pile-up fired this check); the 80% flag line moved with it.
-  query: "Check per-node pod density and resource requests across the exarch nodes: pod count vs each node's live allocatable pod capacity (currently 160), cpu/memory request utilization, and any node trending toward saturation. Quote the per-node pod counts verbatim from tool output in the rationale's table. Report a small table and flag nodes above 80% of any dimension."
+  query: "Check per-node pod density and resource requests across the exarch nodes: pod count vs each node's live allocatable pod capacity (currently 160), cpu/memory request utilization, and any node trending toward saturation. Quote the per-node pod counts verbatim from tool output in the rationale's table. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Report a small table and flag nodes above 80% of any dimension."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
@@ -45,7 +45,7 @@ metadata:
 spec:
   schedule: "13 9 * * 1"
   timeout: 300
-  query: "Review alert and loop health using vmalertmanager and vmsingle (namespace monitoring-system). (1) Quality: which alerts fired most in the past 7 days, which are flapping (fire/resolve repeatedly), and which look like threshold-vs-normal mismatch. (2) Loop stats: alert transitions by alertname this week, health-check verdict flips (pass/fail alternation without a config change). Quote the key counts verbatim from tool output. Propose concrete rule adjustments (threshold, for-duration, keep_firing_for, or silence) for the top 3 offenders."
+  query: "Review alert and loop health using vmalertmanager and vmsingle (namespace monitoring-system). (1) Quality: which alerts fired most in the past 7 days, which are flapping (fire/resolve repeatedly), and which look like threshold-vs-normal mismatch. (2) Loop stats: alert transitions by alertname this week, health-check verdict flips (pass/fail alternation without a config change). Quote the key counts verbatim from tool output. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Propose concrete rule adjustments (threshold, for-duration, keep_firing_for, or silence) for the top 3 offenders."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
@@ -56,7 +56,7 @@ spec:
   timeout: 300
   # acceptance.md's "re-check after 24h" duty, automated (coderabbit#4074): a
   # weekly check leaves alerts resolved on a Tuesday unverified for days.
-  query: "Recheck recently healed alerts using vmalertmanager and vmsingle (namespace monitoring-system): list alerts that fired in the last 48 hours and are currently resolved; for each, re-evaluate its raw rule expression right now and flag any whose underlying condition is at or above threshold again (missed heal). Quote the alert names and current expression values verbatim from tool output. Report a small table, or 'all clear'."
+  query: "Recheck recently healed alerts using vmalertmanager and vmsingle (namespace monitoring-system): list alerts that fired in the last 48 hours and are currently resolved; for each, re-evaluate its raw rule expression right now and flag any whose underlying condition is at or above threshold again (missed heal). Quote the alert names and current expression values verbatim from tool output. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Report a small table, or 'all clear'."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
@@ -65,4 +65,4 @@ metadata:
 spec:
   schedule: "7 6 * * *"
   timeout: 300
-  query: "Check backup health: kopiur snapshot jobs (namespace storage-system) and the cnpg postgres backup plus DR-test cronjobs (namespace database-system): any failed or missed runs in the last 48 hours, and the oldest successful snapshot age per critical app. Quote the oldest-snapshot ages verbatim from tool output in the rationale. Report concise status."
+  query: "Check backup health: kopiur snapshot jobs (namespace storage-system) and the cnpg postgres backup plus DR-test cronjobs (namespace database-system): any failed or missed runs in the last 48 hours, and the oldest successful snapshot age per critical app. Quote the oldest-snapshot ages verbatim from tool output in the rationale. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Report concise status."
