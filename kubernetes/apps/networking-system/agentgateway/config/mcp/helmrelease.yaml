@@ -39,25 +39,22 @@ spec:
               # :4318 is the HTTP receiver — plaintext h2c there got HTTP 400
               # ("Failed parsing HTTP/2") and zero spans ever reached langfuse.
               OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4317"
-              # Warm onnx-promptguard (fp32 1.1GB model) needs 0.5-2.1s per
-              # scan on 2 cores; every timeout is a FailClosed deny (8/12
-              # decisions in 48h, breaking tools/list for all MCP clients).
-              # 5s covers the worst observed latency. NOT switching to the
-              # quantized model: 89.89% vs 98.01% accuracy is the wrong
-              # trade for a security scanner — revisit if latency matters
-              # more than detection rate.
-              SCANNER_TIMEOUT_MS: "5000"
+              # 22M model (image 1.2.0) lands well under 1s per scan; the
+              # 5000ms band-aid from #4151 is reverted. 1000ms still guards
+              # against a wedged runtime without eating slow-but-fine scans.
+              SCANNER_TIMEOUT_MS: "1000"
               # deterministic service.name for the collector's servitor
               # pipeline filter (traces -> langfuse)
               OTEL_SERVICE_NAME: "mcp-guardrails"
             resources:
+              # back to pre-band-aid sizing; the 22M needs a fraction of the
+              # 86M's CPU (and ~90MB vs 1.1GB model memory)
               requests:
-                cpu: 500m
-                memory: 2Gi
+                cpu: 250m
+                memory: 512Mi
               limits:
-                # fp32 ONNX inference scales with cores; 4 halves scan latency
-                cpu: "4"
-                memory: 4Gi
+                cpu: "2"
+                memory: 2Gi
             probes:
               liveness:
                 enabled: true
