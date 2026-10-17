@@ -259,6 +259,13 @@ class Handler(BaseHTTPRequestHandler):
     forgejo = None
     investigator = None
     delivery_lock = threading.Lock()
+    # ThreadingHTTPServer spawns a thread per connection, and each thread used
+    # to immediately read up to MAX_PAYLOAD plus the parsed finding + copies.
+    # An alert storm (or slow Forgejo/Holmes) piled threads until the container
+    # OOMKilled — observed 2026-10-17: kills at ~16Mi steady state. Bound the
+    # in-flight deliveries; the rest wait on the semaphore holding only a
+    # socket, never a payload. homelab-tickets#54/#55.
+    delivery_slots = threading.BoundedSemaphore(4)
 
     def log_message(self, format, *args):
         # Never log request payloads, upstream response bodies, URLs or tokens.
@@ -272,6 +279,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.path != "/findings":
             self.respond(404, {"error": "not found"})
             return
+        # Acquire BEFORE reading the body: waiting threads hold only a socket.
+        Handler.delivery_slots.acquire()
         try:
             length = int(self.headers.get("Content-Length", "0"))
             if length <= 0 or length > MAX_PAYLOAD:
@@ -289,6 +298,8 @@ class Handler(BaseHTTPRequestHandler):
             LOG.error("Forgejo delivery failed")
             self.respond(503, {"error": "Forgejo delivery failed"})
             return
+        finally:
+            Handler.delivery_slots.release()
         LOG.info("delivery action=%s number=%s", result["action"], result.get("number", "-"))
         # Cooldown: a flapping incident reopens repeatedly; one investigation
         # per HOLMES_COOLDOWN is enough and keeps LLM load bounded.
