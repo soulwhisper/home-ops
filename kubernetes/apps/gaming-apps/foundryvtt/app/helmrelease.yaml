@@ -27,7 +27,7 @@ spec:
             image: { repository: ubuntu, tag: "24.04" }
             command:
               - sh
-              - -c
+              - -eu
               - |
                   cur="$(stat -c %C /vol)"
                   if [ "$cur" != "system_u:object_r:ephemeral_t:s0" ]; then
@@ -38,7 +38,7 @@ spec:
               runAsUser: 0
               runAsNonRoot: false
               allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
+              capabilities: { drop: ["ALL"], add: ["FOWNER"] }
               readOnlyRootFilesystem: true
             resources:
               requests: { cpu: 50m, memory: 64Mi }

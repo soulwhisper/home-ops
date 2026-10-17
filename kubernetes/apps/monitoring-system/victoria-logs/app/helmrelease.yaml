@@ -29,6 +29,7 @@ spec:
           image: ubuntu:24.04
           command:
             - sh
+            - -eu
             - -c
             - |
               cur="$(stat -c %C /storage)"
@@ -40,7 +41,7 @@ spec:
             runAsUser: 0
             runAsNonRoot: false  # overrides the pod-level runAsNonRoot
             allowPrivilegeEscalation: false
-            capabilities: { drop: ["ALL"] }
+            capabilities: { drop: ["ALL"], add: ["FOWNER"] }
             readOnlyRootFilesystem: true
           volumeMounts:
             - { name: server-volume, mountPath: /storage }
