@@ -14,6 +14,12 @@ spec:
     installCRDs: true
     controller:
       replicaCount: 1
+      # vlagent parses klog's offset-less timestamps as UTC; with the
+      # k8tz-injected Asia/Shanghai every line landed 8h in the future
+      # (VictoriaLogsFutureLogTimestamps, homelab-tickets#27). Infra Go apps
+      # get UTC until VictoriaLogs#1883 is fixed upstream.
+      podAnnotations:
+        k8tz.io/timezone: "UTC"
       serviceMonitor:
         create: true
     webhook:
