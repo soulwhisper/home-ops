@@ -24,7 +24,7 @@ spec:
         # proven no-op on Talos — relabel via initContainer instead.
         initContainers:
           selinux-relabel:
-            image: ubuntu:24.04
+            image: { repository: ubuntu, tag: "24.04" }
             command:
               - sh
               - -c
@@ -40,8 +40,6 @@ spec:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
-            volumeMounts:
-              - { name: app, mountPath: /vol }
             resources:
               requests: { cpu: 50m, memory: 64Mi }
               limits: { memory: 256Mi }
@@ -117,6 +115,12 @@ spec:
         existingClaim: *name
         globalMounts:
           - path: /home/node/resources/app
+        # app-template schema: initContainer mounts come from advancedMounts,
+        # not per-entry volumeMounts. Mounts the RBD data volume for chcon.
+        advancedMounts:
+          *name :
+            selinux-relabel:
+              - path: /vol
       shared:
         existingClaim: trpg
         globalMounts:
