@@ -6,6 +6,12 @@ metadata:
   name: postgres
 spec:
   instances: 3
+  # SELinux (Talos pod_t vs unlabeled RBD volumes): the three postgres PVCs
+  # were chcon'd to ephemeral_t live 2026-10-17 (see victoria-logs'
+  # selinux-relabel initContainer for the pattern). CNPG Cluster has NO
+  # initContainers/podTemplate knob, so there is no durable in-git fix —
+  # labels persist on the volumes, but a NEW volume (cluster rebuild,
+  # scale-out) must be relabeled by hand until CNPG or Talos grows one.
   # one instance per node: default podAntiAffinityType is "preferred" (soft) —
   # postgres-2/-3 both landed on exarch-03. "required" is free here:
   # 3 instances on 3 nodes means every feasible placement is 1:1:1 anyway.
