@@ -17,21 +17,50 @@ spec:
     server:
       fullnameOverride: *name
       retentionPeriod: 90d
-      # Talos pins pods to pod_t (seLinuxOptions.type ignored — proven
-      # 2026-10-16) and ceph-csi drops SC context= mount flags, so RBD volumes
-      # stay unlabeled_t and every directory write logs a permissive AVC —
-      # victoria-logs is the top flooder (518/676 sampled), driving auditd
-      # bursts that spike the etcd system disk (homelab-tickets#28/#29).
-      # level=s0 triggers kubelet's recursive relabel to a type pod_t may
-      # write; verified zero AVCs with a scratch ceph-block PVC write loop.
-      # Costs a one-time chcon of the 50Gi volume at each pod start.
+      # Talos pins pods to pod_t and its policy has no container_file_t, so
+      # kubelet's seLinuxOptions relabel silently no-ops (proven 2026-10-16:
+      # files stay unlabeled_t; every dir write logs a permissive AVC —
+      # victoria-logs was the #1 flooder, its auditd bursts spike the etcd
+      # system disk, homelab-tickets#28/#29). Talos blesses ephemeral_t for
+      # CSI volumes; relabel idempotently at pod start. Root required: files
+      # are owned by mixed uids (lost+found is root), chcon needs ownership.
+      initContainers:
+        - name: selinux-relabel
+          image: ubuntu:24.04
+          command:
+            - sh
+            - -eu
+            - -c
+            - |
+              # root label alone doesn't prove descendants relabelled
+              if [ "$(stat -c %C /storage)" != "system_u:object_r:ephemeral_t:s0" ]; then
+                chcon -R system_u:object_r:ephemeral_t:s0 /storage
+                echo "relabelled /storage"
+              else
+                for d in /storage/*/; do
+                  if [ -d "$d" ] && [ "$(stat -c %C "$d")" != "system_u:object_r:ephemeral_t:s0" ]; then
+                    chcon -R system_u:object_r:ephemeral_t:s0 /storage
+                    echo "relabelled /storage (descendant $d was stale)"
+                    break
+                  fi
+                done
+              fi
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false  # overrides the pod-level runAsNonRoot
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"], add: ["FOWNER"] }
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - { name: server-volume, mountPath: /storage }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 256Mi }
       podSecurityContext:
         enabled: true
         fsGroup: 2000
         runAsNonRoot: true
         runAsUser: 1000
-        seLinuxOptions:
-          level: "s0"
       persistentVolume:
         enabled: true
         storageClassName: ceph-block

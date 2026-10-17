@@ -58,9 +58,45 @@ spec:
             requests:
               storage: 100Gi
         # cap series intake to protect Ceph from runaway cardinality
+        # (spec-level sibling of storage, not a child of it)
         extraArgs:
           storage.maxHourlySeries: "400000"
           storage.maxDailySeries: "1000000"
+        # Same Talos SELinux fix as victoria-logs (full story there):
+        # idempotent chcon to ephemeral_t at pod start. set -eu so a failed
+        # chcon fails the init (and the pod) loudly; FOWNER because volume
+        # files have mixed ownership (lost+found is root).
+        initContainers:
+          - name: selinux-relabel
+            image: ubuntu:24.04
+            command:
+              - sh
+              - -eu
+              - -c
+              - |
+                # root label alone doesn't prove descendants relabelled
+                if [ "$(stat -c %C /victoria-metrics-data)" != "system_u:object_r:ephemeral_t:s0" ]; then
+                  chcon -R system_u:object_r:ephemeral_t:s0 /victoria-metrics-data
+                  echo "relabelled data"
+                else
+                  for d in /victoria-metrics-data/*/; do
+                    if [ -d "$d" ] && [ "$(stat -c %C "$d")" != "system_u:object_r:ephemeral_t:s0" ]; then
+                      chcon -R system_u:object_r:ephemeral_t:s0 /victoria-metrics-data
+                      echo "relabelled data (descendant $d was stale)"
+                      break
+                    fi
+                  done
+                fi
+            securityContext:
+              runAsUser: 0
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"], add: ["FOWNER"] }
+              readOnlyRootFilesystem: true
+            volumeMounts:
+              - { name: data, mountPath: /victoria-metrics-data }
+            resources:
+              requests: { cpu: 50m, memory: 64Mi }
+              limits: { memory: 256Mi }
 
     # : vmalert
     # : http://vmalert-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8080
