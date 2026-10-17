@@ -34,6 +34,32 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
+        # Same Talos SELinux fix as victoria-logs (full story in the
+        # victoria-logs helmrelease): idempotent chcon to ephemeral_t with a
+        # completion marker.
+        initContainers:
+          selinux-relabel:
+            image: { repository: ubuntu, tag: "24.04" }
+            command:
+              - sh
+              - -eu
+              - -c
+              - |
+                  if [ "$(stat -c %C /vol)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /vol/.selinux-relabelled ]; then
+                    rm -f /vol/.selinux-relabelled
+                    chcon -R system_u:object_r:ephemeral_t:s0 /vol
+                    touch /vol/.selinux-relabelled
+                    echo "relabelled /vol"
+                  fi
+            securityContext:
+              runAsUser: 0
+              runAsNonRoot: false
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"], add: ["FOWNER"] }
+              readOnlyRootFilesystem: true
+            resources:
+              requests: { cpu: 50m, memory: 64Mi }
+              limits: { memory: 256Mi }
         pod:
           securityContext:
             runAsNonRoot: true
