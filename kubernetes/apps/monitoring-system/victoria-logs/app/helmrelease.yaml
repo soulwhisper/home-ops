@@ -32,18 +32,14 @@ spec:
             - -eu
             - -c
             - |
-              # root label alone doesn't prove descendants relabelled
-              if [ "$(stat -c %C /storage)" != "system_u:object_r:ephemeral_t:s0" ]; then
+              # Proof of completion, not of root state: a mid-walk chcon
+              # failure (e.g. RBD stall) leaves root labelled but deep files
+              # stale. The marker exists only if a full chcon -R completed
+              # (set -eu aborts before the touch on failure).
+              if [ "$(stat -c %C /storage)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /storage/.selinux-relabelled ]; then
                 chcon -R system_u:object_r:ephemeral_t:s0 /storage
+                touch /storage/.selinux-relabelled
                 echo "relabelled /storage"
-              else
-                for d in /storage/*/; do
-                  if [ -d "$d" ] && [ "$(stat -c %C "$d")" != "system_u:object_r:ephemeral_t:s0" ]; then
-                    chcon -R system_u:object_r:ephemeral_t:s0 /storage
-                    echo "relabelled /storage (descendant $d was stale)"
-                    break
-                  fi
-                done
               fi
           securityContext:
             runAsUser: 0
