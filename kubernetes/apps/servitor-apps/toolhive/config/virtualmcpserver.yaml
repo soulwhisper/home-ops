@@ -23,10 +23,13 @@ spec:
                   key: OPENAI_API_KEY
           # Operator default cpu limit is 500m; persistent tools/list and
           # embedding-rerank bursts throttled ~52% of CFS periods. Request stays
-          # unchanged, so scheduling is unaffected.
+          # unchanged, so scheduling is unaffected. Memory: the runner leaks
+          # ~9Mi/h under streamable-http sessions (same ToolHive leak class as
+          # hindsight/trendradar) — peaked 348Mi in 39h and OOMKilled once
+          # (homelab-tickets#59). 1Gi + the daily restarter cronjob caps it.
           resources:
-            requests: { cpu: 100m, memory: 128Mi }
-            limits: { cpu: "1", memory: 512Mi }
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 1Gi }
   groupRef:
     name: *name
   telemetryConfigRef:

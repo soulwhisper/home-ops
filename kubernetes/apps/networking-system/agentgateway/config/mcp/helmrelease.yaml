@@ -50,14 +50,13 @@ spec:
               # pipeline filter (traces -> langfuse)
               OTEL_SERVICE_NAME: "mcp-guardrails"
             resources:
-              # cpu requests==limits=4: the CFS quota keeps 4 cores available
-              # regardless of node pressure (requests pin the scheduler
-              # reservation too). NOT Guaranteed QoS — memory req≠limit, and
-              # cpuManagerPolicy is the default "none" anyway, so no exclusive
-              # pinning exists to claim. FailClosed: a throttled guardrail
-              # stalls ALL MCP traffic, hence the full-quota sizing.
+              # limits.cpu=4 is what actually buys scan speed (CFS quota);
+              # requests only reserve scheduler capacity. requests=4 pushed
+              # the cluster over KubeCPUOvercommit (fires when requests >
+              # (N-1)/N of allocatable; N=3 -> 2/3 cap, we were at 0.6728).
+              # requests=1 clears it (~0.62) while scans still burst to 4.
               requests:
-                cpu: "4"
+                cpu: "1"
                 memory: 512Mi
               limits:
                 cpu: "4"

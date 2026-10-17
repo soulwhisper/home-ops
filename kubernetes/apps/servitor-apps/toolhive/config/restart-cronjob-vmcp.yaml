@@ -1,0 +1,75 @@
+# Daily restart of the internal-ro vmcp runner to bound its memory leak.
+# Why: the runner grows ~9 Mi/h under streamable-http sessions (same ToolHive
+# leak class as hindsight/trendradar — peaked 348 Mi in 39h and OOMKilled at
+# the 512Mi limit, homelab-tickets#59). The 1Gi limit plus this daily pod
+# delete caps RSS far below it. Delete this file once ToolHive fixes the leak.
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vmcp-ro-restarter
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vmcp-ro-restarter
+rules:
+  # pod delete (not rollout restart): the runner Deployment is operator-owned
+  # and reconciled from the VirtualMCPServer CR; a template patch is drift the
+  # operator may revert. Deleting the pod is drift-free — it is recreated.
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vmcp-ro-restarter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vmcp-ro-restarter
+subjects:
+  - kind: ServiceAccount
+    name: vmcp-ro-restarter
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vmcp-ro-restarter
+spec:
+  schedule: "40 4 * * *"
+  timeZone: "Asia/Shanghai"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          serviceAccountName: vmcp-ro-restarter
+          automountServiceAccountToken: true
+          securityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: kubectl
+              image: registry.k8s.io/kubectl:v1.37.1
+              resources:
+                requests:
+                  cpu: 5m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 128Mi
+              command:
+                - kubectl
+                - delete
+                - pod
+                - --namespace=servitor-apps
+                - --selector=toolhive-name=internal-ro
+                - --wait=false
+          restartPolicy: Never
