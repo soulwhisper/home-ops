@@ -74,18 +74,14 @@ spec:
               - -eu
               - -c
               - |
-                # root label alone doesn't prove descendants relabelled
-                if [ "$(stat -c %C /victoria-metrics-data)" != "system_u:object_r:ephemeral_t:s0" ]; then
+                # Marker-file proof of a COMPLETED full walk; deleted BEFORE
+                # each redo so a mid-walk failure can't leave a stale marker
+                # (see victoria-logs helmrelease for the full failure mode).
+                if [ "$(stat -c %C /victoria-metrics-data)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /victoria-metrics-data/.selinux-relabelled ]; then
+                  rm -f /victoria-metrics-data/.selinux-relabelled
                   chcon -R system_u:object_r:ephemeral_t:s0 /victoria-metrics-data
+                  touch /victoria-metrics-data/.selinux-relabelled
                   echo "relabelled data"
-                else
-                  for d in /victoria-metrics-data/*/; do
-                    if [ -d "$d" ] && [ "$(stat -c %C "$d")" != "system_u:object_r:ephemeral_t:s0" ]; then
-                      chcon -R system_u:object_r:ephemeral_t:s0 /victoria-metrics-data
-                      echo "relabelled data (descendant $d was stale)"
-                      break
-                    fi
-                  done
                 fi
             securityContext:
               runAsUser: 0
