@@ -101,6 +101,13 @@ spec:
         existingClaim: *name
         globalMounts:
           - path: /config
+        # the relabel initContainer gets its mounts only via advancedMounts
+        # (app-template schema) — without this it Init:Error-loops on
+        # "stat: cannot statx /vol" (my #4180 omission, broke the rollout).
+        advancedMounts:
+          *name :
+            selinux-relabel:
+              - path: /vol
       config:
         type: configMap
         identifier: *name
