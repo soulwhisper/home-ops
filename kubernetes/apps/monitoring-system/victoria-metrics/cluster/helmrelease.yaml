@@ -57,10 +57,34 @@ spec:
           resources:
             requests:
               storage: 100Gi
-        # cap series intake to protect Ceph from runaway cardinality
-        extraArgs:
-          storage.maxHourlySeries: "400000"
-          storage.maxDailySeries: "1000000"
+          # cap series intake to protect Ceph from runaway cardinality
+          extraArgs:
+            storage.maxHourlySeries: "400000"
+            storage.maxDailySeries: "1000000"
+          # Same Talos SELinux fix as victoria-logs (full story there):
+          # idempotent chcon to ephemeral_t at pod start.
+          initContainers:
+            - name: selinux-relabel
+              image: ubuntu:24.04
+              command:
+                - sh
+                - -c
+                - |
+                  cur="$(stat -c %C /victoria-metrics-data)"
+                  if [ "$cur" != "system_u:object_r:ephemeral_t:s0" ]; then
+                    chcon -R system_u:object_r:ephemeral_t:s0 /victoria-metrics-data
+                    echo "relabelled data from $cur"
+                  fi
+              securityContext:
+                runAsUser: 0
+                allowPrivilegeEscalation: false
+                capabilities: { drop: ["ALL"] }
+                readOnlyRootFilesystem: true
+              volumeMounts:
+                - { name: data, mountPath: /victoria-metrics-data }
+              resources:
+                requests: { cpu: 50m, memory: 64Mi }
+                limits: { memory: 256Mi }
 
     # : vmalert
     # : http://vmalert-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8080

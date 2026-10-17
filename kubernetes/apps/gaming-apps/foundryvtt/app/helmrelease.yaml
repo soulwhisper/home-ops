@@ -18,6 +18,33 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
+        # Same Talos SELinux fix as victoria-logs (full story in the
+        # victoria-logs helmrelease): hosted-room-dri's writes to the
+        # unlabeled RBD volume were the #2 AVC source. seLinuxOptions is a
+        # proven no-op on Talos — relabel via initContainer instead.
+        initContainers:
+          selinux-relabel:
+            image: ubuntu:24.04
+            command:
+              - sh
+              - -c
+              - |
+                  cur="$(stat -c %C /vol)"
+                  if [ "$cur" != "system_u:object_r:ephemeral_t:s0" ]; then
+                    chcon -R system_u:object_r:ephemeral_t:s0 /vol
+                    echo "relabelled /vol from $cur"
+                  fi
+            securityContext:
+              runAsUser: 0
+              runAsNonRoot: false
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              readOnlyRootFilesystem: true
+            volumeMounts:
+              - { name: app, mountPath: /vol }
+            resources:
+              requests: { cpu: 50m, memory: 64Mi }
+              limits: { memory: 256Mi }
         pod:
           securityContext:
             runAsNonRoot: true
@@ -25,11 +52,6 @@ spec:
             runAsGroup: 1000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
-            # Same Talos/RBD SELinux fix as victoria-logs: hosted-room-dri's
-            # writes to the unlabeled RBD volume were the #2 AVC source
-            # (RuntimeData/MergeMutate threads). level=s0 -> kubelet relabel.
-            seLinuxOptions:
-              level: "s0"
         containers:
           app:
             image:

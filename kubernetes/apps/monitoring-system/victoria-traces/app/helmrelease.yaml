@@ -17,6 +17,31 @@ spec:
     server:
       fullnameOverride: *name
       retentionPeriod: 14d
+      # Same Talos SELinux fix as victoria-logs (see its helmrelease for the
+      # full story): idempotent chcon to ephemeral_t at pod start.
+      initContainers:
+        - name: selinux-relabel
+          image: ubuntu:24.04
+          command:
+            - sh
+            - -c
+            - |
+              cur="$(stat -c %C /storage)"
+              if [ "$cur" != "system_u:object_r:ephemeral_t:s0" ]; then
+                chcon -R system_u:object_r:ephemeral_t:s0 /storage
+                echo "relabelled /storage from $cur"
+              fi
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false  # overrides the pod-level runAsNonRoot
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - { name: server-volume, mountPath: /storage }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 256Mi }
       persistentVolume:
         enabled: true
         storageClassName: ceph-block
