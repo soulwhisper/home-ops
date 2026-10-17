@@ -74,10 +74,18 @@ spec:
               - -eu
               - -c
               - |
-                cur="$(stat -c %C /victoria-metrics-data)"
-                if [ "$cur" != "system_u:object_r:ephemeral_t:s0" ]; then
+                # root label alone doesn't prove descendants relabelled
+                if [ "$(stat -c %C /victoria-metrics-data)" != "system_u:object_r:ephemeral_t:s0" ]; then
                   chcon -R system_u:object_r:ephemeral_t:s0 /victoria-metrics-data
-                  echo "relabelled data from $cur"
+                  echo "relabelled data"
+                else
+                  for d in /victoria-metrics-data/*/; do
+                    if [ -d "$d" ] && [ "$(stat -c %C "$d")" != "system_u:object_r:ephemeral_t:s0" ]; then
+                      chcon -R system_u:object_r:ephemeral_t:s0 /victoria-metrics-data
+                      echo "relabelled data (descendant $d was stale)"
+                      break
+                    fi
+                  done
                 fi
             securityContext:
               runAsUser: 0

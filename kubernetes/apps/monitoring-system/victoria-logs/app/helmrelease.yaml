@@ -32,10 +32,18 @@ spec:
             - -eu
             - -c
             - |
-              cur="$(stat -c %C /storage)"
-              if [ "$cur" != "system_u:object_r:ephemeral_t:s0" ]; then
+              # root label alone doesn't prove descendants relabelled
+              if [ "$(stat -c %C /storage)" != "system_u:object_r:ephemeral_t:s0" ]; then
                 chcon -R system_u:object_r:ephemeral_t:s0 /storage
-                echo "relabelled /storage from $cur"
+                echo "relabelled /storage"
+              else
+                for d in /storage/*/; do
+                  if [ -d "$d" ] && [ "$(stat -c %C "$d")" != "system_u:object_r:ephemeral_t:s0" ]; then
+                    chcon -R system_u:object_r:ephemeral_t:s0 /storage
+                    echo "relabelled /storage (descendant $d was stale)"
+                    break
+                  fi
+                done
               fi
           securityContext:
             runAsUser: 0

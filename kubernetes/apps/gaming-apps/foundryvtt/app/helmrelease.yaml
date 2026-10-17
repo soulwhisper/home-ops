@@ -28,11 +28,21 @@ spec:
             command:
               - sh
               - -eu
+              - -c
               - |
-                  cur="$(stat -c %C /vol)"
-                  if [ "$cur" != "system_u:object_r:ephemeral_t:s0" ]; then
+                  # root label alone doesn't prove descendants relabelled: a
+                  # mid-walk chcon failure would otherwise be masked forever
+                  if [ "$(stat -c %C /vol)" != "system_u:object_r:ephemeral_t:s0" ]; then
                     chcon -R system_u:object_r:ephemeral_t:s0 /vol
-                    echo "relabelled /vol from $cur"
+                    echo "relabelled /vol"
+                  else
+                    for d in /vol/*/; do
+                      if [ -d "$d" ] && [ "$(stat -c %C "$d")" != "system_u:object_r:ephemeral_t:s0" ]; then
+                        chcon -R system_u:object_r:ephemeral_t:s0 /vol
+                        echo "relabelled /vol (descendant $d was stale)"
+                        break
+                      fi
+                    done
                   fi
             securityContext:
               runAsUser: 0
