@@ -51,12 +51,13 @@ spec:
               OTEL_SERVICE_NAME: "mcp-guardrails"
             resources:
               # limits.cpu=4 is what actually buys scan speed (CFS quota);
-              # requests only reserve scheduler capacity. requests=4 pushed
-              # the cluster over KubeCPUOvercommit (fires when requests >
-              # (N-1)/N of allocatable; N=3 -> 2/3 cap, we were at 0.6728).
-              # requests=1 clears it (~0.62) while scans still burst to 4.
+              # requests reserve scheduler capacity AND cpu.shares under
+              # contention. requests=4 tripped KubeCPUOvercommit (cap (N-1)/N
+              # = 2/3 on 3 nodes; we were at 0.6728). requests=1 would halve
+              # the pod's share exactly when scans matter (FailClosed).
+              # requests=2 clears the alert (~0.64) and keeps a workable share.
               requests:
-                cpu: "1"
+                cpu: "2"
                 memory: 512Mi
               limits:
                 cpu: "4"
