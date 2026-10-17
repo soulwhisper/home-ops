@@ -32,19 +32,23 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/mcp-guardrails
-              tag: 1.2.0
+              # 1.2.1: 22M QUANT model (same accuracy, ~4x smaller, faster CPU
+              # inference) + OTEL_METRICS_ENABLED toggle (#142/#141)
+              tag: 1.2.1
             env:
               # App is OTLP/gRPC-only (guardrails/otel.py proto.grpc exporters,
               # insecure derived from the http:// scheme). gRPC must go to :4317;
               # :4318 is the HTTP receiver — plaintext h2c there got HTTP 400
               # ("Failed parsing HTTP/2") and zero spans ever reached langfuse.
               OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4317"
-              # 22M fp32 on a 2-core CFS quota measured 1.0-3.1s per scan
-              # (variance tracks node load); under FailClosed a timeout is a
-              # deny, and tools/list broke twice on exactly this. 3s + 4
-              # guaranteed cores (below) removes the quota thrash. If ~1s per
-              # guarded call is still too slow, the 22M quant variant
-              # (LF_ONNX_FILE=model.quant.onnx, same accuracy) needs a 1.2.1.
+              # collector runs traces-only pipelines; without this the app
+              # pushes metrics every 15s and logs UNIMPLEMENTED forever
+              # (needs image >=1.2.1, soulwhisper/mcp-guardrails#141)
+              OTEL_METRICS_ENABLED: "false"
+              # 22M fp32 measured 1.0-3.1s/scan on a 2-core quota (twice broke
+              # tools/list on FailClosed timeout). 1.2.1 ships the quant model
+              # (same accuracy, ~4x less compute) — 3s timeout stays as the
+              # FailClosed guard; limits.cpu=4 is the burst quota.
               SCANNER_TIMEOUT_MS: "3000"
               # deterministic service.name for the collector's servitor
               # pipeline filter (traces -> langfuse)
