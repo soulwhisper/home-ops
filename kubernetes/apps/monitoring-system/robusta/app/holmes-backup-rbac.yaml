@@ -1,0 +1,36 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/rbac.authorization.k8s.io/clusterrole_v1.json
+# backup-chain-daily fails unevaluable: the holmes subchart's built-in
+# ClusterRole covers core/batch reads but not VolumeSnapshots or CNPG CRs —
+# "volumesnapshots.snapshot.storage.k8s.io is forbidden" /
+# "backups.postgresql.cnpg.io is forbidden" for robusta-holmes-service-account
+# (homelab-tickets#10). Same pattern as holmes-certmanager-rbac.yaml (#12).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: holmes-backup-read
+rules:
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources:
+      - volumesnapshots
+      - volumesnapshotcontents
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["postgresql.cnpg.io"]
+    resources:
+      - clusters
+      - backups
+      - scheduledbackups
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: holmes-backup-read
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: holmes-backup-read
+subjects:
+  - kind: ServiceAccount
+    name: robusta-holmes-service-account
+    namespace: monitoring-system

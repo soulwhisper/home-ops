@@ -10,6 +10,7 @@ resources:
   - ./externalsecret.yaml
   - ./ciliumnetworkpolicy.yaml
   - ./holmes-certmanager-rbac.yaml
+  - ./holmes-backup-rbac.yaml
 
 configMapGenerator:
   # stable name: the HR references it by name (kustomize can't rewrite inside
