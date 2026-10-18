@@ -27,6 +27,7 @@ class TicketLifecycleTest(unittest.TestCase):
         self.comments = {}
         self.fail_after_create = False
         self.index_lag = False  # simulate a search index that has not caught up
+        self.unpaginated = False  # simulate Forgejo's comments endpoint (17.0.0) ignoring page/limit
         self.searches = 0
         owner = self
 
@@ -52,6 +53,9 @@ class TicketLifecycleTest(unittest.TestCase):
                     return
                 items = (owner.comments.get(int(parts.path.split("/")[2]), [])
                          if parts.path.endswith("/comments") else owner.issues)
+                if owner.unpaginated and parts.path.endswith("/comments"):
+                    self.reply(200, items)
+                    return
                 page, limit = int(query["page"][0]), int(query["limit"][0])
                 self.reply(200, items[(page - 1) * limit:page * limit])
 
@@ -242,6 +246,18 @@ class TicketLifecycleTest(unittest.TestCase):
         self.deliver(changed)
         self.assertEqual(len(self.issues), 51)
         self.assertEqual(len(self.comments[51]), 51)
+
+    def test_unpaginated_comments_endpoint_terminates(self):
+        # Forgejo 17.0.0's comments endpoint ignores page/limit and returns the
+        # whole collection for every page — without the seen guard pages()
+        # never terminates on a ticket with >=50 comments (homelab-tickets#54).
+        self.unpaginated = True
+        self.deliver()
+        self.comments[1] = [{"id": n, "body": "old"} for n in range(53)]
+        changed = self.finding | {"id": "later-event", "starts_at": "2026-10-09T05:00:00Z"}
+        self.assertEqual(self.deliver(changed)["action"], "commented")
+        self.assertEqual(self.deliver(changed)["action"], "duplicate")
+        self.assertEqual(len(self.comments[1]), 54)
 
     def test_missing_identity_is_rejected_without_creating_issue(self):
         for field in ("source", "aggregation_key"):

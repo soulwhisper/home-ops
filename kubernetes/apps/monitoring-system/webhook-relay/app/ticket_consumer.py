@@ -72,12 +72,29 @@ class Forgejo:
         return json.loads(content) if content else None
 
     def pages(self, path):
+        """Yield items page by page; stop on a short page or one with no new ids.
+
+        Forgejo's issue list paginates, but its comments endpoint (17.0.0+gitea
+        -1.22.0, both mirrors) ignores page/limit and returns the whole
+        collection every call. Without the seen guard, any ticket with >=50
+        comments loops forever here — the list() in deliver() grew ~150Mi in
+        ~60s and OOMKilled the container, holding delivery_lock while it spun
+        (homelab-tickets#54/#55).
+        """
         separator = "&" if "?" in path else "?"
         page = 1
+        seen = set()
         while True:
             items = self.request("GET", f"{path}{separator}limit=50&page={page}")
-            yield from items
-            if len(items) < 50:
+            fresh = 0
+            for item in items:
+                marker = item.get("id", json.dumps(item, sort_keys=True))
+                if marker in seen:
+                    continue
+                seen.add(marker)
+                fresh += 1
+                yield item
+            if len(items) < 50 or fresh == 0:
                 return
             page += 1
 
