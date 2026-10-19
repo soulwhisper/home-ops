@@ -29,8 +29,10 @@ spec:
               TZ: Asia/Shanghai
               WEBSERVER_PORT: "8080"
               RUN_MODE: cron
-              CRON_SCHEDULE: "*/30 * * * *"
-              IMMEDIATE_RUN: "true"
+              # One daily crawl after the 04:30 memory-leak restart; no extra
+              # immediate run on pod restart.
+              CRON_SCHEDULE: "0 5 * * *"
+              IMMEDIATE_RUN: "false"
               AI_ANALYSIS_ENABLED: "true"
               # AI lane (base/model/key) comes from the trendradar secret
               # (envFrom below)
