@@ -126,7 +126,10 @@ All four backends carry the mcp-guardrails ExtMCP sidecar (agentgateway
 `mcp.guardrails`): `tools/call` is scanned request+response, `tools/list` /
 `prompts/get` / `resources/read` response-only; `failureMode: FailClosed`
 (the sidecar being down disables tool traffic cluster-wide rather than
-passing it unguarded). There is deliberately **no** unguarded MCP route —
+passing it unguarded). Response scanning uses four balanced windows (11KiB
+by default) with a 3.5s scanner deadline and a 15s Service-scoped ExtMCP
+callout deadline; readiness completes a full-size warmup before traffic.
+There is deliberately **no** unguarded MCP route —
 open-webui and hermes consume the same guarded endpoints; only the LLM
 content lanes differ. Auth: strict API key (`mcp-api-auth`). Direct vmcp
 access is cilium-restricted to the gateway federation and vmagent metrics.

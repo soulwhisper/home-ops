@@ -37,3 +37,19 @@ spec:
               prompts/get: Response
               # Response-only: scan resource bodies for exfil/injection.
               resources/read: Response
+---
+# The guardrail Service is also the ExtMcp callout backend. Its backend-level
+# timeout overrides agentgateway's 10s fallback for that callout.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-guardrails-timeout
+spec:
+  targetRefs:
+    - group: ""
+      kind: Service
+      name: mcp-guardrails
+  backend:
+    http:
+      # Four balanced response windows, each bounded by 3.5s.
+      requestTimeout: 15s
