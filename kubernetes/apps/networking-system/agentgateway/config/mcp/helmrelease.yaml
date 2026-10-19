@@ -32,9 +32,9 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/mcp-guardrails
-              # 1.2.1: 22M QUANT model (same accuracy, ~4x smaller, faster CPU
-              # inference) + OTEL_METRICS_ENABLED toggle (#142/#141)
-              tag: 1.2.1
+              # 1.3.0: batched PromptGuard windows + balanced response windows
+              # + full-size readiness warmup for long MCP responses (#146)
+              tag: 1.3.0
             env:
               # App is OTLP/gRPC-only (guardrails/otel.py proto.grpc exporters,
               # insecure derived from the http:// scheme). gRPC must go to :4317;
@@ -45,11 +45,10 @@ spec:
               # pushes metrics every 15s and logs UNIMPLEMENTED forever
               # (needs image >=1.2.1, soulwhisper/mcp-guardrails#141)
               OTEL_METRICS_ENABLED: "false"
-              # 22M fp32 measured 1.0-3.1s/scan on a 2-core quota (twice broke
-              # tools/list on FailClosed timeout). 1.2.1 ships the quant model
-              # (same accuracy, ~4x less compute) — 3s timeout stays as the
-              # FailClosed guard; limits.cpu=4 is the burst quota.
-              SCANNER_TIMEOUT_MS: "3000"
+              # Four balanced response windows bound each scanner call;
+              # 4 * 3.5s plus processing overhead fits the 15s callout budget.
+              SCANNER_TIMEOUT_MS: "3500"
+              SCAN_TAIL_BYTES: "11264"
               # deterministic service.name for the collector's servitor
               # pipeline filter (traces -> langfuse)
               OTEL_SERVICE_NAME: "mcp-guardrails"
