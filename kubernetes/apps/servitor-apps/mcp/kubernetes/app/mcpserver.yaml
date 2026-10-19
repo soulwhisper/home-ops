@@ -10,14 +10,6 @@ spec:
   image: ghcr.io/containers/kubernetes-mcp-server:v0.0.67
   args: ["--config", "/etc/mcp/config.toml"]
   podTemplateSpec:
-    metadata:
-      annotations:
-        # klog stamps local time with no offset (I1016 22:07:46); with the
-        # k8tz-injected Asia/Shanghai the log pipeline parses those as UTC and
-        # every line lands 8h in the future (VictoriaLogsFutureLogTimestamps,
-        # homelab-tickets#27). k8tz-native UTC: patches /etc/localtime AND the
-        # TZ env, no duplicate container env needed.
-        k8tz.io/timezone: "UTC"
     spec:
       volumes:
         - name: config
@@ -30,6 +22,11 @@ spec:
           emptyDir: {}
       containers:
         - name: mcp
+          # ToolHive does not propagate podTemplate metadata annotations; set TZ
+          # directly so offset-less klog timestamps are UTC (homelab-tickets#27).
+          env:
+            - name: TZ
+              value: "UTC"
           volumeMounts:
             - name: config
               mountPath: /etc/mcp/config.toml
