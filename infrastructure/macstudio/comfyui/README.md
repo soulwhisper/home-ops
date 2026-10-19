@@ -10,13 +10,16 @@ redeployment.
 | File | Deploys to | Purpose |
 |---|---|---|
 | `sh.comfyui.plist` | `~/Library/LaunchAgents/sh.comfyui.plist` | ComfyUI WebUI/API on `0.0.0.0:8188` |
-| `idle_offload.py` | `~/ComfyUI-Data/idle_offload.py` | Calls `/free` after five idle minutes |
+| `idle_offload.py` | `~/ComfyUI/tools/idle_offload.py` | Calls `/free` after five idle minutes |
 | `sh.comfyui.idle-offload.plist` | `~/Library/LaunchAgents/sh.comfyui.idle-offload.plist` | Runs the idle offload check every 60s |
-| `link_models.sh` | manual run on host | Links Qwen Image weights into `~/ComfyUI/models/*` from `~/models` without copying |
+| `link_models.sh` | `~/ComfyUI/tools/link_models.sh` | Links Qwen Image weights into `~/ComfyUI/models/*` from `~/models` without copying |
 
-Not tracked: `~/ComfyUI` (upstream checkout), `~/ComfyUI-Data/user`, generated
-images, and model weights. The saved production workflow is imported from the
-prior Desktop install into `~/ComfyUI/default_workflow.json`.
+Runtime state lives under the application checkout: `~/ComfyUI/data/user`,
+`~/ComfyUI/data/*.log`, `~/ComfyUI/shared/input`, and
+`~/ComfyUI/shared/output`. Not tracked: `~/ComfyUI` (upstream checkout),
+runtime data, generated images, and model weights. The saved production
+workflow is imported from the prior Desktop install into
+`~/ComfyUI/default_workflow.json`.
 
 ## Lifecycle and memory
 

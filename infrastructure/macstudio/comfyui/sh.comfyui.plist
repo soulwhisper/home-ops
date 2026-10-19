@@ -14,11 +14,11 @@
     <string>8188</string>
     <string>--disable-auto-launch</string>
     <string>--user-directory</string>
-    <string>/Users/soulwhisper/ComfyUI-Data/user</string>
+    <string>/Users/soulwhisper/ComfyUI/data/user</string>
     <string>--output-directory</string>
-    <string>/Users/soulwhisper/ComfyUI-Shared/output</string>
+    <string>/Users/soulwhisper/ComfyUI/shared/output</string>
     <string>--input-directory</string>
-    <string>/Users/soulwhisper/ComfyUI-Shared/input</string>
+    <string>/Users/soulwhisper/ComfyUI/shared/input</string>
     <string>--vram-headroom</string>
     <string>8</string>
     <string>--preview-method</string>
@@ -40,8 +40,8 @@
   <key>Nice</key>
   <integer>10</integer>
   <key>StandardOutPath</key>
-  <string>/Users/soulwhisper/ComfyUI-Data/comfyui.log</string>
+  <string>/Users/soulwhisper/ComfyUI/data/comfyui.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/soulwhisper/ComfyUI-Data/comfyui.log</string>
+  <string>/Users/soulwhisper/ComfyUI/data/comfyui.log</string>
 </dict>
 </plist>
