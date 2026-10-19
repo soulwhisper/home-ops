@@ -35,7 +35,7 @@
   },
   "memory": {
     "prefill_memory_guard": true,
-    "memory_guard_tier": "balanced",
+    "memory_guard_tier": "safe",
     "memory_guard_custom_ceiling_gb": 0.0,
     "soft_threshold": 0.85,
     "hard_threshold": 0.95,
@@ -43,7 +43,7 @@
     "prefill_min_chunk_tokens": 32
   },
   "scheduler": {
-    "max_concurrent_requests": 8,
+    "max_concurrent_requests": 4,
     "embedding_batch_size": 32,
     "chunked_prefill": true,
     "prefill_priority": "context",

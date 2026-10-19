@@ -65,6 +65,11 @@ ExternalSecret item (`studio-api-auth`) and every consumer key.
 
 ## Apply
 
+The oMLX desktop app owns the server lifecycle. The legacy
+`~/Library/LaunchAgents/sh.brew.omlx.plist` brew service was removed; do not
+restore it. If the server is stopped, launch `/Applications/oMLX.app` and use
+menu bar -> Restart Server after changing settings.
+
 ```bash
 # restart from the oMLX desktop app (menu bar -> Restart Server)
 curl -H "Authorization: Bearer $API_KEY" http://127.0.0.1:8000/v1/models

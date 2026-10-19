@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>sh.comfyui</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/soulwhisper/ComfyUI/.venv/bin/python</string>
+    <string>/Users/soulwhisper/ComfyUI/main.py</string>
+    <string>--listen</string>
+    <string>0.0.0.0</string>
+    <string>--port</string>
+    <string>8188</string>
+    <string>--disable-auto-launch</string>
+    <string>--user-directory</string>
+    <string>/Users/soulwhisper/ComfyUI-Data/user</string>
+    <string>--output-directory</string>
+    <string>/Users/soulwhisper/ComfyUI-Shared/output</string>
+    <string>--input-directory</string>
+    <string>/Users/soulwhisper/ComfyUI-Shared/input</string>
+    <string>--vram-headroom</string>
+    <string>8</string>
+    <string>--preview-method</string>
+    <string>none</string>
+    <string>--disable-assets</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/soulwhisper/ComfyUI</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>LowPriorityIO</key>
+  <true/>
+  <key>Nice</key>
+  <integer>10</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/soulwhisper/ComfyUI-Data/comfyui.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/soulwhisper/ComfyUI-Data/comfyui.log</string>
+</dict>
+</plist>
