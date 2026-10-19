@@ -8,9 +8,14 @@ spec:
   groupRef:
     name: external
   podTemplateSpec:
-    metadata:
-      annotations:
-        k8tz.io/timezone: "UTC"
+    spec:
+      containers:
+        - name: mcp
+          # ToolHive does not propagate podTemplate metadata annotations; set TZ
+          # directly so offset-less klog timestamps are UTC (homelab-tickets#27).
+          env:
+            - name: TZ
+              value: "UTC"
   image: ghcr.io/stacklok/dockyard/npx/context7:4.4.1
   mcpPort: 3000
   secrets:
