@@ -16,7 +16,7 @@ spec:
     # binds 0.0.0.0 by default (image env) — toolhive proxies to the pod IP,
     # so no HOST override (the old nginx-fronted layout needed loopback)
     - name: FIRECRAWL_API_URL
-      value: "http://firecrawl.selfhosted-apps.svc.cluster.local:3002"
+      value: "http://firecrawl-app.selfhosted-apps.svc.cluster.local:3002"
     - name: HTTP_STREAMABLE_SERVER
       value: "true"
   transport: streamable-http
