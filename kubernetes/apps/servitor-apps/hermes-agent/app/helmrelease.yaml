@@ -27,6 +27,37 @@ spec:
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         initContainers:
+          # Same Talos SELinux fix as victoria-logs (full story in the
+          # victoria-logs helmrelease): hermes writes to its unlabeled RBD
+          # PVC were one of the 2026-10-18 permissive-AVC flood sources, and
+          # seLinuxOptions is a proven no-op on Talos — relabel via
+          # initContainer instead. Root required (chcon needs ownership);
+          # overrides the pod-level runAsNonRoot.
+          selinux-relabel:
+            image: { repository: ubuntu, tag: "24.04" }
+            command:
+              - sh
+              - -eu
+              - -c
+              - |
+                  # Marker-file proof of a COMPLETED full walk; deleted
+                  # BEFORE each redo so a mid-walk failure can't leave a
+                  # stale marker (see victoria-logs helmrelease).
+                  if [ "$(stat -c %C /vol)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /vol/.selinux-relabelled ]; then
+                    rm -f /vol/.selinux-relabelled
+                    chcon -R system_u:object_r:ephemeral_t:s0 /vol
+                    touch /vol/.selinux-relabelled
+                    echo "relabelled /vol"
+                  fi
+            securityContext:
+              runAsUser: 0
+              runAsNonRoot: false
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"], add: ["FOWNER"] }
+              readOnlyRootFilesystem: true
+            resources:
+              requests: { cpu: 50m, memory: 64Mi }
+              limits: { memory: 256Mi }
           # Seeds config.yaml + ops profile onto the PVC at every boot
           # (authoritative; dashboard edits to these files revert on restart).
           # .env files are rendered from pod env because profile $${VAR} refs
@@ -128,6 +159,13 @@ spec:
             subPath: hermes
           - path: /workspace
             subPath: workspace
+        # app-template schema: initContainer mounts come from advancedMounts,
+        # not per-entry volumeMounts. Mounts the whole RBD volume root (no
+        # subPath) so chcon -R covers every subdir.
+        advancedMounts:
+          *name :
+            selinux-relabel:
+              - path: /vol
       seed:
         type: configMap
         name: hermes-agent-config

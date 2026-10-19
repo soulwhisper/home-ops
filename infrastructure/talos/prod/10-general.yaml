@@ -15,6 +15,16 @@ content: |
   [plugins]
     [plugins."io.containerd.cri.v1.images"]
       discard_unpacked_layers = false
+      # Canary mitigation for layer-download I/O: the 2026-10-18T22:39Z
+      # controller exits coincided with a single Firecrawl 2.11.539 pull
+      # (592,105,836 B in 1m5s) on exarch-03 plus nvme1n1 latency, with no
+      # NVMe hardware errors and no audit_lost in that window. Cap
+      # concurrent layer downloads at 1 (containerd default: 3). This
+      # bounds DOWNLOAD parallelism only — it does not claim to eliminate
+      # unpack/decompress I/O. Local pull is preserved (layers are still
+      # kept: discard_unpacked_layers = false). kubelet
+      # maxParallelImagePulls is unchanged (still 2, KubeletConfig below).
+      max_concurrent_downloads = 1
     [plugins."io.containerd.cri.v1.runtime"]
       device_ownership_from_security_context = true
     [plugins."io.containerd.grpc.v1.cri"]

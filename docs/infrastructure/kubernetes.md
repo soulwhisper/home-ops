@@ -570,7 +570,7 @@ Talos provides:
 - **API-driven management** — all configuration changes flow through the Talos API
 - **Automatic upgrades** — System Upgrade Controller (managed by Flux in `gitops-system`) handles Talos version upgrades via `talosctl upgrade-k8s` plans
 - **NVMe storage** — M.2 NVMe SSDs across all nodes provide high-performance local storage for Rook-Ceph
-- **Image pulls capped** — kubelet `maxParallelImagePulls: 2`; EPHEMERAL and etcd share the system NVMe, and unbounded pull waves stalled etcd fsync into leader-election restarts
+- **Image pulls capped** — kubelet `maxParallelImagePulls: 2`; EPHEMERAL and etcd share the system NVMe, and unbounded pull waves stalled etcd fsync into leader-election restarts. Containerd layer downloads are additionally capped at `max_concurrent_downloads = 1` (`CRICustomizationConfig/base` in `infrastructure/talos/prod/`) as a canary mitigation: the 2026-10-18T22:39Z controller exits coincided with a single ~592 MB Firecrawl pull and nvme1n1 latency. The cap bounds download parallelism only, not unpack I/O. Real-rollout verification: applying the config regenerates the CRI config and restarts CRI without a node reboot — confirm `talosctl -n <node> read /etc/cri/containerd.toml` shows `max_concurrent_downloads = 1`, then watch the next large image pull for serialized layer downloads and absence of nvme1n1 latency spikes
 
 The cluster uses Cilium as the CNI in native routing mode (no overlay), leveraging Talos's default network configuration and BGP peering via FRR-K8s for LoadBalancer service IP advertisement.
 
