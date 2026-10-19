@@ -8,6 +8,13 @@
         '{"releases":[{"version": $string(revision)}], "sourceDirectory": name}',
       ],
     },
+    "immich-machine-learning": {
+      defaultRegistryUrlTemplate: "https://api.github.com/repos/immich-app/immich/releases?per_page=100",
+      format: "json",
+      transformTemplates: [
+        '{"releases": $map($filter($, function($release) { $not($release.draft) and $not($release.prerelease) }), function($release) { {"version": $release.tag_name & "-openvino", "releaseTimestamp": $release.published_at} })}',
+      ],
+    },
   },
   customManagers: [
     {
