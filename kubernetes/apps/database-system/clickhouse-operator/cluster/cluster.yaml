@@ -40,6 +40,41 @@ spec:
             mountPath: /var/lib/clickhouse
           - name: clickhouse-storage-volume
             mountPath: /var/log/clickhouse-server
+      # Same Talos SELinux fix as victoria-logs (full story in the
+      # victoria-logs helmrelease): ClickHouse writes to its unlabeled RBD
+      # volume were one of the 2026-10-18 permissive-AVC flood sources, and
+      # seLinuxOptions is a proven no-op on Talos. Relabel idempotently to
+      # ephemeral_t at pod start; root required (chcon needs ownership).
+      - name: selinux-relabel
+        image: ubuntu:24.04
+        command:
+          - sh
+          - -eu
+          - -c
+          - |
+            # Marker-file proof of a COMPLETED full walk; deleted BEFORE
+            # each redo so a mid-walk failure (e.g. RBD stall) can't leave
+            # a stale marker (see victoria-logs helmrelease).
+            if [ "$(stat -c %C /storage)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /storage/.selinux-relabelled ]; then
+              rm -f /storage/.selinux-relabelled
+              chcon -R system_u:object_r:ephemeral_t:s0 /storage
+              touch /storage/.selinux-relabelled
+              echo "relabelled /storage"
+            fi
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+            add: ["FOWNER"]
+          readOnlyRootFilesystem: true
+        volumeMounts:
+          - name: clickhouse-storage-volume
+            mountPath: /storage
+        resources:
+          requests: { cpu: 50m, memory: 64Mi }
+          limits: { memory: 256Mi }
     nodeHostnameKey: kubernetes.io/hostname
     volumes:
       - name: init-db
