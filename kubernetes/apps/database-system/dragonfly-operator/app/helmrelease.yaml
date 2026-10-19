@@ -11,5 +11,8 @@ spec:
     name: dragonfly-operator
 
   values:
+    # Keep klog timestamps aligned with CRI/vlagent until VictoriaLogs#1883 is fixed (#27).
+    podAnnotations:
+      k8tz.io/timezone: "UTC"
     serviceMonitor:
       enabled: true

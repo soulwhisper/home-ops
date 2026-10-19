@@ -52,11 +52,12 @@ spec:
               Kustomization {{ $labels.name }} in {{ $labels.exported_namespace }} is not ready
           labels:
             severity: critical
-        # The vendored flux ruleset that used to fire
-        # FluxOCIRepositoryOciartifactpullfailed is no longer shipped, leaving
-        # OCI pull failures uncovered. Re-add repo-owned with a 10m buffer:
-        # transient upstream-DNS blips self-heal in 3-5m via source-controller
-        # retries (homelab-tickets#15-17) and must not page.
+        # notification-controller Alert CRs send point-in-time events directly
+        # to Alertmanager; kubernetes/components/namespace/alerts/alert.yaml
+        # excludes only observed transient DNS/network messages. These rules
+        # retain sustained coverage: source-controller retries usually self-heal
+        # upstream-DNS blips in 3-5m (homelab-tickets#15-17), while 10m+
+        # failures still page (#66/#67).
         - alert: FluxOCIRepositoryNotReady
           expr: |-
             gotk_resource_info{customresource_kind="OCIRepository", ready!="True"} == 1
@@ -67,5 +68,17 @@ spec:
             description: >-
               Persistent for 10m+ — beyond the self-heal window of transient
               registry/DNS blips. Check source-controller logs for the reason.
+          labels:
+            severity: critical
+        - alert: FluxGitRepositoryNotReady
+          expr: |-
+            gotk_resource_info{customresource_kind="GitRepository", ready!="True"} == 1
+          for: 10m
+          annotations:
+            summary: >-
+              GitRepository {{ $labels.name }} in {{ $labels.exported_namespace }} is not ready
+            description: >-
+              Persistent for 10m+ — beyond the self-heal window of transient
+              git/DNS blips. Check source-controller logs for the reason.
           labels:
             severity: critical

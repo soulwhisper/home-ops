@@ -21,8 +21,15 @@ spec:
       name: "*"
     - kind: OCIRepository
       name: "*"
+  # notification-controller sends point-in-time events directly to Alertmanager.
+  # Exclude only observed transient DNS/network text; sustained OCI/Git source
+  # failures remain covered by Flux*RepositoryNotReady rules after 10m (#66-#79).
   exclusionList:
     - "error.*lookup.*github"
     - "dial.*tcp.*timeout"
     - "waiting.*socket"
+    - "server misbehaving"
+    - "context deadline exceeded"
+    - "unexpected EOF"
+    - ": EOF"
   suspend: false
