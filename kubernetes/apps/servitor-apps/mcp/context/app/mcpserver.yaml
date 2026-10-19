@@ -16,6 +16,9 @@ spec:
         - name: TZ
           value: "UTC"
   image: ghcr.io/stacklok/dockyard/npx/context7:4.4.1
+  env:
+    - name: TZ
+      value: "UTC"
   mcpPort: 3000
   secrets:
     - name: *name

@@ -20,3 +20,25 @@ spec:
       # use "securityContext.fsGroupChangePolicy: OnRootMismatch" instead
       # ref:https://github.com/kubernetes-csi/csi-driver-nfs/issues/870
       enableFSGroupPolicy: false
+
+  # Chart 4.13.5 has no podAnnotation values; patch the workload pod templates
+  # so offset-less klog lines stay UTC until VictoriaLogs#1883 (#27).
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: DaemonSet
+              name: csi-nfs-node
+            patch: |-
+              - op: add
+                path: /spec/template/metadata/annotations
+                value:
+                  k8tz.io/timezone: "UTC"
+          - target:
+              kind: Deployment
+              name: csi-nfs-controller
+            patch: |-
+              - op: add
+                path: /spec/template/metadata/annotations
+                value:
+                  k8tz.io/timezone: "UTC"
