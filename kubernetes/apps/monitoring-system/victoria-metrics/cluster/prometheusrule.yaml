@@ -106,6 +106,7 @@ spec:
             severity: warning
         # Ticket intake is fire-and-forget from Robusta's side: chaski retries
         # 3x then drops. A failed send means an incident has no ticket.
+        # Alert only on permanent failures; recovered retryable sends are not incidents.
         - alert: TicketDeliveryFailing
           annotations:
             summary: "webhook-relay failed {{ $value | humanize }} ticket deliveries in 15m ({{ $labels.outcome }})"
@@ -115,7 +116,7 @@ spec:
               ticket. Check `kubectl -n monitoring-system logs deploy/webhook-relay -c tickets`
               and Forgejo on nas:9003.
           expr: |
-            sum by (outcome) (increase(chaski_target_sends_total{target="forgejo-tickets", outcome!="success"}[15m])) > 0
+            sum by (outcome) (increase(chaski_target_sends_total{target="forgejo-tickets", outcome="permanent"}[15m])) > 0
           labels:
             severity: warning
         - alert: TicketRelayMetricsAbsent
