@@ -17,7 +17,7 @@ spec:
             unless
             sum by (server, mcp_resource_id) (increase(toolhive_mcp_requests_total{mcp_method="tools/call"}[7d] offset 1h)) > 0
           labels:
-            severity: warning
+            severity: info
         - alert: AgentToolCallSpike
           annotations:
             summary: >-

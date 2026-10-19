@@ -58,6 +58,8 @@ spec:
                 cpu: 100m
                 memory: 128Mi
         nodePlugin:
+          annotations:
+            k8tz.io/timezone: "UTC"
           priorityClassName: system-node-critical
           resources:
             plugin:
@@ -100,3 +102,19 @@ spec:
       nfs:
         enabled: false
         name: storage-system.nfs.csi.ceph.com
+
+  # ceph-csi-drivers 1.1.0 renders nodePlugin.annotations but not
+  # controllerPlugin.annotations; patch Driver CRs so the CSI operator adds
+  # the same targeted UTC annotation to controller pod templates (#27).
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              group: csi.ceph.io
+              version: v1
+              kind: Driver
+            patch: |-
+              - op: add
+                path: /spec/controllerPlugin/annotations
+                value:
+                  k8tz.io/timezone: "UTC"
