@@ -15,11 +15,10 @@ redeployment.
 | `link_models.sh` | `~/ComfyUI/tools/link_models.sh` | Links Qwen Image weights into `~/ComfyUI/models/*` from `~/models` without copying |
 
 Runtime state lives under the application checkout: `~/ComfyUI/data/user`,
-`~/ComfyUI/data/*.log`, `~/ComfyUI/shared/input`, and
-`~/ComfyUI/shared/output`. Not tracked: `~/ComfyUI` (upstream checkout),
-runtime data, generated images, and model weights. The saved production
-workflow is imported from the prior Desktop install into
-`~/ComfyUI/default_workflow.json`.
+`~/ComfyUI/data/*.log`, `~/ComfyUI/input`, and `~/ComfyUI/output`. Not
+tracked: `~/ComfyUI` (upstream checkout), runtime data, generated images, and
+model weights. The saved production workflow is imported from the prior
+Desktop install into `~/ComfyUI/default_workflow.json`.
 
 ## Lifecycle and memory
 
