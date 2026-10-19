@@ -7,7 +7,7 @@
   <key>ProgramArguments</key>
   <array>
     <string>/Users/soulwhisper/ComfyUI/.venv/bin/python</string>
-    <string>/Users/soulwhisper/ComfyUI-Data/idle_offload.py</string>
+    <string>/Users/soulwhisper/ComfyUI/tools/idle_offload.py</string>
   </array>
   <key>RunAtLoad</key>
   <true/>
@@ -20,8 +20,8 @@
   <key>Nice</key>
   <integer>15</integer>
   <key>StandardOutPath</key>
-  <string>/Users/soulwhisper/ComfyUI-Data/idle-offload.log</string>
+  <string>/Users/soulwhisper/ComfyUI/data/idle-offload.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/soulwhisper/ComfyUI-Data/idle-offload.log</string>
+  <string>/Users/soulwhisper/ComfyUI/data/idle-offload.log</string>
 </dict>
 </plist>

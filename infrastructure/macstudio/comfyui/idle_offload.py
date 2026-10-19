@@ -7,7 +7,7 @@ from pathlib import Path
 
 API = "http://127.0.0.1:8188"
 IDLE_SECONDS = 300
-STATE = Path.home() / "ComfyUI-Data" / "idle-offload.last-busy"
+STATE = Path.home() / "ComfyUI" / "data" / "idle-offload.last-busy"
 
 
 def request(path, payload=None):
