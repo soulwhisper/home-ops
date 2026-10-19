@@ -53,7 +53,7 @@ spec:
               runAsUser: 0
               runAsNonRoot: false
               allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"], add: ["FOWNER"] }
+              capabilities: { drop: ["ALL"], add: ["DAC_OVERRIDE", "FOWNER"] } # DAC_OVERRIDE: Hermes dirs are mode 0700
               readOnlyRootFilesystem: true
             resources:
               requests: { cpu: 50m, memory: 64Mi }
