@@ -10,7 +10,7 @@ spec:
   # Gateway tool allowlist: networking-system/agentgateway/config/mcp/filters.yaml
   # (cluster policy). Tracked against mcp-grafana 2.0.2 (62 tools enumerated
   # 2026-10-20) — re-verify the allowlist on every version bump.
-  image: grafana/mcp-grafana:2.0.2
+  image: grafana/mcp-grafana:2.1.0
   podTemplateSpec:
     spec:
       containers:
