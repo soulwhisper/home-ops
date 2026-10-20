@@ -15,6 +15,13 @@ services:
     image: "ghcr.io/soulwhisper/dsh-web:0.2.1-rc.2"
     container_name: "dsh-web"
     restart: "unless-stopped"
+    group_add:
+      - "100" # synology user
+    environment:
+      # dsh fence: without this, the UI loads but every /api call and WS
+      # upgrade from the NAS hostname gets 403. Port-less entry matches any
+      # published port (9400 here).
+      - DSH_TRUSTED_HOSTS=nas.homelab.internal
     ports:
       - "9400:3080"
     volumes:

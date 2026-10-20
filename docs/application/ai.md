@@ -211,12 +211,12 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 ### DSH Tavern
 
-- RP chat portal (SillyTavern replacement), image `ghcr.io/soulwhisper/dsh-tavern` (containers repo; dsh-tavern profile + eco plugins + dsh-ui-auth baked). Lives in **servitor-apps**. State on the kopiur-backed PVC at `/home/node/.dsh` (cards/sessions/presets; snapshot schedule included); `/workspace` + `/tmp` are emptyDir
+- RP chat portal (SillyTavern replacement), image `ghcr.io/soulwhisper/dsh-tavern` (containers repo; dsh-tavern profile + eco plugins baked, no in-app auth). Lives in **servitor-apps**. State on the kopiur-backed PVC at `/home/node/.dsh` (cards/sessions/presets; snapshot schedule included); `/workspace` + `/tmp` are emptyDir
 - **LLM**: UI-configured — uncensored lane (foreground prose) / omni (background settlement); key = `llm_uncensored` from the `agentgateway` item. The gateway is the only AI egress
-- **Auth**: authentik forward-auth at the gateway + baked `dsh-ui-auth` login gateway (sessions persist on PVC; bootstrap admin file lands in ephemeral `/workspace` — record the password at first boot; reset = remove the ui-auth storage dir on the PVC and restart)
+- **Auth**: authentik forward-auth at the gateway only (united portal; no in-app auth layer baked). Fallback entry: the dsh startup-token URL from pod logs — note the token rotates per process start, so a pod restart re-locks the UI until the new token URL is visited once
 - **Ingress**: `tavern.noirprime.com` via kgateway-internal
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (LLM only), world-except-private :443 (card/preset fetches, tavern-image backends), kube-dns
-- First-login caveat: token URL in pod logs is the fallback path; the ui-auth login page is the front door
+- First-login caveat: dsh's startup-token URL prints to pod logs on every boot and is the entry after authentik
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
 
