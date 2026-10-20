@@ -24,7 +24,9 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000 # node
             runAsGroup: 1000
-            fsGroup: 1000
+            # kopiur movers work as gid 2000 — PVC data must be group-2000
+            # accessible (same shape as crafty-controller: app 1000, fs 2000)
+            fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         containers:
           app:
