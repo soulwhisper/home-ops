@@ -11,29 +11,12 @@ name: dsh-web
 # (persisted on the data volume).
 
 services:
-  # Bind mounts on the NAS come up root-owned; the app runs as node
-  # (uid 1000) with supplementary group 100 (users). This one-shot prepares
-  # the dirs group-writable so the entrypoint seed can write them.
-  init:
-    image: "ghcr.io/soulwhisper/dsh-web:0.2.1-rc.2"
-    user: "0:0"
-    entrypoint: ["sh", "-c"]
-    command:
-      - "mkdir -p /v/data /v/workspace && chgrp -R 100 /v && chmod -R g+rwX /v"
-    volumes:
-      - "/volume3/docker/dsh-web:/v"
-
   dsh-web:
     image: "ghcr.io/soulwhisper/dsh-web:0.2.1-rc.2"
     container_name: "dsh-web"
     restart: "unless-stopped"
-    depends_on:
-      init:
-        condition: service_completed_successfully
-    # uid 1000 (node) + supplementary gid 100 (users) — matches the bind
-    # mounts' group; enough for the seeded writes
     group_add:
-      - "100"
+      - "100" # synology user
     ports:
       - "9400:3080"
     volumes:
