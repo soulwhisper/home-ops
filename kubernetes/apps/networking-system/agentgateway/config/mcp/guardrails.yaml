@@ -5,19 +5,24 @@ kind: AgentgatewayPolicy
 metadata:
   name: mcp-guardrails
 spec:
+  # Attached to the search and agent backends ONLY (2026-10-20 decision):
+  # - search is the untrusted-content tier (arbitrary web/RSS/git content)
+  #   feeding an unguarded lane (open-webui uncensored);
+  # - agent's consumers are EXTERNAL operator agents — they do not ride the
+  #   cluster's guarded LLM lanes, and forgejo ticket bodies carry
+  #   alert/log-derived (hence untrusted) strings, so the sidecar is their
+  #   only cluster-side injection screen.
+  # cluster/home consumers (hermes) ride the guarded `agent` lane — cluster
+  # adds CEL allowlists and token/SA boundaries, home is RW-by-design behind
+  # the HA token — so the sidecar there was duplication, and FailClosed on
+  # those tiers made one sidecar an outage for all of MCP.
   targetRefs:
     - group: agentgateway.dev
       kind: AgentgatewayBackend
-      name: mcp-backend-ro
+      name: mcp-backend-search
     - group: agentgateway.dev
       kind: AgentgatewayBackend
-      name: mcp-backend-rw
-    - group: agentgateway.dev
-      kind: AgentgatewayBackend
-      name: mcp-backend-ext
-    - group: agentgateway.dev
-      kind: AgentgatewayBackend
-      name: mcp-backend-ops
+      name: mcp-backend-agent
   backend:
     mcp:
       guardrails:

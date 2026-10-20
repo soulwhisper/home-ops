@@ -1,33 +1,36 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
+# Grouping rule: a new group is created ONLY for a new consumer or a new
+# permission class; a new server joins the group whose consumer+permission
+# match. Group <-> agentgateway route <-> API key are bound 1:1:1
+# (see agentgateway config/mcp/).
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPGroup
 metadata:
-  name: internal-ro
+  name: search
 spec:
-  description: "In-cluster, read-only. No egress; read-only Kubernetes SA and scoped Grafana/VictoriaLogs tokens. For monitoring agents."
+  description: "Search tier. Web/docs/news/codebase retrieval: firecrawl, context7, trendradar, github (read-only PAT; the token is the boundary). Issued to open-webui only."
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPGroup
 metadata:
-  name: internal-rw
+  name: cluster
 spec:
-  description: "In-cluster, read-write. No egress; write-scoped credentials (GitHub PAT, Home Assistant token). Side-effecting tools on a separate endpoint."
+  description: "In-cluster, read-only. No egress; read-only Kubernetes/Flux SAs and scoped Grafana/Victoria* tokens. For the ops agent (hermes)."
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPGroup
 metadata:
-  name: external
+  name: home
 spec:
-  description: "External egress. Full outbound network, no upstream credentials. For crawlers (Firecrawl/Context); isolated for rate limiting and audit."
-
+  description: "In-cluster, read-write. No egress; Home Assistant control + conversational memory (hindsight homelab bank). Side-effecting tools on a separate endpoint. For hermes."
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPGroup
 metadata:
-  name: internal-ops
+  name: agent
 spec:
-  description: "Ops isolation tier. Incident and RCA memory bank; separate from chat-tier consumers to prevent memory leakage into conversational context."
+  description: "Operator-agent tier. Forgejo ticket RW (pat_tickets; the Forgejo-side token scope is the boundary) + incident/RCA memory (hindsight ops bank). Separate credential keeps chat-tier consumers out."

@@ -6,7 +6,7 @@ metadata:
   name: &name mcp-home-assistant
 spec:
   groupRef:
-    name: internal-rw
+    name: home
   image: ghcr.io/homeassistant-ai/ha-mcp:8.7.0
   podTemplateSpec:
     spec:

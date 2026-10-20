@@ -8,7 +8,7 @@ metadata:
   name: &name mcp-forgejo
 spec:
   groupRef:
-    name: internal-rw
+    name: agent
   # No toolConfigRef: the pat_tickets token is permission-scoped at Forgejo,
   # so a tool allowlist is redundant — and toolhive v0.51.4's filter
   # middleware re-encodes tools/list through a lossy struct that strips the

@@ -6,7 +6,10 @@ metadata:
   name: &name mcp-victoria-metrics
 spec:
   groupRef:
-    name: internal-ro
+    name: cluster
+  # Gateway tool allowlist: networking-system/agentgateway/config/mcp/filters.yaml
+  # (cluster policy). Tracked against mcp-victoriametrics v1.20.2 (16 tools
+  # enumerated 2026-10-20) — re-verify the allowlist on every version bump.
   # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victoriametrics
   image: ghcr.io/victoriametrics/mcp-victoriametrics:v1.20.2
   env:
@@ -18,6 +21,9 @@ spec:
       value: "http"
     - name: MCP_LISTEN_ADDR
       value: ":8081"
+    # same as vl/vt: docs are searchable upstream, drop the tool
+    - name: MCP_DISABLED_TOOLS
+      value: "documentation"
     # INFO logs dump full tools/resources results; resources/list is ~7.7MiB
     # and exceeds vlagent's hard 2MiB line limit. Keep warnings/errors.
     - name: MCP_LOG_LEVEL

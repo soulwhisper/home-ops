@@ -6,7 +6,7 @@
 # Secrets (set once in the tickets repo's Actions settings):
 #   TICKETS_TOKEN — forgejo `pat_tickets` (API read + git push). Forgejo
 #                   rejects secret names starting with FORGEJO_/GITEA_.
-#   LLM_API_KEY   — llm-api `agentgateway_api_auth` (agent lane consumer key)
+#   LLM_API_KEY   — `agentgateway.llm_agent` (agent lane consumer key)
 name: lessons
 
 on:

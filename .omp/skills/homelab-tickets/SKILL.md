@@ -81,7 +81,7 @@ Duplicates: comment `duplicate of #<survivor>` and close the loser
 
 Ask incident memory whether this was seen before (ops bank, isolated from
 chat memory). Prefer the `hindsight-ops` MCP `reflect`/`recall` tools via
-`https://api.noirprime.com/mcp/ops` when available; otherwise REST:
+`https://api.noirprime.com/mcp/agent` when available; otherwise REST:
 
 ```bash
 kubectl -n selfhosted-apps port-forward svc/hindsight 18888:8888 &

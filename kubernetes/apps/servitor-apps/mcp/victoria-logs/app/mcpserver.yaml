@@ -6,7 +6,7 @@ metadata:
   name: &name mcp-victoria-logs
 spec:
   groupRef:
-    name: internal-ro
+    name: cluster
   # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victorialogs
   image: ghcr.io/victoriametrics/mcp-victorialogs:v1.9.0
   env:

@@ -1,16 +1,67 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+# Consumer API-key auth, per lane (sectionName picks the rule of the unified
+# /v1 route; media route is whole-route). One credential per lane — a chat
+# key cannot call the automation lane and vice versa. Cross-lane needs are
+# served by enrolling the same key in another lane's secret (see
+# externalsecret.yaml), never by sharing a policy.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
-  name: &name llm-api-auth
+  name: llm-uncensored-auth
 spec:
-  # Consumer API-key auth: strict on the unified /v1 lane (all rules, incl.
-  # uncensored) and the media route.
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: agentgateway-llm-route
+      sectionName: uncensored
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      secretRef:
+        name: llm-uncensored-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: llm-agent-auth
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-llm-route
+      sectionName: agent
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      secretRef:
+        name: llm-agent-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: llm-omni-auth
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-llm-route
+      sectionName: omni
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      secretRef:
+        name: llm-omni-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: llm-media-auth
+spec:
+  targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: agentgateway-media-route
@@ -18,7 +69,7 @@ spec:
     apiKeyAuthentication:
       mode: Strict
       secretRef:
-        name: *name
+        name: llm-media-auth
 
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json

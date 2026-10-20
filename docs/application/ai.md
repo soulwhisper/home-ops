@@ -1,5 +1,5 @@
 # AI Infrastructure Summary
-Last updated: 2026-10-05
+Last updated: 2026-10-20
 
 Source: Flux manifests in `kubernetes/apps/`.
 
@@ -23,10 +23,10 @@ flowchart TB
     end
 
     subgraph MCP["MCP Gateway (ToolHive)"]
-        VMCP-RO["internal-ro<br/>(7 servers: monitoring/k8s)"]
-        VMCP-RW["internal-rw<br/>(3 servers: home/smart)"]
-        VMCP-EXT["external<br/>(3 servers: web/search)"]
-        VMCP-OPS["internal-ops<br/>(1 server: incident memory)"]
+        VMCP-SEARCH["search<br/>(4 servers: web/news/code)"]
+        VMCP-CLUSTER["cluster<br/>(6 servers: monitoring/k8s)"]
+        VMCP-HOME["home<br/>(2 servers: smart home/memory)"]
+        VMCP-AGENT["agent<br/>(2 servers: forgejo + incident memory)"]
     end
 
     subgraph Obs["Observability"]
@@ -36,10 +36,10 @@ flowchart TB
     Clients --> AG-LLM
     Clients --> AG-MCP
     AG-LLM --> Studio
-    AG-MCP --> VMCP-RO
-    AG-MCP --> VMCP-RW
-    AG-MCP --> VMCP-EXT
-    AG-MCP --> VMCP-OPS
+    AG-MCP --> VMCP-SEARCH
+    AG-MCP --> VMCP-CLUSTER
+    AG-MCP --> VMCP-HOME
+    AG-MCP --> VMCP-AGENT
     Clients --> Obs
 ```
 
@@ -70,8 +70,17 @@ single uncensored brain. `omni` is reachable exclusively
 guarded. All backends
 speak the OpenAI-compatible API on `studio.homelab.internal:8000` and
 inject the oMLX server key via `policies.auth.secretRef`
-(`studio-api-auth`). Consumers authenticate with ExternalSecret-managed
-API keys; there is no cloud fallback — the studio is a deliberate SPOF.
+(`studio-api-auth`). Consumers authenticate with **per-lane** API keys
+(ExternalSecret-managed from the 1Password `agentgateway` item; format
+`llm-<lane>-<hex16>`): `llm_uncensored` (human chat), `llm_agent` (hermes,
+robusta), `llm_omni` (extractors). Each lane rule carries its own
+apiKeyAuthentication policy (sectionName-scoped), so a chat key cannot call
+the automation lane. Cross-lane needs are served by enrolling the same key
+in another lane's secret, never by sharing a policy: `llm-omni-auth` also
+enrolls the agent key (hermes aux) and the uncensored key (open-webui title
+generation); `llm-media-auth` enrolls the omni key (karakeep/hindsight
+embeddings+rerank). Revocation = remove the entry from every lane secret.
+There is no cloud fallback — the studio is a deliberate SPOF.
 
 
 MCP has no open route (see MCP Backend).
@@ -88,7 +97,7 @@ The gateway API surface is exposed to the intranet via `kgateway-internal` (10.1
 - `/v1/chat/completions` — LLM lanes (strict API key; promptGuard on all but `uncensored`)
 - `/v1/models` — gateway-synthesized lane discovery (`studio-models` directResponse; keep in sync with Studio Model Registry)
 - `/v1/embeddings`, `/v1/rerank`, `/v1/audio/*` — media lanes via LLM-pipeline backends (strict API key)
-- `/mcp/ro`, `/mcp/rw`, `/mcp/ext`, `/mcp/ops` — tiered MCP routing (strict API key, mcp-guardrails ExtMCP on every tier, FailClosed)
+- `/mcp/search`, `/mcp/cluster`, `/mcp/home`, `/mcp/agent` — tiered MCP routing (per-tier API key; mcp-guardrails ExtMCP on the search + agent tiers, FailClosed)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)
 
 TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirprime.com`); external-dns auto-creates the AdGuardHome record. Machine clients authenticate with agentgateway API keys — no SSO extAuth on API paths. Reachable from trusted VLANs (10/100/200); IoT VLAN 210 is ACL-blocked from RFC1918.
@@ -102,10 +111,10 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | hindsight            | `omni`            | MiniCPM-o 4.5      | Extraction-dominant (single-model constraint); embeddings + reranker via gateway media routes |
 | firecrawl            | `omni`            | MiniCPM-o 4.5      | Batch page extraction/summarization                          |
 | karakeep             | `omni`            | MiniCPM-o 4.5      | Text + image tagging (unified); embeddings via `/v1/embeddings` (model `embedding`, 1024d) |
-| trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); egress-isolated MCP group member |
+| trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); queryable via the `search` MCP tier |
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | SillyTavern          | `uncensored`      | Qwen3.8-27B        | Creative/RP; UI-configured, no repo-level config |
-| open-webui           | `/v1`             | `uncensored` (open) / `agent`·`omni` (guarded) | Human chat portal; native tools via the guarded tiered `/mcp/*` (bearer key) |
+| open-webui           | `/v1`             | `uncensored` (open) / `omni` (guarded, title gen) | Human chat portal; MCP tools via the search tier only (`/mcp/search`, bearer key) |
 
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
 `/v1` lane; their prompts carry scraped web content, so a low rate of
@@ -114,25 +123,57 @@ the TODO table.
 
 ### MCP Backend — tiered, guarded, no open lane
 
-One gateway endpoint per ToolHive group (each rule rewrites its tier prefix
-to the canonical `/mcp` upstream):
+One gateway route per ToolHive group, each with its **own credential** —
+group ↔ route ↔ key are bound 1:1:1 (every rule rewrites its tier prefix to
+the canonical `/mcp` upstream):
 
-- `/mcp/ro` → `vmcp-internal-ro` — read-only monitoring/k8s tools
-- `/mcp/rw` → `vmcp-internal-rw` — read-write home/smart tools
-- `/mcp/ext` → `vmcp-external` — external web/search tools
-- `/mcp/ops` → `vmcp-internal-ops` — ops incident memory (hindsight ops bank)
+| Route          | vmcp          | Servers (aggregated)                                          | Key (1Password `agentgateway`) | Issued to                    |
+| -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
+| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | open-webui only              |
+| `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes                       |
+| `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-homelab bank                        | `mcp_home`                     | hermes                       |
+| `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | operator agents only         |
 
-All four backends carry the mcp-guardrails ExtMCP sidecar (agentgateway
-`mcp.guardrails`): `tools/call` is scanned request+response, `tools/list` /
-`prompts/get` / `resources/read` response-only; `failureMode: FailClosed`
-(the sidecar being down disables tool traffic cluster-wide rather than
-passing it unguarded). Response scanning uses four balanced windows (11KiB
+A key minted for one group is invalid on every other route — this is what
+scopes open-webui to search and keeps chat-tier consumers out of incident
+memory and the tickets repo. `mcp_agent` is never distributed to in-cluster
+chat apps. **Grouping rule:** create a group only for a new consumer or a
+new permission class; a new server joins the matching existing group.
+
+**Tool filtering** lives at the gateway (`backend.mcp.authorization` CEL,
+Allow = default-deny; `config/mcp/filters.yaml`), not toolhive — toolhive's
+filter middleware is broken for vmcp Modern backends (SEP-2322 envelope
+loss, 2026-10-10). Only servers without an upstream token boundary are
+CEL-filtered (firecrawl, trendradar, grafana, victoria-metrics); github,
+forgejo, kubernetes, fluxcd are bounded by their upstream tokens/SAs and
+full-allowed by prefix. Allowlists are version-tracked: each filtered
+server's `mcpserver.yaml` names the image tag the tool names were
+enumerated from (live, 2026-10-20) — re-verify on every renovate bump.
+This requires the vmcp **optimizer to stay off**: it masks real tool names
+behind `find_tool`/`call_tool` meta-tools that gateway authorization cannot
+see through (removed 2026-10; also dropped the vmcp embeddings dependency).
+
+The **search and agent backends only** carry the mcp-guardrails ExtMCP sidecar
+(agentgateway `mcp.guardrails`): `tools/call` is scanned request+response,
+`tools/list` / `prompts/get` / `resources/read` response-only;
+`failureMode: FailClosed` (the sidecar being down disables those two tiers
+rather than passing them unguarded). Scope decision (2026-10-20): search is
+the tier where untrusted web content reaches an unguarded lane (open-webui
+`uncensored`); the agent tier's consumers are external operator agents with
+no cluster-side promptGuard in front of them, and forgejo ticket bodies
+carry alert/log-derived (untrusted) strings. cluster/home consumers (hermes)
+ride the guarded `agent` LLM lane — cluster adds CEL allowlists and
+token/SA boundaries, home is RW-by-design behind the HA token — so the
+sidecar there was duplication, and its FailClosed posture made one sidecar
+an outage for all of MCP.
+Response scanning uses four balanced windows (11KiB
 by default) with a 3.5s scanner deadline and a 15s Service-scoped ExtMCP
 callout deadline; readiness completes a full-size warmup before traffic.
-There is deliberately **no** unguarded MCP route —
-open-webui and hermes consume the same guarded endpoints; only the LLM
-content lanes differ. Auth: strict API key (`mcp-api-auth`). Direct vmcp
-access is cilium-restricted to the gateway federation and vmagent metrics.
+There is deliberately **no** unguarded MCP route. Direct vmcp
+access is cilium-restricted to the gateway federation and vmagent metrics
+(exception: `kubectl port-forward` reaches the anonymous vmcp endpoint by
+design of the kubelet path — acceptable, it is RBAC-gated; harden via vmcp
+`incomingAuth` if that ever changes).
 ---
 
 ## LLM Inference — Local
@@ -156,12 +197,12 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 - **Runtime**: user namespaces (`hostUsers: false`) + egress CNP (ADR-03; Kata removed)
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
-- **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP, Agent Gateway LLM
+- **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP (`cluster`+`home` tiers, declarative `mcp_servers` in the configmap), Agent Gateway LLM
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, world-except-private :443 (Feishu WebSocket). No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
 - **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 + webhook ingest :8644 via kgateway-internal (shared rule), webhook ingest :8644 also from frigate + LAN, profile API :8642 same-namespace only; `fromEntities: host` keeps kubelet probes working
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
-  - `ops` — the batching brain: cron/Feishu/automation workload lives here (read-only-first posture, ToolHive tiers as today); Feishu home channel for cron results
+  - `ops` — the batching brain: cron/Feishu/automation workload lives here (cluster read-only + home read-write MCP tiers); Feishu home channel for cron results
   - `default` — fallback/scratch; the retired `chat` profile was removed 2026-10 when open-webui became the human interface (it talks to the gateway directly)
   Model/provider config (`model.provider: custom` → agent gateway, `model.default: agent`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression`/`title_generation` → `omni`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. Requires 1Password `hermes-agent` field: `api_server_key_root` (>=16 chars)
 
@@ -170,15 +211,15 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 ### Open WebUI
 
 - Chat frontend (restored; replaces onyx), app-template, image `ghcr.io/open-webui/open-webui`. Lives in **servitor-apps** (with hermes/toolhive, not selfhosted-apps). Storage is externalized: shared CNPG `postgres` (app data + `VECTOR_DB=pgvector`; role/db via `postgres-init`, plain `vector` ext self-created by migrations — vchord N/A: open-webui hardcodes pgvector DDL), app `Dragonfly` (`REDIS_URL`), app ceph bucket `open-webui` (`STORAGE_PROVIDER=s3`, `STORAGE_LOCAL_CACHE=False`) — data dir is emptyDir cache, no PVC
-- **LLM provider**: single agentgateway entry (`OPENAI_API_BASE_URLS` = `agentgateway-proxy:80/v1`, one key from `llm-api.agentgateway_api_auth`) on the unified OpenAI surface. Lane choice is a model name: `uncensored` (unguarded main brain — the portal default), `agent`/`omni` (guarded; title generation → `omni`, select per-task in Admin Settings). The gateway is the only AI egress.
-- **MCP**: native MCP tool servers via `TOOL_SERVER_CONNECTIONS` = the three tiered, sidecar-guarded gateway endpoints (`agentgateway-proxy:80/mcp/ro|rw|ext`) with `auth_type: "bearer"` and the key expanded from `$GATEWAY_API_KEY` (kubelet dependent-env expansion; bearer auth in `build_tool_server_headers` is native upstream). Same guarded endpoints hermes uses — MCP has no open lane.
+- **LLM provider**: single agentgateway entry (`OPENAI_API_BASE_URLS` = `agentgateway-proxy:80/v1`, key = `llm_uncensored` from the `agentgateway` item) on the unified OpenAI surface. Lane choice is a model name: `uncensored` (unguarded main brain — the portal default), `omni` (guarded; title generation → `omni` via cross-lane enrollment, select per-task in Admin Settings). The gateway is the only AI egress.
+- **MCP**: native MCP tool servers via `TOOL_SERVER_CONNECTIONS` = the search tier only (`agentgateway-proxy:80/mcp/search`) with `auth_type: "bearer"` and the key expanded from `$GATEWAY_API_KEY` (= `mcp_search`; kubelet dependent-env expansion; bearer auth in `build_tool_server_headers` is native upstream). MCP has no open lane.
 - Ingress: `chat.noirprime.com` via kgateway-internal; **auth is authentik forward-auth at the gateway** (components/authentik, provider `open-webui-proxy-provider`, homelab-admin group); open-webui's own login disabled (`WEBUI_AUTH=False`)
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (sole AI egress: LLM + MCP), open-webui-terminals:3000, open-webui-oikb:8080, postgres-rw:5432, open-webui-dragonfly:6379, ceph RGW:80, kube-dns, world-except-private (RAG web fetching)
 - **Sandbox suite**: `open-webui-terminals` (orchestrator, `kubernetes` backend, Role-limited to pods/services/pvcs in servitor-apps, state on shared CNPG via `TERMINALS_DATABASE_URL`) spawns per-user `open-terminal:slim` sandboxes — cluster access MCP-only (vMCP:4483), internet minus private ranges; `open-webui-oikb` (0.4.0 daemon) syncs Knowledge Bases from external sources — parked at `replicas: 0` with `sources: []` until the first KB source is defined (stateless by design: diff state lives server-side, sync history is disposable)
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
 
-Non-chat vector modalities run on the same oMLX process as the chat lanes, exposed on `agentgateway-media-route` through the **LLM pipeline** (no more static passthrough): each lane is an `AgentgatewayBackend` with a `custom` provider declaring exactly one API format, guarded by the same `llm-api-auth` API key as the LLM lane:
+Non-chat vector modalities run on the same oMLX process as the chat lanes, exposed on `agentgateway-media-route` through the **LLM pipeline** (no more static passthrough): each lane is an `AgentgatewayBackend` with a `custom` provider declaring exactly one API format, guarded by the `llm-media-auth` API key (omni key enrolled):
 
 | Path             | Backend             | Client model | Upstream (override)      | Model                                   | Timeout |
 | ---------------- | ------------------- | ------------ | ------------------------ | --------------------------------------- | ------- |
@@ -188,7 +229,7 @@ Non-chat vector modalities run on the same oMLX process as the chat lanes, expos
 
 The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download sits parked (see Studio Model Registry). `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet. Passthrough applies no LLM parsing — the audio lane has no model override, so clients send the folder id `voxcpm2` (unlike embeddings/rerank aliases).
 
-Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backends + route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with the regular **gateway consumer key** — each media backend injects the oMLX server key upstream via `policies.auth.secretRef: studio-api-auth`, identical to the chat lanes (single credential model: the studio key never leaves the backends). **Consumers**: embeddings — karakeep, hindsight, toolhive vmcp optimizer; rerank — **hindsight only**; audio — none yet (TTS lane ready). The direct-to-studio blackbox probe reads the oMLX key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
+Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backends + route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with the omni lane key (`llm_omni`, enrolled in `llm-media-auth`) — each media backend injects the oMLX server key upstream via `policies.auth.secretRef: studio-api-auth`, identical to the chat lanes (single credential model: the studio key never leaves the backends). **Consumers**: embeddings — karakeep, hindsight; rerank — **hindsight only**; audio — none yet (TTS lane ready). The direct-to-studio blackbox probe reads the oMLX key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
 
 ---
 
@@ -197,33 +238,51 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 ### ToolHive
 
 - **Operator**: namespace-scoped RBAC
-- **Optimizer embeddings**: served on the MacStudio via the agent gateway (`/v1/embeddings`)
-- **4 Virtual MCP Servers** with:
-  - Hybrid semantic search (0.6 semantic / 0.4 keyword ratio)
+- **4 Virtual MCP Servers** (search / cluster / home / agent) with:
   - Circuit breaker (3 failures → 30s timeout)
   - OTEL telemetry (5% sampling)
+  - **No optimizer** (removed 2026-10): it hid real tool names behind
+    `find_tool`/`call_tool` meta-tools, blocking gateway-level tool
+    filtering; its removal also dropped the vmcp embeddings dependency
+  - Daily restarter CronJob caps the runner's ~9Mi/h streamable-http leak
+    across all four groups (homelab-tickets#59)
 - **Ingress restricted**: only agentgateway-proxy (MCP protocol, tiered `/mcp/*`) and vmagent (metrics scrape) can connect; chat frontends reach tools through the gateway, never directly
 
-### MCP Servers (13 total)
+### MCP Servers (14 total)
 
-#### internal-ro (read-only, no egress)
+#### search (web/docs/news/codebase retrieval — open-webui)
+
+| Server    | Transport             | Notes                    |
+| --------- | --------------------- | ------------------------ |
+| firecrawl | Streamable HTTP :8080 | Local Firecrawl instance; gateway-filtered to retrieval tools |
+| context7  | stdio :3000           | Context7 API (2 read tools) |
+| trendradar | Streamable HTTP :8080 (proxy→:3333) | TrendRadar news DB; gateway-filtered to query/analysis (no trigger/notify) |
+| github    | HTTP :8082            | Read-only PAT + lockdown, toolsets repos/issues/pull_requests; the token is the boundary (no CEL) |
+
+#### cluster (read-only, no egress — hermes)
 
 | Server        | Transport             | Connects To                   |
 | ------------- | --------------------- | ----------------------------- |
-| victoria-logs | HTTP :8081            | VictoriaLogs                  |
 | kubernetes    | HTTP :8080            | kube-apiserver (read-only SA) |
-| grafana       | Streamable HTTP :8000 | Grafana                       |
 | fluxcd        | HTTP :9090            | Flux (read-only SA)           |
-| trendradar    | Streamable HTTP :8080 (proxy→:3333) | TrendRadar news DB |
-| victoria-metrics | Streamable HTTP :8081 | VictoriaMetrics         |
+| grafana       | Streamable HTTP :8000 | Grafana (read-only SA + `--disable-write`; gateway-filtered: no `grafana_api_request`/manage/provisioning) |
+| victoria-logs | Streamable HTTP :8081 | VictoriaLogs                  |
+| victoria-metrics | Streamable HTTP :8081 | VictoriaMetrics; gateway-filtered to the query surface |
+| victoria-traces | Streamable HTTP :8081 | VictoriaTraces                |
 
-#### internal-rw (read-write, no egress)
+#### home (read-write, no egress — hermes)
 
 | Server         | Transport            | Connects To            |
 | -------------- | -------------------- | ---------------------- |
 | home-assistant | HTTP (FastMCP) :8086 | Home Assistant         |
-| hindsight      | HTTP proxy :8080     | Hindsight MCP endpoint |
-| forgejo        | Streamable HTTP :8080 | Forgejo on nas:9003 via forgejo-mcp; forwarded repo-scoped `pat_tickets` — the Forgejo-side token scope is the security boundary (no tool allowlist; see below) |
+| hindsight-home | HTTP proxy :8080     | Hindsight `homelab` bank (single-bank MCPToolConfig; description overrides stay at toolhive) |
+
+#### agent (operator agents only)
+
+| Server       | Transport             | Notes                                       |
+| ------------ | --------------------- | ------------------------------------------- |
+| forgejo      | Streamable HTTP :8080 | Forgejo on nas:9003 via forgejo-mcp; forwarded repo-scoped `pat_tickets` — the Forgejo-side token scope is the security boundary (no CEL) |
+| hindsight-ops | Streamable HTTP :8080 (proxy→:8888) | Hindsight `ops` bank; incident/RCA memory, no chat-tier consumers |
 
 Forgejo's `pat_tickets` retains repository-write scope for the manual lessons
 workflow, so the guard is the token's Forgejo-side permission scope itself.
@@ -231,23 +290,10 @@ A model-facing `MCPToolConfig` allowlist was tried and removed the same day
 (2026-10-10): toolhive v0.51.4's filter middleware re-encodes `tools/list`
 through a lossy struct that strips the SEP-2322 `resultType` envelope, which
 vmcp rejects for Modern-era backends — the forgejo backend circuit-broke out
-of `internal-rw` until the filter was dropped. Re-add an allowlist only after
-upstream preserves the envelope. No draftbox or broad user PAT was
-provisioned.
-
-#### external (full egress)
-
-| Server    | Transport             | Notes                    |
-| --------- | --------------------- | ------------------------ |
-| github    | HTTP :8082            | Read-only PAT, toolsets repos/issues/pull_requests |
-| firecrawl | Streamable HTTP :8080 | Local Firecrawl instance |
-| context7  | stdio :3000           | Context7 API             |
-
-#### internal-ops (isolated incident/RCA memory)
-
-| Server          | Transport             | Notes                                       |
-| --------------- | --------------------- | ------------------------------------------- |
-| hindsight-ops | Streamable HTTP :8080 (proxy→:8888) | Hindsight `ops` bank; isolated tier, no chat-tier consumers |
+of its group until the filter was dropped. Permission filtering now lives at
+the gateway where needed (see filters.yaml); toolhive `MCPToolConfig` is
+kept ONLY for the hindsight banks' description overrides. No draftbox or
+broad user PAT was provisioned.
 
 #### Obsidian facts workflow
 
@@ -274,7 +320,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 - AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`)
 - Delivery: Feishu custom group robot (`FEISHU_WEBHOOK_URL` from 1Password `feishu.newsbot_webhook`); HTML report at `news.noirprime.com` (SSO)
-- MCP server (:3333) registered as `trendradar` in internal-ro — hermes/agents can query stored news
+- MCP server (:3333) registered as `trendradar` in the `search` group — open-webui can query stored news (gateway-filtered to query/analysis tools)
 - Config fully in ConfigMap (`config.yaml` + `frequency_words.txt` + `ai_interests.txt`); output on 1Gi ceph-block PVC
 
 ## AI-Adjacent Services
@@ -344,9 +390,9 @@ only needed for direct-to-studio calls.
 
 **Auth**: oMLX enforces a server API key (1Password item `omlx`, field
 `api_key`). Every backend — chat and media alike — injects it upstream via
-`policies.auth.secretRef: studio-api-auth`; consumers always present the
-shared gateway key (`llm-api` item, `agentgateway_api_auth`). Single
-credential model: the studio key never leaves the backends.
+`policies.auth.secretRef: studio-api-auth`; consumers always present a
+per-lane gateway key (`agentgateway` item, `llm_<lane>` fields). The studio
+key never leaves the backends.
 
 Alignment table (keep in sync with the bootstrap downloads):
 
@@ -380,7 +426,7 @@ items:
 | ---- | ----- | ------------ |
 | open-webui MCP bearer key rollout | Implemented (`auth_type: "bearer"` + `$GATEWAY_API_KEY` expansion); smoke-verify at rollout | Round-trip a native tool call in open-webui; on failure check kubelet dependent-env expansion ordering before anything else |
 | promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via langfuse/logs; if painful, expose `omni-raw` (one unguarded rule) as the designed escape hatch |
-| hermes MCP server endpoints | Runtime/PVC state, not in GitOps seeds | Point hermes at `/mcp/ro|rw|ext` at rollout; add an MCP section to the seed ConfigMap once the hermes config schema is confirmed |
+| hermes MCP server endpoints | Done (2026-10-20): declarative `mcp_servers` in the seed ConfigMap — `cluster` + `home` tiers via the gateway, keys from the `agentgateway` item | Watch first tool calls; the agent group (`forgejo`/ops memory) can be added later by issuing hermes the `mcp_agent` key |
 | open-terminal sandbox pods → vmcp | Egress allowed, ingress whitelist gap (effectively denies — accidentally enforces the no-open-MCP rule) | Separate PR: add sandbox pods to vmcp-ingress, or drop the egress rule and fix the comment |
 | SillyTavern endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
 | mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred, on watch via langfuse decision spans (open-webui and hermes both emit OTEL) | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
@@ -397,7 +443,7 @@ items:
             ├─ omni         (guarded) ─► minicpm-o-4.5
 /v1/embeddings /v1/rerank /v1/audio/*  (media: alias ─► override ─► folder id; audio: direct)
 
-/mcp/ro /mcp/rw /mcp/ext /mcp/ops  (all tiers: mcp-guardrails ExtMCP, FailClosed) ── every MCP client
+/mcp/search /mcp/cluster /mcp/home /mcp/agent  (per-tier key; guardrails ExtMCP on search+agent, FailClosed) ── every MCP client
 ```
 
 All routing is internal via the agent gateway. No app has direct LLM or MCP server access — the gateway is the single choke point for auth, routing, guardrails, and observability.
