@@ -162,9 +162,10 @@ the tier where untrusted web content reaches an unguarded lane (open-webui
 `uncensored`); the agent tier's consumers are external operator agents with
 no cluster-side promptGuard in front of them, and forgejo ticket bodies
 carry alert/log-derived (untrusted) strings. cluster/home consumers (hermes)
-ride the guarded `agent` LLM lane behind CEL allowlists and token/SA
-boundaries — the sidecar there was duplication, and its FailClosed posture
-made one sidecar an outage for all of MCP.
+ride the guarded `agent` LLM lane — cluster adds CEL allowlists and
+token/SA boundaries, home is RW-by-design behind the HA token — so the
+sidecar there was duplication, and its FailClosed posture made one sidecar
+an outage for all of MCP.
 Response scanning uses four balanced windows (11KiB
 by default) with a 3.5s scanner deadline and a 15s Service-scoped ExtMCP
 callout deadline; readiness completes a full-size warmup before traffic.

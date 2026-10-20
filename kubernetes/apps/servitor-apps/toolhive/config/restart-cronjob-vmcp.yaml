@@ -71,26 +71,29 @@ spec:
                   cpu: 100m
                   memory: 128Mi
               # stagger per group: deleting all four tiers at once would be a
-              # brief total MCP outage. After each delete, wait for the old
-              # pod to disappear AND the replacement to roll out (bounded)
-              # before dropping the next tier — a fixed sleep, or rollout
-              # status while the old pod still Terminates, can overlap
-              # outages. Failures propagate to the Job exit status so
-              # backoffLimit retries actually fire.
+              # brief total MCP outage. Wait on the deleted pod BY NAME — a
+              # selector-based wait can latch onto the replacement pod and
+              # time out even when it is healthy; then wait (bounded) for the
+              # replacement to roll out before dropping the next tier. Fail
+              # fast: proceeding after a failed wait would take more groups
+              # offline while one is still down; backoffLimit retries the
+              # whole Job, which is idempotent.
               command:
                 - sh
                 - -c
                 - >-
-                  rc=0;
                   for g in search cluster home agent; do
-                    kubectl delete pod --namespace=servitor-apps
-                    --selector=toolhive-name=$g --wait=false || rc=1;
-                    kubectl wait --for=delete pod --namespace=servitor-apps
-                    --selector=toolhive-name=$g --timeout=120s || rc=1;
+                    pod=$(kubectl get pod --namespace=servitor-apps
+                    -l toolhive-name=$g
+                    -o jsonpath='{.items[0].metadata.name}');
+                    [ -n "$pod" ] || { echo "no runner pod for $g"; exit 1; }
+                    kubectl delete pod --namespace=servitor-apps "$pod"
+                    --wait=false || exit 1;
+                    kubectl wait --for=delete "pod/$pod"
+                    --namespace=servitor-apps --timeout=120s || exit 1;
                     kubectl --namespace=servitor-apps
-                    rollout status deployment/$g --timeout=180s || rc=1;
-                  done;
-                  exit $rc
+                    rollout status deployment/$g --timeout=180s || exit 1;
+                  done
               securityContext:
                 allowPrivilegeEscalation: false
           restartPolicy: Never

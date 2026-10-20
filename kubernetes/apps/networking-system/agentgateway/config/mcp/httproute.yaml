@@ -7,8 +7,8 @@
 # /mcp). MCP has no open lane: the search and agent tiers carry the
 # mcp-guardrails ExtMCP sidecar (FailClosed) — untrusted web content feeding
 # an unguarded LLM lane, and external operator agents without cluster-side
-# promptGuard; cluster/home rely on guarded lanes + CEL allowlists + token
-# boundaries.
+# promptGuard; cluster adds guarded lanes + CEL allowlists + token
+# boundaries; home is RW-by-design behind the guarded lane and the HA token.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
