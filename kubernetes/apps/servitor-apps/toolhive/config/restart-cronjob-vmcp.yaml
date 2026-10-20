@@ -22,10 +22,6 @@ rules:
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list", "watch", "delete"]
-  # rollout status watch between per-group deletes (bounded readiness wait)
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -72,10 +68,11 @@ spec:
                   memory: 128Mi
               # stagger per group: deleting all four tiers at once would be a
               # brief total MCP outage. Wait on the deleted pod BY NAME — a
-              # selector-based wait can latch onto the replacement pod and
-              # time out even when it is healthy; then wait (bounded) for the
-              # replacement to roll out before dropping the next tier. Fail
-              # fast: proceeding after a failed wait would take more groups
+              # selector-based wait can latch onto the replacement — then
+              # wait for a DIFFERENT-named pod to exist and become Ready
+              # (Deployment status is asynchronous and can report the old
+              # ReplicaSet's counts in a narrow window). Fail fast:
+              # proceeding after a failed wait would take more groups
               # offline while one is still down; backoffLimit retries the
               # whole Job, which is idempotent.
               command:
@@ -91,8 +88,18 @@ spec:
                     --wait=false || exit 1;
                     kubectl wait --for=delete "pod/$pod"
                     --namespace=servitor-apps --timeout=120s || exit 1;
-                    kubectl --namespace=servitor-apps
-                    rollout status deployment/$g --timeout=180s || exit 1;
+                    newpod="";
+                    for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+                      newpod=$(kubectl get pod --namespace=servitor-apps
+                      -l toolhive-name=$g
+                      -o jsonpath='{.items[0].metadata.name}');
+                      [ -n "$newpod" ] && [ "$newpod" != "$pod" ] && break;
+                      sleep 5;
+                    done;
+                    [ -n "$newpod" ] && [ "$newpod" != "$pod" ] || {
+                    echo "no replacement pod for $g"; exit 1; }
+                    kubectl wait --for=condition=ready "pod/$newpod"
+                    --namespace=servitor-apps --timeout=180s || exit 1;
                   done
               securityContext:
                 allowPrivilegeEscalation: false
