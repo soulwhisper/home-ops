@@ -30,8 +30,8 @@ spec:
             image:
               repository: ghcr.io/soulwhisper/dsh-tavern
               tag: "3.0"
-            env:
-              DSH_AUTH_TRUST_PROXY: "1"
+            # no env overrides: auth is the authentik forward-auth portal
+            # (components/authentik); the image bakes no in-app auth layer
             resources:
               requests:
                 cpu: 100m
