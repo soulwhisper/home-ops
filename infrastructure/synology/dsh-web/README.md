@@ -2,6 +2,22 @@
 
 DeepSeek Harness agent workbench, deployed via doco-cd.
 
+## One-time NAS setup (Synology ACL)
+
+Bind mounts under `/volume3/docker` carry a Synology ACL that grants
+`everyone` **read-only** regardless of the unix mode bits (777 included) —
+the container's writes fail with EACCES and the pod restart-loops
+(`cp: ... Permission denied`). Grant write to the `users` group once
+(matches `group_add: 100` in the compose):
+
+```sh
+/usr/syno/bin/synoacltool -add /volume3/docker/dsh-web/data "group:users:allow:rwxpdDaARWc--:fd--"
+/usr/syno/bin/synoacltool -add /volume3/docker/dsh-web/workspace "group:users:allow:rwxpdDaARWc--:fd--"
+```
+
+(skip once the dirs already carry the entry — check with
+`synoacltool -get <dir>`)
+
 - **Access**: `http://nas.homelab.internal:9400` (plain HTTP on the trusted
   LAN — same accepted pattern as forgejo on :9003).
 - **First login (token in transit caveat)**: the startup-token URL is a
