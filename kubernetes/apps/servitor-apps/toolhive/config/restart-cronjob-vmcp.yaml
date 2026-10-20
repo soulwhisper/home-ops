@@ -68,14 +68,20 @@ spec:
                   memory: 128Mi
               # stagger per group: deleting all four tiers at once would be a
               # brief total MCP outage; ~45s between deletes lets each runner
-              # come back Ready before the next tier drops
+              # come back Ready before the next tier drops. Failures are
+              # preserved into the exit status so backoffLimit retries work
+              # (a bare loop would let the final sleep mask a failed delete).
               command:
                 - sh
                 - -c
                 - >-
+                  rc=0;
                   for g in search cluster home agent; do
                     kubectl delete pod --namespace=servitor-apps
-                    --selector=toolhive-name=$g --wait=false;
+                    --selector=toolhive-name=$g --wait=false || rc=1;
                     sleep 45;
-                  done
+                  done;
+                  exit $rc
+              securityContext:
+                allowPrivilegeEscalation: false
           restartPolicy: Never

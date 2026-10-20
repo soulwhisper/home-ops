@@ -97,7 +97,7 @@ The gateway API surface is exposed to the intranet via `kgateway-internal` (10.1
 - `/v1/chat/completions` — LLM lanes (strict API key; promptGuard on all but `uncensored`)
 - `/v1/models` — gateway-synthesized lane discovery (`studio-models` directResponse; keep in sync with Studio Model Registry)
 - `/v1/embeddings`, `/v1/rerank`, `/v1/audio/*` — media lanes via LLM-pipeline backends (strict API key)
-- `/mcp/search`, `/mcp/cluster`, `/mcp/home`, `/mcp/agent` — tiered MCP routing (per-tier API key, mcp-guardrails ExtMCP on every tier, FailClosed)
+- `/mcp/search`, `/mcp/cluster`, `/mcp/home`, `/mcp/agent` — tiered MCP routing (per-tier API key; mcp-guardrails ExtMCP on the search + agent tiers, FailClosed)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)
 
 TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirprime.com`); external-dns auto-creates the AdGuardHome record. Machine clients authenticate with agentgateway API keys — no SSO extAuth on API paths. Reachable from trusted VLANs (10/100/200); IoT VLAN 210 is ACL-blocked from RFC1918.
@@ -153,15 +153,18 @@ This requires the vmcp **optimizer to stay off**: it masks real tool names
 behind `find_tool`/`call_tool` meta-tools that gateway authorization cannot
 see through (removed 2026-10; also dropped the vmcp embeddings dependency).
 
-The **search backend only** carries the mcp-guardrails ExtMCP sidecar
+The **search and agent backends only** carry the mcp-guardrails ExtMCP sidecar
 (agentgateway `mcp.guardrails`): `tools/call` is scanned request+response,
 `tools/list` / `prompts/get` / `resources/read` response-only;
-`failureMode: FailClosed` (the sidecar being down disables the search tier
-rather than passing it unguarded). Scope decision (2026-10-20): search is the
-only tier where untrusted web content reaches an unguarded lane (open-webui
-`uncensored`); cluster/home/agent consumers ride guarded LLM lanes behind
-CEL allowlists and token/SA boundaries, where the sidecar was duplication —
-and its FailClosed posture made one sidecar an outage for all of MCP.
+`failureMode: FailClosed` (the sidecar being down disables those two tiers
+rather than passing them unguarded). Scope decision (2026-10-20): search is
+the tier where untrusted web content reaches an unguarded lane (open-webui
+`uncensored`); the agent tier's consumers are external operator agents with
+no cluster-side promptGuard in front of them, and forgejo ticket bodies
+carry alert/log-derived (untrusted) strings. cluster/home consumers (hermes)
+ride the guarded `agent` LLM lane behind CEL allowlists and token/SA
+boundaries — the sidecar there was duplication, and its FailClosed posture
+made one sidecar an outage for all of MCP.
 Response scanning uses four balanced windows (11KiB
 by default) with a 3.5s scanner deadline and a 15s Service-scoped ExtMCP
 callout deadline; readiness completes a full-size warmup before traffic.
@@ -439,7 +442,7 @@ items:
             ├─ omni         (guarded) ─► minicpm-o-4.5
 /v1/embeddings /v1/rerank /v1/audio/*  (media: alias ─► override ─► folder id; audio: direct)
 
-/mcp/search /mcp/cluster /mcp/home /mcp/agent  (all tiers: per-tier key + mcp-guardrails ExtMCP, FailClosed) ── every MCP client
+/mcp/search /mcp/cluster /mcp/home /mcp/agent  (per-tier key; guardrails ExtMCP on search+agent, FailClosed) ── every MCP client
 ```
 
 All routing is internal via the agent gateway. No app has direct LLM or MCP server access — the gateway is the single choke point for auth, routing, guardrails, and observability.
