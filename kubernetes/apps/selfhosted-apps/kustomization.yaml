@@ -15,7 +15,6 @@ resources:
   - ./karakeep/ks.yaml
   - ./netbox/ks.yaml
   - ./searxng/ks.yaml
-  - ./sillytavern/ks.yaml
   - ./stirling-pdf/ks.yaml
   - ./trendradar/ks.yaml
 patches:

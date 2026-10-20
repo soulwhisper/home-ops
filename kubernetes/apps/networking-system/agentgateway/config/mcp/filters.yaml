@@ -40,7 +40,7 @@ spec:
             # firecrawl: retrieval only — scrape/search/map/crawl (+status).
             # Excluded: monitor_*, agent*, interact*, feedback, find_tools,
             # credit_usage, research_*, developer/gov_search (state-changing
-            # or off-role for open-webui web fetching).
+            # or off-role for search-tier web fetching).
             - |
               mcp.tool.name.matches('^mcp-firecrawl_firecrawl_(scrape|search|map|crawl|check_crawl_status)$')
               || mcp.tool.name.startsWith('mcp-context_')

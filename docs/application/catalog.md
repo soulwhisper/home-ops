@@ -108,7 +108,7 @@
 | MoviePilot    | Media automation (CNPG + Dragonfly + iGPU) |
 | Media-NFS     | Shared media storage                       |
 
-## selfhosted-apps — Self-Hosted Services (11)
+## selfhosted-apps — Self-Hosted Services (10)
 
 | App           | Purpose                                                        |
 | ------------- | -------------------------------------------------------------- |
@@ -120,7 +120,6 @@
 | Karakeep      | Bookmark manager (Chrome + Meilisearch, omni lane)             |
 | Hindsight     | AI memory (slim image; LLM + embeddings + rerank on MacStudio) |
 | Firecrawl     | Web scraping pipeline (3 containers, MCP)                        |
-| SillyTavern   | AI character chat (AgentGateway)                               |
 | Bambuddy      | 3D printer monitor (Bambu Lab)                                 |
 | Dispatcharr   | IPTV dispatch (iGPU transcode)                                 |
 
@@ -129,7 +128,7 @@
 | App           | Purpose                                                                                     |
 | ------------- | ------------------------------------------------------------------------------------------- |
 | Hermes Agent  | AI agent suite (Feishu, cron/automation)                                                    |
-| Open WebUI    | AI chat frontend (native MCP via ToolHive tiers; oikb + terminals companions)               |
+| DSH Tavern    | RP chat portal (SillyTavern replacement)                                    |
 | ToolHive      | MCP gateway (4 VirtualMCP tiers: search/cluster/home/agent, gateway-enforced tool allowlists)   |
 | MCP Servers   | context/firecrawl/fluxcd/forgejo/github/grafana/hindsight-home/hindsight-ops/home-assistant/kubernetes/trendradar/victoria-logs/victoria-metrics/victoria-traces |
 

@@ -1,0 +1,31 @@
+---
+name: dsh-web
+
+# First run: `docker logs dsh-web` shows the startup token URL (replace the
+# loopback host with nas.homelab.internal:9400); dsh-ui-auth writes the
+# bootstrap admin credentials to /workspace/dsh-ui-auth-bootstrap.txt
+# (mounted below, persists). Change the password after first login.
+#
+# Model config is UI-side (Settings → Model): point at the agent gateway,
+#   base URL https://api.noirprime.com/v1, key = 1Password agentgateway.llm_agent
+# (persisted on the data volume).
+
+services:
+  dsh-web:
+    image: "ghcr.io/soulwhisper/dsh-web:0.2.1-rc.2"
+    container_name: "dsh-web"
+    restart: "unless-stopped"
+    ports:
+      - "9400:3080"
+    volumes:
+      - "/volume3/docker/dsh-web/data:/home/node/.dsh"
+      - "/volume3/docker/dsh-web/workspace:/workspace"
+    healthcheck:
+      # root path is auth-gated (401 without token); accept any answered HTTP
+      # status below 500, reject 5xx and connection failures (bare curl -f
+      # would also reject the normal 401)
+      test: ["CMD-SHELL", "code=$$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3080/) && [ \"$$code\" -gt 0 ] && [ \"$$code\" -lt 500 ]"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

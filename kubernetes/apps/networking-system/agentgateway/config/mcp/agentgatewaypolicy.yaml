@@ -2,7 +2,8 @@
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
 # Per-route API-key auth, one credential per ToolHive group. A key minted for
 # one group is invalid on every other group's route — this is what actually
-# scopes open-webui to search and hermes to cluster/home.
+# scopes search/home/cluster to their consumers (hermes for cluster/home;
+# dsh-web for search).
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
