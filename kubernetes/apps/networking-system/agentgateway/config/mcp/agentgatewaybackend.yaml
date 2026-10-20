@@ -3,13 +3,13 @@
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: mcp-backend-ro
+  name: mcp-backend-search
 spec:
   mcp:
     targets:
-      - name: vmcp-internal-ro
+      - name: vmcp-search
         static:
-          host: vmcp-internal-ro.servitor-apps.svc.cluster.local
+          host: vmcp-search.servitor-apps.svc.cluster.local
           path: /mcp
           port: 4483
           protocol: StreamableHTTP
@@ -18,13 +18,13 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: mcp-backend-rw
+  name: mcp-backend-cluster
 spec:
   mcp:
     targets:
-      - name: vmcp-internal-rw
+      - name: vmcp-cluster
         static:
-          host: vmcp-internal-rw.servitor-apps.svc.cluster.local
+          host: vmcp-cluster.servitor-apps.svc.cluster.local
           path: /mcp
           port: 4483
           protocol: StreamableHTTP
@@ -33,13 +33,13 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: mcp-backend-ext
+  name: mcp-backend-home
 spec:
   mcp:
     targets:
-      - name: vmcp-external
+      - name: vmcp-home
         static:
-          host: vmcp-external.servitor-apps.svc.cluster.local
+          host: vmcp-home.servitor-apps.svc.cluster.local
           path: /mcp
           port: 4483
           protocol: StreamableHTTP
@@ -48,13 +48,13 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: mcp-backend-ops
+  name: mcp-backend-agent
 spec:
   mcp:
     targets:
-      - name: vmcp-internal-ops
+      - name: vmcp-agent
         static:
-          host: vmcp-internal-ops.servitor-apps.svc.cluster.local
+          host: vmcp-agent.servitor-apps.svc.cluster.local
           path: /mcp
           port: 4483
           protocol: StreamableHTTP

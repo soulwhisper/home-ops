@@ -6,7 +6,10 @@ metadata:
   name: trendradar
 spec:
   groupRef:
-    name: internal-ro
+    name: search
+  # Gateway tool allowlist: networking-system/agentgateway/config/mcp/filters.yaml
+  # (search policy). Tracked against wantcat/trendradar-mcp 4.1.0 (27 tools
+  # enumerated 2026-10-20) — re-verify the allowlist on every version bump.
   remoteUrl: http://trendradar.selfhosted-apps.svc.cluster.local:3333/mcp
   # in-cluster DNS suffix is blocked by toolhive's SSRF guard unless opted in
   allowPrivateEndpoint: true

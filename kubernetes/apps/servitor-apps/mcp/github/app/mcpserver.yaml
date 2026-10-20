@@ -6,7 +6,7 @@ metadata:
   name: &name mcp-github
 spec:
   groupRef:
-    name: external
+    name: search
   # Pinned at v1.14.0: v2.0.2 emits nullable-union `type: ["null","object"]`
   # in every tool's outputSchema on the Modern (2026-07-28) path, and
   # toolhive-core mcpcompat decodes schemas into a strict `Type string`

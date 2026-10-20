@@ -6,9 +6,10 @@ metadata:
   name: &name mcp-hindsight-ops
 spec:
   groupRef:
-    # isolated tier (virtualmcpserver/internal-ops via agentgateway /mcp/ops) —
-    # chat-tier consumers on ro/rw/ext can never retain into incident memory
-    name: internal-ops
+    # operator-agent tier (virtualmcpserver/agent via agentgateway /mcp/agent) —
+    # chat-tier consumers on search/cluster/home can never retain into
+    # incident memory
+    name: agent
   toolConfigRef:
     name: *name
   # dedicated memory bank for ai-ops incident/RCA memory — recall boundary

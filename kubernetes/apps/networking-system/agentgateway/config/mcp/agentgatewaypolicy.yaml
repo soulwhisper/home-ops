@@ -1,39 +1,68 @@
 ---
-# The MCP route is exposed to the intranet via the agentgateway-intranet
-# HTTPRoute; require the same API key as the LLM route.
-# Covers the three chat-tier endpoints (/mcp/ro|rw|ext) on
-# agentgateway-mcp-route; /mcp/ops has its own route + credential below.
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+# Per-route API-key auth, one credential per ToolHive group. A key minted for
+# one group is invalid on every other group's route — this is what actually
+# scopes open-webui to search and hermes to cluster/home.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
-  name: mcp-api-auth
+  name: mcp-search-auth
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-mcp-route
+      name: agentgateway-mcp-search-route
   traffic:
     apiKeyAuthentication:
       mode: Strict
       secretRef:
-        name: llm-api-auth
+        name: mcp-search-auth
 ---
-# ops tier: distinct credential, issued only to ops agents. A chat-tier
-# key (llm-api-auth) is NOT valid here, which is what actually isolates
-# incident/RCA memory from conversational consumers.
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
-  name: mcp-ops-auth
+  name: mcp-cluster-auth
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-mcp-ops-route
+      name: agentgateway-mcp-cluster-route
   traffic:
     apiKeyAuthentication:
       mode: Strict
       secretRef:
-        name: mcp-ops-auth
+        name: mcp-cluster-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-home-auth
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-mcp-home-route
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      secretRef:
+        name: mcp-home-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+# operator-agent tier: distinct credential, issued only to operator agents.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-agent-auth
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-mcp-agent-route
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      secretRef:
+        name: mcp-agent-auth

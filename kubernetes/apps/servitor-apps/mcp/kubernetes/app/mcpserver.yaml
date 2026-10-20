@@ -6,7 +6,7 @@ metadata:
   name: &name mcp-kubernetes
 spec:
   groupRef:
-    name: internal-ro
+    name: cluster
   resourceOverrides:
     proxyDeployment:
       podTemplateMetadataOverrides:

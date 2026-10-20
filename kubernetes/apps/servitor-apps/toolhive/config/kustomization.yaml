@@ -5,7 +5,6 @@ kind: Kustomization
 resources:
   # shared
   - ./ciliumnetworkpolicy.yaml
-  - ./externalsecret.yaml
   - ./mcptelemetryconfig.yaml
   - ./prometheusrule.yaml
   - ./restart-cronjob-vmcp.yaml

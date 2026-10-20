@@ -1,32 +1,35 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
+# Optimizer removed on ALL groups (2026-10): it masks real tool names behind
+# find_tool/call_tool meta-tools, which made gateway-level tool filtering
+# (agentgateway backend.mcp.authorization) impossible — the gateway only saw
+# the meta-tools. With it off, aggregated {workload}_-prefixed tool names
+# reach the gateway and filters.yaml can allowlist per route. Also drops the
+# vmcp embeddings dependency (no more OPENAI_API_KEY / llm-api-auth secret).
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: VirtualMCPServer
 metadata:
-  name: &name internal-ro
+  name: &name search
 spec:
   incomingAuth:
     type: anonymous
   outgoingAuth:
     source: inline
-  # optimizer embeddings run on the MacStudio (oMLX via agentgateway;
-  # gateway enforces API key -> OPENAI_API_KEY below). EmbeddingServer CR removed
+    backends:
+      # github-mcp-server http mode requires a per-request bearer token
+      mcp-github:
+        type: externalAuthConfigRef
+        externalAuthConfigRef:
+          name: mcp-github
+  # Operator default cpu limit is 500m; persistent tools/list and rerank
+  # bursts throttled ~52% of CFS periods. Memory: the runner leaks ~9Mi/h
+  # under streamable-http sessions (same ToolHive leak class as
+  # hindsight/trendradar — peaked 348Mi in 39h and OOMKilled once,
+  # homelab-tickets#59). 1Gi + the daily restarter cronjob caps it.
   podTemplateSpec:
     spec:
       containers:
         - name: vmcp
-          env:
-            - name: OPENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: llm-api-auth
-                  key: OPENAI_API_KEY
-          # Operator default cpu limit is 500m; persistent tools/list and
-          # embedding-rerank bursts throttled ~52% of CFS periods. Request stays
-          # unchanged, so scheduling is unaffected. Memory: the runner leaks
-          # ~9Mi/h under streamable-http sessions (same ToolHive leak class as
-          # hindsight/trendradar) — peaked 348Mi in 39h and OOMKilled once
-          # (homelab-tickets#59). 1Gi + the daily restarter cronjob caps it.
           resources:
             requests: { cpu: 100m, memory: 256Mi }
             limits: { cpu: "1", memory: 1Gi }
@@ -50,42 +53,56 @@ spec:
           enabled: true
           failureThreshold: 3
           timeout: 30s
-    optimizer:
-      embeddingProvider: openai
-      embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
-      embeddingModel: embedding
-      embeddingServiceTimeout: 15s
-      maxToolsToReturn: 10
-      hybridSearchSemanticRatio: "0.6"
-      semanticDistanceThreshold: "0.8"
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: VirtualMCPServer
 metadata:
-  name: &name internal-rw
+  name: &name cluster
 spec:
   incomingAuth:
     type: anonymous
   outgoingAuth:
     source: inline
-    backends:
-      # forgejo-mcp enforces a per-request bearer token (--token)
-      mcp-forgejo:
-        type: externalAuthConfigRef
-        externalAuthConfigRef:
-          name: mcp-forgejo
-  # see internal-ro: MacStudio embeddings via agentgateway + OPENAI_API_KEY
+  # see search vmcp for the resources comment (same leak class, same caps)
   podTemplateSpec:
     spec:
       containers:
         - name: vmcp
-          env:
-            - name: OPENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: llm-api-auth
-                  key: OPENAI_API_KEY
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 1Gi }
+  groupRef:
+    name: *name
+  telemetryConfigRef:
+    name: shared-otel
+    serviceName: *name
+  config:
+    aggregation:
+      conflictResolution: prefix
+      conflictResolutionConfig:
+        prefixFormat: "{workload}_"
+    operational:
+      failureHandling:
+        partialFailureMode: best_effort
+        healthCheckInterval: 10s
+        healthCheckTimeout: 5s
+        unhealthyThreshold: 2
+        circuitBreaker:
+          enabled: true
+          failureThreshold: 3
+          timeout: 30s
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: VirtualMCPServer
+metadata:
+  name: &name home
+spec:
+  incomingAuth:
+    type: anonymous
+  outgoingAuth:
+    source: inline
   groupRef:
     name: *name
   telemetryConfigRef:
@@ -111,92 +128,26 @@ spec:
           enabled: true
           failureThreshold: 3
           timeout: 30s
-    optimizer:
-      embeddingProvider: openai
-      embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
-      embeddingModel: embedding
-      embeddingServiceTimeout: 15s
-      maxToolsToReturn: 10
-      hybridSearchSemanticRatio: "0.6"
-      semanticDistanceThreshold: "0.8"
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
+# operator-agent tier: forgejo ticket RW + hindsight ops bank. Separate group
+# + credential so chat-tier consumers can never reach incident memory or the
+# tickets repo; reached via agentgateway /mcp/agent only.
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: VirtualMCPServer
 metadata:
-  name: &name external
+  name: &name agent
 spec:
   incomingAuth:
     type: anonymous
   outgoingAuth:
     source: inline
     backends:
-      # github-mcp-server http mode requires a per-request bearer token
-      mcp-github:
+      # forgejo-mcp enforces a per-request bearer token (--token)
+      mcp-forgejo:
         type: externalAuthConfigRef
         externalAuthConfigRef:
-          name: mcp-github
-  # see internal-ro: MacStudio embeddings via agentgateway + OPENAI_API_KEY
-  podTemplateSpec:
-    spec:
-      containers:
-        - name: vmcp
-          env:
-            - name: OPENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: llm-api-auth
-                  key: OPENAI_API_KEY
-  groupRef:
-    name: *name
-  telemetryConfigRef:
-    name: shared-otel
-    serviceName: *name
-  config:
-    aggregation:
-      conflictResolution: prefix
-      conflictResolutionConfig:
-        prefixFormat: "{workload}_"
-    operational:
-      failureHandling:
-        partialFailureMode: best_effort
-        healthCheckInterval: 10s
-        healthCheckTimeout: 5s
-        unhealthyThreshold: 2
-        circuitBreaker:
-          enabled: true
-          failureThreshold: 3
-          timeout: 30s
-    optimizer:
-      embeddingProvider: openai
-      embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
-      embeddingModel: embedding
-      embeddingServiceTimeout: 15s
-      maxToolsToReturn: 10
-      hybridSearchSemanticRatio: "0.6"
-      semanticDistanceThreshold: "0.8"
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
-# ops isolation tier: only ops-domain backends (hindsight ops bank).
-# Separate group so chat-tier consumers (open-webui /mcp/ro|rw|ext) can never
-# retain into incident memory; reached via agentgateway /mcp/ops only.
-apiVersion: toolhive.stacklok.dev/v1beta1
-kind: VirtualMCPServer
-metadata:
-  name: &name internal-ops
-spec:
-  incomingAuth:
-    type: anonymous
-  podTemplateSpec:
-    spec:
-      containers:
-        - name: vmcp
-          env:
-            - name: OPENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: llm-api-auth
-                  key: OPENAI_API_KEY
+          name: mcp-forgejo
   groupRef:
     name: *name
   telemetryConfigRef:
@@ -217,11 +168,3 @@ spec:
           enabled: true
           failureThreshold: 3
           timeout: 30s
-    optimizer:
-      embeddingProvider: openai
-      embeddingService: http://agentgateway-proxy.networking-system.svc.cluster.local:80/v1
-      embeddingModel: embedding
-      embeddingServiceTimeout: 15s
-      maxToolsToReturn: 10
-      hybridSearchSemanticRatio: "0.6"
-      semanticDistanceThreshold: "0.8"

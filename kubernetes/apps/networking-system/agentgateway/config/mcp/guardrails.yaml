@@ -8,16 +8,16 @@ spec:
   targetRefs:
     - group: agentgateway.dev
       kind: AgentgatewayBackend
-      name: mcp-backend-ro
+      name: mcp-backend-search
     - group: agentgateway.dev
       kind: AgentgatewayBackend
-      name: mcp-backend-rw
+      name: mcp-backend-cluster
     - group: agentgateway.dev
       kind: AgentgatewayBackend
-      name: mcp-backend-ext
+      name: mcp-backend-home
     - group: agentgateway.dev
       kind: AgentgatewayBackend
-      name: mcp-backend-ops
+      name: mcp-backend-agent
   backend:
     mcp:
       guardrails:

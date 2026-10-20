@@ -1,0 +1,84 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+# Gateway-level MCP tool allowlists (backend.mcp.authorization, Allow =
+# default-deny for everything unmatched; list ops filtered per item, call/get
+# rejected). Requires vmcp optimizer OFF so aggregated {workload}_-prefixed
+# tool names reach the gateway — see toolhive/config/virtualmcpserver.yaml.
+#
+# Scope per 2026-10-20 review: only servers whose boundary is NOT an upstream
+# token/SB get CEL filters. Token-bounded servers (github RO PAT+LOCKDOWN,
+# forgejo pat_tickets, k8s/fluxcd read-only SAs, grafana read-only SA) are
+# full-allowed by prefix; the token is their permission boundary.
+#
+# VERSION TRACKING: tool names below were enumerated live on 2026-10-20
+# against: firecrawl-mcp-server v3.33.3 (28 tools), context7 4.4.1 (2),
+# trendradar-mcp 4.1.0 (27), github-mcp-server v1.14.0, kubernetes-mcp-server
+# v0.0.67 (15), flux-operator-mcp v0.61.0 (10), mcp-grafana 2.0.2 (62),
+# mcp-victorialogs v1.9.0 (12), mcp-victoriametrics v1.20.2 (16),
+# mcp-victoriatraces v1.5.0. Each filtered server's mcpserver.yaml carries a
+# matching tracking comment — re-enumerate tools/list and re-check these
+# expressions on EVERY image bump (renovate).
+#
+# NOTE: expressions match tool names only; prompts/resources from these
+# servers match nothing and are therefore also denied (none exist today —
+# revisit if a server starts exposing them).
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-search-filter
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-search
+  backend:
+    mcp:
+      authorization:
+        action: Allow
+        policy:
+          matchExpressions:
+            # firecrawl: retrieval only — scrape/search/map/crawl (+status).
+            # Excluded: monitor_*, agent*, interact*, feedback, find_tools,
+            # credit_usage, research_*, developer/gov_search (state-changing
+            # or off-role for open-webui web fetching).
+            - |
+              mcp.tool.name.matches('^mcp-firecrawl_firecrawl_(scrape|search|map|crawl|check_crawl_status)$')
+              || mcp.tool.name.startsWith('mcp-context_')
+              || mcp.tool.name.matches('^trendradar_(search_news|get_latest_news|get_trending_topics|get_latest_rss|search_rss|get_news_by_date|read_article|read_articles_batch|find_related_news|analyze_topic_trend|analyze_data_insights|analyze_sentiment|aggregate_news|compare_periods|resolve_date_range|list_available_dates|generate_summary_report)$')
+              || mcp.tool.name.startsWith('mcp-github_')
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-cluster-filter
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-cluster
+  backend:
+    mcp:
+      authorization:
+        action: Allow
+        policy:
+          matchExpressions:
+            # grafana: read/query classes only (server also runs
+            # --disable-write, SA is read-only — this is the third layer).
+            # Explicitly excluded: grafana_api_request (arbitrary API
+            # passthrough), alerting_manage_routing,
+            # validate_provisioning_file, suggest_*,
+            # list_provisioning_repositories.
+            # victoria-metrics: query surface only — excluded: documentation
+            # (also MCP_DISABLED_TOOLS), flags, tsdb_status, active_queries,
+            # top_queries, metric_statistics.
+            - |
+              mcp.tool.name.startsWith('mcp-kubernetes_')
+              || mcp.tool.name.startsWith('mcp-fluxcd_')
+              || ( mcp.tool.name.startsWith('mcp-grafana_')
+                   && ( mcp.tool.name.matches('^mcp-grafana_(search|get|list|query|analyze|check)_')
+                        || mcp.tool.name.matches('^mcp-grafana_(alerting_rules_read|alerting_silences_read|generate_deeplink|user_info|diff_tempo_traces)$') )
+                   && mcp.tool.name != 'mcp-grafana_list_provisioning_repositories' )
+              || mcp.tool.name.startsWith('mcp-victoria-logs_')
+              || mcp.tool.name.matches('^mcp-victoria-metrics_(query|query_range|labels|label_values|series|metrics|metrics_metadata|explain_query|prettify_query|alerts|rules)$')
+              || mcp.tool.name.startsWith('mcp-victoria-traces_')

@@ -30,9 +30,9 @@ spec:
             severity: warning
         - alert: AgentRWToolOffHours
           annotations:
-            summary: "internal-rw tool {{ $labels.mcp_resource_id }} invoked between 02:00-07:00 CST."
+            summary: "write-tier tool {{ $labels.mcp_resource_id }} ({{ $labels.job }}) invoked between 02:00-07:00 CST."
           expr: |
-            sum by (mcp_resource_id) (increase(toolhive_mcp_requests_total{job="vmcp-internal-rw", mcp_method="tools/call"}[10m])) > 0
+            sum by (job, mcp_resource_id) (increase(toolhive_mcp_requests_total{job=~"vmcp-home|vmcp-agent", mcp_method="tools/call"}[10m])) > 0
             and on() (hour() >= 18 and hour() <= 23)
           labels:
             severity: critical

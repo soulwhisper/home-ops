@@ -3,10 +3,10 @@
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
-  name: &name vmcp-internal-ro
+  name: &name vmcp-cluster
 spec:
   staticConfigs:
-    - targets: ["vmcp-internal-ro.servitor-apps.svc.cluster.local:4483"]
+    - targets: ["vmcp-cluster.servitor-apps.svc.cluster.local:4483"]
   metricsPath: /metrics
   relabelings:
     - action: replace
@@ -17,10 +17,10 @@ spec:
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
-  name: &name vmcp-internal-rw
+  name: &name vmcp-home
 spec:
   staticConfigs:
-    - targets: ["vmcp-internal-rw.servitor-apps.svc.cluster.local:4483"]
+    - targets: ["vmcp-home.servitor-apps.svc.cluster.local:4483"]
   metricsPath: /metrics
   relabelings:
     - action: replace
@@ -31,10 +31,10 @@ spec:
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
-  name: &name vmcp-external
+  name: &name vmcp-search
 spec:
   staticConfigs:
-    - targets: ["vmcp-external.servitor-apps.svc.cluster.local:4483"]
+    - targets: ["vmcp-search.servitor-apps.svc.cluster.local:4483"]
   metricsPath: /metrics
   relabelings:
     - action: replace
@@ -45,10 +45,10 @@ spec:
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
-  name: &name vmcp-internal-ops
+  name: &name vmcp-agent
 spec:
   staticConfigs:
-    - targets: ["vmcp-internal-ops.servitor-apps.svc.cluster.local:4483"]
+    - targets: ["vmcp-agent.servitor-apps.svc.cluster.local:4483"]
   metricsPath: /metrics
   relabelings:
     - action: replace

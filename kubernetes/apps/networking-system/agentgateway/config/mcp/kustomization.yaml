@@ -9,5 +9,6 @@ resources:
   # utils
   - ./helmrelease.yaml
   - ./guardrails.yaml
+  - ./filters.yaml
   - ./agentgatewaypolicy.yaml
   - ./httproute.yaml

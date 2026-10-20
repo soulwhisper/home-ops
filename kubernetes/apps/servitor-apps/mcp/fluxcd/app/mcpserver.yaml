@@ -6,7 +6,7 @@ metadata:
   name: &name mcp-fluxcd
 spec:
   groupRef:
-    name: internal-ro
+    name: cluster
   image: ghcr.io/controlplaneio-fluxcd/flux-operator-mcp:v0.61.0
   args: ["serve", "--transport=http", "--port=9090", "--read-only=true"]
   env:

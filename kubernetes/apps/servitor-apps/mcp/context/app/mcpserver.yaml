@@ -6,7 +6,7 @@ metadata:
   name: &name mcp-context
 spec:
   groupRef:
-    name: external
+    name: search
   resourceOverrides:
     proxyDeployment:
       podTemplateMetadataOverrides:

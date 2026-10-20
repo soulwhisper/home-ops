@@ -6,7 +6,10 @@ metadata:
   name: &name mcp-firecrawl
 spec:
   groupRef:
-    name: external
+    name: search
+  # Gateway tool allowlist: networking-system/agentgateway/config/mcp/filters.yaml
+  # (search policy). Tracked against image v3.33.3 (28 tools enumerated
+  # 2026-10-20) — re-verify the allowlist on every version bump.
   # v3.x dropped the nginx frontend: the node server serves /mcp (and
   # /health) directly — no init/seed/rewrite machinery needed anymore.
   image: ghcr.io/firecrawl/firecrawl-mcp-server:v3.33.3
