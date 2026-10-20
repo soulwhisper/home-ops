@@ -7,7 +7,7 @@ metadata:
 spec:
   # Attached to the search and agent backends ONLY (2026-10-20 decision):
   # - search is the untrusted-content tier (arbitrary web/RSS/git content)
-  #   feeding an unguarded lane (open-webui uncensored);
+  #   feeding an unguarded lane (dsh-tavern / uncensored consumers);
   # - agent's consumers are EXTERNAL operator agents — they do not ride the
   #   cluster's guarded LLM lanes, and forgejo ticket bodies carry
   #   alert/log-derived (hence untrusted) strings, so the sidecar is their
