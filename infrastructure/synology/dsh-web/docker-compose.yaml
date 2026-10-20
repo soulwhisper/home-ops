@@ -1,10 +1,6 @@
 ---
 name: dsh-web
 
-# DeepSeek Harness agent workbench (dsh-web image: web profile, dsh-ui-auth +
-# dshmarket baked). Direct LAN access, no SSO fronting — the dsh-ui-auth login
-# gateway is the auth layer.
-#
 # First run: `docker logs dsh-web` shows the startup token URL (replace the
 # loopback host with nas.homelab.internal:9400); dsh-ui-auth writes the
 # bootstrap admin credentials to /workspace/dsh-ui-auth-bootstrap.txt
@@ -20,9 +16,9 @@ services:
     container_name: "dsh-web"
     restart: "unless-stopped"
     ports:
-      - "9400:3080" # dsh web UI (relay publishes the container's 3080)
+      - "9400:3080"
     volumes:
-      - "/volume3/docker/dsh-web/dsh-home:/home/node/.dsh"
+      - "/volume3/docker/dsh-web/data:/home/node/.dsh"
       - "/volume3/docker/dsh-web/workspace:/workspace"
     healthcheck:
       # root path is auth-gated (401 without token); accept any answered HTTP
