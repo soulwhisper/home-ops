@@ -24,8 +24,6 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000 # node
             runAsGroup: 1000
-            # kopiur movers work as gid 2000 — PVC data must be group-2000
-            # accessible (same shape as crafty-controller: app 1000, fs 2000)
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         containers:
@@ -34,9 +32,6 @@ spec:
               repository: ghcr.io/soulwhisper/dsh-tavern
               tag: "3.0"
             env:
-              # authentik forward-auth in front (components/authentik); the
-              # baked dsh-ui-auth login gateway must trust proxy headers and
-              # count client IPs correctly
               DSH_AUTH_TRUST_PROXY: "1"
             resources:
               requests:
@@ -47,11 +42,8 @@ spec:
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
-              # dsh writes under $DSH_HOME, /workspace (bootstrap files) and /tmp
               readOnlyRootFilesystem: true
             probes:
-              # root path is auth-gated (401 without token) — a TCP connect is
-              # the honest liveness signal
               startup:
                 enabled: true
                 custom: true
@@ -89,8 +81,6 @@ spec:
             namespace: networking-system
 
     persistence:
-      # cards, sessions, presets, profile data — created by the kopiur backup
-      # component (PVC + snapshot schedule)
       home:
         existingClaim: *name
         globalMounts:
