@@ -41,6 +41,7 @@ metadata:
   name: vmcp-restarter
 spec:
   schedule: "40 4 * * *"
+  timeZone: "Asia/Shanghai"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 2
@@ -65,11 +66,16 @@ spec:
                 limits:
                   cpu: 100m
                   memory: 128Mi
+              # stagger per group: deleting all four tiers at once would be a
+              # brief total MCP outage; ~45s between deletes lets each runner
+              # come back Ready before the next tier drops
               command:
-                - kubectl
-                - delete
-                - pod
-                - --namespace=servitor-apps
-                - --selector=toolhive-name in (search,cluster,home,agent)
-                - --wait=false
+                - sh
+                - -c
+                - >-
+                  for g in search cluster home agent; do
+                    kubectl delete pod --namespace=servitor-apps
+                    --selector=toolhive-name=$g --wait=false;
+                    sleep 45;
+                  done
           restartPolicy: Never

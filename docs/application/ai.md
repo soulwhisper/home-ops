@@ -153,11 +153,16 @@ This requires the vmcp **optimizer to stay off**: it masks real tool names
 behind `find_tool`/`call_tool` meta-tools that gateway authorization cannot
 see through (removed 2026-10; also dropped the vmcp embeddings dependency).
 
-All four backends carry the mcp-guardrails ExtMCP sidecar (agentgateway
-`mcp.guardrails`): `tools/call` is scanned request+response, `tools/list` /
-`prompts/get` / `resources/read` response-only; `failureMode: FailClosed`
-(the sidecar being down disables tool traffic cluster-wide rather than
-passing it unguarded). Response scanning uses four balanced windows (11KiB
+The **search backend only** carries the mcp-guardrails ExtMCP sidecar
+(agentgateway `mcp.guardrails`): `tools/call` is scanned request+response,
+`tools/list` / `prompts/get` / `resources/read` response-only;
+`failureMode: FailClosed` (the sidecar being down disables the search tier
+rather than passing it unguarded). Scope decision (2026-10-20): search is the
+only tier where untrusted web content reaches an unguarded lane (open-webui
+`uncensored`); cluster/home/agent consumers ride guarded LLM lanes behind
+CEL allowlists and token/SA boundaries, where the sidecar was duplication —
+and its FailClosed posture made one sidecar an outage for all of MCP.
+Response scanning uses four balanced windows (11KiB
 by default) with a 3.5s scanner deadline and a 15s Service-scoped ExtMCP
 callout deadline; readiness completes a full-size warmup before traffic.
 There is deliberately **no** unguarded MCP route. Direct vmcp

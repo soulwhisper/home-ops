@@ -223,7 +223,7 @@ The two kgateway gateways use the `kgateway` GatewayClass with TLS termination v
 | `/mcp/home`   | home read-write (hermes)               |
 | `/mcp/agent`  | operator agents (forgejo RW + ops memory) |
 
-All four tiers are FailClosed — each backend carries the mcp-guardrails sidecar regardless of the LLM lane the client used. Tool allowlists are enforced per tier via `backend.mcp.authorization` CEL (`config/mcp/filters.yaml`).
+The search tier carries the mcp-guardrails ExtMCP sidecar (FailClosed) — the only tier with untrusted web content feeding an unguarded LLM lane; other tiers rely on guarded lanes + CEL allowlists + token boundaries. Tool allowlists are enforced per tier via `backend.mcp.authorization` CEL (`config/mcp/filters.yaml`).
 
 API key authentication is enforced via `AgentgatewayPolicy` in strict mode for all LLM and MCP routes — per-lane keys on `/v1` (sectionName-scoped), per-group keys on `/mcp/*`. The gateway is the single choke point for auth, routing, guardrails, and observability.
 

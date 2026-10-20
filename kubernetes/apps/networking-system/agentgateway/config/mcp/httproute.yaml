@@ -4,9 +4,10 @@
 # own credential (group <-> route <-> key bound 1:1:1; see mcpgroup.yaml).
 # Every route rewrites its tier prefix to the canonical /mcp before the
 # backend sees it (the streamable-HTTP endpoint on each vmcp lives exactly at
-# /mcp). MCP has no open lane: every tier carries the mcp-guardrails ExtMCP
-# sidecar (FailClosed) via the backend policy, regardless of which LLM lane
-# the client used.
+# /mcp). MCP has no open lane: the search tier carries the mcp-guardrails
+# ExtMCP sidecar (FailClosed) — the only tier with untrusted web content
+# feeding an unguarded LLM lane; other tiers rely on guarded lanes + CEL
+# allowlists + token boundaries.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:

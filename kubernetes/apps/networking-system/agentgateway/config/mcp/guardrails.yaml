@@ -5,19 +5,16 @@ kind: AgentgatewayPolicy
 metadata:
   name: mcp-guardrails
 spec:
+  # Attached to the search backend ONLY (2026-10-20 decision): search is the
+  # sole untrusted-content tier (arbitrary web/RSS/git content) feeding an
+  # unguarded lane (open-webui uncensored). cluster/home/agent consumers ride
+  # guarded LLM lanes (promptGuard regex) behind CEL allowlists and
+  # token/SA boundaries — the sidecar there was pure duplication, and
+  # FailClosed on those tiers made one sidecar an outage for all of MCP.
   targetRefs:
     - group: agentgateway.dev
       kind: AgentgatewayBackend
       name: mcp-backend-search
-    - group: agentgateway.dev
-      kind: AgentgatewayBackend
-      name: mcp-backend-cluster
-    - group: agentgateway.dev
-      kind: AgentgatewayBackend
-      name: mcp-backend-home
-    - group: agentgateway.dev
-      kind: AgentgatewayBackend
-      name: mcp-backend-agent
   backend:
     mcp:
       guardrails:
