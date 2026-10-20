@@ -10,7 +10,7 @@ name: dsh-web
 # bootstrap admin credentials to /workspace/dsh-ui-auth-bootstrap.txt
 # (mounted below, persists). Change the password after first login.
 #
-# Model config is UI-side (Settings → 模型): point at the agent gateway,
+# Model config is UI-side (Settings → Model): point at the agent gateway,
 #   base URL https://api.noirprime.com/v1, key = 1Password agentgateway.llm_agent
 # (persisted on the data volume).
 
@@ -25,9 +25,10 @@ services:
       - "/volume3/docker/dsh-web/dsh-home:/home/node/.dsh"
       - "/volume3/docker/dsh-web/workspace:/workspace"
     healthcheck:
-      # root path is auth-gated (401 without token); a completed HTTP
-      # response of any status proves the server is up
-      test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://127.0.0.1:3080/"]
+      # root path is auth-gated (401 without token); accept any answered HTTP
+      # status below 500, reject 5xx and connection failures (bare curl -f
+      # would also reject the normal 401)
+      test: ["CMD-SHELL", "code=$$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3080/) && [ \"$$code\" -gt 0 ] && [ \"$$code\" -lt 500 ]"]
       interval: 60s
       timeout: 10s
       retries: 3

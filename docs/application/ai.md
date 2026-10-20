@@ -115,7 +115,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); queryable via the `search` MCP tier |
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | dsh-tavern           | `uncensored`      | Qwen3.8-27B        | RP portal (dsh-tavern image, SillyTavern replacement); model/key UI-configured on PVC |
-| dsh-web (NAS)        | `agent`/`omni`    | Qwen-AgentWorld / MiniCPM-o | Agent workbench (doco-cd); MCP via api.noirprime.com when wired |
+| dsh-web (NAS)        | `agent`/`omni`    | Qwen-AgentWorld / MiniCPM-o | Agent workbench (doco-cd); takes over open-webui's set: LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
 
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
 `/v1` lane; their prompts carry scraped web content, so a low rate of
@@ -130,7 +130,7 @@ the canonical `/mcp` upstream):
 
 | Route          | vmcp          | Servers (aggregated)                                          | Key (1Password `agentgateway`) | Issued to                    |
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
-| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | idle (open-webui archived); future consumers |
+| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | dsh-web (open-webui's former set) |
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes                       |
 | `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-homelab bank                        | `mcp_home`                     | hermes                       |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | operator agents only         |
@@ -214,14 +214,9 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - RP chat portal (SillyTavern replacement), image `ghcr.io/soulwhisper/dsh-tavern` (containers repo; dsh-tavern profile + eco plugins + dsh-ui-auth baked). Lives in **servitor-apps**. State on the kopiur-backed PVC at `/home/node/.dsh` (cards/sessions/presets; snapshot schedule included); `/workspace` + `/tmp` are emptyDir
 - **LLM**: UI-configured — uncensored lane (foreground prose) / omni (background settlement); key = `llm_uncensored` from the `agentgateway` item. The gateway is the only AI egress
 - **Auth**: authentik forward-auth at the gateway + baked `dsh-ui-auth` login gateway (sessions persist on PVC; bootstrap admin file lands in ephemeral `/workspace` — record the password at first boot; reset = remove the ui-auth storage dir on the PVC and restart)
-- **Ingress**: `tavern.noirprime.com` via kgateway-internal (host re-taken from SillyTavern, archived in the same change)
+- **Ingress**: `tavern.noirprime.com` via kgateway-internal
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (LLM only), world-except-private :443 (card/preset fetches, tavern-image backends), kube-dns
 - First-login caveat: token URL in pod logs is the fallback path; the ui-auth login page is the front door
-
-### Open WebUI (archived 2026-10-20)
-
-- Retired with SillyTavern in favor of the dsh appliances; manifests in `.archived/kubernetes/servitor/open-webui` (renovate ignores `.archived/**`)
-- Orphaned leftovers for manual cleanup when convenient: CNPG db/role `open-webui`, dragonfly `open-webui-dragonfly`, ceph bucket `open-webui` (durable app data; nothing else references them). oikb/terminals companions archived with it
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
 
@@ -256,7 +251,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 
 ### MCP Servers (14 total)
 
-#### search (web/docs/news/codebase retrieval — idle tier, no current consumer)
+#### search (web/docs/news/codebase retrieval — dsh-web)
 
 | Server    | Transport             | Notes                    |
 | --------- | --------------------- | ------------------------ |
@@ -326,7 +321,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 - AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`)
 - Delivery: Feishu custom group robot (`FEISHU_WEBHOOK_URL` from 1Password `feishu.newsbot_webhook`); HTML report at `news.noirprime.com` (SSO)
-- MCP server (:3333) registered as `trendradar` in the `search` group (gateway-filtered to query/analysis tools; tier currently has no consumer)
+- MCP server (:3333) registered as `trendradar` in the `search` group (gateway-filtered to query/analysis tools; consumed by dsh-web)
 - Config fully in ConfigMap (`config.yaml` + `frequency_words.txt` + `ai_interests.txt`); output on 1Gi ceph-block PVC
 
 ## AI-Adjacent Services
@@ -334,12 +329,6 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 ### Vision alerting (frigate-vision)
 
 Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`objects.genai`, multi-frame, per-camera/object prompts) runs on an openai-compatible provider pointed at the `omni` lane (MiniCPM-o 4.5, `descriptions` role). The caption prompt instructs the model to start with a `[low|medium|high]` severity prefix. Frigate config (provider + per-camera GenAI toggle) lives in the Frigate UI/DB — it is not GitOps-managed. `smarthome-apps/frigate-vision` is a slim forwarder only (python, ConfigMap-mounted): MQTT `frigate/tracked_object_update` (`type: description`) → parse severity prefix → gate on `MIN_SEVERITY` (default medium) → enrich via frigate `GET /api/events/{id}` → hermes webhook `POST :8644/p/ops/webhooks/frigate-alert` (V2 HMAC) — the `ops` profile ingests it as a user message, so the batching brain sees camera events in context with everything else it knows. Webhook route is declared in the GitOps-managed default `config.yaml` (`platforms.webhook.extra.routes`, HMAC secret via `FRIGATE_WEBHOOK_SECRET` in 1Password). The HA `persistent_notification` leg is an HA-side MQTT automation on the same description messages (UI-managed, not GitOps). 1Password additions: `hermes-agent.webhook_secret_frigate`.
-
-### SillyTavern (archived 2026-10-20)
-
-- Replaced by dsh-tavern; manifests in `.archived/kubernetes/servitor/sillytavern`
-- Its `existingClaim` PVC survives pruning (external lifecycle) — cards/chats retained for reference; `tavern.noirprime.com` now serves dsh-tavern
-- Chat history did not migrate (no ST→dsh-tavern converter); key context was carried over by hand where needed
 
 ### Firecrawl
 
