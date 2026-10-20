@@ -9,7 +9,7 @@ spec:
     name: external
   # v3.x dropped the nginx frontend: the node server serves /mcp (and
   # /health) directly — no init/seed/rewrite machinery needed anymore.
-  image: ghcr.io/firecrawl/firecrawl-mcp-server:v3.33.3
+  image: ghcr.io/firecrawl/firecrawl-mcp-server:v3.33.4
   env:
     - name: PORT
       value: "3000"
