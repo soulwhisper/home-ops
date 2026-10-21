@@ -20,11 +20,13 @@ data:
   BROWSER_POOL_SIZE: "2"
   MAX_CPU: "0.75"
   MAX_RAM: "0.75"
-  # SearXNG. Curated engine list: the default fanout spends latency on
-  # Brave (suspended) and DuckDuckGo (CAPTCHA) while only Google CSE returns
-  # reliably. This list was measured at 85-118 results / 0.9-2.4s with no
-  # unresponsive engines. Do not set SEARXNG_CATEGORIES to the broad
+  # SearXNG. General/news engines only: academic engines (arxiv/pubmed/
+  # semantic scholar) can fill a limit=5 search with unrelated papers before
+  # the news engines finish and are returned. Keep research queries on the
+  # SearXNG UI/API (or a separate profile) instead of the global Firecrawl
+  # search path. This list measured 26 results / 0.6-0.8s, 0 academic results
+  # across 3 runs. Do not set SEARXNG_CATEGORIES to the broad
   # general,news,science,it set: that measured 235 results / 15.3s with 11
   # unresponsive engines.
   SEARXNG_ENDPOINT: "http://searxng.selfhosted-apps.svc.cluster.local:8080"
-  SEARXNG_ENGINES: "google cse,duckduckgo,sogou wechat,360search,arxiv,pubmed,semantic scholar,duckduckgo news,wikinews"
+  SEARXNG_ENGINES: "google cse,duckduckgo,sogou wechat,360search,duckduckgo news,wikinews"
