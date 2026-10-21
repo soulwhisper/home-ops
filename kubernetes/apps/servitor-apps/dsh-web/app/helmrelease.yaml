@@ -37,6 +37,9 @@ spec:
                     fieldPath: status.podIP
               DSH_PUBLIC_URL: "https://chat.noirprime.com"
               DSH_TRUSTED_HOSTS: "chat.noirprime.com"
+              # Keep injected skills outside /data/dsh: materialize-state treats
+              # any pre-existing child as existing state and demands a migration.
+              DSH_AGENTS_HOME: "/data/home/.agents"
             envFrom:
               - configMapRef:
                   name: *name
@@ -116,7 +119,7 @@ spec:
       skills:
         type: emptyDir
         globalMounts:
-          - path: /data/dsh/skills
+          - path: /data/home/.agents/skills
       tmpfs:
         type: emptyDir
         globalMounts:
