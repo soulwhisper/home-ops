@@ -20,5 +20,11 @@ data:
   BROWSER_POOL_SIZE: "2"
   MAX_CPU: "0.75"
   MAX_RAM: "0.75"
-  # SearXNG
+  # SearXNG. Curated engine list: the default fanout spends latency on
+  # Brave (suspended) and DuckDuckGo (CAPTCHA) while only Google CSE returns
+  # reliably. This list was measured at 85-118 results / 0.9-2.4s with no
+  # unresponsive engines. Do not set SEARXNG_CATEGORIES to the broad
+  # general,news,science,it set: that measured 235 results / 15.3s with 11
+  # unresponsive engines.
   SEARXNG_ENDPOINT: "http://searxng.selfhosted-apps.svc.cluster.local:8080"
+  SEARXNG_ENGINES: "google cse,duckduckgo,sogou wechat,360search,arxiv,pubmed,semantic scholar,duckduckgo news,wikinews"
