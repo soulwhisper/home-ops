@@ -51,3 +51,59 @@ spec:
         - http://studio.homelab.internal:8000/v1/models
       labels:
         service: macstudio
+---
+# Firecrawl scrape canary: POST /v2/scrape. The module also rejects challenge
+# pages and requires the expected Markdown keyword, not just HTTP 200.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: firecrawl-scrape
+spec:
+  interval: 5m
+  scrapeTimeout: 60s
+  module: firecrawl_scrape
+  prober:
+    url: blackbox-exporter.monitoring-system.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - http://firecrawl-app.selfhosted-apps.svc.cluster.local:3002/v2/scrape
+      labels:
+        service: firecrawl-scrape
+---
+# Firecrawl search canary: POST /v2/search, fails on empty web results.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: firecrawl-search
+spec:
+  interval: 5m
+  scrapeTimeout: 75s
+  module: firecrawl_search
+  prober:
+    url: blackbox-exporter.monitoring-system.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - http://firecrawl-app.selfhosted-apps.svc.cluster.local:3002/v2/search
+      labels:
+        service: firecrawl-search
+---
+# SearXNG JSON search canary. SearXNG is a soft dependency for Firecrawl
+# search; this catches engine fanout/limiter regressions even when the pod is up.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: searxng-search
+spec:
+  interval: 5m
+  scrapeTimeout: 20s
+  module: searxng_search
+  prober:
+    url: blackbox-exporter.monitoring-system.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - "http://searxng.selfhosted-apps.svc.cluster.local:8080/search?q=crawl4ai&format=json"
+      labels:
+        service: searxng-search
