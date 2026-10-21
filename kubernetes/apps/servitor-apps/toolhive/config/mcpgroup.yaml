@@ -25,7 +25,7 @@ kind: MCPGroup
 metadata:
   name: home
 spec:
-  description: "In-cluster, read-write. No egress; Home Assistant control + conversational memory (hindsight homelab bank). Side-effecting tools on a separate endpoint. For hermes."
+  description: "In-cluster, read-write. No egress; Home Assistant control + conversational memory (hindsight home bank). Side-effecting tools on a separate endpoint. For hermes."
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
 apiVersion: toolhive.stacklok.dev/v1beta1

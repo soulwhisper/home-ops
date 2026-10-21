@@ -132,7 +132,7 @@ the canonical `/mcp` upstream):
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
 | `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | dsh-web (open-webui's former set) |
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
-| `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-homelab bank                        | `mcp_home`                     | hermes, dsh-web                      |
+| `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-home bank                           | `mcp_home`                     | hermes, dsh-web                      |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | operator agents only         |
 
 A key minted for one group is invalid on every other route — this is what
@@ -286,7 +286,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | Server         | Transport            | Connects To            |
 | -------------- | -------------------- | ---------------------- |
 | home-assistant | HTTP (FastMCP) :8086 | Home Assistant         |
-| hindsight-home | HTTP proxy :8080     | Hindsight `homelab` bank (single-bank MCPToolConfig; description overrides stay at toolhive) |
+| hindsight-home | HTTP proxy :8080     | Hindsight `home` bank (single-bank MCPToolConfig; description overrides stay at toolhive) |
 
 #### agent (operator agents only)
 

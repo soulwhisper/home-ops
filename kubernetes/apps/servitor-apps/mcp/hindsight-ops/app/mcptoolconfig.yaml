@@ -18,7 +18,7 @@ spec:
   toolsOverride:
     retain:
       description: >-
-        Store incident/RCA memory. Unlike the conversational homelab bank,
+        Store incident/RCA memory. Unlike the conversational home bank,
         FACTUAL operational fields are welcome here: alert/event ids,
         timelines, root causes, actions taken, and verification results.
         Still NEVER retain credentials, raw tool dumps, or verbatim log
