@@ -10,7 +10,7 @@ flowchart TB
     subgraph Clients["AI Clients"]
         Hermes["Hermes Agent"]
         Tavern["DSH Tavern"]
-        DSHW["dsh-web (NAS)"]
+        DSHW["dsh-web (cluster)"]
         HS["Hindsight"]
     end
 
@@ -115,7 +115,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); queryable via the `search` MCP tier |
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | dsh-tavern           | `uncensored`      | Qwen3.8-27B        | RP portal (dsh-tavern image, SillyTavern replacement); model/key UI-configured on PVC |
-| dsh-web (NAS)        | `agent`/`omni`    | Qwen-AgentWorld / MiniCPM-o | Agent workbench (doco-cd); takes over open-webui's set: LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
+| dsh-web              | `agent`/`omni`    | Qwen-AgentWorld / MiniCPM-o | Agent workbench (servitor-apps); takes over open-webui's set: LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
 
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
 `/v1` lane; their prompts carry scraped web content, so a low rate of
@@ -131,8 +131,8 @@ the canonical `/mcp` upstream):
 | Route          | vmcp          | Servers (aggregated)                                          | Key (1Password `agentgateway`) | Issued to                    |
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
 | `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | dsh-web (open-webui's former set) |
-| `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes                       |
-| `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-homelab bank                        | `mcp_home`                     | hermes                       |
+| `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
+| `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-home bank                           | `mcp_home`                     | hermes, dsh-web                      |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | operator agents only         |
 
 A key minted for one group is invalid on every other route — this is what
@@ -209,14 +209,24 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 ---
 
+### DSH Web
+
+- Agent workbench, image `ghcr.io/soulwhisper/dsh-web` pinned by digest (DSH Web + `dshmarket` + required forward-auth). Lives in **servitor-apps**
+- **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
+- **Ingress**: `chat.noirprime.com` via kgateway-internal (takes over the retired Open WebUI hostname)
+- **State**: kopiur-backed PVC `dsh-web` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs` and `/backups` share the `dsh-web-cache` `ceph-cache` PVC; `/tmp` remains emptyDir
+- **MCP/Skills**: the `dsh-web-mcp` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster and home tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/home` with `mcp_search`, `mcp_cluster`, `mcp_home`, never in Git); `/data/dsh/skills` is an emptyDir for future skill injection
+- **LLM/MCP**: UI-configured against the agent gateway; no model key in the manifest
+- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (`/v1/*` + `/mcp/*`), world-except-private :443 for the user-driven plugin market, kube-dns
+
 ### DSH Tavern
 
-- RP chat portal (SillyTavern replacement), image `ghcr.io/soulwhisper/dsh-tavern` (containers repo; dsh-tavern profile + eco plugins baked, no in-app auth). Lives in **servitor-apps**. State on the kopiur-backed PVC at `/home/node/.dsh` (cards/sessions/presets; snapshot schedule included); `/workspace` + `/tmp` are emptyDir
+- RP chat portal (SillyTavern replacement), image `ghcr.io/soulwhisper/dsh-tavern` pinned by digest (dsh-tavern profile + eco plugins baked). Lives in **servitor-apps**
 - **LLM**: UI-configured — uncensored lane (foreground prose) / omni (background settlement); key = `llm_uncensored` from the `agentgateway` item. The gateway is the only AI egress
-- **Auth**: authentik forward-auth at the gateway only (united portal; no in-app auth layer baked). Fallback entry: the dsh startup-token URL from pod logs — note the token rotates per process start, so a pod restart re-locks the UI until the new token URL is visited once
+- **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
 - **Ingress**: `tavern.noirprime.com` via kgateway-internal
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (LLM only), world-except-private :443 (card/preset fetches, tavern-image backends), kube-dns
-- First-login caveat: dsh's startup-token URL prints to pod logs on every boot and is the entry after authentik
+- **State**: kopiur-backed PVC `dsh-tavern` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs` and `/backups` share the `dsh-tavern-cache` `ceph-cache` PVC; `/tmp` remains emptyDir
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
 
@@ -276,7 +286,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | Server         | Transport            | Connects To            |
 | -------------- | -------------------- | ---------------------- |
 | home-assistant | HTTP (FastMCP) :8086 | Home Assistant         |
-| hindsight-home | HTTP proxy :8080     | Hindsight `homelab` bank (single-bank MCPToolConfig; description overrides stay at toolhive) |
+| hindsight-home | HTTP proxy :8080     | Hindsight `home` bank (single-bank MCPToolConfig; description overrides stay at toolhive) |
 
 #### agent (operator agents only)
 
