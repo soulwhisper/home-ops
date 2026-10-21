@@ -35,15 +35,11 @@ spec:
                 valueFrom:
                   fieldRef:
                     fieldPath: status.podIP
-              DSH_PUBLIC_URL: "https://${APP_HOST}"
-              DSH_TRUSTED_HOSTS: "${APP_HOST}"
-              # The edge forwards x-authentik-groups after Authentik allow.
-              # homelab-admin is a group; user admin is its member. Keep this
-              # explicit even though the gateway policy also binds the group.
-              DSH_FORWARD_AUTH_HEADER: "x-authentik-groups"
-              DSH_FORWARD_AUTH_ALLOWED_SUBJECTS: "homelab-admin"
-              DSH_FORWARD_AUTH_TRUSTED_PROXY_CIDRS: "10.100.0.0/17"
-              DSH_FORWARD_AUTH_MAX_CONNECTION_SECONDS: "900"
+              DSH_PUBLIC_URL: "https://chat.noirprime.com"
+              DSH_TRUSTED_HOSTS: "chat.noirprime.com"
+            envFrom:
+              - configMapRef:
+                  name: dsh-web-forward-auth
             resources:
               requests:
                 cpu: 100m
@@ -82,7 +78,7 @@ spec:
 
     route:
       app:
-        hostnames: ["${APP_HOST}"]
+        hostnames: ["chat.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: /icons/open-webui.svg

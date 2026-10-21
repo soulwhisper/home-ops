@@ -35,13 +35,11 @@ spec:
                 valueFrom:
                   fieldRef:
                     fieldPath: status.podIP
-              DSH_PUBLIC_URL: "https://${APP_HOST}"
-              DSH_TRUSTED_HOSTS: "${APP_HOST}"
-              # homelab-admin is the Authentik group containing user admin.
-              DSH_FORWARD_AUTH_HEADER: "x-authentik-groups"
-              DSH_FORWARD_AUTH_ALLOWED_SUBJECTS: "homelab-admin"
-              DSH_FORWARD_AUTH_TRUSTED_PROXY_CIDRS: "10.100.0.0/17"
-              DSH_FORWARD_AUTH_MAX_CONNECTION_SECONDS: "900"
+              DSH_PUBLIC_URL: "https://tavern.noirprime.com"
+              DSH_TRUSTED_HOSTS: "tavern.noirprime.com"
+            envFrom:
+              - configMapRef:
+                  name: dsh-tavern-forward-auth
             resources:
               requests:
                 cpu: 100m
@@ -80,7 +78,7 @@ spec:
 
     route:
       app:
-        hostnames: ["${APP_HOST}"]
+        hostnames: ["tavern.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: /icons/sillytavern.svg

@@ -5,3 +5,9 @@ kind: Kustomization
 resources:
   - ./ciliumnetworkpolicy.yaml
   - ./helmrelease.yaml
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+  - name: dsh-web-forward-auth
+    envs:
+      - ./forward-auth.env
