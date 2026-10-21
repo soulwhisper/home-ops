@@ -58,7 +58,9 @@ spec:
             seccompProfile: { type: RuntimeDefault }
           containers:
             - name: kubectl
-              image: registry.k8s.io/kubectl:v1.37.1
+              # registry.k8s.io/kubectl is distroless (no sh); this job needs a
+              # shell for its retry loop.
+              image: alpine/k8s:1.37.1
               resources:
                 requests:
                   cpu: 5m

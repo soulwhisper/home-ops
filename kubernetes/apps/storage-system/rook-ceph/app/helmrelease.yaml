@@ -11,6 +11,11 @@ spec:
     name: rook-ceph
 
   values:
+    # vlagent parses klog's offset-less timestamps as UTC; the operator is
+    # k8tz-injected Asia/Shanghai, so its lines land 8h in the future
+    # (homelab-tickets#27)
+    annotations:
+      k8tz.io/timezone: "UTC"
     crds:
       enabled: true
     csi:

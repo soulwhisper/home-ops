@@ -49,6 +49,12 @@ spec:
         limits:
           memory: 1Gi
 
+    kubewatch:
+      # klog timestamps are offset-less; with k8tz's Asia/Shanghai vlagent
+      # stores them 8h in the future (homelab-tickets#27)
+      annotations:
+        k8tz.io/timezone: "UTC"
+
     # ---- unified holmes (values carried over from servitor-apps/holmesgpt) ----
     holmes:
       # chart default points SENTRY_DSN at robusta's hosted sentry; the CNP
@@ -72,6 +78,9 @@ spec:
         # bump when holmes-checks-0.42.0.py changes: subPath mounts never
         # propagate ConfigMap updates to running pods (coderabbit)
         home-ops/checks-patch-rev: "10"
+        # the agentgateway lane key lives in the robusta-holmes Secret; without
+        # this a key rotation leaves Holmes on the old key (401 every check)
+        reloader.stakater.com/auto: "true"
       additionalEnvVars:
         # default model for requests that don't name one (HealthChecks!):
         # without it holmes falls back to "gpt-5.4" when OPENAI_API_KEY is set

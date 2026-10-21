@@ -17,7 +17,7 @@ data:
       base_url: $${OPENAI_BASE_URL}
       api_key: $${OPENAI_API_KEY}
     # ToolHive tiers via the agent gateway; per-group keys live in the pod
-    # env (ExternalSecret) and reach this file via ${VAR} interpolation
+    # env (ExternalSecret) and reach this file via $${VAR} interpolation
     # against the seeded .env (hermes _load_mcp_config resolves them)
     mcp_servers:
       cluster:
