@@ -69,7 +69,7 @@ spec:
               - '"success"\s*:\s*true'
               - '"web"\s*:\s*\['
             fail_if_body_matches_regexp:
-              - '"web"\s*:\s*\[\]'
+              - '"web"\s*:\s*\[\s*\]'
         searxng_search:
           prober: http
           timeout: 15s
@@ -80,7 +80,7 @@ spec:
             fail_if_body_not_matches_regexp:
               - '"results"\s*:\s*\['
             fail_if_body_matches_regexp:
-              - '"results"\s*:\s*\[\]'
+              - '"results"\s*:\s*\[\s*\]'
         icmp:
           prober: icmp
           timeout: 5s
@@ -113,9 +113,11 @@ spec:
       enabled: true
       rules:
         - alert: BlackboxProbeFailed
-          # $labels.target does not exist on probe metrics (host is .instance);
-          # macstudio excluded: MacStudioApiDown covers it (fires 5m vs 15m)
-          expr: probe_success{service!="macstudio"} == 0
+          # $labels.target does not exist on probe metrics (host is .instance).
+          # Services with dedicated canary alerts are excluded so their severity
+          # is decided once: macstudio (5m), firecrawl/scrape (10m) and
+          # firecrawl/searxng search (10m).
+          expr: probe_success{service!~"^(macstudio|firecrawl-scrape|firecrawl-search|searxng-search)$"} == 0
           for: 15m
           labels:
             severity: critical
@@ -189,6 +191,15 @@ spec:
           annotations:
             summary: |-
               Firecrawl scrape Probe/metric is missing. Check the Probe CR and
+              blackbox exporter.
+        - alert: FirecrawlSearchProbeMissing
+          expr: absent(probe_success{service="firecrawl-search"})
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: |-
+              Firecrawl search Probe/metric is missing. Check the Probe CR and
               blackbox exporter.
         - alert: SearxngProbeMissing
           expr: absent(probe_success{service="searxng-search"})
