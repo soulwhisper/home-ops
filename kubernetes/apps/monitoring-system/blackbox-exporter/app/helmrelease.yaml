@@ -34,6 +34,53 @@ spec:
               - HTTP/2.0
             follow_redirects: true
             preferred_ip_protocol: ip4
+        # Firecrawl/SearXNG synthetic probes. Native /metrics is absent
+        # (Firecrawl 404, SearXNG open_metrics disabled), so these canaries
+        # are the only signal for "process is up but search/scrape is empty".
+        firecrawl_scrape:
+          prober: http
+          timeout: 45s
+          http:
+            method: POST
+            headers:
+              Content-Type: application/json
+            body: '{"url":"https://en.wikipedia.org/wiki/Web_scraping","formats":["markdown"],"onlyMainContent":true}'
+            valid_status_codes: [200]
+            preferred_ip_protocol: ip4
+            fail_if_body_matches_regexp:
+              - 'SCRAPE_ALL_ENGINES_FAILED'
+              - '安全检测'
+              - '正在刷新'
+              - 'Just a moment'
+            fail_if_body_not_matches_regexp:
+              - '"success"\s*:\s*true'
+              - 'Web scraping'
+        firecrawl_search:
+          prober: http
+          timeout: 60s
+          http:
+            method: POST
+            headers:
+              Content-Type: application/json
+            body: '{"query":"crawl4ai","limit":3}'
+            valid_status_codes: [200]
+            preferred_ip_protocol: ip4
+            fail_if_body_not_matches_regexp:
+              - '"success"\s*:\s*true'
+              - '"web"\s*:\s*\['
+            fail_if_body_matches_regexp:
+              - '"web"\s*:\s*\[\s*\]'
+        searxng_search:
+          prober: http
+          timeout: 15s
+          http:
+            method: GET
+            valid_status_codes: [200]
+            preferred_ip_protocol: ip4
+            fail_if_body_not_matches_regexp:
+              - '"results"\s*:\s*\['
+            fail_if_body_matches_regexp:
+              - '"results"\s*:\s*\[\s*\]'
         icmp:
           prober: icmp
           timeout: 5s
@@ -66,9 +113,11 @@ spec:
       enabled: true
       rules:
         - alert: BlackboxProbeFailed
-          # $labels.target does not exist on probe metrics (host is .instance);
-          # macstudio excluded: MacStudioApiDown covers it (fires 5m vs 15m)
-          expr: probe_success{service!="macstudio"} == 0
+          # $labels.target does not exist on probe metrics (host is .instance).
+          # Services with dedicated canary alerts are excluded so their severity
+          # is decided once: macstudio (5m), firecrawl/scrape (10m) and
+          # firecrawl/searxng search (10m).
+          expr: probe_success{service!~"^(macstudio|firecrawl-scrape|firecrawl-search|searxng-search)$"} == 0
           for: 15m
           labels:
             severity: critical
@@ -89,6 +138,78 @@ spec:
             summary: |-
               Mac Studio oMLX API probe failing: {{ $labels.instance }} (5m).
               Dependents: agentgateway LLM lanes, vmcp optimizer (find_tool), hindsight embeddings/rerank.
+        # Firecrawl search/scrape canaries. Native /metrics is absent, so
+        # probe_success carries the content/challenge failure signal. Use
+        # stable canaries only; do not add NYT/36kr (known anti-bot failures).
+        - alert: FirecrawlScrapeProbeFailed
+          expr: probe_success{service="firecrawl-scrape"} == 0
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: |-
+              Firecrawl scrape canary failing for 10m ({{ $labels.instance }}).
+              Check Firecrawl API logs, Playwright egress and challenge pages.
+        - alert: FirecrawlScrapeSlow
+          expr: probe_duration_seconds{service="firecrawl-scrape"} > 30
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: |-
+              Firecrawl scrape canary slower than 30s for 10m ({{ $labels.instance }}).
+        - alert: FirecrawlSearchProbeFailed
+          expr: probe_success{service="firecrawl-search"} == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: |-
+              Firecrawl search canary failing for 10m. Check SearXNG engines and
+              the SEARXNG_ENGINES curated list.
+        - alert: SearxngSearchProbeFailed
+          expr: probe_success{service="searxng-search"} == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: |-
+              SearXNG JSON search canary failing/empty for 10m.
+        - alert: SearxngSearchSlow
+          expr: probe_duration_seconds{service="searxng-search"} > 10
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: |-
+              SearXNG JSON search canary slower than 10s for 10m.
+        - alert: FirecrawlProbeMissing
+          expr: absent(probe_success{service="firecrawl-scrape"})
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: |-
+              Firecrawl scrape Probe/metric is missing. Check the Probe CR and
+              blackbox exporter.
+        - alert: FirecrawlSearchProbeMissing
+          expr: absent(probe_success{service="firecrawl-search"})
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: |-
+              Firecrawl search Probe/metric is missing. Check the Probe CR and
+              blackbox exporter.
+        - alert: SearxngProbeMissing
+          expr: absent(probe_success{service="searxng-search"})
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: |-
+              SearXNG search Probe/metric is missing. Check the Probe CR and
+              blackbox exporter.
     securityContext:
       readOnlyRootFilesystem: true
       allowPrivilegeEscalation: false
