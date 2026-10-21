@@ -52,6 +52,7 @@ spec:
       labels:
         service: macstudio
 ---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
 # Firecrawl scrape canary: POST /v2/scrape. The module also rejects challenge
 # pages and requires the expected Markdown keyword, not just HTTP 200.
 apiVersion: monitoring.coreos.com/v1
@@ -71,6 +72,7 @@ spec:
       labels:
         service: firecrawl-scrape
 ---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
 # Firecrawl search canary: POST /v2/search, fails on empty web results.
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
@@ -89,6 +91,7 @@ spec:
       labels:
         service: firecrawl-search
 ---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
 # SearXNG JSON search canary. SearXNG is a soft dependency for Firecrawl
 # search; this catches engine fanout/limiter regressions even when the pod is up.
 apiVersion: monitoring.coreos.com/v1
