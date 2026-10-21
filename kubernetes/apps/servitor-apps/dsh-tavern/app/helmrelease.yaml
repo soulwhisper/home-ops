@@ -98,11 +98,7 @@ spec:
           - path: /workspace
             subPath: workspace
       cache:
-        type: persistentVolumeClaim
-        forceRename: dsh-tavern-cache
-        storageClass: ceph-cache
-        size: 8Gi
-        accessMode: ReadWriteOnce
+        existingClaim: dsh-tavern-cache
         globalMounts:
           - path: /cache
             subPath: cache

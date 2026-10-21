@@ -18,9 +18,11 @@ spec:
     - name: agentgateway
       namespace: networking-system
   components:
+    - ../../../../components/cache
     - ../../../../components/authentik
     - ../../../../components/kopiur/backup
   postBuild:
     substitute:
       APP: *name
       APP_HOST: "tavern.noirprime.com"
+      CACHE_CAPACITY: 8Gi

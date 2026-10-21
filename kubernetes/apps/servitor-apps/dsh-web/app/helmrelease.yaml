@@ -98,11 +98,7 @@ spec:
           - path: /workspace
             subPath: workspace
       cache:
-        type: persistentVolumeClaim
-        forceRename: dsh-web-cache
-        storageClass: ceph-cache
-        size: 15Gi
-        accessMode: ReadWriteOnce
+        existingClaim: dsh-web-cache
         globalMounts:
           - path: /cache
             subPath: cache
