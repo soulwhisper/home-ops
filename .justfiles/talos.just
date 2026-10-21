@@ -62,6 +62,14 @@ generate mode:
     # inject installer image pinned by version.yaml (talos_version + live schematic id)
     yq --inplace '(select(.kind == "UnattendedInstallConfig")).installer.image = "factory.talos.dev/metal-installer/'"${SCHEMATIC_ID}"':'"${TALOS_VERSION}"'"' \
       "${TALOS_DIR}/clusterconfig/main-$NODE.yaml"
+    # tuppr overrides come from Node annotations, not the install image. Pin
+    # them to the schematic this config was generated for: a node's runtime
+    # schematic can lag the install image (e.g. a deliberately dropped sysext),
+    # and tuppr's safety net otherwise refuses the upgrade.
+    SCHEMATIC_ID="${SCHEMATIC_ID}" yq --inplace '
+      (select(.kind == "KubeNodeConfig") | .annotations."tuppr.home-operations.com/factory-url") = "factory.talos.dev/metal-installer" |
+      (select(.kind == "KubeNodeConfig") | .annotations."tuppr.home-operations.com/schematic") = strenv(SCHEMATIC_ID)
+    ' "${TALOS_DIR}/clusterconfig/main-$NODE.yaml"
   done
   # gen config leaves endpoints/nodes empty; recipes rely on TALOS_ENDPOINT from talosconfig.
   # Use node IPs: apid certs carry IP SANs, while k8s.homelab.internal is only
