@@ -25,6 +25,23 @@ spec:
             runAsGroup: 1000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
+        initContainers:
+          state-seed:
+            image:
+              repository: ghcr.io/soulwhisper/dsh-web
+              tag: "0.2.1-rc.2@sha256:c4f0ca308caf778f9aca1b94da75a07e6b97caee3001419546924a1c7af5d8ec"
+            command:
+              - node
+              - /opt/dsh/scripts/materialize-state.mjs
+            env:
+              DSH_HOME: /data/dsh
+              HOME: /data/home
+              DSH_PROFILE: web
+              DSH_BACKUP_ROOT: /backups
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              readOnlyRootFilesystem: true
         containers:
           app:
             image:
@@ -37,6 +54,9 @@ spec:
                     fieldPath: status.podIP
               DSH_PUBLIC_URL: "https://chat.noirprime.com"
               DSH_TRUSTED_HOSTS: "chat.noirprime.com"
+              # Keep injected skills outside /data/dsh: materialize-state treats
+              # any pre-existing child as existing state and demands a migration.
+              DSH_AGENTS_HOME: "/data/home/.agents"
             envFrom:
               - configMapRef:
                   name: *name
@@ -93,10 +113,14 @@ spec:
     persistence:
       app:
         existingClaim: *name
-        globalMounts:
-          - path: /data
-          - path: /workspace
-            subPath: workspace
+        advancedMounts:
+          *name :
+            app:
+              - path: /data
+              - path: /workspace
+                subPath: workspace
+            state-seed:
+              - path: /data
       cache:
         existingClaim: dsh-web-cache
         globalMounts:
@@ -109,14 +133,18 @@ spec:
       mcp:
         type: secret
         name: dsh-web-mcp
-        globalMounts:
-          - path: /data/dsh/cordis.patch.yml
-            subPath: cordis.patch.yml
-            readOnly: true
+        advancedMounts:
+          *name :
+            app:
+              - path: /data/dsh/cordis.patch.yml
+                subPath: cordis.patch.yml
+                readOnly: true
       skills:
         type: emptyDir
-        globalMounts:
-          - path: /data/dsh/skills
+        advancedMounts:
+          *name :
+            app:
+              - path: /data/home/.agents/skills
       tmpfs:
         type: emptyDir
         globalMounts:
