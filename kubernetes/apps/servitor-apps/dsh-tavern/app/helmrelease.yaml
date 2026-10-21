@@ -21,7 +21,7 @@ spec:
         pod:
           securityContext:
             runAsNonRoot: true
-            runAsUser: 1000 # node
+            runAsUser: 1000
             runAsGroup: 1000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
@@ -29,13 +29,18 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/dsh-tavern
-              tag: "3.0"
+              tag: "3.0@sha256:62342ac45cb039f3542a6adcac9efeb8868098769bb36ed13ff73c4f396bbfe5"
             env:
-              # dsh fence (docs/user-guide/public-deployments): without
-              # trusted-host, pages load but /api and WS from this hostname
-              # 403. public-url makes the printed token URL directly usable.
-              DSH_TRUSTED_HOSTS: "tavern.noirprime.com"
-              DSH_PUBLIC_URL: "https://tavern.noirprime.com"
+              DSH_HOST:
+                valueFrom:
+                  fieldRef:
+                    fieldPath: status.podIP
+              DSH_PUBLIC_URL: "https://${APP_HOST}"
+              DSH_TRUSTED_HOSTS: "${APP_HOST}"
+              DSH_FORWARD_AUTH_HEADER: "x-authentik-username"
+              DSH_FORWARD_AUTH_ALLOWED_SUBJECTS: "admin"
+              DSH_FORWARD_AUTH_TRUSTED_PROXY_CIDRS: "10.100.0.0/17"
+              DSH_FORWARD_AUTH_MAX_CONNECTION_SECONDS: "900"
             resources:
               requests:
                 cpu: 100m
@@ -51,16 +56,16 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  tcpSocket:
-                    port: &port 3080
+                  exec:
+                    command: ["node", "/opt/dsh/scripts/readiness.mjs"]
                   failureThreshold: 30
                   periodSeconds: 10
               liveness: &liveness
                 enabled: true
                 custom: true
                 spec:
-                  tcpSocket:
-                    port: *port
+                  exec:
+                    command: ["node", "/opt/dsh/scripts/readiness.mjs"]
                   periodSeconds: 30
                   failureThreshold: 3
                   timeoutSeconds: 10
@@ -70,10 +75,11 @@ spec:
       app:
         ports:
           http:
-            port: *port
+            port: 3080
+
     route:
       app:
-        hostnames: ["tavern.noirprime.com"]
+        hostnames: ["${APP_HOST}"]
         annotations:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/icon: /icons/sillytavern.svg
@@ -84,14 +90,27 @@ spec:
             namespace: networking-system
 
     persistence:
-      home:
+      app:
         existingClaim: *name
         globalMounts:
-          - path: /home/node/.dsh
-      workspace:
-        type: emptyDir
-        globalMounts:
+          - path: /data
           - path: /workspace
+            subPath: workspace
+      cache:
+        type: emptyDir
+        sizeLimit: 2Gi
+        globalMounts:
+          - path: /cache
+      logs:
+        type: emptyDir
+        sizeLimit: 512Mi
+        globalMounts:
+          - path: /logs
+      backups:
+        type: emptyDir
+        sizeLimit: 5Gi
+        globalMounts:
+          - path: /backups
       tmpfs:
         type: emptyDir
         globalMounts:

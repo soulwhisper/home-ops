@@ -1,0 +1,58 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: dsh-web
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/name": dsh-web
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "gateway.networking.k8s.io/gateway-name": kgateway-internal
+            "k8s:io.kubernetes.pod.namespace": networking-system
+      toPorts:
+        - ports:
+            - { port: "3080", protocol: TCP }
+    - fromEntities:
+        - host # kubelet probes
+  egress:
+    # LLM and tiered MCP endpoints through the guarded agent gateway.
+    - toServices:
+        - k8sService:
+            serviceName: agentgateway-proxy
+            namespace: networking-system
+      toPorts:
+        - ports:
+            - { port: "80", protocol: TCP }
+          rules:
+            http:
+              - method: "POST"
+                path: "/v1/.*"
+              - path: "/mcp(/.*)?"
+    # Plugin market and runtime plugin downloads. Keep this explicit: the
+    # market is user-driven, not part of the model path.
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+            - 169.254.0.0/16
+            - 100.64.0.0/10
+      toPorts:
+        - ports:
+            - { port: "443", protocol: TCP }
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - { port: "53", protocol: TCP }
+            - { port: "53", protocol: UDP }
+          rules:
+            dns:
+              - matchPattern: "*"
