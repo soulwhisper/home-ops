@@ -11,8 +11,9 @@ data:
   ENV: "production"
   LOGGING_LEVEL: "INFO"
   IS_KUBERNETES: "true"
-  # Service
-  PLAYWRIGHT_MICROSERVICE_URL: "http://firecrawl-playwright.selfhosted-apps.svc.cluster.local:3000"
+  # Service. Firecrawl POSTs to this URL verbatim; the Playwright service
+  # serves /scrape (POST / is a 404).
+  PLAYWRIGHT_MICROSERVICE_URL: "http://firecrawl-playwright.selfhosted-apps.svc.cluster.local:3000/scrape"
   MAX_CONCURRENT_JOBS: "2"
   NUM_WORKERS_PER_QUEUE: "2"
   CRAWL_CONCURRENT_REQUESTS: "2"

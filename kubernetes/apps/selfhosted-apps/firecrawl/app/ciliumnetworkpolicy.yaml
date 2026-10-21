@@ -39,6 +39,14 @@ spec:
       toPorts:
         - ports:
             - { port: "8080", protocol: TCP }
+    # Playwright browser service (api + nuq-worker -> :3000)
+    - toServices:
+        - k8sService:
+            serviceName: firecrawl-playwright
+            namespace: selfhosted-apps
+      toPorts:
+        - ports:
+            - { port: "3000", protocol: TCP }
     # DNS
     - toEndpoints:
         - matchLabels:
