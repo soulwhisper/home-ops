@@ -98,20 +98,18 @@ spec:
           - path: /workspace
             subPath: workspace
       cache:
-        type: emptyDir
-        sizeLimit: 2Gi
+        type: persistentVolumeClaim
+        forceRename: dsh-tavern-cache
+        storageClass: ceph-cache
+        size: 8Gi
+        accessMode: ReadWriteOnce
         globalMounts:
           - path: /cache
-      logs:
-        type: emptyDir
-        sizeLimit: 512Mi
-        globalMounts:
+            subPath: cache
           - path: /logs
-      backups:
-        type: emptyDir
-        sizeLimit: 5Gi
-        globalMounts:
+            subPath: logs
           - path: /backups
+            subPath: backups
       tmpfs:
         type: emptyDir
         globalMounts:

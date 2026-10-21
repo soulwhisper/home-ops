@@ -6,4 +6,5 @@ resources:
   - ./ciliumnetworkpolicy.yaml
   - ./configmap.yaml
   - ./externalsecret.yaml
+  - ./mcp-externalsecret.yaml
   - ./helmrelease.yaml

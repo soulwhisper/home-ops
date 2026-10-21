@@ -98,20 +98,29 @@ spec:
           - path: /workspace
             subPath: workspace
       cache:
-        type: emptyDir
-        sizeLimit: 4Gi
+        type: persistentVolumeClaim
+        forceRename: dsh-web-cache
+        storageClass: ceph-cache
+        size: 15Gi
+        accessMode: ReadWriteOnce
         globalMounts:
           - path: /cache
-      logs:
-        type: emptyDir
-        sizeLimit: 1Gi
-        globalMounts:
+            subPath: cache
           - path: /logs
-      backups:
-        type: emptyDir
-        sizeLimit: 10Gi
-        globalMounts:
+            subPath: logs
           - path: /backups
+            subPath: backups
+      mcp:
+        type: secret
+        name: dsh-web-mcp
+        globalMounts:
+          - path: /data/dsh/cordis.patch.yml
+            subPath: cordis.patch.yml
+            readOnly: true
+      skills:
+        type: emptyDir
+        globalMounts:
+          - path: /data/dsh/skills
       tmpfs:
         type: emptyDir
         globalMounts:
