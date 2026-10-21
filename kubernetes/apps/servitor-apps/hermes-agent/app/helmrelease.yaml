@@ -88,7 +88,7 @@ spec:
               # caveman skills, feishu deps) + supervisord (gateway+dashboard
               # in one container). Tag tracks upstream semver releases.
               repository: ghcr.io/soulwhisper/hermes-agent
-              tag: 0.22.2
+              tag: 0.22.3
             # every k8s rollout SIGTERMs the gateway and it broadcasts
             # "Gateway shutting down — task interrupted" to feishu mid-task
             # (10 graceful SIGTERMs/3d, zero crashes). Give in-flight tasks a
