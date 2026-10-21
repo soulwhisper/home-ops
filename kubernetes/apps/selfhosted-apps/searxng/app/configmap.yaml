@@ -65,6 +65,9 @@ data:
       images:
       videos:
       map:
+      music:
+      files:
+      social media:
     plugins:
       searx.plugins.calculator.SXNGPlugin:
         active: true
