@@ -3,9 +3,9 @@
 version: 1
 entries:
   - model: authentik_providers_proxy.proxyprovider
-    id: sillytavern-proxy-provider
+    id: dsh-tavern-proxy-provider
     identifiers:
-      name: &provider sillytavern-proxy-provider
+      name: &provider dsh-tavern-proxy-provider
     attrs:
       name: *provider
       authorization_flow:
@@ -23,18 +23,18 @@ entries:
       access_token_validity: "hours=12"
       cookie_domain: "noirprime.com"
   - model: authentik_core.application
-    id: sillytavern
+    id: dsh-tavern
     identifiers:
-      slug: &name sillytavern
+      slug: &name dsh-tavern
     attrs:
-      name: *name
-      provider: !KeyOf sillytavern-proxy-provider
+      name: DSH Tavern
+      provider: !KeyOf dsh-tavern-proxy-provider
       meta_launch_url: *domain
       group: "Service"
       policy_engine_mode: all
   - model: authentik_policies.policybinding
     identifiers:
-      target: !KeyOf sillytavern
+      target: !KeyOf dsh-tavern
       group: !Find [authentik_core.group, [name, homelab-admin]]
       order: 0
     attrs: { enabled: true, timeout: 30 }

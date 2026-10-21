@@ -50,10 +50,10 @@ configMapGenerator:
       - ./blueprints/forward/homepage.yaml
       - ./blueprints/forward/hubble.yaml
       - ./blueprints/forward/metube.yaml
-      - ./blueprints/forward/open-webui.yaml
+      - ./blueprints/forward/dsh-web.yaml
       - ./blueprints/forward/qbittorrent.yaml
       - ./blueprints/forward/scrypted.yaml
-      - ./blueprints/forward/sillytavern.yaml
+      - ./blueprints/forward/dsh-tavern.yaml
       - ./blueprints/forward/victoria-logs.yaml
       - ./blueprints/forward/victoria-metrics.yaml
       - ./blueprints/forward/victoria-alert.yaml
