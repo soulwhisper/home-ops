@@ -212,7 +212,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 ### DSH Web
 
 - Agent workbench, image `ghcr.io/soulwhisper/dsh-web` pinned by digest (DSH Web + `dshmarket` + required forward-auth). Lives in **servitor-apps**
-- **Auth**: Authentik forward-auth at the gateway; the image additionally enforces `x-authentik-username` from the trusted kgateway CIDR with the `admin` allowlist. No startup-token or local-password fallback
+- **Auth**: Authentik forward-auth at the gateway; the image additionally enforces the `homelab-admin` group from the trusted kgateway CIDR via `x-authentik-groups` (`admin` is the group member). No startup-token or local-password fallback
 - **Ingress**: `chat.noirprime.com` via kgateway-internal (takes over the retired Open WebUI hostname)
 - **State**: kopiur-backed PVC `dsh-web` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs`, `/backups` and `/tmp` are non-authoritative emptyDir
 - **LLM/MCP**: UI-configured against the agent gateway (`agentgateway.llm_agent`, search tier `/mcp/search` with `mcp_search`); no model key in the manifest
@@ -222,7 +222,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 - RP chat portal (SillyTavern replacement), image `ghcr.io/soulwhisper/dsh-tavern` pinned by digest (dsh-tavern profile + eco plugins baked). Lives in **servitor-apps**
 - **LLM**: UI-configured — uncensored lane (foreground prose) / omni (background settlement); key = `llm_uncensored` from the `agentgateway` item. The gateway is the only AI egress
-- **Auth**: Authentik forward-auth at the gateway; the image enforces `x-authentik-username` from the trusted kgateway CIDR with the `admin` allowlist. No startup-token or local-password fallback
+- **Auth**: Authentik forward-auth at the gateway; the image enforces the `homelab-admin` group from the trusted kgateway CIDR via `x-authentik-groups` (`admin` is the group member). No startup-token or local-password fallback
 - **Ingress**: `tavern.noirprime.com` via kgateway-internal
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (LLM only), world-except-private :443 (card/preset fetches, tavern-image backends), kube-dns
 - **State**: kopiur-backed PVC `dsh-tavern` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs`, `/backups` and `/tmp` are emptyDir

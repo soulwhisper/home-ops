@@ -37,11 +37,11 @@ spec:
                     fieldPath: status.podIP
               DSH_PUBLIC_URL: "https://${APP_HOST}"
               DSH_TRUSTED_HOSTS: "${APP_HOST}"
-              # The edge forwards x-authentik-username after Authentik allow.
-              # Keep this single-owner allowlist explicit; a group header does
-              # not authorize here.
-              DSH_FORWARD_AUTH_HEADER: "x-authentik-username"
-              DSH_FORWARD_AUTH_ALLOWED_SUBJECTS: "admin"
+              # The edge forwards x-authentik-groups after Authentik allow.
+              # homelab-admin is a group; user admin is its member. Keep this
+              # explicit even though the gateway policy also binds the group.
+              DSH_FORWARD_AUTH_HEADER: "x-authentik-groups"
+              DSH_FORWARD_AUTH_ALLOWED_SUBJECTS: "homelab-admin"
               DSH_FORWARD_AUTH_TRUSTED_PROXY_CIDRS: "10.100.0.0/17"
               DSH_FORWARD_AUTH_MAX_CONNECTION_SECONDS: "900"
             resources:
