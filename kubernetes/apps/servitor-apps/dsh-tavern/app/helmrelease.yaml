@@ -39,7 +39,9 @@ spec:
               DSH_TRUSTED_HOSTS: "tavern.noirprime.com"
             envFrom:
               - configMapRef:
-                  name: dsh-tavern-forward-auth
+                  name: *name
+              - secretRef:
+                  name: *name
             resources:
               requests:
                 cpu: 100m
