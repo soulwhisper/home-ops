@@ -131,8 +131,8 @@ the canonical `/mcp` upstream):
 | Route          | vmcp          | Servers (aggregated)                                          | Key (1Password `agentgateway`) | Issued to                    |
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
 | `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | dsh-web (open-webui's former set) |
-| `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes                       |
-| `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-homelab bank                        | `mcp_home`                     | hermes                       |
+| `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
+| `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-homelab bank                        | `mcp_home`                     | hermes, dsh-web                      |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | operator agents only         |
 
 A key minted for one group is invalid on every other route — this is what
@@ -215,7 +215,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
 - **Ingress**: `chat.noirprime.com` via kgateway-internal (takes over the retired Open WebUI hostname)
 - **State**: kopiur-backed PVC `dsh-web` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs` and `/backups` share the `dsh-web-cache` `ceph-cache` PVC; `/tmp` remains emptyDir
-- **MCP/Skills**: the `dsh-web-mcp` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search tier (`/mcp/search` with `mcp_search`, never in Git); `/data/dsh/skills` is an emptyDir for future skill injection
+- **MCP/Skills**: the `dsh-web-mcp` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster and home tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/home` with `mcp_search`, `mcp_cluster`, `mcp_home`, never in Git); `/data/dsh/skills` is an emptyDir for future skill injection
 - **LLM/MCP**: UI-configured against the agent gateway; no model key in the manifest
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (`/v1/*` + `/mcp/*`), world-except-private :443 for the user-driven plugin market, kube-dns
 
