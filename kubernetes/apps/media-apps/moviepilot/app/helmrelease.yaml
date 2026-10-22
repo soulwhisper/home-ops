@@ -30,7 +30,7 @@ spec:
           app:
             image:
               repository: ghcr.io/jxxghp/moviepilot
-              tag: 3.1.8
+              tag: 3.1.9
             env:
               # Scheduler reads TZ into settings.TZ; keep it explicit instead
               # of relying on the image default.
