@@ -2,7 +2,7 @@
 name: versitygw
 services:
   versitygw:
-    image: "ghcr.io/versity/versitygw:v1.9.0"
+    image: "ghcr.io/versity/versitygw:v1.10.0"
     container_name: "versitygw"
     restart: "unless-stopped"
     command:
