@@ -16,11 +16,26 @@ spec:
       repository: coredns/coredns
     replicaCount: 3 # critical for HA
     k8sAppLabelOverride: kube-dns
+    priorityClassName: system-cluster-critical
     serviceAccount:
       create: true
     service:
       name: kube-dns
       clusterIP: 10.100.128.10
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+    podDisruptionBudget:
+      minAvailable: 2
+      unhealthyPodEvictionPolicy: AlwaysAllow
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
+    deployment:
+      dnsPolicy: Default
     servers:
       - zones:
           - zone: .
@@ -31,22 +46,16 @@ spec:
           - name: errors
           - name: health
             configBlock: |-
-              lameduck 5s
+              lameduck 10s
           - name: ready
           - name: kubernetes
             parameters: cluster.local in-addr.arpa ip6.arpa
             configBlock: |-
-              pods verified
               fallthrough in-addr.arpa ip6.arpa
-          - name: autopath
-            parameters: "@kubernetes"
           - name: forward
             parameters: . /etc/resolv.conf
           - name: cache
-            configBlock: |-
-              prefetch 20
-              # until fixed: https://github.com/coredns/coredns/issues/8390
-              # serve_stale
+            parameters: "30"
           - name: loop
           - name: reload
           - name: loadbalance
@@ -55,6 +64,14 @@ spec:
           - name: log
             configBlock: |-
               class error
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: *name
+            app.kubernetes.io/instance: *name
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
