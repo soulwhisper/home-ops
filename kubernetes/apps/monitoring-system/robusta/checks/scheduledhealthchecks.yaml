@@ -47,7 +47,10 @@ metadata:
 spec:
   schedule: "13 1 * * 1" # Monday 09:13 Asia/Shanghai
   timeout: 300
-  query: "Review alert and loop health using vmalertmanager and vmsingle (namespace monitoring-system). (1) Quality: which alerts fired most in the past 7 days, which are flapping (fire/resolve repeatedly), and which look like threshold-vs-normal mismatch. (2) Loop stats: alert transitions by alertname this week, health-check verdict flips (pass/fail alternation without a config change). Quote the key counts verbatim from tool output. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Propose concrete rule adjustments (threshold, for-duration, keep_firing_for, or silence) for the top 3 offenders."
+  # Advisory weekly review. Keep the verbatim evidence gate, but on alert
+  # names: the counts are model-derived from log rows and cannot be checked as
+  # one quoted span, which made every verdict unverifiable (homelab-tickets#19).
+  query: "Review alert and loop health using vmalertmanager and vmsingle (namespace monitoring-system). (1) Quality: which alerts appear most often in the past 7 days, which are flapping (fire/resolve repeatedly), and which look like threshold-vs-normal mismatch. (2) Loop stats: alert transitions by alertname this week, health-check verdict flips (pass/fail alternation without a config change). Base every statement on tool output gathered in this run. Do not invent numeric counts: if a count is not directly in tool output, describe frequency qualitatively. Quote the alert names verbatim from tool output. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Propose concrete rule adjustments (threshold, for-duration, keep_firing_for, or silence) for the top 3 offenders."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
