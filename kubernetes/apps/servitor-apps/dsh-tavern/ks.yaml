@@ -25,4 +25,4 @@ spec:
     substitute:
       APP: *name
       APP_HOST: "tavern.noirprime.com"
-      CACHE_CAPACITY: 8Gi
+      CACHE_CAPACITY: 15Gi
