@@ -73,8 +73,15 @@ timezones independently of the process timezone. MoviePilot reads `TZ` into
 **Verification:**
 
 - `vl_storage_log_max_timestamp_seconds - time()` stays below 1800.
-- `date` in every exception pod reports CST; all other workload pods report UTC.
-- `kubectl get cronjob -A -o custom-columns=...` shows the expected `timeZone`.
+- `date` reports `Asia/Shanghai` in the Immich `app`, Crafty, MoviePilot,
+  TrendRadar `app`/`mcp`, and Robusta runner containers.
+- `date` reports `UTC` in the Robusta operator and CNPG operator containers.
+  For containers that inherit an image default (for example the SGCC bridge),
+  verify the image contract separately instead of asserting a value here.
+- Validate schedule-only entries separately:
+  - `kubectl get cronjob -A -o custom-columns=...` shows the expected `timeZone`.
+  - `ScheduledBackup` and Kopiur schedule status show the expected schedule
+    timezone; these are not pod `date` checks.
 - `kubectl get mutatingwebhookconfiguration k8tz` returns NotFound.
 - `ScheduledHealthCheck` next runs remain at the same wall-clock times after the
   UTC cron conversion.
