@@ -98,3 +98,11 @@ data:
         - (.*\.)?askubuntu.com$
         - (.*\.)?superuser.com$
         - (.*)\/blog\/(.*)
+    # Brave/DDG/Google CSE keep rate-limiting or CAPTCHA-ing this WAN IP,
+    # which left the JSON canary with zero results (homelab-tickets#105).
+    # Bing is disabled by default upstream but answered 10 results in ~3s
+    # from this pod; cn.bing.com is the stable endpoint for this region.
+    engines:
+      - name: bing
+        disabled: false
+        base_url: https://cn.bing.com

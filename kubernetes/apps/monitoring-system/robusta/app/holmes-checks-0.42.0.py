@@ -233,21 +233,51 @@ def _execute_ai_check_two_phase(
             **stats.model_dump(),
         )
 
-    resp, choice, content = _coerce()
-    result = _to_result(resp, choice, content, RequestStats(), 1)
-    interim = _parse_check_response(result, check)
-    if "Verdict rejected" in interim.rationale or "Failed to parse" in interim.rationale:
-        logging.getLogger(__name__).info(
-            "coerce degenerated on %s; retrying once", getattr(check, "name", "?")
-        )
-        resp2, choice2, content2 = _coerce(
+    # LOCAL PATCH (home-ops, homelab-tickets#19/#22): one retry was not
+    # enough. The lane intermittently returns an empty `{}` (parse error) or
+    # a paraphrase without a verbatim span (gate reject); both are stochastic
+    # and independent between calls. Retry up to three times total, with a
+    # failure-specific note, so a single bad sample cannot open a ticket.
+    failure_notes = {
+        "Verdict rejected": (
             "\n\nYour previous answer contained no verbatim quote of the tool "
             "output and was rejected. Answer again, quoting the actual metric "
             "names and values from <tool_output>."
+        ),
+        "Failed to parse": (
+            "\n\nYour previous answer was empty or did not follow the required "
+            "format. Answer again with exactly one RATIONALE: paragraph and one "
+            "PASSED: yes or no line."
+        ),
+    }
+    prior_stats = RequestStats()
+    note = ""
+    result = None
+    for attempt in range(1, 4):
+        resp, choice, content = _coerce(note)
+        result = _to_result(resp, choice, content, prior_stats, attempt)
+        interim = _parse_check_response(result, check)
+        kind = next(
+            (k for k in failure_notes if interim.rationale.startswith(k)), None
         )
-        result = _to_result(
-            resp2, choice2, content2, RequestStats.from_response(resp), 2
+        if kind is None:
+            return result
+        if attempt == 3:
+            logging.getLogger(__name__).warning(
+                "coerce still failed on %s after %d attempts: %.200s",
+                getattr(check, "name", "?"),
+                attempt,
+                interim.rationale,
+            )
+            return result
+        logging.getLogger(__name__).info(
+            "coerce failed on %s (attempt %d/3), retrying: %.200s",
+            getattr(check, "name", "?"),
+            attempt,
+            interim.rationale,
         )
+        note = failure_notes[kind]
+        prior_stats += RequestStats.from_response(resp)
     return result
 
 # LOCAL PATCH (home-ops, homelab-tickets#7): evidence gate. Holmes can emit a
@@ -368,8 +398,16 @@ def _parse_check_response(
                 "unevidenced verdict. Investigate the toolchain, not the target."
             ),
         )
+    raw = (response.result or "").strip()
+    # An empty completion must be a parse failure (and therefore retried),
+    # not a Pydantic dump of "2 validation errors for CheckResponse"
+    # (homelab-tickets#22).
+    if not raw or raw in ("{}", "null"):
+        return CheckResponse(
+            passed=False, rationale="Failed to parse response: empty verdict"
+        )
     try:
-        result_json = json.loads(response.result or "{}")
+        result_json = json.loads(raw)
         parsed = CheckResponse(**result_json)
     except (json.JSONDecodeError, Exception) as parse_error:
         return CheckResponse(

@@ -7,6 +7,12 @@ metadata:
 spec:
   allowedNamespaces:
     all: true
+  # All 21 SnapshotPolicies fire inside one 30m jitter window. Without a cap
+  # every mover read/uploads at once, saturating the NAS link and the shared
+  # node NVMe; etcd proposals fail and controllers restart (homelab-tickets
+  # #4/#28/#29). Two movers keep the 6h backup window while bounding the burst.
+  concurrency:
+    maxConcurrentJobs: 2
   backend:
     s3:
       bucket: kopiur

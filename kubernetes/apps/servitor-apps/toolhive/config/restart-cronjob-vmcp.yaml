@@ -48,6 +48,9 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: 1
+      # 4 groups * (discovery 120s + delete 120s + recreate 300s + ready
+      # 300s) worst case is 56m; cap the whole run at 30m.
+      activeDeadlineSeconds: 1800
       template:
         spec:
           serviceAccountName: vmcp-restarter
@@ -77,32 +80,67 @@ spec:
               # proceeding after a failed wait would take more groups
               # offline while one is still down; backoffLimit retries the
               # whole Job, which is idempotent.
+              # The 2026-10-22 run exhausted its retry within seconds without
+              # replacing a pod. The old script had unguarded discovery and
+              # get/delete races that could abort exactly that way, and the Job
+              # left no usable log (homelab-tickets#106). Retry discovery,
+              # tolerate a vanished pod, and log every step so the next
+              # failure names its group.
               command:
                 - sh
                 - -c
-                - >-
+                - |
+                  set -u
+                  ns=servitor-apps
+
+                  find_pod() {
+                    group="$1"
+                    i=0
+                    while [ "$i" -lt 24 ]; do
+                      pod=$(kubectl get pod --namespace="$ns" \
+                        -l "toolhive-name=$group" \
+                        -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+                      if [ -n "$pod" ]; then
+                        printf '%s' "$pod"
+                        return 0
+                      fi
+                      i=$((i + 1))
+                      sleep 5
+                    done
+                    return 1
+                  }
+
                   for g in search cluster home agent; do
-                    pod=$(kubectl get pod --namespace=servitor-apps
-                    -l toolhive-name=$g
-                    -o jsonpath='{.items[0].metadata.name}');
-                    [ -n "$pod" ] || { echo "no runner pod for $g"; exit 1; }
-                    kubectl delete pod --namespace=servitor-apps "$pod"
-                    --wait=false || exit 1;
-                    kubectl wait --for=delete "pod/$pod"
-                    --namespace=servitor-apps --timeout=120s || exit 1;
-                    newpod="";
-                    for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
-                      newpod=$(kubectl get pod --namespace=servitor-apps
-                      -l toolhive-name=$g
-                      -o jsonpath='{.items[0].metadata.name}');
-                      [ -n "$newpod" ] && [ "$newpod" != "$pod" ] && break;
-                      sleep 5;
-                    done;
-                    [ -n "$newpod" ] && [ "$newpod" != "$pod" ] || {
-                    echo "no replacement pod for $g"; exit 1; }
-                    kubectl wait --for=condition=ready "pod/$newpod"
-                    --namespace=servitor-apps --timeout=180s || exit 1;
+                    pod=$(find_pod "$g") || {
+                      echo "no runner pod for $g after 120s"; exit 1; }
+                    echo "restarting $g/$pod"
+                    kubectl delete pod --namespace="$ns" "$pod" \
+                      --wait=false --ignore-not-found=true || exit 1
+                    kubectl wait --for=delete "pod/$pod" \
+                      --namespace="$ns" --timeout=120s || exit 1
+
+                    newpod=""
+                    i=0
+                    while [ "$i" -lt 60 ]; do
+                      candidate=$(kubectl get pod --namespace="$ns" \
+                        -l "toolhive-name=$g" \
+                        -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+                      if [ -n "$candidate" ] && [ "$candidate" != "$pod" ]; then
+                        newpod="$candidate"
+                        break
+                      fi
+                      i=$((i + 1))
+                      sleep 5
+                    done
+                    if [ -z "$newpod" ]; then
+                      echo "no replacement pod for $g after 300s"
+                      exit 1
+                    fi
+                    echo "waiting for $g/$newpod"
+                    kubectl wait --for=condition=ready "pod/$newpod" \
+                      --namespace="$ns" --timeout=300s || exit 1
                   done
+                  echo "all runner pods restarted"
               securityContext:
                 allowPrivilegeEscalation: false
           restartPolicy: Never
