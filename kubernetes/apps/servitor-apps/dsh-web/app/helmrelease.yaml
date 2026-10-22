@@ -37,9 +37,6 @@ spec:
                     fieldPath: status.podIP
               DSH_PUBLIC_URL: "https://chat.noirprime.com"
               DSH_TRUSTED_HOSTS: "chat.noirprime.com"
-              # The temporary HOME skills emptyDir remains until the image
-              # with native skill roots is pinned. Set DSH_SKILL_DIRS only
-              # for extra roots.
             envFrom:
               - configMapRef:
                   name: *name
@@ -96,12 +93,11 @@ spec:
     persistence:
       app:
         existingClaim: *name
-        advancedMounts:
-          *name :
-            app:
-              - path: /data
-              - path: /workspace
-                subPath: workspace
+        globalMounts:
+          - path: /data
+            subPath: data
+          - path: /workspace
+            subPath: workspace
       cache:
         existingClaim: dsh-web-cache
         globalMounts:
@@ -114,18 +110,10 @@ spec:
       mcp:
         type: secret
         name: dsh-web-mcp
-        advancedMounts:
-          *name :
-            app:
-              - path: /data/dsh/cordis.patch.yml
-                subPath: cordis.patch.yml
-                readOnly: true
-      skills:
-        type: emptyDir
-        advancedMounts:
-          *name :
-            app:
-              - path: /data/home/.agents/skills
+        globalMounts:
+          - path: /data/dsh/cordis.patch.yml
+            subPath: cordis.patch.yml
+            readOnly: true
       tmpfs:
         type: emptyDir
         globalMounts:
