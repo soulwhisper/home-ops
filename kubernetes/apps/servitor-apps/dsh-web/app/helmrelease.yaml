@@ -25,23 +25,6 @@ spec:
             runAsGroup: 1000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
-        initContainers:
-          state-seed:
-            image:
-              repository: ghcr.io/soulwhisper/dsh-web
-              tag: "0.2.1-rc.2-r2@sha256:64505485b1ed284dd90a8ec51ca57dda11542e8e6d56e0f12ba783008bdf2a3e"
-            command:
-              - node
-              - /opt/dsh/scripts/materialize-state.mjs
-            env:
-              DSH_HOME: /data/dsh
-              HOME: /data/home
-              DSH_PROFILE: web
-              DSH_BACKUP_ROOT: /backups
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-              readOnlyRootFilesystem: true
         containers:
           app:
             image:
@@ -54,11 +37,9 @@ spec:
                     fieldPath: status.podIP
               DSH_PUBLIC_URL: "https://chat.noirprime.com"
               DSH_TRUSTED_HOSTS: "chat.noirprime.com"
-              # Native skill roots: /workspace/.dsh/skills,
-              # /workspace/.agents/skills, $DSH_HOME/skills and
-              # $DSH_AGENTS_HOME/skills. Do not mount skills below
-              # /data/home. Set DSH_SKILL_DIRS only for extra roots.
-              DSH_AGENTS_HOME: "/data/home/.agents"
+              # The temporary HOME skills emptyDir remains until the image
+              # with native skill roots is pinned. Set DSH_SKILL_DIRS only
+              # for extra roots.
             envFrom:
               - configMapRef:
                   name: *name
@@ -121,8 +102,6 @@ spec:
               - path: /data
               - path: /workspace
                 subPath: workspace
-            state-seed:
-              - path: /data
       cache:
         existingClaim: dsh-web-cache
         globalMounts:
@@ -141,6 +120,12 @@ spec:
               - path: /data/dsh/cordis.patch.yml
                 subPath: cordis.patch.yml
                 readOnly: true
+      skills:
+        type: emptyDir
+        advancedMounts:
+          *name :
+            app:
+              - path: /data/home/.agents/skills
       tmpfs:
         type: emptyDir
         globalMounts:
