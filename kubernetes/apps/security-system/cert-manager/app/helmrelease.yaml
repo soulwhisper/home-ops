@@ -14,17 +14,6 @@ spec:
     crds:
       enabled: true
     featureGates: ACMEUseARI=true # RFC 9773 renewal info; LE drives renewal windows
-    # vlagent parses klog's offset-less timestamps as UTC; cainjector (and
-    # other k8tz-CST Go infra) landed 8h in the future (homelab-tickets#27).
-    # UTC until VictoriaLogs#1883. cainjector logs the most of the set.
-    podAnnotations:
-      k8tz.io/timezone: "UTC"
-    cainjector:
-      podAnnotations:
-        k8tz.io/timezone: "UTC"
-    webhook:
-      podAnnotations:
-        k8tz.io/timezone: "UTC"
     dns01RecursiveNameservers: https://1.1.1.1:443/dns-query,https://1.0.0.1:443/dns-query
     dns01RecursiveNameserversOnly: true
     # HTTPS_PROXY is needed, under 'extraEnv'

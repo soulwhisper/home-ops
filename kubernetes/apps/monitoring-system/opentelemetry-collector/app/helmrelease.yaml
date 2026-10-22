@@ -14,11 +14,6 @@ spec:
     fullnameOverride: *name
     mode: deployment
     replicaCount: 2
-    # vlagent parses klog-style timestamps as UTC; with k8tz Asia/Shanghai
-    # those lines landed 8h in the future (homelab-tickets#27). UTC until
-    # VictoriaLogs#1883.
-    podAnnotations:
-      k8tz.io/timezone: "UTC"
     clusterRole:
       rules:
         - apiGroups: [events.k8s.io]

@@ -13,5 +13,10 @@ spec:
   values:
     fullnameOverride: *name
     replicaCount: 1
+    # ScheduledBackup cron has no timezone field; keep the operator on UTC and
+    # express schedules as UTC.
+    additionalEnv:
+      - name: TZ
+        value: UTC
     crds:
       create: true

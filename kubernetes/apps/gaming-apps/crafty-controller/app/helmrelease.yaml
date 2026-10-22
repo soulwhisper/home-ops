@@ -32,6 +32,9 @@ spec:
             image:
               repository: registry.gitlab.com/crafty-controller/crafty-4
               tag: 4.11.0
+            env:
+              # APScheduler uses get_localzone() for in-app schedules.
+              TZ: Asia/Shanghai
             probes:
               liveness:
                 enabled: true

@@ -1,8 +1,8 @@
 # Application Catalog
 
-78 applications, 13 backend MCP servers, and 4 ToolHive VirtualMCP tiers across 12 namespaces, managed via Flux GitOps.
+77 applications, 13 backend MCP servers, and 4 ToolHive VirtualMCP tiers across 12 namespaces, managed via Flux GitOps.
 
-## kube-system — Cluster Infrastructure (10)
+## kube-system — Cluster Infrastructure (9)
 
 | App              | Purpose                                            |
 | ---------------- | -------------------------------------------------- |
@@ -14,7 +14,6 @@
 | Intel GPU Plugin | i915 GPU exposure for transcoding                  |
 | Reloader         | Auto-restart on ConfigMap/Secret change            |
 | Descheduler      | Pod rebalancing                                    |
-| K8tz             | Timezone injection (Asia/Shanghai)                 |
 | Gateway API CRDs | CRDs for kgateway                                  |
 
 ## gitops-system — GitOps Engine (3)

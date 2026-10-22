@@ -152,9 +152,9 @@ spec:
               Whole log entries are being lost. Find the producer in VictoriaLogs
               from the vlagent warning "skipping log entry from Pod".
         # vlagent parses some zone-less embedded app timestamps as UTC and
-        # overrides the CRI timestamp; k8tz makes app clocks Asia/Shanghai, so
-        # affected rows are stored up to 8h in the future. Alert until upstream
-        # VictoriaLogs stops preferring ambiguous embedded timestamps.
+        # overrides the CRI timestamp. Containers default to UTC now, so
+        # affected rows should no longer land 8h in the future. Alert until
+        # upstream VictoriaLogs stops preferring ambiguous embedded timestamps.
         - alert: VictoriaLogsFutureLogTimestamps
           expr: max(vl_storage_log_max_timestamp_seconds) - time() > 1800
           for: 30m

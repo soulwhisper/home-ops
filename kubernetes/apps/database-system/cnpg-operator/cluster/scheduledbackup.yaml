@@ -5,7 +5,9 @@ kind: ScheduledBackup
 metadata:
   name: postgres
 spec:
-  schedule: "@daily"
+  # 16:00 UTC = 00:00 Asia/Shanghai. The operator runs with TZ=UTC and this
+  # resource has no timezone field.
+  schedule: "0 0 16 * * *"
   immediate: true
   backupOwnerReference: self
   cluster:

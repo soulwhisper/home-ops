@@ -39,6 +39,7 @@ spec:
               repository: ghcr.io/immich-app/immich-server
               tag: v3.3.5
             env:
+              TZ: Asia/Shanghai
               DB_USERNAME:
                 valueFrom:
                   secretKeyRef:

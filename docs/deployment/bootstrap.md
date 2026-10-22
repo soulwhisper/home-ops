@@ -200,7 +200,6 @@ Two steps, run sequentially:
    | `external-secrets` | `security-system` | `gateway-api-crds` | 1Password-backed secrets |
    | `cert-manager` | `security-system` | `gateway-api-crds` | Certificate management |
    | `onepassword-connect` | `security-system` | `external-secrets` | 1Password Connect API |
-   | `k8tz` | `kube-system` | `cert-manager` | Timezone injection |
    | `flux-operator` | `gitops-system` | `external-secrets` | Flux controller manager |
    | `flux-instance` | `gitops-system` | `flux-operator` | Flux Kustomization controllers |
 

@@ -26,7 +26,6 @@ flowchart TB
         B5 --> B7["external-secrets"]
         B5 --> B8["cert-manager"]
         B7 --> B9["onepassword-connect"]
-        B8 --> B10["k8tz"]
         B7 --> B11["flux-operator"]
         B11 --> B12["flux-instance"]
     end
@@ -214,13 +213,13 @@ Key behaviors this enforces cluster-wide:
 
 All Helm charts are sourced from OCI registries. The legacy `HelmRepository` CRD is eliminated — every chart reference uses `OCIRepository` exclusively.
 
-### Own OCIRepositories (53)
+### Own OCIRepositories (52)
 
-Each non-trivial application defines its own `OCIRepository` resource in its `app/` subdirectory alongside its `HelmRelease`. These 53 repositories pull charts directly from their publishers' OCI registries:
+Each non-trivial application defines its own `OCIRepository` resource in its `app/` subdirectory alongside its `HelmRelease`. These 52 repositories pull charts directly from their publishers' OCI registries:
 
 | Namespace         | Count | Example Charts                                                                                                                                                                                                                                        |
 | ----------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| kube-system       | 11    | cilium, coredns, spegel, frr-k8s, descheduler, reloader, metrics-server, k8tz, gateway-api-crds, intel-device-plugins (operator + GPU)                                                                                                                |
+| kube-system       | 10    | cilium, coredns, spegel, frr-k8s, descheduler, reloader, metrics-server, gateway-api-crds, intel-device-plugins (operator + GPU)                                                                                                                       |
 | security-system   | 5     | authentik, cert-manager, external-secrets, onepassword-connect, kyverno                                                                                                                                                                                        |
 | storage-system    | 6     | rook-ceph (app + cluster + drivers), kopiur, snapshot-controller, csi-driver-nfs                                                                                                                                                     |
 | database-system   | 4     | cloudnative-pg, plugin-barman-cloud, dragonfly-operator, clickhouse-operator                                                                                                                                                                          |
@@ -392,7 +391,7 @@ The cluster uses 12 namespaces, ordered by dependency from foundational infrastr
 
 | #   | Namespace           | Purpose                              | Key Resources                                                                                                                                                                                                                              |
 | --- | ------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | `kube-system`       | Cluster networking and node services | Cilium CNI, CoreDNS, Spegel mirror, FRR-K8s BGP, Intel GPU plugins, Reloader, Descheduler, k8tz, Gateway API CRDs, Metrics Server                                                                                         |
+| 1   | `kube-system`       | Cluster networking and node services | Cilium CNI, CoreDNS, Spegel mirror, FRR-K8s BGP, Intel GPU plugins, Reloader, Descheduler, Gateway API CRDs, Metrics Server                                                                                                |
 | 2   | `security-system`   | Identity, certificates, secrets      | Authentik SSO, cert-manager, External Secrets Operator, 1Password Connect, Kyverno (6 ClusterPolicies)                                                                                                                                                                  |
 | 3   | `storage-system`    | Persistent storage and backups       | Rook-Ceph (block + object), CSI NFS driver, kopiur, Snapshot Controller                                                                                                                                                   |
 | 4   | `database-system`   | Database operators                   | CloudNativePG, Dragonfly Operator, ClickHouse Operator                                                                                                                                                                                     |
@@ -420,13 +419,13 @@ The namespace numbering reflects the reconciliation dependency chain:
 
 ## Bootstrap Chain
 
-Before Flux can manage the cluster, the foundational components must be installed. This is handled by a **helmfile** in `kubernetes/bootstrap/helmfile.yaml` — 12 releases wired into a dependency DAG via `needs:`:
+Before Flux can manage the cluster, the foundational components must be installed. This is handled by a **helmfile** in `kubernetes/bootstrap/helmfile.yaml` — 11 releases wired into a dependency DAG via `needs:`:
 
 ```
 prometheus-crds → coredns → cilium → spegel → gateway-api-crds
 gateway-api-crds → kgateway-crds
                  → external-secrets → onepassword-connect
-                 → cert-manager → k8tz
+                 → cert-manager
 external-secrets → flux-operator → flux-instance
 ```
 
@@ -438,7 +437,7 @@ Flux cannot install itself. The bootstrap chain uses helmfile for the initial pr
 2. CoreDNS is installed before Cilium (hubble-relay rendering requires cluster DNS to exist; it only becomes ready once Cilium provides pod networking).
 3. Spegel provides the OCI registry mirror that subsequent chart pulls use.
 4. Gateway API CRDs are needed by kgateway-crds, external-secrets, and cert-manager.
-5. External Secrets and 1Password Connect provision the secrets that Flux and applications consume; cert-manager and k8tz cover certificates and time-zone injection.
+5. External Secrets and 1Password Connect provision the secrets that Flux and applications consume; cert-manager covers certificates, and timezones are owned by workloads (see [ADR 04](../decisions/timezone.md)).
 6. Flux Operator and Flux Instance are the last step — once they're running, Flux takes over.
 
 ### Step Details
@@ -454,9 +453,8 @@ Flux cannot install itself. The bootstrap chain uses helmfile for the initial pr
 | 7. `external-secrets` | `oci://ghcr.io/external-secrets/charts/external-secrets`             | `values.yaml.gotmpl` | Kubernetes External Secrets Operator — syncs secrets from 1Password                                   |
 | 8. `cert-manager`     | `oci://quay.io/jetstack/charts/cert-manager`                         | `values.yaml.gotmpl` | Certificate management for cluster-wide TLS                                                           |
 | 9. `onepassword-connect` | `oci://ghcr.io/1password/connect`                                 | `values.yaml.gotmpl` | 1Password Connect server backing the ClusterSecretStore                                               |
-| 10. `k8tz`            | `oci://ghcr.io/k8tz/k8tz/charts/k8tz`                                | `values.yaml.gotmpl` | Timezone injection via admission webhook (needs cert-manager)                                         |
-| 11. `flux-operator`   | `oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator`           | `values.yaml.gotmpl` | Manages Flux Instance lifecycle                                                                       |
-| 12. `flux-instance`   | `oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance`           | `values.yaml.gotmpl` | Creates the GitRepository and Kustomization resources that begin GitOps reconciliation                |
+| 10. `flux-operator`   | `oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator`           | `values.yaml.gotmpl` | Manages Flux Instance lifecycle                                                                       |
+| 11. `flux-instance`   | `oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance`           | `values.yaml.gotmpl` | Creates the GitRepository and Kustomization resources that begin GitOps reconciliation                |
 
 ### Values Templating
 
