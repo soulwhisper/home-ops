@@ -9,11 +9,6 @@ spec:
     deployment:
       replicas: 3 # bgp advertise 3 nodes
     podTemplate:
-      extraAnnotations:
-        # kgateway's klog timestamps are offset-less; with k8tz's
-        # Asia/Shanghai vlagent stores them 8h in the future
-        # (homelab-tickets#27)
-        k8tz.io/timezone: "UTC"
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname

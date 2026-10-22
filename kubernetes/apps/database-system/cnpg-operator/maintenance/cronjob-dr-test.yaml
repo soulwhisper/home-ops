@@ -150,6 +150,7 @@ spec:
         type: cronjob
         cronjob:
           schedule: "0 4 * * 0"
+          timeZone: "Asia/Shanghai"
           activeDeadlineSeconds: 1800 # 30m
           backoffLimit: 0
           concurrencyPolicy: Forbid

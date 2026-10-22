@@ -32,6 +32,9 @@ spec:
               repository: ghcr.io/jxxghp/moviepilot
               tag: 3.1.8
             env:
+              # Scheduler reads TZ into settings.TZ; keep it explicit instead
+              # of relying on the image default.
+              TZ: Asia/Shanghai
               NGINX_PORT: &port 3000
               PORT: &apiPort 3001
               CACHE_BACKEND_TYPE: "redis"

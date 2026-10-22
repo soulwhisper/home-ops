@@ -63,3 +63,4 @@ nav:
       - BGP: decisions/bgp.md
       - Public Exposure: decisions/public-exposure.md
       - Workload Sandboxing: decisions/workload-sandboxing.md
+      - Timezones: decisions/timezone.md

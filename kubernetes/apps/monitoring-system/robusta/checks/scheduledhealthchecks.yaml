@@ -1,11 +1,13 @@
 ---
+# Schedules are UTC because the operator runs with TZ=UTC. The previous
+# Asia/Shanghai wall-clock times are preserved by subtracting 8 hours.
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/holmesgpt.dev/scheduledhealthcheck_v1alpha1.json
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
 metadata:
   name: ceph-health-growth
 spec:
-  schedule: "17 */6 * * *"
+  schedule: "17 4,10,16,22 * * *" # 00:17/06:17/12:17/18:17 Asia/Shanghai
   # controller default is 30s — real tool-using investigations take minutes
   timeout: 300
   # 2026-10-13 (+08): a fail verdict listed nine catastrophic ceph conditions
@@ -20,7 +22,7 @@ kind: ScheduledHealthCheck
 metadata:
   name: cert-expiry-watch
 spec:
-  schedule: "23 7 * * *"
+  schedule: "23 23 * * *" # 07:23 Asia/Shanghai
   timeout: 300
   # noirprime-com deliberately runs a 160h duration, so a flat "expiring within
   # 14 days" window can never pass (homelab-tickets#12). Judge renewal health
@@ -32,7 +34,7 @@ kind: ScheduledHealthCheck
 metadata:
   name: node-density-trend
 spec:
-  schedule: "41 8 * * *"
+  schedule: "41 0 * * *" # 08:41 Asia/Shanghai
   timeout: 300
   # maxPods is 160 per node since homelab-tickets#13 (was 110 when the
   # exarch-03 pile-up fired this check); the 80% flag line moved with it.
@@ -43,7 +45,7 @@ kind: ScheduledHealthCheck
 metadata:
   name: alert-rule-quality-weekly
 spec:
-  schedule: "13 9 * * 1"
+  schedule: "13 1 * * 1" # Monday 09:13 Asia/Shanghai
   timeout: 300
   query: "Review alert and loop health using vmalertmanager and vmsingle (namespace monitoring-system). (1) Quality: which alerts fired most in the past 7 days, which are flapping (fire/resolve repeatedly), and which look like threshold-vs-normal mismatch. (2) Loop stats: alert transitions by alertname this week, health-check verdict flips (pass/fail alternation without a config change). Quote the key counts verbatim from tool output. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Propose concrete rule adjustments (threshold, for-duration, keep_firing_for, or silence) for the top 3 offenders."
 ---
@@ -52,7 +54,7 @@ kind: ScheduledHealthCheck
 metadata:
   name: resolved-alert-recheck-daily
 spec:
-  schedule: "3 9 * * *"
+  schedule: "3 1 * * *" # 09:03 Asia/Shanghai
   timeout: 300
   # acceptance.md's "re-check after 24h" duty, automated (coderabbit#4074): a
   # weekly check leaves alerts resolved on a Tuesday unverified for days.
@@ -63,6 +65,6 @@ kind: ScheduledHealthCheck
 metadata:
   name: backup-chain-daily
 spec:
-  schedule: "7 6 * * *"
+  schedule: "7 22 * * *" # 06:07 Asia/Shanghai
   timeout: 300
   query: "Check backup health: kopiur snapshot jobs (namespace storage-system) and the cnpg postgres backup plus DR-test cronjobs (namespace database-system): any failed or missed runs in the last 48 hours, and the oldest successful snapshot age per critical app. Quote the oldest-snapshot ages verbatim from tool output in the rationale. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Report concise status."

@@ -12,7 +12,6 @@ resources:
   - ./frr-k8s/ks.yaml
   - ./gateway-api-crds/ks.yaml
   - ./intel-device-plugins/ks.yaml
-  - ./k8tz/ks.yaml
   - ./metrics-server/ks.yaml
   - ./reloader/ks.yaml
   - ./spegel/ks.yaml

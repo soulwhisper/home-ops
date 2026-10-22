@@ -42,18 +42,17 @@ spec:
           size_limit: 262144
 
     runner:
+      # Ticket Started/Ended are user-facing; keep this renderer on local time.
+      # The rest of the monitoring data plane stays UTC.
+      additional_env_vars:
+        - name: TZ
+          value: Asia/Shanghai
       resources:
         requests:
           cpu: 50m
           memory: 256Mi
         limits:
           memory: 1Gi
-
-    kubewatch:
-      # klog timestamps are offset-less; with k8tz's Asia/Shanghai vlagent
-      # stores them 8h in the future (homelab-tickets#27)
-      annotations:
-        k8tz.io/timezone: "UTC"
 
     # ---- unified holmes (values carried over from servitor-apps/holmesgpt) ----
     holmes:
@@ -122,6 +121,11 @@ spec:
       # results read from CR status
       operator:
         enabled: true
+        # ScheduledHealthCheck cron expressions are UTC; keep the operator in
+        # UTC so schedules do not silently shift by the node timezone.
+        additionalEnvVars:
+          - name: TZ
+            value: UTC
       resources:
         requests:
           cpu: 100m

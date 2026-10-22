@@ -14,17 +14,3 @@ spec:
     alertmanagerAddress: http://vmalertmanager-victoria-metrics-cluster.monitoring-system.svc.cluster.local:9093
     networkPolicy:
       enabled: false
-
-  # Chart 0.21.0 has no podAnnotations value; target only this pod template (#27).
-  postRenderers:
-    - kustomize:
-        patches:
-          - target:
-              group: apps
-              version: v1
-              kind: Deployment
-              name: silence-operator
-            patch: |-
-              - op: add
-                path: /spec/template/metadata/annotations/k8tz.io~1timezone
-                value: "UTC"

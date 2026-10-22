@@ -98,9 +98,6 @@ spec:
     # : http://vmalert-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8080
     vmalert:
       spec:
-        podMetadata:
-          annotations:
-            k8tz.io/timezone: "UTC"
         datasource:
           url: "http://vmauth-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8427"
 
@@ -108,9 +105,6 @@ spec:
     # : http://vmagent-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8429
     vmagent:
       spec:
-        podMetadata:
-          annotations:
-            k8tz.io/timezone: "UTC"
         # avg 0.13c/140Mi but scrape bursts throttle at the stock 200m cap
         # (CPUThrottlingHigh); nodes are 13900H/96G so allow honest bursts
         resources:
@@ -127,9 +121,6 @@ spec:
     vmauth:
       enabled: true
       spec:
-        podMetadata:
-          annotations:
-            k8tz.io/timezone: "UTC"
         extraArgs:
           requestBufferSize: "65536"
         unauthorizedUserAccessSpec:
@@ -146,10 +137,6 @@ spec:
     # : http://vmalertmanager-victoria-metrics-cluster.monitoring-system.svc.cluster.local:9093
     alertmanager:
       useManagedConfig: true
-      spec:
-        podMetadata:
-          annotations:
-            k8tz.io/timezone: "UTC"
       config:
         route:
           group_by: ["alertname", "job"]

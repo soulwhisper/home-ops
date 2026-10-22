@@ -9,9 +9,6 @@ spec:
     name: cluster
   resourceOverrides:
     proxyDeployment:
-      podTemplateMetadataOverrides:
-        annotations:
-          k8tz.io/timezone: "UTC"
       env:
         - name: TZ
           value: "UTC"
