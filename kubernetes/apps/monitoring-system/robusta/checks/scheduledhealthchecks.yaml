@@ -47,10 +47,12 @@ metadata:
 spec:
   schedule: "13 1 * * 1" # Monday 09:13 Asia/Shanghai
   timeout: 300
-  # Advisory weekly review. Keep the verbatim evidence gate, but on alert
-  # names: the counts are model-derived from log rows and cannot be checked as
-  # one quoted span, which made every verdict unverifiable (homelab-tickets#19).
-  query: "Review alert and loop health using vmalertmanager and vmsingle (namespace monitoring-system). (1) Quality: which alerts appear most often in the past 7 days, which are flapping (fire/resolve repeatedly), and which look like threshold-vs-normal mismatch. (2) Loop stats: alert transitions by alertname this week, health-check verdict flips (pass/fail alternation without a config change). Base every statement on tool output gathered in this run. Do not invent numeric counts: if a count is not directly in tool output, describe frequency qualitatively. Quote the alert names verbatim from tool output. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Propose concrete rule adjustments (threshold, for-duration, keep_firing_for, or silence) for the top 3 offenders."
+  # The old version tried to rank alert history from raw log rows; the
+  # aggregate counts are not a single verifiable quote span and every verdict
+  # was rejected or failed on tool-output size (homelab-tickets#19). This is
+  # now a deterministic alerting-loop health check: target availability plus a
+  # firing count for context. Rule-quality ranking waits for a compact source.
+  query: "Review alerting loop health using vmsingle (namespace monitoring-system). Run these PromQL queries and quote each exact numeric value: (1) `sum(up{job=\"vmalert-victoria-metrics-cluster\"}) or vector(0)`; (2) `sum(up{job=\"vmalertmanager-victoria-metrics-cluster\"}) or vector(0)`; (3) `sum(up{job=~\"vmalert.*|alertmanager.*\"}) or vector(0)`; (4) `count(up{job=~\"vmalert.*|alertmanager.*\"}) or vector(0)`; (5) `count(ALERTS{alertstate=\"firing\"}) or vector(0)`. PASS only when values (1) and (2) are both 1 and value (3) equals value (4). Firing alerts (5) are context and are not a failure by themselves. FAIL when a component sum is 0 or a target is down. Do not use VictoriaLogs. Report the five values and a one-line loop-health verdict."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
