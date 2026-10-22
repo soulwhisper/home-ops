@@ -188,9 +188,9 @@ def _execute_ai_check_two_phase(
                 "is empty or all errors, the check fails. A check PASSES when "
                 "no problem is found and FAILS when the problem is present or "
                 "unevaluable.\n"
-                "Answer EXACTLY in this format:\n"
-                "RATIONALE: <one short paragraph with verbatim quotes>\n"
-                "PASSED: yes or no"
+                "Start the answer with 'RATIONALE:' followed by one short "
+                "paragraph of reasoning. End with a final line that says "
+                "either 'PASSED: yes' or 'PASSED: no'."
             ),
         }
     def _coerce(extra_note: str = ""):
@@ -340,6 +340,12 @@ _PLAIN_ANSWER = re.compile(
 # Punctuation-only values such as "...", "—", and "…" carry no verdict.
 _DEGENERATE_RATIONALE = re.compile(r"^[\W_]*$")
 
+# The model sometimes echoes the prompt's format skeleton instead of answering
+# (observed 2026-10-22: the rationale was the literal
+# "<one short paragraph with verbatim quotes>"). That is not a verdict and
+# must be retried, never parsed and passed.
+_PLACEHOLDER_RATIONALE = re.compile(r"^\s*<[^<>]{1,200}>\s*$")
+
 def _plain_to_check_json(content: str) -> str:
     """Convert a RATIONALE:/PASSED: plain-text answer into the CheckResponse
     JSON shape; empty string on missing markers (counts as degenerate)."""
@@ -349,7 +355,11 @@ def _plain_to_check_json(content: str) -> str:
     rationale = m.group("rationale").strip()
     # Punctuation-only rationale is degenerate lane output, not a verdict
     # (homelab-tickets#19); count it as degenerate so the retry runs.
-    if not rationale or _DEGENERATE_RATIONALE.fullmatch(rationale):
+    if (
+        not rationale
+        or _DEGENERATE_RATIONALE.fullmatch(rationale)
+        or _PLACEHOLDER_RATIONALE.fullmatch(rationale)
+    ):
         return ""
     return json.dumps(
         {
@@ -380,6 +390,21 @@ def _rationale_quotes_evidence(rationale: str, evidence: str) -> bool:
     tokens = set(_EVIDENCE_TOKEN.findall(" ".join(evidence.split())))
     hits = tokens & set(_EVIDENCE_TOKEN.findall(normalized_rationale))
     return len(hits) >= 2 and any(t.replace(".", "", 1).isdigit() for t in hits)
+
+
+def _rationale_quotes_names(rationale: str, evidence: str) -> bool:
+    """Gate for advisory reports (homelab-tickets#19): require >=2 distinct
+    alert names quoted from this run's successful tool output. Aggregate counts
+    are model-derived and cannot be checked as one verbatim span, so the query
+    asks for names and treats frequencies qualitatively."""
+    tokens = set(_EVIDENCE_TOKEN.findall(" ".join(evidence.split())))
+    names = {
+        token
+        for token in tokens
+        if len(token) >= 8 and not token.replace(".", "", 1).isdigit()
+    }
+    hits = names & set(_EVIDENCE_TOKEN.findall(" ".join((rationale or "").split())))
+    return len(hits) >= 2
 
 
 def _parse_check_response(
@@ -413,41 +438,54 @@ def _parse_check_response(
         return CheckResponse(
             passed=False, rationale=f"Failed to parse response: {str(parse_error)}"
         )
-    # Checks whose query demands verbatim quotes (e.g. ceph-health-growth) must
-    # quote successful tool output from this run; failure summaries don't count.
-    if (
-        check is not None
-        and "verbatim" in check.query
-        and not _rationale_quotes_evidence(
-            parsed.rationale or "", _successful_evidence(entries)
-        )
-    ):
-        # LOCAL PATCH (home-ops): operator-local diagnostics (pod logs only,
-        # never notifications) — without this the reject reason is invisible.
-        _gate_evidence = _successful_evidence(entries)
-        _gate_tokens = set(_EVIDENCE_TOKEN.findall(" ".join(_gate_evidence.split())))
-        _gate_hits = _gate_tokens & set(
-            _EVIDENCE_TOKEN.findall(" ".join((parsed.rationale or "").split()))
-        )
-        logging.getLogger(__name__).info(
-            "evidence-gate reject: check=%s hits=%s evidence_tokens=%d "
-            "evidence_head=%.200r rationale_head=%.200r",
-            getattr(check, "name", "?"),
-            sorted(_gate_hits),
-            len(_gate_tokens),
-            _gate_evidence[:200],
-            (parsed.rationale or "")[:200],
-        )
-        # LOCAL PATCH (coderabbit#4072): never forward the rejected rationale —
-        # it flows into Slack/PagerDuty and could carry a fabricated incident.
+    if _PLACEHOLDER_RATIONALE.fullmatch(parsed.rationale or ""):
         return CheckResponse(
             passed=False,
-            rationale=(
-                "Verdict rejected: the query requires quoting live tool output "
-                "verbatim, but the rationale contains no verbatim span from "
-                "this run. Original verdict omitted because it is unverifiable."
-            ),
+            rationale="Failed to parse response: placeholder verdict",
         )
+    # Checks whose query demands verbatim quotes must quote successful tool
+    # output from this run; failure summaries don't count. Numeric checks
+    # (e.g. ceph-health-growth) require a numeric reading; advisory reports
+    # marked "quote the alert names verbatim" require real alert names instead
+    # of model-derived aggregate counts (homelab-tickets#19).
+    if check is not None and "verbatim" in check.query:
+        _gate_evidence = _successful_evidence(entries)
+        if "quote the alert names verbatim" in check.query.lower():
+            evidence_ok = _rationale_quotes_names(
+                parsed.rationale or "", _gate_evidence
+            )
+        else:
+            evidence_ok = _rationale_quotes_evidence(
+                parsed.rationale or "", _gate_evidence
+            )
+        if not evidence_ok:
+            # LOCAL PATCH (home-ops): operator-local diagnostics (pod logs only,
+            # never notifications) — without this the reject reason is invisible.
+            _gate_tokens = set(_EVIDENCE_TOKEN.findall(" ".join(_gate_evidence.split())))
+            _gate_hits = _gate_tokens & set(
+                _EVIDENCE_TOKEN.findall(" ".join((parsed.rationale or "").split()))
+            )
+            logging.getLogger(__name__).info(
+                "evidence-gate reject: check=%s hits=%s evidence_tokens=%d "
+                "evidence_head=%.200r rationale_head=%.200r",
+                getattr(check, "name", "?"),
+                sorted(_gate_hits),
+                len(_gate_tokens),
+                _gate_evidence[:200],
+                (parsed.rationale or "")[:200],
+            )
+            # LOCAL PATCH (coderabbit#4072): never forward the rejected
+            # rationale — it flows into Slack/PagerDuty and could carry a
+            # fabricated incident.
+            return CheckResponse(
+                passed=False,
+                rationale=(
+                    "Verdict rejected: the query requires quoting live tool "
+                    "output verbatim, but the rationale contains no verbatim "
+                    "span from this run. Original verdict omitted because it is "
+                    "unverifiable."
+                ),
+            )
     return parsed
 
 
