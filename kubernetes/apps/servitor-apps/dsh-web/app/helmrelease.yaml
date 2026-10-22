@@ -54,8 +54,10 @@ spec:
                     fieldPath: status.podIP
               DSH_PUBLIC_URL: "https://chat.noirprime.com"
               DSH_TRUSTED_HOSTS: "chat.noirprime.com"
-              # Keep injected skills outside /data/dsh: materialize-state treats
-              # any pre-existing child as existing state and demands a migration.
+              # Native skill roots: /workspace/.dsh/skills,
+              # /workspace/.agents/skills, $DSH_HOME/skills and
+              # $DSH_AGENTS_HOME/skills. Do not mount skills below
+              # /data/home. Set DSH_SKILL_DIRS only for extra roots.
               DSH_AGENTS_HOME: "/data/home/.agents"
             envFrom:
               - configMapRef:
@@ -139,12 +141,6 @@ spec:
               - path: /data/dsh/cordis.patch.yml
                 subPath: cordis.patch.yml
                 readOnly: true
-      skills:
-        type: emptyDir
-        advancedMounts:
-          *name :
-            app:
-              - path: /data/home/.agents/skills
       tmpfs:
         type: emptyDir
         globalMounts:
