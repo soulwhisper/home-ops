@@ -37,8 +37,6 @@ spec:
                     fieldPath: status.podIP
               DSH_PUBLIC_URL: "https://tavern.noirprime.com"
               DSH_TRUSTED_HOSTS: "tavern.noirprime.com"
-              # One-time r1 -> r2 state migration; remove after the rollout is verified.
-              DSH_STATE_MIGRATION: "apply"
             envFrom:
               - configMapRef:
                   name: *name
