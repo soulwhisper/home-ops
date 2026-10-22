@@ -59,9 +59,15 @@ spec:
               storage: 100Gi
         # cap series intake to protect Ceph from runaway cardinality
         # (spec-level sibling of storage, not a child of it)
+        #
+        # Measured baseline 2026-10-22: ~350k hourly / ~515k daily series.
+        # The old 400k hourly cap left ~14% headroom, so every pod-rollout
+        # wave (new pod/container/replicaset labels) dropped rows for the
+        # rest of the hour and flooded vmsingle warnings (homelab-tickets
+        # #102/#108). 1M/2M keeps a hard ceiling at ~3-4x baseline.
         extraArgs:
-          storage.maxHourlySeries: "400000"
-          storage.maxDailySeries: "1000000"
+          storage.maxHourlySeries: "1000000"
+          storage.maxDailySeries: "2000000"
         # Same Talos SELinux fix as victoria-logs (full story there):
         # idempotent chcon to ephemeral_t at pod start. set -eu so a failed
         # chcon fails the init (and the pod) loudly; FOWNER because volume
