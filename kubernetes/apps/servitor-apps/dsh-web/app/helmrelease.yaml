@@ -38,8 +38,6 @@ spec:
               HOME: /data/home
               DSH_PROFILE: web
               DSH_BACKUP_ROOT: /backups
-              # One-time r1 -> r2 state migration; remove after the rollout is verified.
-              DSH_STATE_MIGRATION: "apply"
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
