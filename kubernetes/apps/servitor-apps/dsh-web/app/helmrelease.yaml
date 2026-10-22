@@ -37,17 +37,18 @@ spec:
                     fieldPath: status.podIP
               DSH_PUBLIC_URL: "https://chat.noirprime.com"
               DSH_TRUSTED_HOSTS: "chat.noirprime.com"
+              DSH_FORWARD_AUTH_HEADER: x-authentik-username
+              DSH_FORWARD_AUTH_TRUSTED_PROXY_CIDRS: 10.100.0.0/17
+              DSH_FORWARD_AUTH_MAX_CONNECTION_SECONDS: "900"
             envFrom:
-              - configMapRef:
-                  name: *name
               - secretRef:
                   name: *name
             resources:
               requests:
                 cpu: 100m
-                memory: 512Mi
+                memory: 1Gi
               limits:
-                memory: 2Gi
+                memory: 4Gi
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
@@ -109,7 +110,7 @@ spec:
             subPath: backups
       mcp:
         type: secret
-        name: dsh-web-mcp
+        name: *name
         globalMounts:
           - path: /data/dsh/cordis.patch.yml
             subPath: cordis.patch.yml

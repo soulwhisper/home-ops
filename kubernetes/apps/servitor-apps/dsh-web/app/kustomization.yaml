@@ -3,8 +3,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ./ciliumnetworkpolicy.yaml
-  - ./configmap.yaml
-  - ./externalsecret.yaml
-  - ./mcp-externalsecret.yaml
+  # app
   - ./helmrelease.yaml
+  # utils
+  - ./ciliumnetworkpolicy.yaml
+  - ./externalsecret.yaml
