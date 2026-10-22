@@ -29,7 +29,7 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/dsh-tavern
-              tag: "3.0@sha256:62342ac45cb039f3542a6adcac9efeb8868098769bb36ed13ff73c4f396bbfe5"
+              tag: "3.1@sha256:40467793ecdef54de01dd9806ef900418e69db298c1973460e224ea57c4583e4"
             env:
               DSH_HOST:
                 valueFrom:
