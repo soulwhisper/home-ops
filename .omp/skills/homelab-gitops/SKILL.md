@@ -125,8 +125,15 @@ the current code. They are not a changelog.
 
 - When fixing or updating, write a short plain-text reason for the fix.
   Do not include dates, incident/commit references, security-sensitive
-  details (topology, credential leaks, design failures, third-party bugs),
-  or hints that the change aligns with a person, team, or external change.
+  details (topology, credential leaks, design failures, third-party bug
+  history), or hints that the change aligns with a person, team, or
+  external change.
+- Third-party configuration comments split on control:
+  1. If we control the config, do not leave a comment implying we follow
+     the third party's rule. We choose the shape, and the comment will
+     drift.
+  2. If we cannot control it, keep a short comment recording the constraint
+     so a future change can align with it.
 - When removing something, remove it cleanly. Do not leave a tombstone
   comment describing what was removed, why it existed, or what should
   replace it later.

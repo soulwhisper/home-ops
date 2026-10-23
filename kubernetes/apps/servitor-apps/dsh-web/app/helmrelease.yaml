@@ -29,7 +29,6 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/dsh-web
-              # Tag-only so Renovate can bump the release tag.
               tag: "0.2.1-rc.2-r2"
             env:
               DSH_HOST:

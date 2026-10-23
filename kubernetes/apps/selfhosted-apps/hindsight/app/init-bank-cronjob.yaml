@@ -1,6 +1,6 @@
 ---
-# Ensures the home bank exists for the /mcp/home remote proxy. The script
-# checks first and PUT is create-or-update, so repeated runs are no-ops.
+# Hindsight does not create banks automatically; this ensures the home bank
+# exists for /mcp/home. The script no-ops when it is already present.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
