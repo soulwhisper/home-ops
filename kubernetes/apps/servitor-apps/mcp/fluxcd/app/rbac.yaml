@@ -39,6 +39,8 @@ rules:
       - external-secrets.io # ES/CSS status,secret value not included
       - snapshot.storage.k8s.io
       - frrk8s.metallb.io
+      - fluxcd.controlplane.io # FluxInstance / FluxReport status
+      - apiextensions.k8s.io # CRD inventory for get_kubernetes_api_versions
     resources: ["*"]
     verbs: ["get", "list", "watch"]
 ---

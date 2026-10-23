@@ -10,3 +10,5 @@ resources:
   - ./ciliumnetworkpolicy.yaml
   # bounded restart for upstream memory leak (see file header)
   - ./restart-cronjob.yaml
+  # ensure the /mcp/home bank exists (Hindsight does not auto-create banks)
+  - ./init-bank-cronjob.yaml

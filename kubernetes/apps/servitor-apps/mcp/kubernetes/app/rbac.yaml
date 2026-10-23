@@ -16,3 +16,30 @@ subjects:
   - kind: ServiceAccount
     name: mcp-kubernetes-view
     namespace: servitor-apps
+---
+# Read-only node visibility for nodes_top, nodes_stats_summary and nodes_log.
+# nodes/proxy is GET-only (kubelet logs/stats); no create, so no exec.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mcp-kubernetes-nodes
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes/proxy"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-kubernetes-nodes
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mcp-kubernetes-nodes
+subjects:
+  - kind: ServiceAccount
+    name: mcp-kubernetes-view
+    namespace: servitor-apps

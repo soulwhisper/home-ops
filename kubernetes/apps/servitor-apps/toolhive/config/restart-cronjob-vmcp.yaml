@@ -48,6 +48,10 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: 1
+      # KubeJobFailed is evaluated per Job: a retained failed Job keeps the
+      # alert firing after the next successful run. Expire finished Jobs so
+      # the alert clears without manual cleanup.
+      ttlSecondsAfterFinished: 3600
       # 4 groups * (discovery 120s + delete 120s + recreate 300s + ready
       # 300s) worst case is 56m; cap the whole run at 30m.
       activeDeadlineSeconds: 1800

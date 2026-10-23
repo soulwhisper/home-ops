@@ -4,8 +4,9 @@
 # is outside the observed in-cluster allowlist (ghcr/quay/
 # registry.k8s.io/docker hub + the few vendor CRs in use). Migrated from
 # ClusterPolicy v1 (deprecated in kyverno v1.19) to CEL: the image library
-# normalizes bare names to docker.io, which the old regex pair encoded by
-# hand; unparseable references pass, matching the old bare-name branch.
+# normalizes bare names and the docker.io alias to index.docker.io, which the
+# old regex pair encoded by hand; unparseable references pass, matching the
+# old bare-name branch.
 apiVersion: policies.kyverno.io/v1
 kind: ValidatingPolicy
 metadata:
@@ -13,6 +14,8 @@ metadata:
 spec:
   evaluation:
     background:
+      # targetName uses admission-only request.*; keep this admission-time.
+      # Existing PolicyReports refresh when the workload is next re-admitted.
       enabled: false
   # Audit-only: a down or slow single-replica admission controller must not
   # block Pod creation cluster-wide (webhook default is Fail).
@@ -50,7 +53,7 @@ spec:
           : object.metadata.?generateName.orValue('<workload>') + '*'
     - name: allowedRegistries
       expression: >-
-        ['ghcr.io', 'quay.io', 'registry.k8s.io', 'docker.io', 'registry.gitlab.com', 'gsoci.azurecr.io', 'cr.kgateway.dev', 'cr.agentgateway.dev', 'docker.stirlingpdf.com', 'docker.dragonflydb.io', 'git.b4mad.industries']
+        ['ghcr.io', 'quay.io', 'registry.k8s.io', 'docker.io', 'index.docker.io', 'registry.gitlab.com', 'gsoci.azurecr.io', 'cr.kgateway.dev', 'cr.agentgateway.dev', 'docker.stirlingpdf.com', 'docker.dragonflydb.io', 'git.b4mad.industries']
   validations:
     - expression: >-
         variables.allContainers.all(c,

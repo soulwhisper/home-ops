@@ -46,7 +46,8 @@ spec:
               # (needs image >=1.2.1, soulwhisper/mcp-guardrails#141)
               OTEL_METRICS_ENABLED: "false"
               # Four balanced response windows bound each scanner call;
-              # 4 * 3.5s plus processing overhead fits the 15s callout budget.
+              # 4 * 3.5s plus processing overhead fits the 20s callout budget.
+              # tools/list bypasses response scanning in the policy above.
               SCANNER_TIMEOUT_MS: "3500"
               SCAN_TAIL_BYTES: "11264"
               # deterministic service.name for the collector's servitor
