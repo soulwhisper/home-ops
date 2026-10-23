@@ -108,6 +108,13 @@ spec:
             subPath: logs
           - path: /backups
             subPath: backups
+      mcp:
+        type: secret
+        name: *name
+        globalMounts:
+          - path: /data/dsh/cordis.patch.yml
+            subPath: cordis.patch.yml
+            readOnly: true
       tmpfs:
         type: emptyDir
         globalMounts:
