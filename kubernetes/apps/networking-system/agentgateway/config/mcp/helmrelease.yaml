@@ -47,7 +47,8 @@ spec:
               OTEL_METRICS_ENABLED: "false"
               # Four balanced response windows bound each scanner call;
               # 4 * 3.5s plus processing overhead fits the 20s callout budget.
-              # tools/list bypasses response scanning in the policy above.
+              # Search-tier tools/list bypasses response scanning; agent-tier
+              # tools/list remains scanned.
               SCANNER_TIMEOUT_MS: "3500"
               SCAN_TAIL_BYTES: "11264"
               # deterministic service.name for the collector's servitor

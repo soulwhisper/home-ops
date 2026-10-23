@@ -12,3 +12,4 @@ resources:
   - ./restart-cronjob.yaml
   # ensure the /mcp/home bank exists (Hindsight does not auto-create banks)
   - ./init-bank-cronjob.yaml
+  - ./init-bank-egress.yaml

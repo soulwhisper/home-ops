@@ -10,7 +10,9 @@ kind: CronJob
 metadata:
   name: hindsight-init-bank-home
 spec:
-  schedule: "50 4 * * *"
+  # Hourly: the check is a no-op once the bank exists, and this bounds the
+  # post-merge gap instead of waiting for the next 04:50 run.
+  schedule: "50 * * * *"
   timeZone: "Asia/Shanghai"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1

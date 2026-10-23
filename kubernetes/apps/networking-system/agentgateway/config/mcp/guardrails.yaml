@@ -40,7 +40,9 @@ spec:
               # and the sidecar's failClosed verdict denies the whole tier.
               # Bypass the response scan for list-only metadata. The CEL tool
               # allowlist still bounds what can be called; tools/call,
-              # prompts/get and resources/read remain guarded.
+              # prompts/get and resources/read remain guarded. Follow-up:
+              # mcp-guardrails needs a bounded per-tool scan (or cached
+              # descriptions) so this can be re-enabled.
               tools/list: "Off"
               # Response-only: scan prompt content for injection.
               prompts/get: Response
