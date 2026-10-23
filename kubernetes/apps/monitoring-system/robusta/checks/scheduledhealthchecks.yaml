@@ -1,6 +1,5 @@
 ---
-# Schedules are UTC because the operator runs with TZ=UTC. The previous
-# Asia/Shanghai wall-clock times are preserved by subtracting 8 hours.
+# Schedules are UTC; the comments show the Asia/Shanghai equivalent.
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/holmesgpt.dev/scheduledhealthcheck_v1alpha1.json
 apiVersion: holmesgpt.dev/v1alpha1
 kind: ScheduledHealthCheck
@@ -10,11 +9,9 @@ spec:
   schedule: "17 4,10,16,22 * * *" # 00:17/06:17/12:17/18:17 Asia/Shanghai
   # controller default is 30s — real tool-using investigations take minutes
   timeout: 300
-  # 2026-10-13 (+08): a fail verdict listed nine catastrophic ceph conditions
-  # while the cluster was HEALTH_OK (homelab-tickets#7) — the model asserted
-  # state it never observed. Verdicts must cite live tool output; the demands
-  # track what the sandboxed toolset actually emits (Prometheus metrics, not
-  # the ceph CLI text — kubectl exec is approval-gated in this sandbox).
+  # Verdicts must cite live tool output; the demands track what the sandboxed
+  # toolset actually emits (Prometheus metrics, not ceph CLI text — kubectl
+  # exec is approval-gated in this sandbox).
   query: "Check the ceph cluster (namespace storage-system) health: overall HEALTH status, OSD count/in/out state, pool usage vs the ceph-blockpool/ceph-cachepool/ceph-filesystem trend, and any slow or blocked requests. Base the verdict only on tool output gathered in this run: quote the decisive evidence verbatim in the rationale — metric names with their raw values, e.g. ceph_health_status=0, ceph_osd_up/ceph_osd_in counts, ceph_pool_bytes_used values. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry; report a tool error only when a retry still cannot provide evidence — never guess cluster state. Report concise status and flag anything trending worse."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
@@ -24,9 +21,8 @@ metadata:
 spec:
   schedule: "23 23 * * *" # 07:23 Asia/Shanghai
   timeout: 300
-  # noirprime-com deliberately runs a 160h duration, so a flat "expiring within
-  # 14 days" window can never pass (homelab-tickets#12). Judge renewal health
-  # instead: cert-manager exposes status.renewalTime well before notAfter.
+  # noirprime-com uses a 160h duration, so judge renewal health via
+  # status.renewalTime, not a flat expiry window.
   query: "Check cert-manager managed certificates in this cluster: list any Certificate not in Ready state, and any Certificate whose status.renewalTime is missing, already past, or later than status.notAfter (renewal broken or overdue). Short-lived certificates with a valid future renewalTime before notAfter are healthy, not findings. Quote each flagged certificate's name, namespace, renewalTime and notAfter verbatim from tool output in the rationale. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Report a concise list, or 'all clear'."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
@@ -36,8 +32,7 @@ metadata:
 spec:
   schedule: "41 0 * * *" # 08:41 Asia/Shanghai
   timeout: 300
-  # maxPods is 160 per node since homelab-tickets#13 (was 110 when the
-  # exarch-03 pile-up fired this check); the 80% flag line moved with it.
+  # maxPods is 160 per node; the 80% flag line moves with allocatable capacity.
   query: "Check per-node pod density and resource requests across the exarch nodes: pod count vs each node's live allocatable pod capacity (currently 160), cpu/memory request utilization, and any node trending toward saturation. Quote the per-node pod counts verbatim from tool output in the rationale's table. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Report a small table and flag nodes above 80% of any dimension."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
@@ -47,11 +42,8 @@ metadata:
 spec:
   schedule: "13 1 * * 1" # Monday 09:13 Asia/Shanghai
   timeout: 300
-  # The old version tried to rank alert history from raw log rows; the
-  # aggregate counts are not a single verifiable quote span and every verdict
-  # was rejected or failed on tool-output size (homelab-tickets#19). This is
-  # now a deterministic alerting-loop health check: target availability plus a
-  # firing count for context. Rule-quality ranking waits for a compact source.
+  # Deterministic alerting-loop health check: target availability plus a firing
+  # count for context.
   query: "Review alerting loop health using vmsingle (namespace monitoring-system). Run these PromQL queries and quote each exact numeric value: (1) `sum(up{job=\"vmalert-victoria-metrics-cluster\"}) or vector(0)`; (2) `sum(up{job=\"vmalertmanager-victoria-metrics-cluster\"}) or vector(0)`; (3) `sum(up{job=~\"vmalert.*|alertmanager.*\"}) or vector(0)`; (4) `count(up{job=~\"vmalert.*|alertmanager.*\"}) or vector(0)`; (5) `count(ALERTS{alertstate=\"firing\"}) or vector(0)`. PASS only when values (1) and (2) are both 1 and value (3) equals value (4). Firing alerts (5) are context and are not a failure by themselves. FAIL when a component sum is 0 or a target is down. Do not use VictoriaLogs. Report the five values and a one-line loop-health verdict."
 ---
 apiVersion: holmesgpt.dev/v1alpha1
@@ -61,8 +53,8 @@ metadata:
 spec:
   schedule: "3 1 * * *" # 09:03 Asia/Shanghai
   timeout: 300
-  # acceptance.md's "re-check after 24h" duty, automated (coderabbit#4074): a
-  # weekly check leaves alerts resolved on a Tuesday unverified for days.
+  # Recheck recently healed alerts daily so a resolved alert is verified the
+  # next day, not a week later.
   query: "Recheck recently healed alerts using vmalertmanager and vmsingle (namespace monitoring-system): list alerts that fired in the last 48 hours and are currently resolved; for each, re-evaluate its raw rule expression right now and flag any whose underlying condition is at or above threshold again (missed heal). Quote the alert names and current expression values verbatim from tool output. Tool discipline: keep every tool response small (under ~2000 chars) — use server-side selectors and jq filters, never dump full tables; a truncated or errored response means narrow the query and retry. Report a small table, or 'all clear'."
 ---
 apiVersion: holmesgpt.dev/v1alpha1

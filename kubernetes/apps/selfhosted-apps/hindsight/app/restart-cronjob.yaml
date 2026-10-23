@@ -1,11 +1,5 @@
-# Daily restart of hindsight to bound its memory growth.
-# Why: the hindsight-api Python process leaks ~14 MB/h under steady MCP
-# traffic (2160 new streamable-http transports/3h from the toolhive proxy),
-# so the 2Gi limit is hit in ~5 days and the container is OOMKilled
-# (last: exit 137, peak RSS pinned at 2046 MiB). Upstream leaks are tracked
-# in vectorize-io/hindsight#996 / #660 / #1572; no fixed release yet
-# (0.10.0 is latest). Restarting daily caps RSS at ~380 MiB, far below the
-# limit. Delete this file once upstream ships a fix.
+# Daily restart of hindsight to cap its memory growth under the 2Gi limit.
+# Remove when the process no longer grows under steady MCP traffic.
 ---
 apiVersion: v1
 kind: ServiceAccount

@@ -1,6 +1,6 @@
 ---
 # pod SA: in-cluster bootstrap only (bound to `view`, no secrets).
-# The long-lived SA-token Secret and token login were removed — OIDC only.
+# OIDC only; no SA token.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -19,11 +19,8 @@ subjects:
     name: headlamp-admin
     namespace: monitoring-system
 ---
-# Read-only wildcard for OIDC humans: covers current AND future CRDs, so new
-# installs stop surfacing as per-CRD "forbidden" errors. Includes secrets —
-# accepted: homelab-admin already holds cluster-admin via kubectl, and the
-# leak-prone path (non-expiring SA token in pod/browser localStorage) was
-# deleted instead of granting secrets to it.
+# Read-only wildcard for OIDC humans: covers current and future CRDs.
+# Includes secrets; accepted because homelab-admin already has cluster-admin.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -36,7 +33,6 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  # new name: roleRef is immutable, so the old view-bound binding is replaced
   name: headlamp-oidc-readall
 roleRef:
   apiGroup: rbac.authorization.k8s.io

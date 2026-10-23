@@ -77,8 +77,7 @@ spec:
     kubeProxyReplacement: "true"
     kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
     l2announcements:
-      # leader node answers ARP for LB VIPs on bond0 — replaces the switch's
-      # proxy-arp for the in-/24 pool (2026-09-13 ARP poisoning incident)
+      # leader node answers ARP for LB VIPs on bond0
       enabled: true
     loadBalancer:
       acceleration: native
@@ -101,9 +100,8 @@ spec:
         trustCRDsExist: true
     rollOutCiliumPods: true
     # Socket-LB only reaps UDP sockets to deleted backends by default; TCP needs
-    # this (hidden) agent flag. Without it a reply-less pooled/pubsub socket to
-    # a rescheduled pod keeps retransmitting into POLICY_DENIED (2026-10-08:
-    # open-webui -> old dragonfly IP for 27h). Kernel has INET_DIAG_DESTROY.
+    # this agent flag. Without it a reply-less pooled/pubsub socket to a
+    # rescheduled pod keeps retransmitting into POLICY_DENIED.
     extraConfig:
       lb-sock-terminate-all-protos: "true"
     routingMode: native

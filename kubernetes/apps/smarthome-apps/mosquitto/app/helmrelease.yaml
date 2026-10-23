@@ -19,8 +19,8 @@ spec:
       *name :
         data:
           mosquitto.conf: |
-            # 2.1: password_file/per_listener_settings directives deprecated,
-            # auth moved to the password-file plugin (same code, new shape)
+            # Mosquitto 2.1 uses the password-file plugin; password_file and
+            # per_listener_settings are deprecated.
             allow_anonymous false
             autosave_interval 60
             connection_messages false
@@ -29,14 +29,12 @@ spec:
             plugin_opt_password_file /etc/mosquitto/password_file
             persistence true
             persistence_location /config
-            # 2.1 behavior note: max_packet_size now defaults to 2MB (was 256MB)
+            # Mosquitto 2.1 default max_packet_size is 2MB.
     controllers:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
-        # Same Talos SELinux fix as victoria-logs (full story in the
-        # victoria-logs helmrelease): idempotent chcon to ephemeral_t with a
-        # completion marker.
+        # Idempotent chcon to ephemeral_t; the marker proves a completed walk.
         initContainers:
           selinux-relabel:
             image: { repository: ubuntu, tag: "24.04" }
@@ -102,8 +100,7 @@ spec:
         globalMounts:
           - path: /config
         # the relabel initContainer gets its mounts only via advancedMounts
-        # (app-template schema) — without this it Init:Error-loops on
-        # "stat: cannot statx /vol" (my #4180 omission, broke the rollout).
+        # (app-template schema); without this it fails on a missing /vol mount.
         advancedMounts:
           *name :
             selinux-relabel:

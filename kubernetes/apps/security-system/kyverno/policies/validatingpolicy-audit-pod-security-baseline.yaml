@@ -6,10 +6,8 @@
 # (ceph OSD privileged), monitoring-system (node-exporter hostNetwork) and
 # kube-system are deliberately out of scope. Protects against an injected
 # executor/agent launching host-level pods in app namespaces.
-# Migrated from ClusterPolicy v1 (deprecated in kyverno v1.19): the
-# podSecurity keyword has no CEL equivalent, so the five upstream Baseline
-# controls (HostProcess, HostNamespaces, Privileged, Capabilities, HostPorts)
-# are written out as explicit validations over
+# The five Baseline controls (HostProcess, HostNamespaces, Privileged,
+# Capabilities, HostPorts) are written out as explicit validations over
 # containers+initContainers+ephemeralContainers.
 apiVersion: policies.kyverno.io/v1
 kind: ValidatingPolicy
@@ -54,7 +52,7 @@ spec:
         + object.spec.?ephemeralContainers.orValue([])
     - name: targetName
       # request.* survives autogen rewriting; object.metadata.name is rewritten
-      # to the pod template's absent name on controller variants (kyverno#15591).
+      # to the pod template's absent name on controller variants.
       expression: >-
         request.name != ''
           ? request.name

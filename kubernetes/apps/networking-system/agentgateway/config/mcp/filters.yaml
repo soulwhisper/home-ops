@@ -5,19 +5,14 @@
 # rejected). Requires vmcp optimizer OFF so aggregated {workload}_-prefixed
 # tool names reach the gateway — see toolhive/config/virtualmcpserver.yaml.
 #
-# Scope per 2026-10-20 review: only servers whose boundary is NOT an upstream
-# token/SB get CEL filters. Token-bounded servers (github RO PAT+LOCKDOWN,
-# forgejo pat_tickets, k8s/fluxcd read-only SAs, grafana read-only SA) are
-# full-allowed by prefix; the token is their permission boundary.
+# Only servers whose boundary is NOT an upstream token/SB get CEL filters.
+# Token-bounded servers (github RO PAT+LOCKDOWN, forgejo pat_tickets,
+# k8s/fluxcd read-only SAs, grafana read-only SA) are full-allowed by prefix;
+# the token is their permission boundary.
 #
-# VERSION TRACKING: tool names below were enumerated live on 2026-10-20
-# against: firecrawl-mcp-server v3.33.3 (28 tools), context7 4.4.1 (2),
-# trendradar-mcp 4.1.0 (27), github-mcp-server v1.14.0, kubernetes-mcp-server
-# v0.0.67 (15), flux-operator-mcp v0.61.0 (10), mcp-grafana 2.0.2 (62),
-# mcp-victorialogs v1.9.0 (12), mcp-victoriametrics v1.20.2 (16),
-# mcp-victoriatraces v1.5.0. Each filtered server's mcpserver.yaml carries a
-# matching tracking comment — re-enumerate tools/list and re-check these
-# expressions on EVERY image bump (renovate).
+# Tool allowlists are version-sensitive: re-enumerate tools/list and re-check
+# these expressions on every image bump. The filtered servers' mcpserver.yaml
+# files track their current images.
 #
 # NOTE: expressions match tool names only; prompts/resources from these
 # servers match nothing and are therefore also denied (none exist today —

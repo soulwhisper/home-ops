@@ -5,9 +5,6 @@
 # git are the main RCA noise source. Excluding every ServiceAccount (flux,
 # operators, system) leaves only human Users: if a person touches these
 # namespaces outside git, it lands in a PolicyReport. AUDIT ONLY.
-# Migrated from ClusterPolicy v1 (deprecated in kyverno v1.19): match+exclude
-# became matchConstraints+matchConditions, the unconditional deny:{} became
-# an always-false validation (Audit action records it, blocks nothing).
 apiVersion: policies.kyverno.io/v1
 kind: ValidatingPolicy
 metadata:
@@ -69,7 +66,7 @@ spec:
       # request.* only: AdmissionRequest name/namespace/operation/userInfo are
       # populated for every operation incl. DELETE (object is null there) —
       # an oldObject/object ternary variable lost its metadata key in
-      # messageExpression evaluation (observed live 2026-10-10).
+      # messageExpression evaluation.
       # request.name is empty for generateName creates; object is null on
       # DELETE (request.name always set there), so the fallback never
       # dereferences a null object.

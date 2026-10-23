@@ -62,8 +62,8 @@ spec:
       extraEnvVarsSecrets:
         - robusta-holmes # OPENAI_API_BASE + OPENAI_API_KEY (ExternalSecret)
       # LOCAL PATCH: mount a patched checks.py forcing two-phase check execution
-      # on the agent lane (response_format+tools incompatible). Pin tracks the
-      # holmes image tag; drop when HolmesGPT/holmesgpt#2581 ships (homelab-tickets#7)
+      # on the agent lane (response_format+tools incompatible). Keep the image
+      # pinned to the tag this patch targets.
       additionalVolumes:
         - name: holmes-checks-patch
           configMap:
