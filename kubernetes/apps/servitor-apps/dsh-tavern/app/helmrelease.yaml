@@ -29,8 +29,7 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/dsh-tavern
-              # Tag-only: Renovate's Kubernetes manager cannot bump a
-              # tag@sha256 pin, so keep the release tag as the version axis.
+              # Tag-only so Renovate can bump the release tag.
               tag: "3.1"
             env:
               DSH_HOST:

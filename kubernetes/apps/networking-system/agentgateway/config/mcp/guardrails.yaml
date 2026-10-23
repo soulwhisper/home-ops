@@ -5,9 +5,8 @@ kind: AgentgatewayPolicy
 metadata:
   name: mcp-guardrails
 spec:
-  # Split across mcp-guardrails (search) and mcp-guardrails-agent (agent)
-  # so search can bypass tools/list response scanning without weakening the
-  # agent tier:
+  # Search: tool calls, prompts and resources are guarded; tools/list skips
+  # the response scan. Agent: full pipeline in mcp-guardrails-agent.
   # - search is the untrusted-content tier (arbitrary web/RSS/git content)
   #   feeding an unguarded lane (dsh-tavern / uncensored consumers);
   # - agent's consumers are EXTERNAL operator agents — they do not ride the
@@ -35,23 +34,16 @@ spec:
               # Full = Request + Response. See header: this is the
               # single most important phase choice in the policy.
               tools/call: Full
-              # tools/list is response-only metadata. The search tier
-              # aggregates 79 tools (~73KB); four 3.5s ONNX windows time out
-              # and the sidecar's failClosed verdict denies the whole tier.
-              # Bypass the response scan for list-only metadata. The CEL tool
-              # allowlist still bounds what can be called; tools/call,
-              # prompts/get and resources/read remain guarded. Follow-up:
-              # mcp-guardrails needs a bounded per-tool scan (or cached
-              # descriptions) so this can be re-enabled.
+              # tools/list is list-only metadata; skip the response scan so a
+              # large tool list cannot fail the tier. Tool calls, prompts and
+              # resources stay guarded.
               tools/list: "Off"
               # Response-only: scan prompt content for injection.
               prompts/get: Response
               # Response-only: scan resource bodies for exfil/injection.
               resources/read: Response
 ---
-# Agent tier: keep tools/list response scanning. Its tool set is much smaller
-# than search, so the 4x3.5s ONNX budget is enough; external operator agents
-# need the tool-description check.
+# Agent tier: full guardrail pipeline, including the tools/list response scan.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:

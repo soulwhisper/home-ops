@@ -114,8 +114,8 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | karakeep             | `omni`            | MiniCPM-o 4.5      | Text + image tagging (unified); embeddings via `/v1/embeddings` (model `embedding`, 1024d) |
 | trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); queryable via the `search` MCP tier |
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
-| dsh-tavern           | `uncensored`      | Qwen3.8-27B        | RP portal (dsh-tavern image, SillyTavern replacement); model/key UI-configured on PVC |
-| dsh-web              | `agent`/`omni`    | Qwen-AgentWorld / MiniCPM-o | Agent workbench (servitor-apps); takes over open-webui's set: LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
+| dsh-tavern           | `uncensored`      | Qwen3.8-27B        | RP portal (dsh-tavern image); model/key UI-configured on PVC |
+| dsh-web              | `agent`/`omni`    | Qwen-AgentWorld / MiniCPM-o | Agent workbench (servitor-apps); LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
 
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
 `/v1` lane; their prompts carry scraped web content, so a low rate of
@@ -130,7 +130,7 @@ the canonical `/mcp` upstream):
 
 | Route          | vmcp          | Servers (aggregated)                                          | Key (1Password `agentgateway`) | Issued to                    |
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
-| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | dsh-web (open-webui's former set) |
+| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | dsh-web                      |
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
 | `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-home bank                           | `mcp_home`                     | hermes, dsh-web                      |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | operator agents only         |
@@ -211,9 +211,9 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 ### DSH Web
 
-- Agent workbench, image `ghcr.io/soulwhisper/dsh-web` pinned by digest (DSH Web + `dshmarket` + required forward-auth). Lives in **servitor-apps**
+- Agent workbench, image `ghcr.io/soulwhisper/dsh-web` (DSH Web + `dshmarket` + required forward-auth). Lives in **servitor-apps**
 - **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
-- **Ingress**: `chat.noirprime.com` via kgateway-internal (takes over the retired Open WebUI hostname)
+- **Ingress**: `chat.noirprime.com` via kgateway-internal
 - **State**: kopiur-backed PVC `dsh-web` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs` and `/backups` share the `dsh-web-cache` `ceph-cache` PVC; `/tmp` remains emptyDir
 - **MCP/Skills**: the `dsh-web-mcp` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster and home tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/home` with `mcp_search`, `mcp_cluster`, `mcp_home`, never in Git). Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
 - **LLM/MCP**: UI-configured against the agent gateway; no model key in the manifest
@@ -221,7 +221,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 ### DSH Tavern
 
-- RP chat portal (SillyTavern replacement), image `ghcr.io/soulwhisper/dsh-tavern` pinned by digest (dsh-tavern profile + eco plugins baked). Lives in **servitor-apps**
+- RP chat portal, image `ghcr.io/soulwhisper/dsh-tavern` (dsh-tavern profile + eco plugins baked). Lives in **servitor-apps**
 - **LLM**: UI-configured — uncensored lane (foreground prose) / omni (background settlement); key = `llm_uncensored` from the `agentgateway` item. The gateway is the only AI egress
 - **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
 - **Ingress**: `tavern.noirprime.com` via kgateway-internal
@@ -443,7 +443,7 @@ items:
 ```
 /v1/chat/completions  (strict API key)
             │  model:
-            ├─ uncensored   (OPEN)    ─► qwen3.8-27b        ── SillyTavern, open-webui chat
+            ├─ uncensored   (OPEN)    ─► qwen3.8-27b        ── dsh-tavern
             ├─ agent        (guarded) ─► qwen-agentworld    ── hermes, holmes, automation
             ├─ omni         (guarded) ─► minicpm-o-4.5
 /v1/embeddings /v1/rerank /v1/audio/*  (media: alias ─► override ─► folder id; audio: direct)

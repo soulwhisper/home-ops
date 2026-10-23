@@ -1,10 +1,6 @@
 ---
-# The home tier's MCPRemoteProxy points at /mcp/home, but Hindsight does not
-# auto-create banks. Without this CronJob, get_bank/list_tags/recall return
-# "Bank 'home' not found". PUT is create-or-update and the script checks the
-# bank first, so repeated runs are no-ops once the bank exists.
-# The pod label intentionally differs from app.kubernetes.io/name=hindsight:
-# the hindsight-egress CNP only permits LLM/Postgres/OTEL egress.
+# Ensures the home bank exists for the /mcp/home remote proxy. The script
+# checks first and PUT is create-or-update, so repeated runs are no-ops.
 apiVersion: batch/v1
 kind: CronJob
 metadata:

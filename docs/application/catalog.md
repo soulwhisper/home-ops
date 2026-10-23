@@ -127,8 +127,8 @@
 | App           | Purpose                                                                                     |
 | ------------- | ------------------------------------------------------------------------------------------- |
 | Hermes Agent  | AI agent suite (Feishu, cron/automation)                                                    |
-| DSH Web       | Agent workbench (Open WebUI replacement)                                                    |
-| DSH Tavern    | RP chat portal (SillyTavern replacement)                                                    |
+| DSH Web       | Agent workbench                                                                             |
+| DSH Tavern    | RP chat portal                                                                              |
 | ToolHive      | MCP gateway (4 VirtualMCP tiers: search/cluster/home/agent, gateway-enforced tool allowlists)   |
 | MCP Servers   | context/firecrawl/fluxcd/forgejo/github/grafana/hindsight-home/hindsight-ops/home-assistant/kubernetes/trendradar/victoria-logs/victoria-metrics/victoria-traces |
 

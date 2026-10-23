@@ -17,9 +17,7 @@ subjects:
     name: mcp-kubernetes-view
     namespace: servitor-apps
 ---
-# Read-only node metadata for nodes_top. nodes/proxy is intentionally not
-# granted: a GET on that subresource can reach kubelet exec/run endpoints over
-# WebSocket, so it is not a read-only permission.
+# Read-only node metadata; nodes/proxy is intentionally not granted.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:

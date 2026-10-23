@@ -1,7 +1,5 @@
 ---
-# The init-bank CronJob deliberately does not carry app.kubernetes.io/name:
-# hindsight (that label would inherit hindsight-egress, which does not allow
-# the Hindsight API). Permit only DNS and the API service.
+# Restrict the init Job to DNS and the Hindsight API.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:

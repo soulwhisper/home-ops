@@ -118,6 +118,23 @@ Rules:
   `sync-*` recipes.
 - Helm values belong in the HelmRelease in git, never `helm upgrade` by hand.
 
+## Comments and removal hygiene
+
+Code and manifest comments describe the current invariant or the reason for
+the current code. They are not a changelog.
+
+- When fixing or updating, write a short plain-text reason for the fix.
+  Do not include dates, incident/commit references, security-sensitive
+  details (topology, credential leaks, design failures, third-party bugs),
+  or hints that the change aligns with a person, team, or external change.
+- When removing something, remove it cleanly. Do not leave a tombstone
+  comment describing what was removed, why it existed, or what should
+  replace it later.
+- Do not leave "delete once upstream fixes X" workaround notes. If a
+  workaround must stay, describe the invariant it enforces now.
+- When touching surrounding code, delete comments that only narrate
+  history.
+
 ## Storage
 
 Discover the actual layout instead of assuming names:
