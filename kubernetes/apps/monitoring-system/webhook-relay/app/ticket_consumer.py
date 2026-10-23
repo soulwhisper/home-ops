@@ -280,8 +280,9 @@ class Handler(BaseHTTPRequestHandler):
     # immediately reads up to MAX_PAYLOAD plus the parsed finding + copies.
     # An alert storm (or slow Forgejo/Holmes) piles threads until the container
     # OOMKills (steady state is ~16Mi; storms push it past the limit). Bound
-    # the in-flight deliveries; the rest wait on the semaphore holding only a
-    # socket, never a payload.
+    # the in-flight deliveries: admission is non-blocking, so excess requests
+    # get an immediate 503 and the relay retries — even payload-less waiting
+    # threads would be unbounded in count (CWE-400).
     delivery_slots = threading.BoundedSemaphore(4)
 
     def log_message(self, format, *args):

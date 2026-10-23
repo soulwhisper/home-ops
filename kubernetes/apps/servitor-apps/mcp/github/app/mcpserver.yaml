@@ -11,7 +11,8 @@ spec:
   # `type: ["null","object"]` in every tool's outputSchema on the Modern
   # (2026-07-28) protocol path, and toolhive-core mcpcompat decodes schemas
   # into a strict `Type string` field — vmcp tools/list decode fails and the
-  # circuit opens. Re-verify the pin on toolhive upgrades.
+  # circuit opens. Re-verify the pin on github-mcp-server bumps and toolhive
+  # upgrades.
   image: ghcr.io/github/github-mcp-server:v1.14.0
   args: ["http"]
   env:
