@@ -19,3 +19,7 @@ temp/
 .tmp-*/
 .tmp-*.md
 .vscode/
+
+# python
+__pycache__/
+*.py[cod]
