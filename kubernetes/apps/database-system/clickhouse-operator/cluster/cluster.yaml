@@ -40,11 +40,10 @@ spec:
             mountPath: /var/lib/clickhouse
           - name: clickhouse-storage-volume
             mountPath: /var/log/clickhouse-server
-      # Same Talos SELinux fix as victoria-logs (full story in the
-      # victoria-logs helmrelease): ClickHouse writes to its unlabeled RBD
-      # volume were one of the 2026-10-18 permissive-AVC flood sources, and
-      # seLinuxOptions is a proven no-op on Talos. Relabel idempotently to
-      # ephemeral_t at pod start; root required (chcon needs ownership).
+      # Same Talos SELinux relabel as victoria-logs: ClickHouse writes to an
+      # unlabeled RBD volume, and seLinuxOptions is a no-op on Talos. Relabel
+      # idempotently to ephemeral_t at pod start; root required (chcon needs
+      # ownership).
       - name: selinux-relabel
         image: ubuntu:24.04
         command:

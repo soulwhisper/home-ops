@@ -34,7 +34,7 @@ dashboards/
     └── kustomization.yaml      # Maps _sources/ or custom/ path to ConfigMap
 ```
 
-#### Layout: debug-focused (2026-09)
+#### Layout: debug-focused
 
 State checks live in native UIs (headlamp, ceph-mgr dashboard, hubble-ui,
 agentgateway `:15000/ui`, VM UIs at metrics/logs/traces/alert.noirprime.com);

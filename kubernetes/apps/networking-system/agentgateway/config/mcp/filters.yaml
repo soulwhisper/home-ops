@@ -5,10 +5,13 @@
 # rejected). Requires vmcp optimizer OFF so aggregated {workload}_-prefixed
 # tool names reach the gateway — see toolhive/config/virtualmcpserver.yaml.
 #
-# Only servers whose boundary is NOT an upstream token/SB get CEL filters.
-# Token-bounded servers (github RO PAT+LOCKDOWN, forgejo pat_tickets,
-# k8s/fluxcd read-only SAs, grafana read-only SA) are full-allowed by prefix;
-# the token is their permission boundary.
+# CEL filters serve two purposes: security default-deny where the upstream has
+# no token/SA boundary (firecrawl, trendradar, grafana, victoria-*), and schema
+# size control on fat APIs (forgejo to the ticket workflow, grafana to
+# dashboard lookup + deeplinks) so tool lists fit 64K-context consumers.
+# Token-bounded servers (github RO PAT+LOCKDOWN, k8s/fluxcd read-only SAs)
+# stay full-allowed by prefix — the token is their permission boundary;
+# hindsight banks are bounded by the tier key.
 #
 # Tool allowlists are version-sensitive: re-enumerate tools/list and re-check
 # these expressions on every image bump. The filtered servers' mcpserver.yaml
@@ -58,22 +61,52 @@ spec:
         action: Allow
         policy:
           matchExpressions:
-            # grafana: read/query classes only (server also runs
-            # --disable-write, SA is read-only — this is the third layer).
-            # Explicitly excluded: grafana_api_request (arbitrary API
-            # passthrough), alerting_manage_routing,
-            # validate_provisioning_file, suggest_*,
-            # list_provisioning_repositories.
+            # grafana: dashboards exist only to be linked to humans — data is
+            # queried at the sources (victoria-*), alerting is vmalert, loki/
+            # pyroscope are not deployed, incident/oncall unused. Keep the two
+            # real uses: find a dashboard / copy its panel queries, and mint
+            # deeplinks. Everything else is duplicate or dead surface.
+            # fluxcd: flux-native only; its generic get_kubernetes_* getters
+            # duplicate mcp-kubernetes (which is richer).
+            # victoria-logs: query surface only — flags is a server-config read.
             # victoria-metrics: query surface only — excluded: documentation
             # (also MCP_DISABLED_TOOLS), flags, tsdb_status, active_queries,
             # top_queries, metric_statistics.
             - |
               mcp.tool.name.startsWith('mcp-kubernetes_')
-              || mcp.tool.name.startsWith('mcp-fluxcd_')
-              || ( mcp.tool.name.startsWith('mcp-grafana_')
-                   && ( mcp.tool.name.matches('^mcp-grafana_(search|get|list|query|analyze|check)_')
-                        || mcp.tool.name.matches('^mcp-grafana_(alerting_rules_read|alerting_silences_read|generate_deeplink|user_info|diff_tempo_traces)$') )
-                   && mcp.tool.name != 'mcp-grafana_list_provisioning_repositories' )
-              || mcp.tool.name.startsWith('mcp-victoria-logs_')
+              || ( mcp.tool.name.startsWith('mcp-fluxcd_')
+                   && ! mcp.tool.name.startsWith('mcp-fluxcd_get_kubernetes_') )
+              || mcp.tool.name.matches('^mcp-grafana_(search_dashboards|get_dashboard_by_uid|get_dashboard_panel_queries|generate_deeplink|list_datasources)$')
+              || ( mcp.tool.name.startsWith('mcp-victoria-logs_')
+                   && mcp.tool.name != 'mcp-victoria-logs_flags' )
               || mcp.tool.name.matches('^mcp-victoria-metrics_(query|query_range|labels|label_values|series|metrics|metrics_metadata|explain_query|prettify_query|alerts|rules)$')
               || mcp.tool.name.startsWith('mcp-victoria-traces_')
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+# agent tier: forgejo narrowed to the ticket workflow (the only sanctioned use
+# of this tier; homelab-tickets skill); hindsight-ops stays whole — it is the
+# incident memory. pat_tickets remains the permission boundary; this is the
+# second layer plus schema-size control (the full forgejo surface alone would
+# not fit a 64K-context consumer alongside the other tiers).
+# Explicitly out: delete_*, repo/hook/secret admin, dispatch_workflow
+# (operator-only by design), stopwatch/tracked-time.
+# Tracked against forgejo-mcp v3.3.0 (163 tools enumerated) — re-verify on
+# every version bump.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-agent-filter
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-agent
+  backend:
+    mcp:
+      authorization:
+        action: Allow
+        policy:
+          matchExpressions:
+            - |
+              mcp.tool.name.matches('^mcp-forgejo_(list_repo_issues|get_issue_by_index|list_issue_comments|get_issue_comment|create_issue_comment|edit_issue_comment|issue_state_change|search_issues|list_repo_labels|add_issue_labels|remove_issue_labels|update_issue)$')
+              || mcp.tool.name.startsWith('mcp-hindsight-ops_')

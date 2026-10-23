@@ -1,7 +1,7 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
 # Scrapes the standalone ESXi host (10.0.0.10) over the SOAP SDK.
-# Upstream project is dormant (v0.18.4, 2022-10) but the ESXi SOAP API is
+# Upstream project is dormant (v0.18.4) but the ESXi SOAP API is
 # stable; telegraf inputs.vsphere is the maintained fallback if auth breaks.
 # The ESXi account is created MANUALLY on the host (see PR/1Password `esxi`).
 apiVersion: helm.toolkit.fluxcd.io/v2

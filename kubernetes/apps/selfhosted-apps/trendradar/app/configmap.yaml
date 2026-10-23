@@ -10,7 +10,7 @@ data:
     schedule:
       enabled: true
     platforms:
-      enabled: true   # community-curated list (TrendRadar issue #95, 2026-05 update)
+      enabled: true   # community-curated list
       api_url: ""     # default newsnow API; self-host newsnow and set api_url if the public instance flakes
       sources:
         # === 综合新闻媒体类 ===

@@ -27,12 +27,10 @@ spec:
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         initContainers:
-          # Same Talos SELinux fix as victoria-logs (full story in the
-          # victoria-logs helmrelease): hermes writes to its unlabeled RBD
-          # PVC were one of the 2026-10-18 permissive-AVC flood sources, and
-          # seLinuxOptions is a proven no-op on Talos — relabel via
-          # initContainer instead. Root required (chcon needs ownership);
-          # overrides the pod-level runAsNonRoot.
+          # Same Talos SELinux relabel as victoria-logs: hermes writes to an
+          # unlabeled RBD PVC, and seLinuxOptions is a no-op on Talos —
+          # relabel via initContainer instead. Root required (chcon needs
+          # ownership); overrides the pod-level runAsNonRoot.
           selinux-relabel:
             image: { repository: ubuntu, tag: "24.04" }
             command:

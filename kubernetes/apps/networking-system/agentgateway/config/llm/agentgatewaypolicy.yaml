@@ -80,7 +80,7 @@ spec:
 # current-time injection stays authoritative for timestamps.
 # role MUST be lowercase `system`: passed verbatim to the upstream chat
 # template; `SYSTEM` 400s every request with "Chat template error:
-# Unexpected message role" (post-merge smoke 2026-10-10).
+# Unexpected message role".
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:

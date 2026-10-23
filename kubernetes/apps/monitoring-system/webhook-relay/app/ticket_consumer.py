@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: 2025-2026 soulwhisper (https://github.com/soulwhisper)
+# SPDX-FileCopyrightText: 2025, 2026 soulwhisper (https://github.com/soulwhisper)
 # SPDX-License-Identifier: Apache-2.0
 """Serialize Robusta findings into one Forgejo issue per alert instance."""
 import hashlib
@@ -29,7 +29,7 @@ HOLMES_COOLDOWN = timedelta(hours=6)
 # pods (<name>-<ordinal>) are stable and keep their name.
 POD_HASH = re.compile(r"-[a-z0-9]{6,10}-[a-z0-9]{5}$")
 # Labels that identify *where* the condition is, as opposed to scrape plumbing
-# (instance/pod IP/endpoint) or per-rule detail that would split one incident
+# (instance/pod IP/endpoint) or per-rule detail that would split one failure
 # into dozens of tickets (e.g. one AlertingRulesError per rule group).
 IDENTITY_LABELS = (
     "namespace", "exported_namespace", "workload", "deployment", "statefulset",
@@ -107,7 +107,7 @@ class Forgejo:
         match = next((i for i in hint or [] if (i.get("body") or "").startswith(prefix)), None)
         if match is not None:
             return match
-        # Indexer lag or a cold index must not create a duplicate incident.
+        # Indexer lag or a cold index must not create a duplicate ticket.
         return next(
             (item for item in self.pages("/issues?state=all&type=issues")
              if (item.get("body") or "").startswith(prefix)),
@@ -119,7 +119,7 @@ class Forgejo:
         key = finding.get("aggregation_key")
         if not isinstance(source, str) or not source or not isinstance(key, str) or not key:
             raise ValueError("source and aggregation_key are required")
-        # One incident per alert + affected workload. Alertmanager fingerprints
+        # One ticket per alert + affected workload. Alertmanager fingerprints
         # change with every pod name and every per-rule label, so a rollout or
         # a rule-evaluation storm would otherwise open a ticket per pod/group.
         identity = json.dumps([source, key, incident_scope(finding)], separators=(",", ":"), sort_keys=True)
@@ -149,7 +149,7 @@ class Forgejo:
         )
         if duplicate:
             return {"action": "duplicate", "number": number}
-        # A new failure reopens the incident before recording its event. Exact
+        # A new failure reopens the ticket before recording its event. Exact
         # replays must not undo a later human close. Resolution never auto-closes.
         action = "commented"
         if not resolved and issue["state"] == "closed":
@@ -276,12 +276,13 @@ class Handler(BaseHTTPRequestHandler):
     forgejo = None
     investigator = None
     delivery_lock = threading.Lock()
-    # ThreadingHTTPServer spawns a thread per connection, and each thread used
-    # to immediately read up to MAX_PAYLOAD plus the parsed finding + copies.
-    # An alert storm (or slow Forgejo/Holmes) piled threads until the container
-    # OOMKilled — observed 2026-10-17: kills at ~16Mi steady state. Bound the
-    # in-flight deliveries; the rest wait on the semaphore holding only a
-    # socket, never a payload. homelab-tickets#54/#55.
+    # ThreadingHTTPServer spawns a thread per connection, and each thread
+    # immediately reads up to MAX_PAYLOAD plus the parsed finding + copies.
+    # An alert storm (or slow Forgejo/Holmes) piles threads until the container
+    # OOMKills (steady state is ~16Mi; storms push it past the limit). Bound
+    # the in-flight deliveries: admission is non-blocking, so excess requests
+    # get an immediate 503 and the relay retries — even payload-less waiting
+    # threads would be unbounded in count (CWE-400).
     delivery_slots = threading.BoundedSemaphore(4)
 
     def log_message(self, format, *args):
@@ -322,8 +323,8 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             Handler.delivery_slots.release()
         LOG.info("delivery action=%s number=%s", result["action"], result.get("number", "-"))
-        # Cooldown: a flapping incident reopens repeatedly; one investigation
-        # per HOLMES_COOLDOWN is enough and keeps LLM load bounded.
+        # Cooldown: a flapping alert reopens its ticket repeatedly; one
+        # investigation per HOLMES_COOLDOWN is enough and keeps LLM load bounded.
         if self.investigator and investigation_due(result):
             self.investigator.submit(result["number"], finding)
         self.respond(200, {k: v for k, v in result.items() if k != "investigated_at"})

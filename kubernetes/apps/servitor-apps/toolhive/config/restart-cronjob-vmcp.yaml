@@ -84,11 +84,8 @@ spec:
               # proceeding after a failed wait would take more groups
               # offline while one is still down; backoffLimit retries the
               # whole Job, which is idempotent.
-              # The 2026-10-22 run exhausted its retry within seconds without
-              # replacing a pod. The old script had unguarded discovery and
-              # get/delete races that could abort exactly that way, and the Job
-              # left no usable log (homelab-tickets#106). Retry discovery,
-              # tolerate a vanished pod, and log every step so the next
+              # Discovery can race a pod that vanishes mid-walk: retry
+              # discovery, tolerate the vanish, and log every step so a
               # failure names its group.
               command:
                 - sh
