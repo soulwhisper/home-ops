@@ -13,7 +13,8 @@ spec:
   toolConfigRef:
     name: *name
   # dedicated memory bank for ai-ops incident/RCA memory — recall boundary
-  # keeps ops history out of the conversational `homelab` bank
+  # keeps ops history out of conversational banks.
+  # Hindsight creates the bank on first retain; reads require it to exist.
   remoteUrl: http://hindsight.selfhosted-apps.svc.cluster.local:8888/mcp/ops
   # in-cluster DNS suffix is blocked by toolhive's SSRF guard unless opted in
   allowPrivateEndpoint: true
