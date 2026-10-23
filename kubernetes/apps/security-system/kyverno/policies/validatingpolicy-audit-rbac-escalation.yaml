@@ -6,10 +6,9 @@
 # 2) any new/edited ClusterRole containing wildcard resource+verb grants
 # An injected agent or supply-chain payload that wants persistence must
 # escalate first — this is where it shows up.
-# Migrated from ClusterPolicy v1 (deprecated in kyverno v1.19). The old
-# `exclude.clusterRoles: [cluster-admin]` has no CEL equivalent, so the actor
-# gate is: the current cluster-admin ClusterRoleBinding subjects by name
-# (cheap short-circuit — flux applies the bulk of RBAC), then a live
+# Admission CEL sees userInfo, not role bindings, so the actor gate is: the
+# current cluster-admin ClusterRoleBinding subjects by name (cheap
+# short-circuit — flux applies the bulk of RBAC), then a live
 # SubjectAccessReview for wildcard rights to catch binding drift.
 apiVersion: policies.kyverno.io/v1
 kind: ValidatingPolicy
@@ -32,7 +31,7 @@ spec:
         resources: ['clusterrolebindings', 'rolebindings', 'clusterroles']
   variables:
     # Cheap gate first: the enumerated cluster-admin subjects
-    # (ClusterRoleBindings as of 2026-10-10). The SAR behind isClusterAdmin
+    # (ClusterRoleBindings). The SAR behind isClusterAdmin
     # only runs for other actors — lazily, once per request.
     - name: isKnownAdmin
       expression: >-

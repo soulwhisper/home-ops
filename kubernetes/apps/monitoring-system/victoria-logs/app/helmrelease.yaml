@@ -17,13 +17,10 @@ spec:
     server:
       fullnameOverride: *name
       retentionPeriod: 90d
-      # Talos pins pods to pod_t and its policy has no container_file_t, so
-      # kubelet's seLinuxOptions relabel silently no-ops (proven 2026-10-16:
-      # files stay unlabeled_t; every dir write logs a permissive AVC —
-      # victoria-logs was the #1 flooder, its auditd bursts spike the etcd
-      # system disk, homelab-tickets#28/#29). Talos blesses ephemeral_t for
-      # CSI volumes; relabel idempotently at pod start. Root required: files
-      # are owned by mixed uids (lost+found is root), chcon needs ownership.
+      # Talos pins pods to pod_t and has no container_file_t, so kubelet's
+      # seLinuxOptions relabel is a no-op. Talos blesses ephemeral_t for CSI
+      # volumes; relabel idempotently at pod start. Root required because
+      # volume files have mixed uids (lost+found is root).
       initContainers:
         - name: selinux-relabel
           image: ubuntu:24.04
@@ -32,12 +29,8 @@ spec:
             - -eu
             - -c
             - |
-              # Proof of completion, not of root state: a mid-walk chcon
-              # failure (e.g. RBD stall) leaves root labelled but deep files
-              # stale. The marker exists only if a full chcon -R completed —
-              # it is deleted BEFORE each walk, so a failed redo (chcon labels
-              # parents before descendants and can "fix" the root while
-              # failing deeper) cannot leave a stale marker behind.
+              # Marker-file proof of a completed full walk; deleted before
+              # each redo so a failed walk cannot leave a stale marker.
               if [ "$(stat -c %C /storage)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /storage/.selinux-relabelled ]; then
                 rm -f /storage/.selinux-relabelled
                 chcon -R system_u:object_r:ephemeral_t:s0 /storage

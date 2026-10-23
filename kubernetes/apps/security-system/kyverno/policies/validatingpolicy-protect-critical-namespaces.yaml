@@ -7,8 +7,7 @@
 # no legit traffic to break. The namespace-controller finalizes via finalizer
 # updates, not DELETE calls, so normal namespace teardown by admins still
 # works.
-# Migrated from ClusterPolicy v1 (deprecated in kyverno v1.19). The old
-# `exclude.clusterRoles: [cluster-admin]` becomes: system:masters cheap path,
+# Admission CEL sees userInfo, not role bindings: system:masters cheap path,
 # then a live SubjectAccessReview for wildcard rights (flux controllers hold
 # cluster-admin by binding, invisible to admission CEL otherwise).
 apiVersion: policies.kyverno.io/v1

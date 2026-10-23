@@ -78,8 +78,7 @@ spec:
               # documented fallback if the gateway is down
               FORGEJO_REPO_URL: https://git.noirprime.com/api/v1/repos/soulwhisper/homelab-tickets
               # New/reopened incidents get one Holmes investigation comment.
-              # /api/chat is the only investigation API in holmes 0.42 (the
-              # Robusta ask_holmes action posts to the removed /api/investigate).
+              # /api/chat is the investigation API in holmes 0.42.
               HOLMES_URL: http://robusta-holmes.monitoring-system.svc.cluster.local:80
               FORGEJO_TICKETS_TOKEN:
                 valueFrom:
@@ -88,10 +87,9 @@ spec:
                     key: FORGEJO_TICKETS_TOKEN
             resources:
               requests: { cpu: 10m, memory: 32Mi }
-              # 128Mi was OOMKilled by unbounded Holmes /api/chat reads
-              # (homelab-tickets#54/#55); read is now capped at 2 MiB in
-              # ticket_consumer.py, so 256Mi is generous headroom over the
-              # observed ~16-22Mi steady state + issue/comment pagination.
+              # Holmes /api/chat reads are capped at 2 MiB; 256Mi leaves
+              # headroom over the observed ~16-22Mi steady state plus
+              # issue/comment pagination.
               limits: { memory: 256Mi }
             securityContext:
               runAsNonRoot: true

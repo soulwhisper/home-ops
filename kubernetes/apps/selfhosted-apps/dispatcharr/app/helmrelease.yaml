@@ -41,8 +41,7 @@ spec:
               repository: ghcr.io/dispatcharr/dispatcharr
               tag: 0.32.0
             env:
-              # Modular deployment bugged until upstream fixed
-              # 0.29+: honor X-Forwarded-For only from the pod CIDR (kgateway)
+              # Honor X-Forwarded-For only from the pod CIDR (kgateway).
               DISPATCHARR_TRUSTED_PROXIES: 10.100.0.0/17
               DISPATCHARR_ENV: aio
               DISPATCHARR_LOG_LEVEL: info

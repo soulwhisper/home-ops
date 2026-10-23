@@ -29,14 +29,11 @@ spec:
                     - SystemCriticalPods
             - name: LowNodeUtilization
               # Bands fitted to 3x 13900H/96G nodes (allocatable ~19.95c/93.4Gi,
-              # maxPods 110). Measured requests run cpu 50-76% / mem 50-76%
+              # maxPods 160). Measured requests run cpu 50-76% / mem 50-76%
               # cluster-wide, so tight bands leave no underutilized receiver and
-              # the plugin no-ops every cycle ("No node is underutilized").
-              #   under : cpu<75% (~15c) AND mem<80% (~75Gi) AND pods<55% (60)
-              #   evict : cpu>90% (~18c)  OR mem>90% (~84Gi)  OR pods>75% (82)
-              # pods dimension was previously 100/100 = physically unreachable
-              # (>100% of 110 maxPods), so pod-count skew was invisible:
-              # exarch-03 hit 106/110 (96%) while exarch-01 idled at 47%.
+              # the plugin no-ops every cycle.
+              #   under : cpu<75% (~15c) AND mem<80% (~75Gi) AND pods<55% (88)
+              #   evict : cpu>90% (~18c)  OR mem>90% (~84Gi)  OR pods>75% (120)
               args:
                 thresholds:
                   cpu: 75

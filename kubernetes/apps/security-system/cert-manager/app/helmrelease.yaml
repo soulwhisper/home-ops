@@ -22,4 +22,3 @@ spec:
       servicemonitor:
         enabled: true
     replicaCount: 2
-    # gateway-api support removed for simplicity
