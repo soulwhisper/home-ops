@@ -29,6 +29,12 @@ spec:
             path:
               type: ReplaceFullPath
               replaceFullPath: /mcp
+      # Guarded tiers land scan time inside the route budget (response scans
+      # buffer the body before headers go out); 120s covers the 45s callout
+      # budget plus tool execution with headroom — the gateway default would
+      # cut long guarded calls early.
+      timeouts:
+        request: 120s
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
@@ -55,6 +61,12 @@ spec:
             path:
               type: ReplaceFullPath
               replaceFullPath: /mcp
+      # Guarded tiers land scan time inside the route budget (response scans
+      # buffer the body before headers go out); 120s covers the 45s callout
+      # budget plus tool execution with headroom — the gateway default would
+      # cut long guarded calls early.
+      timeouts:
+        request: 120s
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
@@ -81,6 +93,12 @@ spec:
             path:
               type: ReplaceFullPath
               replaceFullPath: /mcp
+      # Guarded tiers land scan time inside the route budget (response scans
+      # buffer the body before headers go out); 120s covers the 45s callout
+      # budget plus tool execution with headroom — the gateway default would
+      # cut long guarded calls early.
+      timeouts:
+        request: 120s
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
@@ -110,6 +128,12 @@ spec:
             path:
               type: ReplaceFullPath
               replaceFullPath: /mcp
+      # Guarded tiers land scan time inside the route budget (response scans
+      # buffer the body before headers go out); 120s covers the 45s callout
+      # budget plus tool execution with headroom — the gateway default would
+      # cut long guarded calls early.
+      timeouts:
+        request: 120s
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
