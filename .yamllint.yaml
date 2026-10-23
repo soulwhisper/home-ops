@@ -19,8 +19,5 @@ rules:
     spaces: 2
   line-length: disable
   quoted-strings:
-    # 'consistent' requires yamllint >= 1.38; CodeRabbit's bundled 1.37.1
-    # rejects it and skips YAMLlint on every PR. 'any' keeps the rule portable
-    # while required: false preserves the existing style.
     quote-type: any
     required: false

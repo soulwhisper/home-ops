@@ -1,15 +1,12 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/policies.kyverno.io/validatingpolicy_v1.json
-# Decision-gate detector for the AI-ops executor (P2 precursor). AUDIT ONLY:
+# Decision-gate detector for the AI-ops executor. AUDIT ONLY:
 # validationActions: [Audit] blocks nothing. DELETE reports may disappear with
 # the Pod; OTel exports PolicyViolation events (including actor/target in the
 # note) to VictoriaLogs for the observation window. Event TTL/collector gaps
 # still preclude claiming a complete API audit trail.
-# Migrated from ClusterPolicy v1 (deprecated in kyverno v1.19). The old
-# `exclude.clusterRoles: [cluster-admin]` has no CEL equivalent — admission
-# CEL sees userInfo, not role bindings — so the check runs as a live
-# SubjectAccessReview for full wildcard rights, which is what cluster-admin
-# is in this cluster (verified against ClusterRoleBindings 2026-10-10).
+# Admission CEL sees userInfo, not role bindings, so the check runs a live
+# SubjectAccessReview for full wildcard rights (cluster-admin in this cluster).
 apiVersion: policies.kyverno.io/v1
 kind: ValidatingPolicy
 metadata:
@@ -25,7 +22,7 @@ spec:
     - Audit
   # Pods-only by design: ValidatingPolicy autogen is on by default when this
   # block is absent. Generated controller DELETE variants rewrite
-  # oldObject.metadata.name to the pod template's absent name (kyverno#15591)
+  # oldObject.metadata.name to the pod template's absent name
   # and audit controller deletes this policy never targeted. Empty list = off.
   autogen:
     podControllers:
@@ -90,10 +87,3 @@ spec:
         "unexpected pod delete by " + request.userInfo.username + " on "
         + oldObject.metadata.namespace + "/" + oldObject.metadata.name
         + " — candidate for the executor allow-list or a policy exception"
----
-# P2 enforce-mode template (commented until audit data justifies it):
-# same match, same excludes, validationActions: [Deny] — then ONLY
-# cluster-admin actors plus the executor SA (robusta-runner) may delete pods
-# in those namespaces, and every remediation action is forced through the
-# alertname->action playbook allow-list upstream of it. Flip deliberately,
-# never by default.

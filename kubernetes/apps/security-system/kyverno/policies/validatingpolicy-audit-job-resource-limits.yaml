@@ -1,10 +1,8 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/policies.kyverno.io/validatingpolicy_v1.json
 # Burst-control tripwire: every Job/CronJob pod template must declare cpu+memory
-# limits. Unthrottled batch bursts on the shared control-plane nodes stalled
-# apiserver lease renewals twice (unbounded image pulls, fixed #3607; kopiur
-# mover bursts, homelab-tickets#4 + soulwhisper/home-ops#4070). Audit-only for
-# a month, then consider Enforce — policy failures page nobody today.
+# limits. Unthrottled batch bursts on the shared control-plane nodes can stall
+# apiserver lease renewals. Audit-only.
 apiVersion: policies.kyverno.io/v1
 kind: ValidatingPolicy
 metadata:

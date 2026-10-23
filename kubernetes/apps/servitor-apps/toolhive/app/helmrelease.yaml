@@ -20,7 +20,3 @@ spec:
         scope: "namespace"
         allowedNamespaces:
           - "servitor-apps"
-      # operator.defaultRedis intentionally NOT set: upstream bug
-      # stacklok/toolhive#6679 — the operator forwards the redis addr to
-      # proxyrunner pods but not the password -> NOAUTH crashloop on every
-      # MCPServer. Revisit when #6679 lands in a release.

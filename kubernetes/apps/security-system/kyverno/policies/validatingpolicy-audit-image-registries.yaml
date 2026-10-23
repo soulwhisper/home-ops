@@ -1,11 +1,8 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/policies.kyverno.io/validatingpolicy_v1.json
 # Image provenance visibility (AUDIT). Flags containers whose image registry
-# is outside the observed in-cluster allowlist (ghcr/quay/
-# registry.k8s.io/docker hub + the few vendor CRs in use). Migrated from
-# ClusterPolicy v1 (deprecated in kyverno v1.19) to CEL: the image library
-# normalizes bare names to docker.io, which the old regex pair encoded by
-# hand; unparseable references pass, matching the old bare-name branch.
+# is outside the observed in-cluster allowlist. Docker Hub references resolve
+# to index.docker.io; unparseable references pass.
 apiVersion: policies.kyverno.io/v1
 kind: ValidatingPolicy
 metadata:
@@ -43,7 +40,7 @@ spec:
         + object.spec.?ephemeralContainers.orValue([])
     - name: targetName
       # request.* survives autogen rewriting; object.metadata.name is rewritten
-      # to the pod template's absent name on controller variants (kyverno#15591).
+      # to the pod template's absent name on controller variants.
       expression: >-
         request.name != ''
           ? request.name
