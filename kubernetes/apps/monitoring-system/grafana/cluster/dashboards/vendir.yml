@@ -35,7 +35,7 @@ directories:
         lazy: true
         git:
           url: https://github.com/cilium/cilium
-          ref: v1.20.3
+          ref: v1.20.4
         includePaths:
           - install/kubernetes/cilium/files/cilium-agent/dashboards/cilium-dashboard.json
         # dropped (hubble-ui covers flows natively; boards referenced un-emitted metrics):
