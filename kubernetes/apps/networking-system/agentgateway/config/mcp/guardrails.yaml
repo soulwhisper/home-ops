@@ -15,8 +15,8 @@ spec:
   #   only cluster-side injection screen.
   # cluster/home consumers (hermes) ride the guarded `agent` lane — cluster
   # adds CEL allowlists and token/SA boundaries, home is RW-by-design behind
-  # the HA token — so the sidecar there was duplication, and FailClosed on
-  # those tiers made one sidecar an outage for all of MCP.
+  # the HA token — so a sidecar there is duplication, and FailClosed there
+  # would make one sidecar an outage for all of MCP.
   targetRefs:
     - group: agentgateway.dev
       kind: AgentgatewayBackend

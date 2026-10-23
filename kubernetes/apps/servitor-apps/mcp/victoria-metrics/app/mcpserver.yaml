@@ -9,7 +9,7 @@ spec:
     name: cluster
   # Gateway tool allowlist: networking-system/agentgateway/config/mcp/filters.yaml
   # (cluster policy). Tracked against mcp-victoriametrics v1.20.2 (16 tools
-  # enumerated 2026-10-20) — re-verify the allowlist on every version bump.
+  # enumerated) — re-verify the allowlist on every version bump.
   # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victoriametrics
   image: ghcr.io/victoriametrics/mcp-victoriametrics:v1.20.2
   env:

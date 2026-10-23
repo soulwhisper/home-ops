@@ -77,7 +77,7 @@ data:
     # ops profile is the automation brain — cluster/home tiers like default,
     # plus agent (forgejo ticket RW + hindsight-ops memory) and search
     # (web/docs retrieval). agent/search ride the FailClosed mcp-guardrails
-    # sidecar: a sidecar outage suspends those two tiers for ops.
+    # sidecar: if the sidecar is down, those two tiers are suspended for ops.
     mcp_servers:
       cluster:
         url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/cluster
@@ -128,8 +128,7 @@ data:
     # FEISHU_* must live here, not only in the pod env: since v0.21.x the
     # multiplex gateway reloads config under a profile scope whose secret
     # resolver no longer honors process env — platforms with creds only in
-    # the pod env are silently dropped from the adapter map (feishu outage
-    # 2026-10-14).
+    # the pod env are silently dropped from the adapter map.
     cat > /opt/data/.env <<EOF
     OPENAI_BASE_URL=$${OPENAI_BASE_URL}
     OPENAI_API_KEY=$${OPENAI_API_KEY}

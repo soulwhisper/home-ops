@@ -1,11 +1,11 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
-# Optimizer removed on ALL groups (2026-10): it masks real tool names behind
-# find_tool/call_tool meta-tools, which made gateway-level tool filtering
-# (agentgateway backend.mcp.authorization) impossible — the gateway only saw
-# the meta-tools. With it off, aggregated {workload}_-prefixed tool names
-# reach the gateway and filters.yaml can allowlist per route. Also drops the
-# vmcp embeddings dependency (no more OPENAI_API_KEY / llm-api-auth secret).
+# Optimizer stays OFF on all groups: it masks real tool names behind
+# find_tool/call_tool meta-tools, which would blind gateway-level tool
+# filtering (agentgateway backend.mcp.authorization) — the gateway would only
+# see the meta-tools. With it off, aggregated {workload}_-prefixed tool names
+# reach the gateway and filters.yaml can allowlist per route; the vmcp
+# embeddings dependency stays out with it.
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: VirtualMCPServer
 metadata:

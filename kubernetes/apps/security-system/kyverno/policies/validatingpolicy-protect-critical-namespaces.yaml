@@ -18,8 +18,8 @@ spec:
   evaluation:
     background:
       enabled: false
-  # Enforce: keep the webhook default (Fail) — a kyverno outage must fail
-  # closed on this one.
+  # Enforce: keep the webhook default (Fail) — this policy must fail closed
+  # if kyverno is unavailable.
   failurePolicy: Fail
   validationActions:
     - Deny

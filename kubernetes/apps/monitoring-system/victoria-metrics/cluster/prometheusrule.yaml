@@ -19,8 +19,7 @@ spec:
           labels:
             severity: critical
         # KubePodCrashLooping only sees CrashLoopBackOff; a control-plane stall
-        # instead restarts many leader-election controllers once each
-        # (2026-10-08 18:20Z / 10-09 00:16Z: ~20 pods, "leader election lost").
+        # instead restarts many leader-election controllers once each.
         # Node reboots are excluded; they legitimately restart everything.
         - alert: PodRestartStorm
           annotations:
@@ -35,8 +34,8 @@ spec:
             ) unless on () (min(time() - node_boot_time_seconds) < 1800)
           labels:
             severity: warning
-        # etcdHighFsyncDurations needs 10m above 0.5s; the incident spikes were
-        # ~5m at 1.4-1.8s and still cost leadership.
+        # etcdHighFsyncDurations needs 10m above 0.5s; shorter ~5m spikes of
+        # 1.4-1.8s still cost leadership.
         - alert: EtcdFsyncLatencySpike
           annotations:
             summary: "etcd {{ $labels.instance }} WAL fsync p99 {{ $value | humanizeDuration }}"
@@ -62,9 +61,9 @@ spec:
             sum by (instance) (increase(etcd_server_proposals_failed_total[5m])) > 0
           labels:
             severity: warning
-        # 2026-10-13 23:49Z: exarch-01 averaged >0.2s/write for minutes while
-        # etcd logged multi-second fdatasync and apiserver probes returned 500.
-        # The same expression had no 7d hits when sampled at 30m.
+        # Minutes averaging >0.2s/write on the system disk coincide with
+        # multi-second etcd fdatasync and failing apiserver probes. On healthy
+        # nodes this expression has no 7d hits at 30m sampling.
         - alert: NodeSystemDiskWriteLatency
           annotations:
             summary: "system disk writes on {{ $labels.instance }} average {{ $value | humanizeDuration }}"
@@ -105,9 +104,9 @@ spec:
           labels:
             severity: warning
         # Ticket intake is fire-and-forget from Robusta's side: chaski retries
-        # 3x then drops. A failed send means an incident has no ticket.
+        # 3x then drops. A failed send means an alert has no ticket.
         # Chaski records success only after a retry succeeds; outcome=retryable
-        # means retries were exhausted and the incident delivery was dropped.
+        # means retries were exhausted and the delivery was dropped.
         # Page on sustained loss, not a single transient drop.
         - alert: TicketDeliveryFailing
           annotations:

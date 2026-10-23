@@ -280,10 +280,9 @@ def _execute_ai_check_two_phase(
         prior_stats += RequestStats.from_response(resp)
     return result
 
-# LOCAL PATCH (home-ops, homelab-tickets#7): evidence gate. Holmes can emit a
-# schema-valid verdict with zero real evidence (observed 2026-10-13: a ceph
-# fail listing nine catastrophic states while the cluster was HEALTH_OK).
-# Every verdict must rest on this run's tool output.
+# LOCAL PATCH (home-ops): evidence gate. Holmes can emit a schema-valid
+# verdict with zero real evidence. Every verdict must rest on this run's tool
+# output.
 def _collect_tool_evidence(response: LLMResult) -> "tuple[list[tuple[str, bool, str]], int, int]":
     """Return ([(tool_name, succeeded, text)], successful-with-data count,
     failed/empty count). Successful text is the full output; failures carry
@@ -341,9 +340,8 @@ _PLAIN_ANSWER = re.compile(
 _DEGENERATE_RATIONALE = re.compile(r"^[\W_]*$")
 
 # The model sometimes echoes the prompt's format skeleton instead of answering
-# (observed 2026-10-22: the rationale was the literal
-# "<one short paragraph with verbatim quotes>"). That is not a verdict and
-# must be retried, never parsed and passed.
+# (e.g. the literal "<one short paragraph with verbatim quotes>"). That is
+# not a verdict and must be retried, never parsed and passed.
 _PLACEHOLDER_RATIONALE = re.compile(r"^\s*<[^<>]{1,200}>\s*$")
 
 def _plain_to_check_json(content: str) -> str:
@@ -474,9 +472,8 @@ def _parse_check_response(
                 _gate_evidence[:200],
                 (parsed.rationale or "")[:200],
             )
-            # LOCAL PATCH (coderabbit#4072): never forward the rejected
-            # rationale — it flows into Slack/PagerDuty and could carry a
-            # fabricated incident.
+            # LOCAL PATCH: never forward the rejected rationale — it flows
+            # into Slack/PagerDuty and could carry fabricated claims.
             return CheckResponse(
                 passed=False,
                 rationale=(

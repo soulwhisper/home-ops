@@ -77,7 +77,7 @@ spec:
               # -> nas:9003); direct nas.homelab.internal:9003 stays as the
               # documented fallback if the gateway is down
               FORGEJO_REPO_URL: https://git.noirprime.com/api/v1/repos/soulwhisper/homelab-tickets
-              # New/reopened incidents get one Holmes investigation comment.
+              # New/reopened tickets get one Holmes investigation comment.
               # /api/chat is the investigation API in holmes 0.42.
               HOLMES_URL: http://robusta-holmes.monitoring-system.svc.cluster.local:80
               FORGEJO_TICKETS_TOKEN:

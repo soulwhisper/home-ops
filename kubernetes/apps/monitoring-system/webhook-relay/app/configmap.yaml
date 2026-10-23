@@ -85,7 +85,8 @@ data:
       # Robusta's builtin playbooks (PodOOMKill, CrashLoopBackOff,
       # ImagePullBackOff, PodEvicted) emit KUBERNETES_API_SERVER findings for
       # the same events the OOMKilled/KubePodCrashLooping rules already cover,
-      # which would open a second ticket per incident. Those still reach Feishu.
+      # which would open a duplicate ticket for the same failure. Those still
+      # reach Feishu.
       # Access is enforced by network identity: the relay ingress CNP admits
       # this path only from robusta pods.
       robusta-tickets:
