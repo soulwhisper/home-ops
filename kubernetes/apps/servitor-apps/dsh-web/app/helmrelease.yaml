@@ -29,7 +29,9 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/dsh-web
-              tag: "0.2.1-rc.2-r2@sha256:64505485b1ed284dd90a8ec51ca57dda11542e8e6d56e0f12ba783008bdf2a3e"
+              # Tag-only: Renovate's Kubernetes manager cannot bump a
+              # tag@sha256 pin, so keep the release tag as the version axis.
+              tag: "0.2.1-rc.2-r2"
             env:
               DSH_HOST:
                 valueFrom:
