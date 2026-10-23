@@ -46,27 +46,29 @@ spec:
               # (needs image >=1.2.1, soulwhisper/mcp-guardrails#141)
               OTEL_METRICS_ENABLED: "false"
               # Four balanced response windows bound each scanner call;
-              # 4 * 3.5s plus processing overhead fits the 20s callout budget.
-              # Search-tier tools/list bypasses response scanning; agent-tier
-              # tools/list remains scanned.
-              SCANNER_TIMEOUT_MS: "3500"
+              # 4 * 10s plus processing overhead fits the 45s callout budget.
+              # tools/list skips response scanning on both guarded tiers.
+              SCANNER_TIMEOUT_MS: "10000"
               SCAN_TAIL_BYTES: "11264"
               # deterministic service.name for the collector's servitor
               # pipeline filter (traces -> langfuse)
               OTEL_SERVICE_NAME: "mcp-guardrails"
             resources:
-              # limits.cpu=4 is what actually buys scan speed (CFS quota);
+              # limits.cpu is what actually buys scan speed (CFS quota);
               # requests reserve scheduler capacity AND cpu.shares under
               # contention. requests=4 tripped KubeCPUOvercommit (cap (N-1)/N
               # = 2/3 on 3 nodes; we were at 0.6728). requests=1 would halve
               # the pod's share exactly when scans matter (FailClosed).
               # requests=2 clears the alert (~0.64) and keeps a workable share.
+              # limits raised under observed scan timeouts/OOM pressure: the
+              # ONNX scanner is CPU-bound and the 2Gi memory limit was being
+              # hit under concurrent full-payload scans.
               requests:
                 cpu: "2"
                 memory: 512Mi
               limits:
-                cpu: "4"
-                memory: 2Gi
+                cpu: "6"
+                memory: 4Gi
             probes:
               liveness:
                 enabled: true
