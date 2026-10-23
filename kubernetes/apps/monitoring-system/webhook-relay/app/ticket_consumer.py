@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: 2025, 2026 soulwhisper (https://github.com/soulwhisper)
+# SPDX-FileCopyrightText: 2025-2026 soulwhisper (https://github.com/soulwhisper)
 # SPDX-License-Identifier: Apache-2.0
 """Serialize Robusta findings into one Forgejo issue per alert instance."""
 import hashlib

@@ -43,7 +43,10 @@ spec:
               # Response-only: scan resource bodies for exfil/injection.
               resources/read: Response
 ---
-# Agent tier: full guardrail pipeline, including the tools/list response scan.
+# Agent tier: calls fully guarded; tools/list skips the response scan — the
+# catalog is operator-authored config, not untrusted content, and a slow scan
+# of a large list otherwise FailClosed-blocks the whole tier. Injection risk
+# rides call arguments and results, which stay fully scanned.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
@@ -64,7 +67,7 @@ spec:
               failureMode: FailClosed
             methods:
               tools/call: Full
-              tools/list: Response
+              tools/list: "Off"
               prompts/get: Response
               resources/read: Response
 ---
@@ -81,6 +84,6 @@ spec:
       name: mcp-guardrails
   backend:
     http:
-      # Four balanced response windows, each bounded by 3.5s; 20s leaves
+      # Four balanced response windows, each bounded by 10s; 45s leaves
       # headroom for tool-call responses that need all four windows.
-      requestTimeout: 20s
+      requestTimeout: 45s

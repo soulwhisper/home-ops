@@ -156,7 +156,9 @@ see through (removed 2026-10; also dropped the vmcp embeddings dependency).
 
 The **search and agent backends only** carry the mcp-guardrails ExtMCP sidecar
 (agentgateway `mcp.guardrails`): `tools/call` is scanned request+response,
-`tools/list` / `prompts/get` / `resources/read` response-only;
+`tools/list` skips the response scan on both tiers (the catalog is
+operator-authored config, not untrusted content), while `prompts/get` /
+`resources/read` stay response-only;
 `failureMode: FailClosed` (the sidecar being down disables those two tiers
 rather than passing them unguarded). Scope decision (2026-10-20): search is
 the tier where untrusted web content reaches an unguarded lane (dsh-tavern /
