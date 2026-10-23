@@ -10,7 +10,7 @@ the source of truth for manual (re)deployment and drift reference.
 | File | Deploys to | Purpose |
 |---|---|---|
 | `settings.json` | `~/.omlx/settings.json` | Global server settings (secrets stripped) |
-| `model_settings.json` | `~/.omlx/model_settings.json` | Per-model overrides (e.g. `qwen-agentworld-35b-a3b` pinned to `max_context_window: 65536`) |
+| `model_settings.json` | `~/.omlx/model_settings.json` | Per-model overrides (e.g. `ornith-1.5-35b-a3b` set to `max_context_window: 65536`) |
 
 Intentionally **not** tracked: `stats.json`, `usage.sqlite3`, `logs/`,
 `cache/` (telemetry/runtime state, regenerable), `~/models/*` (weights,

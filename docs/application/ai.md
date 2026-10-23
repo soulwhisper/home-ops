@@ -20,7 +20,7 @@ flowchart TB
     end
 
     subgraph LLM["LLM Providers"]
-        Studio["MacStudio oMLX<br/>Qwen3.8-27B + Qwen-AgentWorld-35B-A3B + MiniCPM-o 4.5<br/>(MLX 4bit, 10.10.0.210)"]
+        Studio["MacStudio oMLX<br/>Qwen3.8-27B + Ornith-1.5-35B + MiniCPM-o 4.5<br/>(MLX 4bit, 10.10.0.210)"]
     end
 
     subgraph MCP["MCP Gateway (ToolHive)"]
@@ -58,7 +58,7 @@ name:
 | Client model | promptGuard | Backend | Model (studio id) |
 | ------------ | ----------- | ------- | ----------------- |
 | `uncensored` | none (open lane) | `llm-backend-complex` | Qwen3.8-27B Uncensored (`qwen3.8-27b`, MLX 4bit) — pure chat only |
-| `agent` | **guarded** | `llm-backend-agent` | Qwen-AgentWorld-35B-A3B (`qwen-agentworld-35b-a3b`, MLX oQ4) — AI-ops automation |
+| `agent` | **guarded** | `llm-backend-agent` | Ornith-1.5-35B (`ornith-1.5-35b-a3b`, MLX 4bit) — AI-ops automation |
 | `omni` | **guarded** | `llm-backend-omni` | MiniCPM-O-4.5 (`minicpm-o-4.5`, text+vision+audio-in) |
 
 Consumer base URLs
@@ -107,15 +107,15 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 
 | App                  | Lane              | Model              | Notes                                                        |
 | -------------------- | ----------------- | ------------------ | ------------------------------------------------------------ |
-| hermes-agent         | `agent`           | Qwen-AgentWorld-35B-A3B | Agent brain: automation / KB QA / ops batching; aux side-tasks on `omni` (GitOps configmap) |
-| robusta (holmes)     | `agent`           | Qwen-AgentWorld-35B-A3B | Alert RCA + ScheduledHealthChecks; 3-25x faster than 27b on tool workloads (measured 2026-10); temperature 0.6 per model tuning |
+| hermes-agent         | `agent`           | Ornith-1.5-35B | Agent brain: automation / KB QA / ops batching; aux side-tasks on `omni` (GitOps configmap) |
+| robusta (holmes)     | `agent`           | Ornith-1.5-35B      | Alert RCA + ScheduledHealthChecks; temperature 0.6 per model tuning |
 | hindsight            | `omni`            | MiniCPM-o 4.5      | Extraction-dominant (single-model constraint); embeddings + reranker via gateway media routes |
 | firecrawl            | `omni`            | MiniCPM-o 4.5      | Batch page extraction/summarization                          |
 | karakeep             | `omni`            | MiniCPM-o 4.5      | Text + image tagging (unified); embeddings via `/v1/embeddings` (model `embedding`, 1024d) |
 | trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); queryable via the `search` MCP tier |
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | dsh-tavern           | `uncensored`      | Qwen3.8-27B        | RP portal (dsh-tavern image); model/key UI-configured on PVC |
-| dsh-web              | `agent`/`omni`    | Qwen-AgentWorld / MiniCPM-o | Agent workbench (servitor-apps); LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
+| dsh-web              | `agent`/`omni`    | Ornith-1.5 / MiniCPM-o | Agent workbench (servitor-apps); LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
 
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
 `/v1` lane; their prompts carry scraped web content, so a low rate of
@@ -179,7 +179,7 @@ design of the kubelet path — acceptable, it is RBAC-gated; harden via vmcp
 
 ## LLM Inference — Local
 
-All lanes run on the MacStudio inference host (`uncensored` Qwen3.8-27B, `agent` Qwen-AgentWorld-35B-A3B, `omni` MiniCPM-o 4.5). The in-cluster llama.cpp deployment (`llama-qwen3`) was archived 2026-08-28; its 50Gi CephFS PVC `llama` is retained for manual cleanup. Qwen3.5-4B was retired 2026-09-09 with the `fast`/`memory`/`vision` lane removal.
+All lanes run on the MacStudio inference host (`uncensored` Qwen3.8-27B, `agent` Ornith-1.5-35B, `omni` MiniCPM-o 4.5). The in-cluster llama.cpp deployment (`llama-qwen3`) was archived 2026-08-28; its 50Gi CephFS PVC `llama` is retained for manual cleanup. Qwen3.5-4B was retired 2026-09-09 with the `fast`/`memory`/`vision` lane removal.
 
 ---
 
@@ -404,7 +404,7 @@ Alignment table (keep in sync with the bootstrap downloads):
 | Order | Lane        | Studio id (folder)       | Model                        | HF source                                   | Format / size   | Served by |
 | ----- | ----------- | ------------------------ | ---------------------------- | ------------------------------------------- | --------------- | --------- |
 | 1     | `uncensored` | `qwen3.8-27b`           | Qwen3.8-27B Uncensored       | `orcarouter/Qwen3.8-27B-Uncensored-MLX`     | MLX 4bit, ~15.7G | oMLX :8000 |
-| 2     | `agent`     | `qwen-agentworld-35b-a3b` | Qwen-AgentWorld-35B-A3B    | `mlx-community/Qwen-AgentWorld-35B-A3B-oQ4` | MLX oQ4, ~19.9G | oMLX :8000 |
+| 2     | `agent`     | `ornith-1.5-35b-a3b`     | Ornith-1.5-35B               | DeepReinforce Ornith-1.5-35B, local MLX 4bit conversion | MLX 4bit, ~19G | oMLX :8000 |
 | 3     | `omni`      | `minicpm-o-4.5`          | MiniCPM-O-4.5                | `mlx-community/MiniCPM-o-4_5-4bit`          | MLX 4bit, ~7G   | oMLX :8000 |
 | 4     | `embedding` | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d) | `mlx-community/Qwen3-Embedding-0.6B-4bit-DWQ` | MLX, ~1.3G    | oMLX :8000 (`/v1/embeddings`) |
 | 5     | `reranker`  | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B          | `mlx-community/Qwen3-Reranker-0.6B-4bit`    | MLX, ~1.3G      | oMLX :8000 (`/v1/rerank`) |
@@ -444,7 +444,7 @@ items:
 /v1/chat/completions  (strict API key)
             │  model:
             ├─ uncensored   (OPEN)    ─► qwen3.8-27b        ── dsh-tavern
-            ├─ agent        (guarded) ─► qwen-agentworld    ── hermes, holmes, automation
+            ├─ agent        (guarded) ─► ornith-1.5-35b     ── hermes, holmes, automation
             ├─ omni         (guarded) ─► minicpm-o-4.5
 /v1/embeddings /v1/rerank /v1/audio/*  (media: alias ─► override ─► folder id; audio: direct)
 

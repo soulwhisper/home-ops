@@ -21,7 +21,6 @@ spec:
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 # AI-ops automation lane (alert RCA / ScheduledHealthChecks / MCP batch).
-# AgentWorld serves this lane; 27b serves `uncensored`.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
@@ -30,7 +29,7 @@ spec:
   ai:
     provider:
       openai:
-        model: "qwen-agentworld-35b-a3b"
+        model: "ornith-1.5-35b-a3b"
       host: studio.homelab.internal
       port: 8000
   policies:

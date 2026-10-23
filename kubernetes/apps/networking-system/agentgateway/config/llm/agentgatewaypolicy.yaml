@@ -73,10 +73,10 @@ spec:
 
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
-# AgentWorld harness, scoped by backend (only the agent lane consumes
-# llm-backend-agent). Encodes the weaknesses measured in the oMLX PoC
-# (temp/omlx-optimization.md): repeat-call loops, training-time date anchors,
-# truncation blindness, LogsQL unfamiliarity. Static text only; Holmes' native
+# Agent lane harness, scoped by backend (only the agent lane consumes
+# llm-backend-agent). Guards the failure modes this 35B-A3B family shows on
+# tool workloads: repeat-call loops, training-time date anchors, truncation
+# blindness, LogsQL unfamiliarity. Static text only; Holmes' native
 # current-time injection stays authoritative for timestamps.
 # role MUST be lowercase `system`: passed verbatim to the upstream chat
 # template; `SYSTEM` 400s every request with "Chat template error:
