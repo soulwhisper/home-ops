@@ -24,6 +24,10 @@ spec:
         apiVersions: ['v1']
         operations: ['CREATE', 'UPDATE', 'DELETE']  # admission maps HTTP PATCH to UPDATE
         resources: ['deployments', 'statefulsets', 'daemonsets']
+      - apiGroups: ['batch']
+        apiVersions: ['v1']
+        operations: ['CREATE', 'UPDATE', 'DELETE']
+        resources: ['jobs', 'cronjobs']
       - apiGroups: ['']
         apiVersions: ['v1']
         operations: ['CREATE', 'UPDATE', 'DELETE']

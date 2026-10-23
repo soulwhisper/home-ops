@@ -29,7 +29,7 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/dsh-tavern
-              tag: "3.1@sha256:40467793ecdef54de01dd9806ef900418e69db298c1973460e224ea57c4583e4"
+              tag: "3.1.3"
             env:
               DSH_HOST:
                 valueFrom:
@@ -108,6 +108,13 @@ spec:
             subPath: logs
           - path: /backups
             subPath: backups
+      mcp:
+        type: secret
+        name: *name
+        globalMounts:
+          - path: /data/dsh/cordis.patch.yml
+            subPath: cordis.patch.yml
+            readOnly: true
       tmpfs:
         type: emptyDir
         globalMounts:

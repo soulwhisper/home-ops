@@ -5,7 +5,8 @@ kind: AgentgatewayPolicy
 metadata:
   name: mcp-guardrails
 spec:
-  # Attached to the search and agent backends ONLY (2026-10-20 decision):
+  # Search: tool calls, prompts and resources are guarded; tools/list skips
+  # the response scan. Agent: full pipeline in mcp-guardrails-agent.
   # - search is the untrusted-content tier (arbitrary web/RSS/git content)
   #   feeding an unguarded lane (dsh-tavern / uncensored consumers);
   # - agent's consumers are EXTERNAL operator agents — they do not ride the
@@ -20,9 +21,6 @@ spec:
     - group: agentgateway.dev
       kind: AgentgatewayBackend
       name: mcp-backend-search
-    - group: agentgateway.dev
-      kind: AgentgatewayBackend
-      name: mcp-backend-agent
   backend:
     mcp:
       guardrails:
@@ -36,11 +34,38 @@ spec:
               # Full = Request + Response. See header: this is the
               # single most important phase choice in the policy.
               tools/call: Full
-              # Response-only: scan tool descriptions for poisoning.
-              tools/list: Response
+              # tools/list is list-only metadata; skip the response scan so a
+              # large tool list cannot fail the tier. Tool calls, prompts and
+              # resources stay guarded.
+              tools/list: "Off"
               # Response-only: scan prompt content for injection.
               prompts/get: Response
               # Response-only: scan resource bodies for exfil/injection.
+              resources/read: Response
+---
+# Agent tier: full guardrail pipeline, including the tools/list response scan.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-guardrails-agent
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-agent
+  backend:
+    mcp:
+      guardrails:
+        processors:
+          - remote:
+              backendRef:
+                name: mcp-guardrails
+                port: 9001
+              failureMode: FailClosed
+            methods:
+              tools/call: Full
+              tools/list: Response
+              prompts/get: Response
               resources/read: Response
 ---
 # The guardrail Service is also the ExtMcp callout backend. Its backend-level
@@ -56,5 +81,6 @@ spec:
       name: mcp-guardrails
   backend:
     http:
-      # Four balanced response windows, each bounded by 3.5s.
-      requestTimeout: 15s
+      # Four balanced response windows, each bounded by 3.5s; 20s leaves
+      # headroom for tool-call responses that need all four windows.
+      requestTimeout: 20s

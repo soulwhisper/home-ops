@@ -47,7 +47,7 @@ spec:
           : object.metadata.?generateName.orValue('<workload>') + '*'
     - name: allowedRegistries
       expression: >-
-        ['ghcr.io', 'quay.io', 'registry.k8s.io', 'docker.io', 'registry.gitlab.com', 'gsoci.azurecr.io', 'cr.kgateway.dev', 'cr.agentgateway.dev', 'docker.stirlingpdf.com', 'docker.dragonflydb.io', 'git.b4mad.industries']
+        ['ghcr.io', 'quay.io', 'registry.k8s.io', 'docker.io', 'index.docker.io', 'registry.gitlab.com', 'gsoci.azurecr.io', 'cr.kgateway.dev', 'cr.agentgateway.dev', 'docker.stirlingpdf.com', 'docker.dragonflydb.io', 'git.b4mad.industries']
   validations:
     - expression: >-
         variables.allContainers.all(c,
