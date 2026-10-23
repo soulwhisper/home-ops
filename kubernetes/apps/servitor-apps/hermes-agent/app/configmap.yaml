@@ -74,7 +74,10 @@ data:
       provider: custom
       base_url: $${OPENAI_BASE_URL}
       api_key: $${OPENAI_API_KEY}
-    # ops profile is the automation brain — same cluster/home tiers as default
+    # ops profile is the automation brain — cluster/home tiers like default,
+    # plus agent (forgejo ticket RW + hindsight-ops memory) and search
+    # (web/docs retrieval). agent/search ride the FailClosed mcp-guardrails
+    # sidecar: a sidecar outage suspends those two tiers for ops.
     mcp_servers:
       cluster:
         url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/cluster
@@ -84,6 +87,14 @@ data:
         url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/home
         headers:
           Authorization: "Bearer $${MCP_HOME_KEY}"
+      agent:
+        url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/agent
+        headers:
+          Authorization: "Bearer $${MCP_AGENT_KEY}"
+      search:
+        url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/search
+        headers:
+          Authorization: "Bearer $${MCP_SEARCH_KEY}"
     # rtk shell-output compression for the automation loops
     plugins:
       enabled: [rtk-rewrite]
@@ -164,4 +175,6 @@ data:
     OPENAI_API_KEY=$${OPENAI_API_KEY}
     MCP_CLUSTER_KEY=$${MCP_CLUSTER_KEY}
     MCP_HOME_KEY=$${MCP_HOME_KEY}
+    MCP_AGENT_KEY=$${MCP_AGENT_KEY}
+    MCP_SEARCH_KEY=$${MCP_SEARCH_KEY}
     EOF
