@@ -1,5 +1,5 @@
 # AI Infrastructure Summary
-Last updated: 2026-10-20
+Last updated: 2026-10-24
 
 Source: Flux manifests in `kubernetes/apps/`.
 
@@ -21,6 +21,7 @@ flowchart TB
 
     subgraph LLM["LLM Providers"]
         Studio["MacStudio oMLX<br/>Qwen3.8-27B + Ornith-1.5-35B + MiniCPM-o 4.5<br/>(MLX 4bit, 10.10.0.210)"]
+        External["DeepSeek / Kimi APIs"]
     end
 
     subgraph MCP["MCP Gateway (ToolHive)"]
@@ -41,12 +42,14 @@ flowchart TB
     AG-MCP --> VMCP-CLUSTER
     AG-MCP --> VMCP-HOME
     AG-MCP --> VMCP-AGENT
+    Tavern --> External
+    DSHW --> External
     Clients --> Obs
 ```
 
 ## Agent Gateway — Central LLM + MCP Router
 
-The agent gateway is the single entry point for all AI traffic. Every AI app routes through it — no app talks to an LLM or MCP server directly.
+The agent gateway is the single entry point for all agentgateway-managed LLM lanes and MCP traffic. UI-configured external providers (DeepSeek and Kimi) connect directly from DSH apps; Hermes always uses the gateway for LLM and MCP calls.
 
 ### LLM lanes
 
@@ -116,6 +119,8 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | dsh-tavern           | `uncensored`      | Qwen3.8-27B        | RP portal (dsh-tavern image); model/key UI-configured on PVC |
 | dsh-web              | `agent`/`omni`    | Ornith-1.5 / MiniCPM-o | Agent workbench (servitor-apps); LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
+
+Both DSH apps also expose the optional `kimi` provider (`https://api.moonshot.ai/v1`, model `kimi-k3.1-pro`). It is a direct external provider, not an agentgateway lane, and does not override the default model.
 
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
 `/v1` lane; their prompts carry scraped web content, so a low rate of
@@ -205,8 +210,8 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 + webhook ingest :8644 via kgateway-internal (shared rule), webhook ingest :8644 also from frigate + LAN, profile API :8642 same-namespace only; `fromEntities: host` keeps kubelet probes working
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
-  - `ops` — the batching brain: cron/Feishu/automation workload lives here (cluster read-only + home read-write MCP tiers); Feishu home channel for cron results
-  - `default` — fallback/scratch; the retired `chat` profile was removed 2026-10 when the human interface moved to dedicated portals (now dsh-tavern, gateway-direct)
+  - `ops` — the batching brain: cron/Feishu/automation workload lives here (cluster read-only + home read-write MCP tiers); owns the Feishu adapter, credentials, home channel and new Feishu sessions
+  - `default` — fallback/scratch with no Feishu adapter; the retired `chat` profile was removed 2026-10 when the human interface moved to dedicated portals (now dsh-tavern, gateway-direct)
   Model/provider config (`model.provider: custom` → agent gateway, `model.default: agent`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression`/`title_generation` → `omni`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. Requires 1Password `hermes-agent` field: `api_server_key_root` (>=16 chars)
 
 ---
@@ -218,13 +223,13 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **Ingress**: `chat.noirprime.com` via kgateway-internal
 - **State**: kopiur-backed PVC `dsh-web` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs` and `/backups` share the `dsh-web-cache` `ceph-cache` PVC; `/tmp` remains emptyDir
 - **MCP/Skills**: the `dsh-web-mcp` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster and home tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/home` with `mcp_search`, `mcp_cluster`, `mcp_home`, never in Git). Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
-- **LLM/MCP**: UI-configured against the agent gateway; no model key in the manifest
+- **LLM/MCP**: UI-selectable agentgateway, DeepSeek and Kimi providers; MCP uses the guarded tiers. No default model is pinned
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (`/v1/*` + `/mcp/*`), world-except-private :443 for the user-driven plugin market, kube-dns
 
 ### DSH Tavern
 
 - RP chat portal, image `ghcr.io/soulwhisper/dsh-tavern` (dsh-tavern profile + eco plugins baked). Lives in **servitor-apps**
-- **LLM**: UI-configured — uncensored lane (foreground prose) / omni (background settlement); key = `llm_uncensored` from the `agentgateway` item. The gateway is the only AI egress
+- **LLM**: UI-selectable uncensored/omni gateway lanes plus direct DeepSeek and Kimi providers; no default model is pinned
 - **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
 - **Ingress**: `tavern.noirprime.com` via kgateway-internal
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (LLM only), world-except-private :443 (card/preset fetches, tavern-image backends), kube-dns
@@ -453,4 +458,4 @@ items:
 /mcp/search /mcp/cluster /mcp/home /mcp/agent  (per-tier key; guardrails ExtMCP on search+agent, FailClosed) ── every MCP client
 ```
 
-All routing is internal via the agent gateway. No app has direct LLM or MCP server access — the gateway is the single choke point for auth, routing, guardrails, and observability.
+Agentgateway-managed routing remains internal and centralized for auth, routing, guardrails, and observability. UI-selected external providers (DeepSeek and Kimi) are explicit exceptions for their direct LLM calls; MCP still goes through the gateway.

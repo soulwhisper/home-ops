@@ -124,11 +124,8 @@ data:
     cp /seed/config.yaml /opt/data/config.yaml
 
     # root .env — authoritative; prevents first-boot placeholder seeding from
-    # shadowing pod env (dotenv loads with override=True).
-    # FEISHU_* must live here, not only in the pod env: since v0.21.x the
-    # multiplex gateway reloads config under a profile scope whose secret
-    # resolver no longer honors process env — platforms with creds only in
-    # the pod env are silently dropped from the adapter map.
+    # shadowing pod env (dotenv loads with override=True). Feishu credentials
+    # belong only to ops so default never claims the shared bot credential.
     cat > /opt/data/.env <<EOF
     OPENAI_BASE_URL=$${OPENAI_BASE_URL}
     OPENAI_API_KEY=$${OPENAI_API_KEY}
@@ -138,22 +135,7 @@ data:
     API_SERVER_HOST=0.0.0.0
     API_SERVER_KEY=$${API_SERVER_KEY}
     FRIGATE_WEBHOOK_SECRET=$${FRIGATE_WEBHOOK_SECRET}
-    FEISHU_APP_ID=$${FEISHU_APP_ID}
-    FEISHU_APP_SECRET=$${FEISHU_APP_SECRET}
-    FEISHU_ENCRYPT_KEY=$${FEISHU_ENCRYPT_KEY}
-    FEISHU_VERIFICATION_TOKEN=$${FEISHU_VERIFICATION_TOKEN}
-    FEISHU_ALLOWED_USERS=$${FEISHU_ALLOWED_USERS}
-    FEISHU_HOME_CHANNEL=$${FEISHU_HOME_CHANNEL}
     EOF
-
-    # policy vars live on plain env (not the secret) — write only when set,
-    # so an empty line can never shadow the pod env (dotenv override=True).
-    # no $( ) command substitution: flux postBuild misparses it
-    for v in FEISHU_DOMAIN FEISHU_CONNECTION_MODE FEISHU_ALLOW_BOTS FEISHU_GROUP_POLICY; do
-      if printenv "$v" >/dev/null 2>&1; then
-        { echo -n "$v="; printenv "$v"; } >> /opt/data/.env
-      fi
-    done
 
     # remove leftover profiles on upgrade — multiplex_profiles=true keeps any
     # leftover dir live (incl. its API key + model config); seed only owns ops
@@ -176,4 +158,18 @@ data:
     MCP_HOME_KEY=$${MCP_HOME_KEY}
     MCP_AGENT_KEY=$${MCP_AGENT_KEY}
     MCP_SEARCH_KEY=$${MCP_SEARCH_KEY}
+    FEISHU_APP_ID=$${FEISHU_APP_ID}
+    FEISHU_APP_SECRET=$${FEISHU_APP_SECRET}
+    FEISHU_ENCRYPT_KEY=$${FEISHU_ENCRYPT_KEY}
+    FEISHU_VERIFICATION_TOKEN=$${FEISHU_VERIFICATION_TOKEN}
+    FEISHU_ALLOWED_USERS=$${FEISHU_ALLOWED_USERS}
+    FEISHU_HOME_CHANNEL=$${FEISHU_HOME_CHANNEL}
     EOF
+    # policy vars live on plain env (not the secret) — write only when set,
+    # so an empty line can never shadow the pod env (dotenv override=True).
+    # no $( ) command substitution: flux postBuild misparses it
+    for v in FEISHU_DOMAIN FEISHU_CONNECTION_MODE FEISHU_ALLOW_BOTS FEISHU_GROUP_POLICY; do
+      if printenv "$v" >/dev/null 2>&1; then
+        { echo -n "$v="; printenv "$v"; } >> /opt/data/profiles/ops/.env
+      fi
+    done
