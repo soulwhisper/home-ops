@@ -42,6 +42,8 @@ data:
         username: "admin"
         password_hash: "scrypt$16384$8$1$iqGHQwhoTPMwkiMDI7SV3w==$V45cYiP24KiQ6tllPk3FN7XBM2fenuVWyvPtcMUvDko="
     platforms:
+      feishu:
+        enabled: false
       webhook:
         enabled: true
         extra:
@@ -124,8 +126,8 @@ data:
     cp /seed/config.yaml /opt/data/config.yaml
 
     # root .env — authoritative; prevents first-boot placeholder seeding from
-    # shadowing pod env (dotenv loads with override=True). Feishu credentials
-    # belong only to ops so default never claims the shared bot credential.
+    # shadowing pod env (dotenv loads with override=True). Feishu is disabled
+    # for default and its credentials are seeded only into ops.
     cat > /opt/data/.env <<EOF
     OPENAI_BASE_URL=$${OPENAI_BASE_URL}
     OPENAI_API_KEY=$${OPENAI_API_KEY}
