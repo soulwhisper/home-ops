@@ -29,7 +29,8 @@ spec:
                 - "(?i)(from now on|effective immediately|starting now|henceforth)\\s*(,\\s+)?(you\\s+)?(will|shall|must|should|are to|need to)\\s+(be|act|respond|answer|behave|operate|function)"
                 - "(?i)(your new|revised|updated)\\s+(purpose|goal|objective|role|instruction|directive|rule)"
                 - "(?:请|你要|现在)?忽略(?:之前|上面|以上|前面|所有)(?:的)?(?:指令|指示|规则|提示|要求|约束)"
-                - "(?:取消|移除|去掉|关闭|忽略|跳过|绕过|忘记|丢弃)(?:之前|所有|一切|你的|以上|前面)*(?:的)?(?:限制|约束|安全|过滤|审查|规则|指令|设定)"
+                # Keep 安全 as a qualifier of an explicit object; bare "绕过安全隔离" is security news.
+                - "(?:取消|移除|去掉|关闭|忽略|跳过|绕过|忘记|丢弃)(?:之前|所有|一切|你的|以上|前面)*(?:的)?(?:安全)?(?:限制|约束|过滤|审查|规则|指令|设定)"
                 - "(?:你的)?(?:新|真正的|实际的)(?:任务|目标|使命|工作)(?:是|变成|改为)"
                 - "(?i)(?:please|pls|now)?\\s*(?:ignore|forget|disregard)\\s+.*(?:指令|规则|之前|以上)"
                 - "(?i)(?:忽略|忘记|跳过).*(?:instruction|rule|prompt|previous)"
