@@ -67,9 +67,16 @@ usually **one** root cause — work the earliest, link the rest.
 ## 2. Claim
 
 Writes need `pat_tickets` (never echo it):
+Prefer loading the write token from `~/forgejo_tickets.key`; if that file is
+absent, fall back to 1Password `pat_tickets`. Never print either value.
+
 
 ```bash
-export FORGEJO_TOKEN="$(op item get forgejo --fields pat_tickets --reveal)"
+if [ -f "$HOME/forgejo_tickets.key" ]; then
+  export FORGEJO_TOKEN="$(cat "$HOME/forgejo_tickets.key")"
+else
+  export FORGEJO_TOKEN="$(op item get forgejo --fields pat_tickets --reveal)"
+fi
 fj() { curl -fsS -H "Authorization: token $FORGEJO_TOKEN" -H 'Content-Type: application/json' "$@"; }
 fj -X POST "$F/issues/<N>/comments" -d '{"body":"taking"}'
 ```
