@@ -11,9 +11,9 @@ customization:
     - i915.enable_guc=3
     - module_blacklist=igc
     # bring-up network: bond0 (LACP) + DHCP from first boot for maintenance.
-    # Production nodes use static BondConfig addresses after install. The full
-    # positional ip= form is required: Linux IP-Config reads field 0 as the
-    # client IPv4 address, field 5 as the device, and field 6 as autoconf.
+    # Production nodes use static BondConfig addresses after install. Prefer the
+    # explicit positional ip= form to avoid Talos/Linux IP-Config ambiguity:
+    # field 0 is client IPv4, field 5 is the device, and field 6 is autoconf.
     - bond=bond0:enp2s0f0np0,enp2s0f1np1:mode=802.3ad,lacp_rate=fast,xmit_hash_policy=layer3+4:9000
     - ip=:::::bond0:dhcp
   systemExtensions:

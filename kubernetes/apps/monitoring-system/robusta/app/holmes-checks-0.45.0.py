@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Modified copy of holmes/checks/checks.py from HolmesGPT/holmesgpt v0.42.0,
-# licensed under the Apache License, Version 2.0 (see LICENSE and NOTICE).
+# which is byte-identical to v0.45.0, licensed under Apache License 2.0.
 """Health check functionality for Holmes."""
 
 import json
