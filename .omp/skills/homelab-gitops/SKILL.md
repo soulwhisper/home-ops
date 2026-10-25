@@ -217,10 +217,18 @@ The user will be prompted; don't try to suppress that.
 
 ## Talos-specific
 
-Talos nodes are immutable; mutate them by patching machine config sources
-under `infrastructure/talos/`, then use the repo's apply recipe. Files under
-`clusterconfig/` are GENERATED output — edit sources/patches, regenerate,
-never hand-edit the output.
+Talos nodes are immutable. Edit machine config sources under
+`infrastructure/talos/`, regenerate derived output, and never hand-edit
+`clusterconfig/`. For live machine-config changes, use
+`talosctl patch machineconfig` with the smallest valid YAML merge for the
+changed document/fields — never a full `talosctl apply-config` replacement.
+
+- Always run `talosctl patch machineconfig --dry-run --nodes <node>
+  --patch-file <patch.yaml>` first, with an explicit patch payload, and patch
+  one node at a time; concurrent applies contend for the node apply lock.
+- For `UnattendedInstallConfig`, patch that document's `installer.image` while
+  preserving required sibling fields (`provisioning.diskSelector.match`); do
+  not use the legacy `.machine.install` path.
 
 ```bash
 talosctl -n <node> version

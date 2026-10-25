@@ -46,6 +46,8 @@ jobs:
 
       - name: Run backup verifier regressions
         run: python3 -m unittest discover -s .github/scripts -p test_backup_verifier.py
+      - name: Test LLM guardrail regressions
+        run: python3 -m unittest discover -s .github/scripts -p test_guardrails.py
 
       - name: Install flate
         uses: home-operations/flate/action@v0.6.5
