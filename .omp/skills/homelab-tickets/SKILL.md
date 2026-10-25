@@ -67,13 +67,14 @@ usually **one** root cause — work the earliest, link the rest.
 ## 2. Claim
 
 Writes need `pat_tickets` (never echo it):
-Prefer loading the write token from `~/forgejo_tickets.key`; if that file is
-absent, fall back to 1Password `pat_tickets`. Never print either value.
+Honor `FORGEJO_TOKEN_FILE` when set; otherwise prefer `~/forgejo_tickets.key`.
+If no key file is readable, fall back to 1Password `pat_tickets`. Never print either value.
 
 
 ```bash
-if [ -f "$HOME/forgejo_tickets.key" ]; then
-  export FORGEJO_TOKEN="$(cat "$HOME/forgejo_tickets.key")"
+TOKEN_FILE="${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}"
+if [[ -r "$TOKEN_FILE" ]]; then
+  export FORGEJO_TOKEN="$(tr -d '[:space:]' < "$TOKEN_FILE")"
 else
   export FORGEJO_TOKEN="$(op item get forgejo --fields pat_tickets --reveal)"
 fi

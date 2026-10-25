@@ -27,11 +27,11 @@ Perform a read-only diagnosis of the live cluster. Do not edit cluster resources
    - When a tracing backend is available, query relevant error/latency traces by service and operation. Otherwise use events, conditions, and state transitions as the trace evidence and state that no trace backend was verified.
 
 4. **Recent alerts**
-   - Query Alertmanager for active, silenced, inhibited, and recently resolved alerts. Compare them with current raw rule expressions and metric values.
+  - Query Alertmanager for active, silenced, and inhibited alerts. Use vmsingle's retained `ALERTS` history for recently resolved/firing transitions and corroborate them with Forgejo ticket timelines; do not use Alertmanager as the historical source.
    - Never treat silence, inhibition, or an empty Alertmanager result as proof of healing.
 
 5. **Forgejo tickets**
-   - List open issues and inspect relevant comments/timelines. Use the public read-only API when possible; when authentication is required, load the token from `~/forgejo_tickets.key` without printing it.
+  - List open issues and inspect relevant comments/timelines. Use the public read-only API when possible; when authentication is required, load the token with `tr -d '[:space:]' < "${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}"` without printing it, using the skill's 1Password fallback only when no key file is readable.
    - Correlate related tickets and likely duplicate root causes. Do not create, modify, assign, or close tickets during diagnosis.
 
 ## Report contract
