@@ -118,6 +118,12 @@ Ports are configured as **STP edge ports** on all access bonds, and the switch o
 
 Management connectivity uses a dedicated access port (Ten-GE 1/0/19, VLAN 1) with broadcast/multicast/unicast suppression at 5% for OOB control of the MS-01 nodes via AMT.
 
+### Talos Bring-up Networking
+
+Production nodes use static addresses from their `BondConfig`. Factory maintenance images may use DHCP on `bond0`, but the `ip=` argument must use the full positional form `ip=:::::bond0:dhcp`. Do not shorten it to `ip=bond0:dhcp`: Linux IP-Config interprets the first field as the client IPv4 address and installs the resulting invalid address before Talos starts its own DHCP client.
+
+VLAN 100 DHCP is normally disabled (`dhcp.lab.ignore=1` on OpenWrt). Maintenance/ISO bring-up that requires DHCP must enable a deliberately scoped pool; otherwise use static dashboard/META pre-configuration. No broad `10.0.0.0/8` pool is permitted.
+
 ### BGP Design
 
 The core switch and each Kubernetes node run eBGP to advertise the LoadBalancer CIDR.
