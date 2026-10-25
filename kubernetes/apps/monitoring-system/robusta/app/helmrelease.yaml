@@ -62,8 +62,8 @@ spec:
       extraEnvVarsSecrets:
         - robusta-holmes # OPENAI_API_BASE + OPENAI_API_KEY (ExternalSecret)
       # LOCAL PATCH: mount a patched checks.py forcing two-phase check execution
-      # on the agent lane (response_format+tools incompatible). Keep the image
-      # pinned to the tag this patch targets.
+      # on the agent lane (response_format+tools incompatible). Keep the patch
+      # aligned with the deployed Holmes image (currently 0.45.x).
       additionalVolumes:
         - name: holmes-checks-patch
           configMap:
@@ -74,9 +74,9 @@ spec:
           subPath: checks.py
           readOnly: true
       podAnnotations:
-        # bump when holmes-checks-0.42.0.py changes: subPath mounts never
+        # bump when holmes-checks-0.45.0.py changes: subPath mounts never
         # propagate ConfigMap updates to running pods (coderabbit)
-        home-ops/checks-patch-rev: "12"
+        home-ops/checks-patch-rev: "13"
         # the agentgateway lane key lives in the robusta-holmes Secret; without
         # this a key rotation leaves Holmes on the old key (401 every check)
         reloader.stakater.com/auto: "true"

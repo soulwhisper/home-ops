@@ -19,4 +19,4 @@ configMapGenerator:
     options:
       disableNameSuffixHash: true
     files:
-      - checks.py=holmes-checks-0.42.0.py
+      - checks.py=holmes-checks-0.45.0.py

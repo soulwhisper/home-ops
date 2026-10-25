@@ -45,6 +45,13 @@ spec:
             - { port: "8428", protocol: TCP }
     - toServices:
         - k8sService:
+            serviceName: vmalert-victoria-metrics-cluster
+            namespace: monitoring-system
+      toPorts:
+        - ports:
+            - { port: "8080", protocol: TCP }
+    - toServices:
+        - k8sService:
             serviceName: vmalertmanager-victoria-metrics-cluster
             namespace: monitoring-system
       toPorts:
