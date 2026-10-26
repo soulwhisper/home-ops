@@ -54,12 +54,6 @@ static-bind ip-address 10.0.0.202 24 hardware-address 9C05-D6A1-69C7
  dhcp server ip-pool 1
  gateway-list 10.0.0.1
  static-bind ip-address 10.0.0.210 24 hardware-address 3052-5301-A32D
-# Talos maintenance/bootstrap only: a small shared pool for temporary leases.
-dhcp server ip-pool 2
- network 10.10.0.0 mask 255.255.255.0
- address range 10.10.0.160 10.10.0.169
- gateway-list 10.10.0.1
- dns-list 10.10.0.254
 
 # stp
 stp mode rstp
@@ -98,7 +92,6 @@ interface vlan-interface 10
 
 interface vlan-interface 100
  ip address 10.10.0.1 24
- dhcp select server global-pool
  bfd min-transmit-interval 400
  bfd min-receive-interval 400
  bfd detect-multiplier 5

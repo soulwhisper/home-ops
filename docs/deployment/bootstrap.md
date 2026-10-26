@@ -21,7 +21,7 @@ the justfile `env` recipe) signs off on the mise config.
 
 ---
 
-### Phase 1: Talos Image Build
+### Phase 1: Talos Image Build (bare metal)
 
 ```shell
 just talos image bootstrap
@@ -32,7 +32,7 @@ Factory](https://factory.talos.dev) to resolve a unique schematic ID, fetches
 the latest stable Talos version, then downloads the matching
 `metal-amd64.iso`. The ISO is placed in the repo root.
 
-**Bootstrap schematic** (`infrastructure/talos/bootstrap/00-schematic.yaml`):
+**Bare-metal bootstrap schematic** (`infrastructure/talos/bootstrap/00-schematic.yaml`):
 
 | Extension | Purpose |
 |-----------|---------|
@@ -44,14 +44,14 @@ the latest stable Talos version, then downloads the matching
 **Kernel arguments**: `pcie_aspm=off`, `nvme_core.default_ps_max_latency_us=0`,
 `i915.enable_guc=3`, `module_blacklist=igc`.
 
-**Bootstrap and production network roles**: the `bootstrap` image is only
-for initial maintenance. It creates `bond0` and obtains a temporary lease
-from OpenWrt's predefined maintenance pool, which is enabled only for that
-work and disabled afterward. The temporary address is used only to apply
+**Bootstrap and production network roles**: the bare-metal `bootstrap` image
+is only for initial maintenance. It creates `bond0` and obtains a temporary
+lease from OpenWrt's predefined maintenance pool, which is enabled only for
+that work and disabled afterward. The temporary address is used only to apply
 configuration and can differ from the final static address, so no per-node
-reservation, custom MAC, or node-specific image is needed. The installed
-`prod` image omits early DHCP and takes its address and route from
-`BondConfig`.
+`generate test` selects the installed environment image; that image omits the
+bootstrap `ip=` argument, and the applied config takes its address and route
+from `BondConfig`.
 
 Write the ISO to a USB drive and boot each node into Talos maintenance mode
 (pure RAM disk, no install yet).
@@ -107,35 +107,49 @@ just talos generate prod
 ### Phase 3: Node Provisioning
 
 ```shell
-just bootstrap
+# Replace these example addresses with the nodes' current OpenWrt leases.
+# They are temporary dynamic addresses, not reservations.
+just bootstrap prod \
+  exarch-01=10.10.0.160 \
+  exarch-02=10.10.0.161 \
+  exarch-03=10.10.0.162
 ```
 
-The top-level `bootstrap` recipe orchestrates phases 3–5. You can also
-provision individual nodes:
+The top-level `bootstrap` recipe requires the environment and one
+`<hostname>=<temporary-ip>` mapping for every generated node config. Before
+applying anything, it validates all mappings, checks that every installer
+matches the selected `prod` or `test` schematic in `version.yaml`, and requires
+a static `BondConfig` address with no `DHCPv4Config`.
 
-```shell
-just talos apply exarch-01
-```
-
-During initial provisioning (`just talos _bootstrap_talos`), each node is
-configured **insecurely** (no mutual TLS yet — the node has no prior
-identity):
+During initial provisioning, `_bootstrap_talos` configures each node
+**insecurely** at its temporary address (no mutual TLS yet — the node has no
+prior identity):
 
 | Behavior | Detail |
 |----------|--------|
+| Target mapping | Every generated node must have one explicit `<hostname>=<temporary-ip>` argument |
+| Preflight validation | All installer and static-network checks must pass before the first `apply-config` |
 | Retry count | 12 attempts per node |
 | Retry interval | 5 seconds |
 | Failure policy | Hard fail (`exit 1`) after 12 attempts; a node answering "certificate required" is already configured and skipped |
 
 ```shell
 # Under the hood:
-talosctl apply-config --nodes <hostname> \
+talosctl apply-config --nodes <temporary-ip> \
   --file infrastructure/talos/clusterconfig/main-<hostname>.yaml \
   --insecure
 ```
 
-After config is applied, Talos installs itself to disk and reboots. Wait for
-all nodes to come back before proceeding.
+After config is applied, Talos installs the `prod` or `test` installer pinned
+by `generate` and reboots. The static `BondConfig` address and default route
+replace the temporary lease; the bootstrap ISO and maintenance DHCP pool are
+no longer used. Wait for all nodes at their generated static addresses before
+proceeding. Later configuration changes use the configured node, not its old
+maintenance lease:
+
+```shell
+just talos apply exarch-01
+```
 
 ---
 
@@ -282,14 +296,23 @@ provisioning, and every other workload.
 
 ### Test Environment
 
-The test cluster runs on VMs inside a separate VLAN. Use `test` instead of
-`prod` in all `just talos` commands:
+The test cluster runs on VMs inside a separate VLAN. The bare-metal
+`bootstrap` schematic is not valid for these VMs because its bond argument
+hardcodes the MS01 NIC names. Boot the test maintenance ISO instead, then use
+the same explicit DHCP-to-static handoff with `test` configs:
 
 ```shell
 just talos image test
 just talos generate test
-just talos apply exarch-01    # uses test configs
+just bootstrap test \
+  exarch-01=TEST_IP_01 \
+  exarch-02=TEST_IP_02 \
+  exarch-03=TEST_IP_03
 ```
+
+Replace `TEST_IP_*` with the current temporary addresses. The applied test
+config installs the test image and replaces those addresses with the static
+`172.19.82.0/24` `BondConfig` addresses.
 
 **Key differences from production**:
 
