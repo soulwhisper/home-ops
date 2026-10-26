@@ -99,6 +99,7 @@ interface vlan-interface 10
 
 interface vlan-interface 100
  ip address 10.10.0.1 24
+ dhcp select server global-pool
  bfd min-transmit-interval 400
  bfd min-receive-interval 400
  bfd detect-multiplier 5

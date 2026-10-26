@@ -32,7 +32,7 @@ Factory](https://factory.talos.dev) to resolve a unique schematic ID, fetches
 the latest stable Talos version, then downloads the matching
 `metal-amd64.iso`. The ISO is placed in the repo root.
 
-**Production schematic** (`infrastructure/talos/prod/00-schematic.yaml`):
+**Bootstrap schematic** (`infrastructure/talos/bootstrap/00-schematic.yaml`):
 
 | Extension | Purpose |
 |-----------|---------|
@@ -83,7 +83,7 @@ just talos generate prod
    |-------|------|--------------------|
    | 10 | `10-general.yaml` | Multi-document config: discovery, install, DNS, kubelet/node, scheduler, sysctls, CRI, NUT, NTP |
    | 30 | `30-private-mirrors.yaml` | Registry mirrors routing through NAS cache (`nas.homelab.internal:9002`) |
-  | — | `nodes/<hostname>.yaml` | Hostname, bond configuration (802.3ad, 10G, MTU 9000), static IP, pinned bond MAC |
+   | — | `nodes/<hostname>.yaml` | Hostname, bond configuration (802.3ad, 10G, MTU 9000), static IP, pinned bond MAC |
 
    Numbered shared patches (`[1-9][0-9]-*.yaml`) and each node's `nodes/<hostname>.yaml` file are applied to the machineconfig. `00-schematic.yaml` is consumed exclusively by the Talos Image Factory (Phase 1) to resolve the schematic ID, which `generate` then injects into the installer image — it is never a machineconfig patch.
 
