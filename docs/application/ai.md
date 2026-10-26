@@ -111,7 +111,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | App                  | Lane              | Model              | Notes                                                        |
 | -------------------- | ----------------- | ------------------ | ------------------------------------------------------------ |
 | hermes-agent         | `agent`           | Ornith-1.5-35B | Agent brain: automation / KB QA / ops batching; aux side-tasks on `omni` (GitOps configmap) |
-| robusta (holmes)     | `agent`           | Ornith-1.5-35B      | Alert RCA + ScheduledHealthChecks; temperature 0.6 per model tuning |
+| robusta (holmes)     | `agent`           | Ornith-1.5-35B      | Alert RCA + ScheduledHealthChecks; 32K client context cap bounds oMLX prefill memory; temperature 0.6 per model tuning |
 | hindsight            | `omni`            | MiniCPM-o 4.5      | Extraction-dominant (single-model constraint); embeddings + reranker via gateway media routes |
 | firecrawl            | `omni`            | MiniCPM-o 4.5      | Batch page extraction/summarization                          |
 | karakeep             | `omni`            | MiniCPM-o 4.5      | Text + image tagging (unified); embeddings via `/v1/embeddings` (model `embedding`, 1024d) |
