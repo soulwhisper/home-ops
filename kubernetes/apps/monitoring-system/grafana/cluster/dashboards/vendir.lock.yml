@@ -44,12 +44,12 @@ directories:
     path: dragonfly
   path: _sources/database
 - contents:
-  - configDigest: 07f37f648c289ac55d8aed1fb2f59d885cd85ae57ae7d1e355133d04e92dc120
+  - configDigest: 2634e7a328fc4bfab00088042e727a6997806954ed1ba4b8ed8a1831f5603bdd
     git:
-      commitTitle: '[release-1.9] Bump ratelimit version (#10136)...'
-      sha: f9f92a112a4033abed5c8d43a5f7e37da257403c
+      commitTitle: '[release-1.9] cherrypick for v1.9.3 (#10394)...'
+      sha: ec0171b20585a36de7124328c0ceaae72ad0f79f
       tags:
-      - v1.9.2
+      - v1.9.3
     path: gateway
   path: _sources/envoy
 - contents:

@@ -83,7 +83,7 @@ directories:
         lazy: true
         git:
           url: https://github.com/envoyproxy/gateway
-          ref: v1.9.2
+          ref: v1.9.3
         includePaths:
           - "charts/gateway-addons-helm/dashboards/envoy-proxy-global.json"
         # dropped (30-43% metric overlap with proxy-global; same envoy_* families):
