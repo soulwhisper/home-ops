@@ -111,9 +111,9 @@ just talos generate prod
 # Replace these example addresses with the nodes' current OpenWrt leases.
 # They are temporary dynamic addresses, not reservations.
 just bootstrap prod \
-  exarch-01=10.10.0.160 \
-  exarch-02=10.10.0.161 \
-  exarch-03=10.10.0.162
+  exarch-01=10.10.0.101 \
+  exarch-02=10.10.0.102 \
+  exarch-03=10.10.0.103
 ```
 
 The top-level `bootstrap` recipe requires the environment and one
