@@ -9,7 +9,6 @@ hostname: exarch-02
 apiVersion: v1alpha1
 kind: BondConfig
 name: bond0
-hardwareAddr: 58:47:ca:77:d1:52
 links:
   - enp2s0f0np0
   - enp2s0f1np1

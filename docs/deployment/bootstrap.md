@@ -45,11 +45,12 @@ the latest stable Talos version, then downloads the matching
 `i915.enable_guc=3`, `module_blacklist=igc`.
 
 **Bootstrap and production network roles**: the `bootstrap` image is only
-for initial maintenance. It creates `bond0` and requests one lease on
-`bond0`, using the MAC inherited from the first slave. H3C is the sole VLAN
-100 DHCP authority and provides only static reservations; OpenWrt DHCP stays
-disabled. The installed `prod` image omits early DHCP and takes its address
-and route from `BondConfig`, which also pins that same inherited MAC.
+for initial maintenance. It creates `bond0` and obtains a temporary lease
+from a small shared H3C pool. The temporary address is used only to apply
+configuration and can differ from the final static address, so no per-node
+reservation, custom MAC, or node-specific image is needed. The installed
+`prod` image omits early DHCP and takes its address and route from
+`BondConfig`.
 
 Write the ISO to a USB drive and boot each node into Talos maintenance mode
 (pure RAM disk, no install yet).
@@ -83,7 +84,7 @@ just talos generate prod
    |-------|------|--------------------|
    | 10 | `10-general.yaml` | Multi-document config: discovery, install, DNS, kubelet/node, scheduler, sysctls, CRI, NUT, NTP |
    | 30 | `30-private-mirrors.yaml` | Registry mirrors routing through NAS cache (`nas.homelab.internal:9002`) |
-   | — | `nodes/<hostname>.yaml` | Hostname, bond configuration (802.3ad, 10G, MTU 9000), static IP, pinned bond MAC |
+   | — | `nodes/<hostname>.yaml` | Hostname, bond configuration (802.3ad, 10G, MTU 9000), static IP |
 
    Numbered shared patches (`[1-9][0-9]-*.yaml`) and each node's `nodes/<hostname>.yaml` file are applied to the machineconfig. `00-schematic.yaml` is consumed exclusively by the Talos Image Factory (Phase 1) to resolve the schematic ID, which `generate` then injects into the installer image — it is never a machineconfig patch.
 

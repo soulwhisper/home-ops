@@ -10,9 +10,8 @@ customization:
     # hardware
     - i915.enable_guc=3
     - module_blacklist=igc
-    # First-boot network: create bond0 and request one lease on bond0 only.
-    # Reservations use the MAC inherited from the first slave, not a custom
-    # BondConfig hardwareAddr applied later by Talos.
+    # First-boot network: create bond0 and request one temporary lease on
+    # bond0 only. No per-node reservation or custom MAC is required.
     - bond=bond0:enp2s0f0np0,enp2s0f1np1:mode=802.3ad,lacp_rate=fast,xmit_hash_policy=layer3+4:9000
     - ip=:::::bond0:dhcp
   systemExtensions:
