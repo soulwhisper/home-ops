@@ -76,7 +76,7 @@ spec:
           meilisearch:
             image:
               repository: getmeili/meilisearch
-              tag: v1.55.0
+              tag: v1.56.0
             # image entrypoint is tini; args replace CMD so the binary name
             # must be included
             args:
