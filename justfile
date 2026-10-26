@@ -39,12 +39,12 @@ lint:
 reconcile:
   flux --namespace gitops-system reconcile kustomization gitops-system --with-source
 
-[doc('Bootstrap Cluster')]
+[doc('Bootstrap Cluster with generated prod/test config')]
 [script]
-bootstrap:
+bootstrap mode *targets:
   echo "Make sure you disable all proxies."
   echo "Bootstrapping Talos..."
-  just talos _bootstrap_talos
+  just talos _bootstrap_talos {{mode}} {{targets}}
   echo "completed."
   echo "Bootstrapping K8s..."
   just talos _bootstrap_k8s
@@ -56,7 +56,7 @@ bootstrap:
   echo "Bootstrapping Apps..."
   just _bootstrap_apps
   echo "completed."
-  echo "Cluster bootstrapped. Please reboot nodes."
+  echo "Cluster bootstrapped. Disable the temporary maintenance DHCP pool."
 
 [script]
 _template file:

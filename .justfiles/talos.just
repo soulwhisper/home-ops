@@ -100,23 +100,101 @@ apply node *args:
   echo "Applying talos configuration to {{node}}"
   talosctl apply-config --nodes {{node}} --file ${TALOS_DIR}/clusterconfig/main-{{node}}.yaml {{args}}
 
-# BRING-UP REQUIREMENT (bond): DHCP must be OFF on the node subnet and each
-# node needs a static nic0 pre-config from the Talos maintenance dashboard
-# (via AMT) before applying. A live DHCP client on any NIC that gets enslaved
-# breaks the bond (stale routes shadow bond0, all IP traffic dies).
-[doc('Bootstrap talos cluster, INSECURE')]
+# Initial ISO/PXE maintenance supplies only temporary DHCP connectivity. Apply
+# generated prod/test config explicitly to those leases; its installer and
+# static BondConfig take over after installation. Never use the bootstrap
+# schematic for installed nodes or run DHCP independently on the LACP slaves.
+[doc('Apply generated environment config to temporary DHCP addresses')]
 [script]
-_bootstrap_talos:
-  for FILE in $(ls ${TALOS_DIR}/clusterconfig/main-*.yaml); do
-    NODE=$(basename "$FILE" .yaml | sed 's/^main-//')
-    # bare hostnames get hijacked by fake-ip proxies (198.18.0.0/16); resolve the FQDN
-    TARGET=$(getent ahostsv4 "${NODE}.homelab.internal" 2>/dev/null | awk 'NR==1 {print $1}')
-    TARGET=${TARGET:-$NODE}
-    echo "🚀 Bootstrapping Talos Node: $NODE"
+_bootstrap_talos mode *targets:
+  MODE=$1
+  shift
+  case "$MODE" in
+    prod|test) ;;
+    *) echo "❌ Unknown mode: $MODE (expected: prod|test)"; exit 1 ;;
+  esac
+  if [ "$#" -eq 0 ]; then
+    echo "❌ Provide every node as <hostname>=<temporary-ip>."
+    echo "Usage: just bootstrap $MODE exarch-01=10.10.0.160 exarch-02=10.10.0.161 exarch-03=10.10.0.162"
+    exit 1
+  fi
+
+  EXPECTED_SCHEMATIC=$(yq -r ".schematic_id.${MODE}" "${TALOS_DIR}/version.yaml")
+  EXPECTED_VERSION=$(yq -r '.talos_version' "${TALOS_DIR}/version.yaml")
+  EXPECTED_IMAGE="factory.talos.dev/metal-installer/${EXPECTED_SCHEMATIC}:${EXPECTED_VERSION}"
+  declare -A TARGETS=()
+  declare -A TARGET_OWNERS=()
+  for SPEC in "$@"; do
+    NODE=${SPEC%%=*}
+    TARGET=${SPEC#*=}
+    if [[ "$SPEC" != *=* || -z "$NODE" || -z "$TARGET" || "$TARGET" == *=* ]]; then
+      echo "❌ Invalid target '$SPEC' (expected: <hostname>=<temporary-ip>)."
+      exit 1
+    fi
+    if [[ ! "$NODE" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+      echo "❌ Invalid hostname '$NODE'."
+      exit 1
+    fi
+    FILE="${TALOS_DIR}/clusterconfig/main-${NODE}.yaml"
+    if [ ! -f "$FILE" ]; then
+      echo "❌ Missing generated config for $NODE. Run 'just talos generate $MODE' first."
+      exit 1
+    fi
+    if [[ -v "TARGETS[$NODE]" ]]; then
+      echo "❌ Duplicate target for $NODE."
+      exit 1
+    fi
+    if [[ -v "TARGET_OWNERS[$TARGET]" ]]; then
+      echo "❌ Temporary address $TARGET is assigned to both ${TARGET_OWNERS[$TARGET]} and $NODE."
+      exit 1
+    fi
+    TARGETS["$NODE"]="$TARGET"
+    TARGET_OWNERS["$TARGET"]="$NODE"
+  done
+
+  shopt -s nullglob
+  CONFIG_FILES=("${TALOS_DIR}"/clusterconfig/main-*.yaml)
+  shopt -u nullglob
+  if [ "${#CONFIG_FILES[@]}" -eq 0 ]; then
+    echo "❌ No generated node configs. Run 'just talos generate $MODE' first."
+    exit 1
+  fi
+
+  # Validate every node before applying anything: explicit mapping, matching
+  # environment installer, and static networking to replace the temporary lease.
+  declare -A STATIC_IPS=()
+  for FILE in "${CONFIG_FILES[@]}"; do
+    NODE=$(basename "$FILE" .yaml)
+    NODE=${NODE#main-}
+    if [[ ! -v "TARGETS[$NODE]" ]]; then
+      echo "❌ Missing temporary address for $NODE."
+      exit 1
+    fi
+    INSTALLER_IMAGE=$(yq -r 'select(.kind == "UnattendedInstallConfig") | .installer.image // ""' "$FILE")
+    if [[ "$INSTALLER_IMAGE" != "$EXPECTED_IMAGE" ]]; then
+      echo "❌ $NODE installer does not match $MODE; run 'just talos generate $MODE'."
+      echo "   Expected: $EXPECTED_IMAGE"
+      echo "   Found:    ${INSTALLER_IMAGE:-none}"
+      exit 1
+    fi
+    STATIC_ADDRESS=$(yq -r 'select(.kind == "BondConfig") | .addresses[0].address // ""' "$FILE")
+    DHCP_CONFIG=$(yq -r 'select(.kind == "DHCPv4Config") | .kind' "$FILE")
+    if [[ -z "$STATIC_ADDRESS" || -n "$DHCP_CONFIG" ]]; then
+      echo "❌ $NODE must have a static BondConfig address and no DHCPv4Config."
+      exit 1
+    fi
+    STATIC_IPS["$NODE"]="${STATIC_ADDRESS%%/*}"
+  done
+
+  for SPEC in "$@"; do
+    NODE=${SPEC%%=*}
+    TARGET=${TARGETS[$NODE]}
+    FILE="${TALOS_DIR}/clusterconfig/main-${NODE}.yaml"
+    echo "🚀 Bootstrapping $NODE via $TARGET; installed address: ${STATIC_IPS[$NODE]}"
     count=0
     while true; do
       if OUT=$(talosctl apply-config --nodes "$TARGET" --file "$FILE" --insecure 2>&1); then
-        echo "✅ $NODE accepted configuration."
+        echo "✅ $NODE accepted $MODE configuration."
         break
       fi
       if [[ "$OUT" == *"certificate required"* ]]; then
@@ -124,12 +202,12 @@ _bootstrap_talos:
         break
       fi
       count=$((count + 1))
-      if [ $count -ge 12 ]; then
+      if [ "$count" -ge 12 ]; then
         echo "❌ Failed to apply config to $NODE after 12 attempts:"
         echo "$OUT"
         exit 1
       fi
-      echo "⏳ Waiting for $NODE to accept config (attempt $count/12)..."
+      echo "⏳ Waiting for $NODE at $TARGET (attempt $count/12)..."
       sleep 5
     done
   done
