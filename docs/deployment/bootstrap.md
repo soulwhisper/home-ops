@@ -46,7 +46,8 @@ the latest stable Talos version, then downloads the matching
 
 **Bootstrap and production network roles**: the `bootstrap` image is only
 for initial maintenance. It creates `bond0` and obtains a temporary lease
-from a small shared H3C pool. The temporary address is used only to apply
+from OpenWrt's predefined maintenance pool, which is enabled only for that
+work and disabled afterward. The temporary address is used only to apply
 configuration and can differ from the final static address, so no per-node
 reservation, custom MAC, or node-specific image is needed. The installed
 `prod` image omits early DHCP and takes its address and route from

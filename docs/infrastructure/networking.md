@@ -94,7 +94,7 @@ The core switch enforces strict L3 isolation between security domains. Inter-VLA
 | ---- | ---------- | --------------- | ------------ | ----------------------------------------------- | ---------------- |
 | 1    | Management | 10.0.0.0/24     | 10.0.0.1     | Switch mgmt, ESXi, UniFi, OOB access            | Yes (switch)     |
 | 10   | LAN        | 10.0.10.0/24    | 10.0.10.1    | Trusted wired LAN                               | Yes (OpenWrt)    |
-| 100  | K8S / NAS  | 10.10.0.0/24    | 10.10.0.1    | Kubernetes nodes, NAS, workstation, BGP peering | Scoped dynamic / H3C |
+| 100  | K8S / NAS  | 10.10.0.0/24    | 10.10.0.1    | Kubernetes nodes, NAS, workstation, BGP peering | On demand / OpenWrt |
 | 200  | WiFi       | 10.20.0.0/24    | 10.20.0.1    | Trusted wireless clients                        | Yes (OpenWrt)    |
 | 210  | IoT        | 10.20.10.0/24   | 10.20.10.1   | Untrusted IoT devices (ACL-isolated)            | Yes (OpenWrt)    |
 | 1000 | Transit    | 10.255.255.0/30 | 10.255.255.1 | Switch↔Router point-to-point link               | Static           |
@@ -120,9 +120,9 @@ Management connectivity uses a dedicated access port (Ten-GE 1/0/19, VLAN 1) wit
 
 ### Talos Bring-up Networking
 
-`bootstrap` images are reserved for initial ISO/PXE maintenance. They use `ip=:::::bond0:dhcp` only on `bond0` to obtain a temporary address from a small shared H3C pool. That address is used only to apply configuration and need not match the final static address. No per-node reservation, custom MAC, or node-specific image is required. If no DHCP service is available, the two IP-Config timeout cycles are an accepted bring-up risk.
+`bootstrap` images are reserved for initial ISO/PXE maintenance. They use `ip=:::::bond0:dhcp` only on `bond0` to obtain a temporary address from OpenWrt's predefined maintenance pool. That address is used only to apply configuration and need not match the final static address. No per-node reservation, custom MAC, or node-specific image is required. If no DHCP service is available, the two IP-Config timeout cycles are an accepted bring-up risk.
 
-`prod` images used for installation and upgrades omit `ip=`. Each node's `BondConfig` supplies its only IPv4 address and default route, and no custom `hardwareAddr` is required. No early DHCP runs during production boot, so a disabled DHCP service cannot delay startup. OpenWrt remains with `dhcp.lab.ignore=1`; H3C is the only VLAN 100 DHCP authority, and no broad address pool is permitted.
+`prod` images used for installation and upgrades omit `ip=`. Each node's `BondConfig` supplies its only IPv4 address and default route, and no custom `hardwareAddr` is required. No early DHCP runs during production boot, so a disabled DHCP service cannot delay startup. OpenWrt keeps `dhcp.lab.ignore=1` outside maintenance; its predefined maintenance range is enabled only for initial bootstrap and disabled again afterward.
 
 ### BGP Design
 

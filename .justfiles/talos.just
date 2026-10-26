@@ -101,9 +101,10 @@ apply node *args:
   talosctl apply-config --nodes {{node}} --file ${TALOS_DIR}/clusterconfig/main-{{node}}.yaml {{args}}
 
 # BRING-UP REQUIREMENT (bond): initial ISO/PXE boots use the bootstrap
-# schematic with `ip=:::::bond0:dhcp`; H3C owns a small shared pool of
-# temporary leases. Production upgrades omit `ip=` so static BondConfig does
-# not race an early DHCP client. Never run DHCP independently on the slaves.
+# schematic with `ip=:::::bond0:dhcp`; OpenWrt's predefined maintenance pool
+# is enabled only for that work and disabled afterward. Production upgrades
+# omit `ip=` so static BondConfig does not race an early DHCP client.
+# Never run DHCP independently on the LACP slaves.
 [doc('Bootstrap talos cluster, INSECURE')]
 [script]
 _bootstrap_talos:
