@@ -26,9 +26,37 @@ spec:
   healthChecks:
     - apiVersion: kopiur.home-operations.com/v1alpha1
       kind: Snapshot
+      description: No backup snapshots actively running
+      timeout: 10m
       expr: |-
         !(has(status.phase) && status.phase in ["Running", "Pending"])
     - apiVersion: ceph.rook.io/v1
       kind: CephCluster
+      name: storage-system
+      namespace: storage-system
+      description: Ceph cluster ready and healthy
+      timeout: 10m
       expr: |-
-        status.ceph.health in ['HEALTH_OK'] || status.ceph.health in ['HEALTH_WARN']
+        status.phase == "Ready" && status.ceph.health == "HEALTH_OK"
+    - apiVersion: v1
+      kind: Node
+      description: All Kubernetes nodes ready
+      timeout: 10m
+      expr: |-
+        status.conditions.exists(c, c.type == "Ready" && c.status == "True")
+    - apiVersion: kopiur.home-operations.com/v1alpha1
+      kind: ClusterRepository
+      name: nas
+      description: Backup repository ready and reachable
+      timeout: 10m
+      expr: >-
+        status.phase == "Ready" &&
+        status.conditions.exists(c, c.type == "BackendReachable" && c.status == "True")
+    - apiVersion: postgresql.cnpg.io/v1
+      kind: Cluster
+      name: postgres
+      namespace: database-system
+      description: PostgreSQL instances ready
+      timeout: 10m
+      expr: |-
+        status.readyInstances == status.instances && status.instances > 0
