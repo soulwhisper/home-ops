@@ -85,9 +85,9 @@ spec:
         # without it holmes falls back to "gpt-5.4" when OPENAI_API_KEY is set
         # -> agentgateway 404s the unknown lane
         - { name: MODEL, value: agent }
-        # the agent lane caps at 64K total context; holmes' output floor of
-        # max(64K, 12% of window) would eat the whole window, so cap output
-        # explicitly and compact earlier (65% of 64K + 8K output < 64K)
+        # The agent lane supports 64K, but concurrent Holmes investigations can
+        # exceed oMLX's prefill memory guard. Cap this client at 32K; 65%
+        # compaction plus 8K output stays below that cap without changing timeout.
         - { name: OVERRIDE_MAX_OUTPUT_TOKEN, value: "8192" }
         - { name: CONTEXT_WINDOW_COMPACTION_THRESHOLD_PCT, value: "65" }
       modelList:
@@ -98,11 +98,11 @@ spec:
           api_base: envRef:OPENAI_API_BASE
           api_key: envRef:OPENAI_API_KEY
           temperature: 0.6
-          # holmes assumes 200K when the model is unknown to litellm; the lane
-          # rejects prompts >64K ("Prompt too long"). Tell holmes the truth so
-          # it compacts instead of erroring.
+          # holmes assumes 200K when the model is unknown to litellm. Use a
+          # 32K client window to bound KV/SDPA pressure during concurrent RCA
+          # and HealthChecks while leaving the server-side model unchanged.
           custom_args:
-            max_context_size: 65536
+            max_context_size: 32768
       toolsets:
         internet:
           enabled: false # no Internet egress for this pod (see CNP)
