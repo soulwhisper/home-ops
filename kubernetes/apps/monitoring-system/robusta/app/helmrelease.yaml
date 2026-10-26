@@ -87,9 +87,9 @@ spec:
         - { name: MODEL, value: agent }
         # the agent lane caps at 64K total context; holmes' output floor of
         # max(64K, 12% of window) would eat the whole window, so cap output
-        # explicitly and compact earlier (65% of 64K + 8K output < 64K)
+        # explicitly and compact earlier (60% of 64K + 8K output < 64K)
         - { name: OVERRIDE_MAX_OUTPUT_TOKEN, value: "8192" }
-        - { name: CONTEXT_WINDOW_COMPACTION_THRESHOLD_PCT, value: "65" }
+        - { name: CONTEXT_WINDOW_COMPACTION_THRESHOLD_PCT, value: "60" }
       modelList:
         # agent lane (studio-hosted). temperature 0.6 follows the model's
         # tuned sampling (0.6/0.95/top_k 20).
