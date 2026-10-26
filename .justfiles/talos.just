@@ -100,10 +100,10 @@ apply node *args:
   echo "Applying talos configuration to {{node}}"
   talosctl apply-config --nodes {{node}} --file ${TALOS_DIR}/clusterconfig/main-{{node}}.yaml {{args}}
 
-# BRING-UP REQUIREMENT (bond): DHCP must be OFF on the node subnet and each
-# node needs a static nic0 pre-config from the Talos maintenance dashboard
-# (via AMT) before applying. A live DHCP client on any NIC that gets enslaved
-# breaks the bond (stale routes shadow bond0, all IP traffic dies).
+# BRING-UP REQUIREMENT (bond): initial ISO/PXE boots use the bootstrap
+# schematic with `ip=:::::bond0:dhcp`; H3C owns the reservations. Production
+# upgrades omit `ip=` so static BondConfig does not race an early DHCP client.
+# Never run DHCP independently on the LACP slaves.
 [doc('Bootstrap talos cluster, INSECURE')]
 [script]
 _bootstrap_talos:

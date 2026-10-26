@@ -24,7 +24,7 @@ the justfile `env` recipe) signs off on the mise config.
 ### Phase 1: Talos Image Build
 
 ```shell
-just talos image prod
+just talos image bootstrap
 ```
 
 Posts the environment's `00-schematic.yaml` to the [Talos Image
@@ -43,6 +43,13 @@ the latest stable Talos version, then downloads the matching
 
 **Kernel arguments**: `pcie_aspm=off`, `nvme_core.default_ps_max_latency_us=0`,
 `i915.enable_guc=3`, `module_blacklist=igc`.
+
+**Bootstrap and production network roles**: the `bootstrap` image is only
+for initial maintenance. It creates `bond0` and requests one lease on
+`bond0`, using the MAC inherited from the first slave. H3C is the sole VLAN
+100 DHCP authority and provides only static reservations; OpenWrt DHCP stays
+disabled. The installed `prod` image omits early DHCP and takes its address
+and route from `BondConfig`, which also pins that same inherited MAC.
 
 Write the ISO to a USB drive and boot each node into Talos maintenance mode
 (pure RAM disk, no install yet).
@@ -76,7 +83,7 @@ just talos generate prod
    |-------|------|--------------------|
    | 10 | `10-general.yaml` | Multi-document config: discovery, install, DNS, kubelet/node, scheduler, sysctls, CRI, NUT, NTP |
    | 30 | `30-private-mirrors.yaml` | Registry mirrors routing through NAS cache (`nas.homelab.internal:9002`) |
-   | — | `nodes/<hostname>.yaml` | Hostname, bond configuration (802.3ad, 10G, MTU 9000), static IP |
+  | — | `nodes/<hostname>.yaml` | Hostname, bond configuration (802.3ad, 10G, MTU 9000), static IP, pinned bond MAC |
 
    Numbered shared patches (`[1-9][0-9]-*.yaml`) and each node's `nodes/<hostname>.yaml` file are applied to the machineconfig. `00-schematic.yaml` is consumed exclusively by the Talos Image Factory (Phase 1) to resolve the schematic ID, which `generate` then injects into the installer image — it is never a machineconfig patch.
 

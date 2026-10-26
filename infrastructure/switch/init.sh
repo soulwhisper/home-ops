@@ -54,6 +54,13 @@ static-bind ip-address 10.0.0.202 24 hardware-address 9C05-D6A1-69C7
  dhcp server ip-pool 1
  gateway-list 10.0.0.1
  static-bind ip-address 10.0.0.210 24 hardware-address 3052-5301-A32D
+# Talos maintenance/bootstrap only: static leases, no dynamic address range.
+dhcp server ip-pool 2
+ gateway-list 10.10.0.1
+ dns-list 10.10.0.254
+ static-bind ip-address 10.10.0.101 24 hardware-address 5847-CA7A-4F54
+ static-bind ip-address 10.10.0.102 24 hardware-address 5847-CA77-D152
+ static-bind ip-address 10.10.0.103 24 hardware-address 5847-CA7A-58DC
 
 # stp
 stp mode rstp

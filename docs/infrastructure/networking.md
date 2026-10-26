@@ -120,9 +120,9 @@ Management connectivity uses a dedicated access port (Ten-GE 1/0/19, VLAN 1) wit
 
 ### Talos Bring-up Networking
 
-Production nodes use static addresses from their `BondConfig`. Factory maintenance images may use DHCP on `bond0`; use the explicit positional form `ip=:::::bond0:dhcp` to avoid the Talos/Linux IP-Config interpretation mismatch. Talos also accepts the shorthand `ip=bond0:dhcp`, but Linux IP-Config independently interprets the first field as the client IPv4 address and can install an unintended address before Talos starts its own DHCP client.
+`bootstrap` images are reserved for initial ISO/PXE maintenance. They use `ip=:::::bond0:dhcp` only on `bond0`; H3C provides the only VLAN 100 DHCP service and assigns static leases to each node's inherited bond MAC. This avoids both per-slave DHCP and the Talos/Linux shorthand mismatch.
 
-VLAN 100 DHCP is normally disabled (`dhcp.lab.ignore=1` on OpenWrt). Maintenance/ISO bring-up that requires DHCP must enable a deliberately scoped pool; otherwise use static dashboard/META pre-configuration. No broad `10.0.0.0/8` pool is permitted.
+`prod` images used for installation and upgrades omit `ip=`. Each node's `BondConfig` supplies its only IPv4 address and default route, and `hardwareAddr` pins the same inherited MAC used by the bootstrap reservation. No early DHCP runs during production boot, so a disabled DHCP service cannot delay startup. OpenWrt remains with `dhcp.lab.ignore=1`; no second DHCP authority or broad address pool is permitted.
 
 ### BGP Design
 

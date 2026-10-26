@@ -1,0 +1,23 @@
+---
+# schematic for initial ISO/PXE maintenance only, not production upgrades
+# id is resolved live from factory.talos.dev and tracked in ../version.yaml
+customization:
+  bootloader: sd-boot
+  extraKernelArgs:
+    # stability
+    - pcie_aspm=off
+    - nvme_core.default_ps_max_latency_us=0
+    # hardware
+    - i915.enable_guc=3
+    - module_blacklist=igc
+    # First-boot network: create bond0 and request one lease on bond0 only.
+    # Reservations use the MAC inherited from the first slave, not a custom
+    # BondConfig hardwareAddr applied later by Talos.
+    - bond=bond0:enp2s0f0np0,enp2s0f1np1:mode=802.3ad,lacp_rate=fast,xmit_hash_policy=layer3+4:9000
+    - ip=:::::bond0:dhcp
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/i915
+      - siderolabs/intel-ucode
+      - siderolabs/mei
+      - siderolabs/nut-client
