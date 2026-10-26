@@ -123,6 +123,7 @@ _bootstrap_talos mode *targets:
   EXPECTED_VERSION=$(yq -r '.talos_version' "${TALOS_DIR}/version.yaml")
   EXPECTED_IMAGE="factory.talos.dev/metal-installer/${EXPECTED_SCHEMATIC}:${EXPECTED_VERSION}"
   declare -A TARGETS=()
+  declare -A TARGET_OWNERS=()
   for SPEC in "$@"; do
     NODE=${SPEC%%=*}
     TARGET=${SPEC#*=}
@@ -143,7 +144,12 @@ _bootstrap_talos mode *targets:
       echo "❌ Duplicate target for $NODE."
       exit 1
     fi
+    if [[ -v "TARGET_OWNERS[$TARGET]" ]]; then
+      echo "❌ Temporary address $TARGET is assigned to both ${TARGET_OWNERS[$TARGET]} and $NODE."
+      exit 1
+    fi
     TARGETS["$NODE"]="$TARGET"
+    TARGET_OWNERS["$TARGET"]="$NODE"
   done
 
   shopt -s nullglob

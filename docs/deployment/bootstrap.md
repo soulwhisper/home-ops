@@ -49,9 +49,10 @@ is only for initial maintenance. It creates `bond0` and obtains a temporary
 lease from OpenWrt's predefined maintenance pool, which is enabled only for
 that work and disabled afterward. The temporary address is used only to apply
 configuration and can differ from the final static address, so no per-node
-`generate test` selects the installed environment image; that image omits the
-bootstrap `ip=` argument, and the applied config takes its address and route
-from `BondConfig`.
+reservation, custom MAC, or node-specific image is needed. `just talos
+generate prod` or `just talos generate test` selects the corresponding
+installed image; that image omits the bootstrap `ip=` argument, and the
+applied config takes its address and route from `BondConfig`.
 
 Write the ISO to a USB drive and boot each node into Talos maintenance mode
 (pure RAM disk, no install yet).
