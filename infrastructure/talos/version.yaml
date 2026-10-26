@@ -11,6 +11,6 @@ k8s_version: v1.37.1
 # refreshed here on every run, so the installer image and ISO downloads
 # always match the current 00-schematic.yaml content.
 schematic_id:
+  bootstrap: 790dad575fcbd08c5521aead8c3222ac58c9e04245ff4502196336a08bab5b70
   prod: df8a291f203e6957e0ca7a2d264399ec645ac0cbaadc44f415c8523ae5b699e9
   test: 5bf167b739a3594940f8012df8e9659662dddd8e6e3b2a3ed5262f16bbf1d7c0
-  bootstrap: 790dad575fcbd08c5521aead8c3222ac58c9e04245ff4502196336a08bab5b70
