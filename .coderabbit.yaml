@@ -75,8 +75,8 @@ reviews:
           pair — multiple services in one rule with multiple ports creates a
           port cross-product.
         - Storage: never suggest renaming CSI driver name prefixes or changing
-          StorageClass immutable fields; ceph-cache (size=1) is rewarmable
-          scratch by design, ceph-block/ceph-filesystem are size=3.
+          StorageClass immutable fields; ceph-cache (size=2, host failure domain)
+          is rewarmable scratch by design, ceph-block/ceph-filesystem are size=3.
         - Images: pinned tags (date/semver/digest) with renovate comments where
           conventional; flag unpinned :latest on new workloads.
         - Do NOT ask for replica/HA increases: single WAN/router/switch/NAS

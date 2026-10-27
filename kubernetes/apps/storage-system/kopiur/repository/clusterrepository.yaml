@@ -34,8 +34,8 @@ spec:
     cache:
       # warm kopia cache across mover runs: controller-owned RWO PVC per
       # policy instead of a cold emptyDir each run (~96 mover runs/day).
-      # ceph-cache (replica=1 NVMe pool): the cache is rewarmable, so the
-      # 3x replication write amplification of ceph-block buys nothing here.
+      # ceph-cache keeps two replicas on separate hosts so an OSD drain cannot
+      # make every copy unavailable during RBD teardown and the node reboot.
       mode: Persistent
       storageClassName: ceph-cache
       capacity: 10Gi

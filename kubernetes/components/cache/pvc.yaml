@@ -1,7 +1,7 @@
 ---
-# Rewarmable cache/scratch PVC on the replica=1 ceph-cachepool (NVMe, no
-# replication amplification). Data loss on OSD failure is acceptable: caches
-# rewarm. Never use for durable data. Consumers mount via existingClaim.
+# Rewarmable cache/scratch PVC on a two-replica, host-failure-domain NVMe pool.
+# A single-replica layout can block RBD teardown and the node reboot when its
+# OSD is drained. Never use for durable data. Consumers mount via existingClaim.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
