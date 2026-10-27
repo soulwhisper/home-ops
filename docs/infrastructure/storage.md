@@ -4,7 +4,7 @@ Storage spans two complementary layers: **distributed Ceph** for replicated bloc
 
 ### Rook-Ceph Cluster
 
-The [Rook](https://rook.io) operator manages a 3-node Ceph cluster across `exarch-01`, `exarch-02`, and `exarch-03`. Each node contributes one **SK Hynix P41 2TB NVMe** device, partitioned into **2 OSDs per device** for balanced placement-group distribution. Every durable pool uses a **replication factor of 3** with **`failureDomain: host`**, tolerating the loss of an entire node without data unavailability. The one exception is `ceph-cachepool` (below), a single-replica scratch pool.
+The [Rook](https://rook.io) operator manages a 3-node Ceph cluster across `exarch-01`, `exarch-02`, and `exarch-03`. Each node contributes one **SK Hynix P41 2TB NVMe** device, partitioned into **2 OSDs per device** for balanced placement-group distribution. Every durable pool uses a **replication factor of 3** with **`failureDomain: host`**, tolerating the loss of an entire node without data unavailability. `ceph-cachepool` (below) uses two replicas for rewarmable data.
 
 The operator ships with the [ceph-csi-drivers](https://github.com/ceph/ceph-csi-operator) Helm chart, which registers two CSI drivers under `storage-system.*.csi.ceph.com` — `rbd` and `cephfs` (`nfs` and `nvmeof` are disabled).
 
@@ -38,9 +38,9 @@ CSI secrets (`rook-csi-rbd-provisioner`, `rook-csi-rbd-node`) are auto-generated
 
 #### CephBlockPool: `ceph-cachepool`
 
-A single-replica scratch pool (`size: 1`, `failureDomain: osd`, `requireSafeReplicaSize: false`) for **rewarmable** cache/scratch data — jellyfin transcode, stirling-pdf and scrypted caches (via the `components/cache` PVC component), and the kopiur mover cache. The 3× replication write amplification of `ceph-block` buys nothing for data that rewarms; data loss on OSD failure is acceptable, and an OSD stop can temporarily make cache PVCs and their movers unavailable. Never use for durable data.
+A replicated scratch pool (`size: 2`, `failureDomain: host`, `min_size: 1`, `requireSafeReplicaSize: false`) for **rewarmable** cache/scratch data — jellyfin transcode, stirling-pdf and scrypted caches (via the `components/cache` PVC component), and the kopiur mover cache. The second replica keeps a copy available when one host is drained; a single-replica PG could instead lose all copies and block RBD teardown during the node reboot. It is not for durable data. `enableCrushUpdates: true` is required for these changes to update the CRUSH rule of an existing pool; after changes, verify the actual CRUSH rule and per-PG host placement before maintenance.
 
-It replaced the previous local-PV mover cache to resolve kopiur mover I/O issues; there is no planned migration back. The `POOL_NO_REDUNDANCY` mute and `continueUpgradeAfterChecksEvenIfNotHealthy: true` remain intentional exceptions for this pool. Both affect cluster-level safety checks: verify durable pools remain healthy before upgrades; do not treat muted health as proof that every pool is redundant.
+Persistent per-policy caches reduce repeated index downloads during frequent mover runs. `continueUpgradeAfterChecksEvenIfNotHealthy: true` bypasses Rook health checks cluster-wide; durable-pool health must be verified independently before Ceph upgrades.
 
 ```yaml
 StorageClass:  ceph-cache
@@ -226,7 +226,7 @@ Each MS-01 node boots from a 256 GB industrial SSD. Production Talos configs pin
 | StorageClass | Default | Access | Provisioner | Backend |
 |-------------|:-------:|:------:|------------|---------|
 | `ceph-block` | yes | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (3-replica) |
-| `ceph-cache` | no | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (intentional single-copy, rewarmable cache) |
+| `ceph-cache` | no | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (two replicas on separate hosts, rewarmable cache) |
 | `ceph-filesystem` | no | RWX | `storage-system.cephfs.csi.ceph.com` | CephFS (3-replica) |
 | `synology-volume1` | no | RWX | `nfs.csi.k8s.io` | NAS `/volume1` |
 | `synology-volume2` | no | RWX | `nfs.csi.k8s.io` | NAS `/volume2` |

@@ -325,7 +325,7 @@ Applications that need persistent data backed up to S3 include this component. T
 
 **Path**: `kubernetes/components/cache/`
 
-Injects a rewarmable cache/scratch `PersistentVolumeClaim` on the replica=1 `ceph-cache` NVMe pool — no replication amplification, data loss on OSD failure is acceptable. Consumers mount it via `existingClaim`. Never use for durable data.
+Injects a rewarmable cache/scratch `PersistentVolumeClaim` on a two-replica `ceph-cache` NVMe pool. Replicas are placed on separate hosts so an OSD drain cannot make every copy unavailable during RBD teardown and the node reboot. Data loss on OSD failure is acceptable. Consumers mount it via `existingClaim`. Never use for durable data.
 
 ### Component: authentik (15 consumers)
 

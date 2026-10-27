@@ -21,8 +21,8 @@ spec:
     force: false
     stage: false
     placement: soft
-    rebootMode: powercycle
-    waitForVolumeDetach: true
+    rebootMode: default
+    waitForVolumeDetach: false
   healthChecks:
     - apiVersion: kopiur.home-operations.com/v1alpha1
       kind: Snapshot
