@@ -35,18 +35,6 @@ spec:
             description: |
               The most recent backup attempt failed (failed_ts > available_ts).
               Subsequent attempts may recover, but investigate to be sure.
-        - alert: PostgresWALArchiveStale
-          # WAL should be archived continuously; >1h gap with active DB suggests
-          # archive_command is failing.
-          expr: |
-            (time() - barman_cloud_cloudnative_pg_io_first_recoverability_point{namespace="database-system",pod=~"postgres-.*"}) > 60 * 60 * 24 * 31
-          for: 30m
-          labels: { severity: warning }
-          annotations:
-            summary: Postgres recoverability window has exceeded 31 days
-            description: |
-              The earliest recoverable point is older than retention policy (30d).
-              Either retention is not enforcing properly, or new WALs aren't archived.
         - alert: PostgresBackupVerifyFailed
           expr: |
             kube_job_status_failed{namespace="database-system",job_name=~"postgres-backup-verify-.*"} > 0
