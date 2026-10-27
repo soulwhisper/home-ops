@@ -22,7 +22,7 @@ spec:
     stage: false
     placement: soft
     rebootMode: default
-    waitForVolumeDetach: false
+    waitForVolumeDetach: true
   healthChecks:
     - apiVersion: kopiur.home-operations.com/v1alpha1
       kind: Snapshot
