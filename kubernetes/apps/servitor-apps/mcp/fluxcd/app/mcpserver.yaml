@@ -7,7 +7,7 @@ metadata:
 spec:
   groupRef:
     name: cluster
-  image: ghcr.io/controlplaneio-fluxcd/flux-operator-mcp:v0.62.0
+  image: ghcr.io/controlplaneio-fluxcd/flux-operator-mcp:v0.62.1
   args: ["serve", "--transport=http", "--port=9090", "--read-only=true"]
   env:
     - name: RUNTIME_NAMESPACE
