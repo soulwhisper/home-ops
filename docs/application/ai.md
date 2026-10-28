@@ -169,9 +169,9 @@ operator-authored config, not untrusted content), while `prompts/get` /
 `failureMode: FailClosed` (the sidecar being down disables those two tiers
 rather than passing them unguarded). Scope decision (2026-10-20): search is
 the tier where untrusted web content reaches an unguarded lane (dsh-tavern /
-any `uncensored`-lane consumer); the agent tier's consumers are operator agents (including hermes) with
-no cluster-side promptGuard in front of them, and forgejo ticket bodies
-carry alert/log-derived (untrusted) strings. cluster/home consumers (hermes)
+any `uncensored`-lane consumer); the agent tier combines external operators with hermes;
+hermes rides the guarded `agent` LLM lane, and the ExtMCP sidecar additionally scans MCP
+tool content because forgejo ticket bodies carry alert/log-derived (untrusted) strings. cluster/home consumers (hermes)
 ride the guarded `agent` LLM lane — cluster adds CEL allowlists and
 token/SA boundaries, home is RW-by-design behind the HA token — so the
 sidecar there was duplication, and its FailClosed posture made one sidecar
@@ -450,7 +450,7 @@ items:
 | ---- | ----- | ------------ |
 | open-webui MCP bearer key rollout | Restored with the native search-tier bearer connection | Smoke-verify a native tool call after rollout; check the `tool_server.connections` config row if the persisted shape diverges |
 | promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via langfuse/logs; if painful, expose `omni-raw` (one unguarded rule) as the designed escape hatch |
-| hermes MCP server endpoints | Done (2026-10-20): declarative `mcp_servers` in the seed ConfigMap — `cluster` + `home` tiers via the gateway, keys from the `agentgateway` item | Watch first tool calls; the agent group (`forgejo`/ops memory) can be added later by issuing hermes the `mcp_agent` key |
+| hermes MCP server endpoints | Done: declarative `mcp_servers` in the seed ConfigMap covers search, cluster, home, and agent tiers, with keys from the `agentgateway` item | Watch tool calls across all four tiers |
 | SillyTavern endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
 | mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred, on watch via langfuse decision spans (open-webui and hermes both emit OTEL) | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
 | ASR/TTS model | VoxCPM2-4bit served on the studio via `/v1/audio/*` (`studio-audio` backend) — lane ready, no in-repo consumer | Point a consumer at the lane when one appears; ASR (`/v1/audio/transcriptions`) wired but unused |
