@@ -36,17 +36,17 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
-  name: llm-voxcpm2-auth
+  name: llm-audio-auth
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-voxcpm2-route
+      name: agentgateway-audio-route
   traffic:
     apiKeyAuthentication:
       mode: Strict
       secretRef:
-        name: llm-voxcpm2-auth
+        name: llm-audio-auth
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1
@@ -90,12 +90,12 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
-  name: studio-voxcpm2-model
+  name: studio-audio-model
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-voxcpm2-route
+      name: agentgateway-audio-route
       sectionName: discovery
   traffic:
     directResponse:

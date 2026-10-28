@@ -86,7 +86,7 @@ key cannot call the automation lane. Cross-lane needs are served by enrolling th
 in another lane's secret, never by sharing a policy: `llm-omni-auth` also
 enrolls the agent key (hermes aux) and the uncensored key (open-webui auxiliary
 tasks). Each media model has its own route and credential:
-`llm-embedding-auth`, `llm-reranker-auth`, and `llm-voxcpm2-auth`; the omni
+`llm-embedding-auth`, `llm-reranker-auth`, and `llm-audio-auth`; the omni
 group key is currently enrolled in each. Revocation = remove the entry from
 every lane and media capability secret.
 There is no cloud fallback — the studio is a deliberate SPOF.
@@ -259,7 +259,7 @@ Non-chat vector modalities run on the same oMLX process as the chat lanes, expos
 | ---------------- | ------------------- | ------------ | ------------------------ | --------------------------------------- | ------- |
 | `/v1/embeddings` | `studio-embeddings` | `embedding`  | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d)            | 120s    |
 | `/v1/rerank`     | `studio-reranker`     | `reranker`   | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
-| `/v1/audio/speech`, `/v1/audio/transcriptions` | `studio-voxcpm2` | `voxcpm2` | (passthrough — no override) | VoxCPM2 (TTS) | 300s |
+| `/v1/audio/speech`, `/v1/audio/transcriptions` | `studio-audio` | `voxcpm2` | (passthrough — no override) | VoxCPM2 (TTS) | 300s |
 
 The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download remains parked. `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet. Passthrough applies no LLM parsing — the audio lane has no model override, so clients send the folder id `voxcpm2` (unlike embeddings/rerank aliases).
 
@@ -457,7 +457,7 @@ items:
 | hermes MCP server endpoints | Done: declarative `mcp_servers` in the seed ConfigMap covers search, cluster, home, and agent tiers, with keys from the `agentgateway` item | Watch tool calls across all four tiers |
 | SillyTavern endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
 | mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred, on watch via langfuse decision spans (open-webui and hermes both emit OTEL) | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
-| ASR/TTS model | VoxCPM2-4bit served on the studio via `/v1/audio/speech` and `/v1/audio/transcriptions` (`studio-voxcpm2` backend) — lane ready, no in-repo consumer | Point a consumer at the lane when one appears; ASR (`/v1/audio/transcriptions`) wired but unused |
+| ASR/TTS model | VoxCPM2-4bit served on the studio via `/v1/audio/speech` and `/v1/audio/transcriptions` (`studio-audio` backend) — lane ready, no in-repo consumer | Point a consumer at the lane when one appears; ASR (`/v1/audio/transcriptions`) wired but unused |
 | backend upstream auth | `policies.auth.secretRef: studio-api-auth` on all chat + media backends (oMLX server key, ES item `omlx`) | Verify at rollout: `/v1/chat/completions` and `/v1/embeddings|rerank|audio` answer 200 through the gateway while oMLX 401s keyless direct calls |
 
 ## Model Routing Summary

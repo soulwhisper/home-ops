@@ -69,7 +69,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: agentgateway-voxcpm2-route
+  name: agentgateway-audio-route
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
@@ -89,14 +89,14 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: studio-voxcpm2
+          name: studio-audio
       timeouts:
         request: 300s
     - name: discovery
       matches:
         - path:
             type: Exact
-            value: /v1/models/voxcpm2
+            value: /v1/models/audio
           method: GET
       timeouts:
         request: 30s
