@@ -41,3 +41,5 @@ spec:
   dependsOn:
     - name: kopiur
       namespace: storage-system
+    - name: onepassword-connect
+      namespace: security-system

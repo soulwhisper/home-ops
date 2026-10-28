@@ -304,13 +304,13 @@ The `name: _` is a Kustomize placeholder — postBuild substitution in each name
 
 **Path**: `kubernetes/components/kopiur/shared/`
 
-Injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
+Combines the shared kopiur namespace resources. It patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"` for uid-0/DAC_OVERRIDE backup movers, and injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
 
 ### Component: kopiur/backup (22 consumers)
 
 **Path**: `kubernetes/components/kopiur/backup/`
 
-The most heavily used component. It patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"` for uid-0/DAC_OVERRIDE backup movers, and provisions the backup-and-recovery pipeline for a stateful application:
+The most heavily used component. It provisions the backup-and-recovery pipeline for a stateful application:
 
 | Resource                | Purpose                                                                                 |
 | ----------------------- | --------------------------------------------------------------------------------------- |

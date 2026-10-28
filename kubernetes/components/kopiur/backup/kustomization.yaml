@@ -7,7 +7,3 @@ resources:
   - ./snapshotschedule.yaml
   - ./restore.yaml
   - ./pvc.yaml
-patches:
-  - path: ./annotations.yaml
-    target:
-      kind: Namespace
