@@ -16,5 +16,5 @@ spec:
   dependsOn:
     - name: victoria-traces
       namespace: monitoring-system
-    - name: langfuse-web
+    - name: langfuse
       namespace: monitoring-system

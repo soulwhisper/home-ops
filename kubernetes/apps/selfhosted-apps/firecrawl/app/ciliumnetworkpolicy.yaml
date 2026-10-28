@@ -27,7 +27,7 @@ spec:
             - { port: "5432", protocol: TCP }
     - toServices:
         - k8sService:
-            serviceName: firecrawl-database-dragonfly
+            serviceName: firecrawl-dragonfly
             namespace: selfhosted-apps
       toPorts:
         - ports:
