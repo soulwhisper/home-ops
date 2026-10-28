@@ -1,30 +1,24 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
-# Unified LLM lane: everything OpenAI lives under /v1 (chat completions +
-# media). Lane selection by model id (body model -> x-model header via the
-# gateway-wide PreRouting transform). Guarded/open split is a MODEL NAME:
-# `uncensored` skips promptGuard, everything else is guarded (policy
-# targets the guarded rules by sectionName). No catch-all — unknown ids 404.
-# SDK note: OpenAI/litellm clients append /chat/completions to their base
-# URL, so consumer base URLs are .../v1 (see ai.md).
+# Each chat model owns its inference and discovery rules. The same lane key
+# authorizes both rules; discovery is served by the model's directResponse
+# policy and deliberately has no backendRef.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: agentgateway-llm-route
+  name: agentgateway-uncensored-route
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: agentgateway-proxy
   rules:
-    # OPEN lane (rule `uncensored`): the single uncensored model, unguarded.
-    # Pure-chat consumers only (SillyTavern / open-webui);
-    # automation rides the guarded `agent` lane.
-    - name: uncensored
+    - name: chat
       matches:
         - path:
-            type: PathPrefix
+            type: Exact
             value: /v1/chat/completions
+          method: POST
           headers:
             - type: Exact
               name: x-model
@@ -32,15 +26,36 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: llm-backend-complex
+          name: llm-backend-uncensored
       timeouts:
         request: 300s
-    # GUARDED lanes (llm-guardrails targets these rules by sectionName).
-    - name: agent
+    - name: discovery
       matches:
         - path:
-            type: PathPrefix
+            type: Exact
+            value: /v1/models/uncensored
+          method: GET
+      timeouts:
+        request: 30s
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: agentgateway-agent-route
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-proxy
+  rules:
+    # Cold 35B loads after oMLX TTL eviction need a longer automation budget.
+    - name: chat
+      matches:
+        - path:
+            type: Exact
             value: /v1/chat/completions
+          method: POST
           headers:
             - type: Exact
               name: x-model
@@ -49,18 +64,34 @@ spec:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
           name: llm-backend-agent
-      # ornith-1.5-35b-a3b is is_pinned=false with ttl_seconds=3600 on
-      # oMLX, and its consumers (HealthChecks 6h cadence, alert RCA) arrive
-      # colder than the TTL — nearly every request is a cold 35B load,
-      # potentially after evicting a resident model to make room. 300s is
-      # not enough headroom for that; automation lane, no interactivity cost.
       timeouts:
         request: 900s
-    - name: omni
+    - name: discovery
       matches:
         - path:
-            type: PathPrefix
+            type: Exact
+            value: /v1/models/agent
+          method: GET
+      timeouts:
+        request: 30s
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: agentgateway-omni-route
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-proxy
+  rules:
+    - name: chat
+      matches:
+        - path:
+            type: Exact
             value: /v1/chat/completions
+          method: POST
           headers:
             - type: Exact
               name: x-model
@@ -71,3 +102,11 @@ spec:
           name: llm-backend-omni
       timeouts:
         request: 300s
+    - name: discovery
+      matches:
+        - path:
+            type: Exact
+            value: /v1/models/omni
+          method: GET
+      timeouts:
+        request: 30s

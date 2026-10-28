@@ -383,7 +383,7 @@ components:
   - ../../../../components/kopiur/backup # PVC backup to S3
 ```
 
-The only four-component stack is `open-webui` (`authentik`, `cnpg`, `dragonfly`, `ceph-bucket`). `netbox` uses `cnpg`, `dragonfly`, and `kopiur/backup`; `langfuse` uses `cnpg`, `dragonfly`, and `ceph-bucket`.
+The only five-component stack is `open-webui` (`cache`, `authentik`, `cnpg`, `dragonfly`, `ceph-bucket`). `netbox` uses `cnpg`, `dragonfly`, and `kopiur/backup`; `langfuse` uses `cnpg`, `dragonfly`, and `ceph-bucket`.
 
 ## Namespace Inventory
 

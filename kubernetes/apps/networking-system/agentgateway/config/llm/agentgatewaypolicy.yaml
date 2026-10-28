@@ -1,10 +1,6 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
-# Consumer API-key auth, per lane (sectionName picks the rule of the unified
-# /v1 route; media route is whole-route). One credential per lane — a chat
-# key cannot call the automation lane and vice versa. Cross-lane needs are
-# served by enrolling the same key in another lane's secret (see
-# externalsecret.yaml), never by sharing a policy.
+# Each route uses its lane credential for both inference and model discovery.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
@@ -13,8 +9,7 @@ spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-llm-route
-      sectionName: uncensored
+      name: agentgateway-uncensored-route
   traffic:
     apiKeyAuthentication:
       mode: Strict
@@ -30,8 +25,7 @@ spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-llm-route
-      sectionName: agent
+      name: agentgateway-agent-route
   traffic:
     apiKeyAuthentication:
       mode: Strict
@@ -47,8 +41,7 @@ spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-llm-route
-      sectionName: omni
+      name: agentgateway-omni-route
   traffic:
     apiKeyAuthentication:
       mode: Strict
@@ -59,18 +52,58 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
-  name: llm-media-auth
+  name: studio-uncensored-model
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-media-route
+      name: agentgateway-uncensored-route
+      sectionName: discovery
   traffic:
-    apiKeyAuthentication:
-      mode: Strict
-      secretRef:
-        name: llm-media-auth
-
+    directResponse:
+      status: 200
+      headers:
+        - name: content-type
+          value: '"application/json"'
+      body: '{"id":"uncensored","object":"model","created":0,"owned_by":"omlx"}'
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: studio-agent-model
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-agent-route
+      sectionName: discovery
+  traffic:
+    directResponse:
+      status: 200
+      headers:
+        - name: content-type
+          value: '"application/json"'
+      body: '{"id":"agent","object":"model","created":0,"owned_by":"omlx"}'
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: studio-omni-model
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-omni-route
+      sectionName: discovery
+  traffic:
+    directResponse:
+      status: 200
+      headers:
+        - name: content-type
+          value: '"application/json"'
+      body: '{"id":"omni","object":"model","created":0,"owned_by":"omlx"}'
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
 # Agent lane harness, scoped by backend (only the agent lane consumes

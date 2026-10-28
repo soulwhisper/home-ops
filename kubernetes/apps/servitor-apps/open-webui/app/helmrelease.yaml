@@ -30,10 +30,6 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
-        # role + database open-webui are created by postgres-init against the
-        # shared CNPG cluster (no Database CR / managed role — open-webui has
-        # no special extension/ownership needs; its migrations self-create
-        # the vector extension)
         initContainers:
           init-db:
             image:
@@ -46,51 +42,14 @@ spec:
           app:
             image:
               repository: ghcr.io/open-webui/open-webui
-              # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
               tag: v0.12.4
             env:
-              # Authentik forward-auth gates access at the gateway. With no
-              # trusted-header mapping, local auth is disabled and requests
-              # use Open WebUI's shared local system account.
               WEBUI_AUTH: "False"
-              # Provider URLs+keys both come from the open-webui secret (envFrom).
-              # Gateway API key for the MCP tool servers below. Declared
-              # before TOOL_SERVER_CONNECTIONS so $(GATEWAY_API_KEY) expands
-              # (kubelet dependent-env expansion, same pattern as
-              # REDIS_PASSWORD above).
-              GATEWAY_API_KEY:
-                valueFrom:
-                  secretKeyRef: { name: open-webui, key: GATEWAY_API_KEY }
-              # Search-tier MCP only (firecrawl, context7, trendradar,
-              # github-ro) via the agentgateway guarded endpoint /mcp/search.
-              # auth_type "bearer" + key is native on v0.11.3
-              # (build_tool_server_headers -> Authorization: Bearer). MCP has
-              # no open lane by design. Shape follows the Admin UI
-              # persistence: match is on info.id, not a top-level id (v0.11.3
-              # middleware connect_mcp_server). Every entry MUST carry "path"
-              # (v0.11.4+ ToolServerConnection requires it; a missing key
-              # 500s GET /api/v1/configs/tool_servers with
-              # ResponseValidationError). Persistent config: the first-seeded
-              # DB row shadows this env forever — after editing, delete the
-              # config row 'tool_server.connections' (done 2026-10-16 for the
-              # pre-#3729 direct-vmcp shape).
-              TOOL_SERVER_CONNECTIONS: '[{"type":"mcp","url":"http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/search","auth_type":"bearer","key":"$(GATEWAY_API_KEY)","info":{"id":"search","name":"search","description":"ToolHive search (firecrawl, context7, trendradar, github-ro)"},"config":{"enable":true},"path":""}]'  # yamllint disable-line rule:quoted-strings
-              ENABLE_OLLAMA_API: "false"
-              # OTLP -> opentelemetry-collector; its traces/servitor pipeline
-              # keeps gen_ai spans and exports them to langfuse.
-              # OTEL_OTLP_SPAN_EXPORTER=http is REQUIRED: the default grpc
-              # exporter ignores the http:// scheme (OTEL_EXPORTER_OTLP_INSECURE
-              # defaults False) and TLS-dials :4318 -> WRONG_VERSION_NUMBER spam,
-              # zero spans exported. The HTTP exporter takes the endpoint
-              # verbatim (no /v1/traces append), so the path must be inline.
               ENABLE_OTEL: "true"
               ENABLE_OTEL_TRACES: "true"
               OTEL_OTLP_SPAN_EXPORTER: "http"
               OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4318/v1/traces"
               OTEL_SERVICE_NAME: "open-webui"
-              # durable state is externalized — CNPG (data + pgvector), the
-              # app dragonfly (session/rate-limit state), the app ceph bucket
-              # (uploads/KB files); the on-disk data dir is cache-only
               DATABASE_URL:
                 valueFrom:
                   secretKeyRef: { name: open-webui-pguser, key: uri }
@@ -99,11 +58,6 @@ spec:
                 valueFrom:
                   secretKeyRef: { name: open-webui-dragonfly, key: password }
               REDIS_URL: "redis://:$(REDIS_PASSWORD)@open-webui-dragonfly:6379/0"
-              # Passed to the socket.io AsyncRedisManager's client (the
-              # long-lived pubsub socket — the storm source). keepalive uses
-              # the pod sysctls above; health_check pings idle conns before
-              # reuse. socket_timeout must stay null: a finite timeout breaks
-              # blocking pubsub reads.
               WEBSOCKET_REDIS_OPTIONS: "{\"socket_timeout\": null, \"socket_connect_timeout\": 5, \"socket_keepalive\": true, \"health_check_interval\": 30}"
               STORAGE_PROVIDER: "s3"
               STORAGE_LOCAL_CACHE: "False"
@@ -118,9 +72,6 @@ spec:
                 valueFrom:
                   secretKeyRef:
                     { name: ceph-bucket-open-webui, key: AWS_SECRET_ACCESS_KEY }
-            envFrom:
-              - secretRef:
-                  name: *name
             resources:
               requests:
                 cpu: 10m
@@ -136,7 +87,7 @@ spec:
       app:
         ports:
           http:
-            port: &port 8080
+            port: 8080
     route:
       app:
         hostnames: ["chat.noirprime.com"]
@@ -151,8 +102,8 @@ spec:
 
     persistence:
       # cache only; durable state lives in CNPG / dragonfly / the ceph bucket
-      app:
-        type: emptyDir
+      cache:
+        existingClaim: open-webui-cache
         globalMounts:
           - path: /app/backend/data
       tmpfs:

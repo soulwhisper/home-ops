@@ -54,14 +54,16 @@ The agent gateway is the single entry point for all agentgateway-managed LLM lan
 
 ### LLM lanes
 
-One route, one path: `POST /v1/chat/completions`. The guarded/open split is
-a **model name** (body `model` → `x-model` header via the gateway-wide
-PreRouting transform); guardrails attach to the guarded rules by section
-name:
+Each model has an independent HTTPRoute and authentication policy. Chat inference
+shares `POST /v1/chat/completions`; model discovery is
+`GET /v1/models/<model>` on the same route and uses the same credential. The
+guarded/open split is a **model name** (body `model` → `x-model` header via
+the gateway-wide PreRouting transform); guardrails attach to the guarded chat
+rules by section name:
 
 | Client model | promptGuard | Backend | Model (studio id) |
 | ------------ | ----------- | ------- | ----------------- |
-| `uncensored` | none (open lane) | `llm-backend-complex` | Qwen3.8-27B Uncensored (`qwen3.8-27b`, MLX 4bit) — pure chat only |
+| `uncensored` | none (open lane) | `llm-backend-uncensored` | Qwen3.8-27B Uncensored (`qwen3.8-27b`, MLX 4bit) — pure chat only |
 | `agent` | **guarded** | `llm-backend-agent` | Ornith-1.5-35B (`ornith-1.5-35b-a3b`, MLX 4bit) — AI-ops automation |
 | `omni` | **guarded** | `llm-backend-omni` | MiniCPM-O-4.5 (`minicpm-o-4.5`, text+vision+audio-in) |
 
@@ -78,13 +80,17 @@ inject the oMLX server key via `policies.auth.secretRef`
 (`studio-api-auth`). Consumers authenticate with **per-lane** API keys
 (ExternalSecret-managed from the 1Password `agentgateway` item; format
 `llm-<lane>-<hex16>`): `llm_uncensored` (human chat), `llm_agent` (hermes,
-robusta), `llm_omni` (extractors). Each lane rule carries its own
-apiKeyAuthentication policy (sectionName-scoped), so a chat key cannot call
-the automation lane. Cross-lane needs are served by enrolling the same key
+robusta), `llm_omni` (extractors). Each model route carries its own
+apiKeyAuthentication policy covering both inference and discovery, so a chat
+key cannot call the automation lane. Cross-lane needs are served by enrolling the same key
 in another lane's secret, never by sharing a policy: `llm-omni-auth` also
-enrolls the agent key (hermes aux) and the uncensored key (dsh-tavern background
-generation and open-webui auxiliary tasks); `llm-media-auth` enrolls the omni key (karakeep/hindsight
-embeddings+rerank). Revocation = remove the entry from every lane secret.
+enrolls the agent key (hermes aux) and the uncensored key (open-webui auxiliary
+tasks). Each media model has its own route, credential, and field in the
+`agentgateway` 1Password item:
+`llm-embedding-auth` uses `llm_embedding`, `llm-reranker-auth` uses
+`llm_reranker`, and `llm-audio-auth` uses `llm_audio`. Chat-lane keys do not
+implicitly authorize media inference or discovery. Revocation = remove the
+entry from every lane and media capability secret.
 There is no cloud fallback — the studio is a deliberate SPOF.
 
 
@@ -100,8 +106,8 @@ Lane-fit guidance: `omni` covers everything fidelity-sensitive: summarization, c
 The gateway API surface is exposed to the intranet via `kgateway-internal` (10.10.0.131) at `https://api.noirprime.com` (`/v1/*`, `/mcp`; dashboard stays on `https://ai.noirprime.com/ui`):
 
 - `/v1/chat/completions` — LLM lanes (strict API key; promptGuard on all but `uncensored`)
-- `/v1/models` — gateway-synthesized lane discovery (`studio-models` directResponse; keep in sync with Studio Model Registry)
-- `/v1/embeddings`, `/v1/rerank`, `/v1/audio/*` — media lanes via LLM-pipeline backends (strict API key)
+- `/v1/models/<model>` — per-model direct-response discovery on the model's own route, authorized by that route's credential
+- `/v1/embeddings`, `/v1/rerank`, `/v1/audio/speech`, `/v1/audio/transcriptions` — media lanes via LLM-pipeline backends (strict API key)
 - `/mcp/search`, `/mcp/cluster`, `/mcp/home`, `/mcp/agent` — tiered MCP routing (per-tier API key; mcp-guardrails ExtMCP on the search + agent tiers, FailClosed)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)
 
@@ -125,7 +131,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 Both DSH apps also expose the optional `kimi` provider (`https://api.moonshot.ai/v1`, model `kimi-k3.1-pro`). It is a direct external provider, not an agentgateway lane, and does not override the default model.
 
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
-`/v1` lane; their prompts carry scraped web content, so a low rate of
+`/v1` route for that model; their prompts carry scraped web content, so a low rate of
 promptGuard false-positive rejections (403) is expected and watched — see
 the TODO table.
 
@@ -223,9 +229,9 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - Human chat portal, image `ghcr.io/open-webui/open-webui`. Lives in **servitor-apps**
 - **Auth**: Authentik forward-auth gates access at the gateway; with no trusted-header mapping, Open WebUI login is disabled and requests use its shared local system account
 - **Ingress**: `chat.noirprime.com` via kgateway-internal
-- **LLM**: single agentgateway OpenAI provider; `uncensored` for chat and `omni` for guarded auxiliary tasks
+- **LLM**: single agentgateway OpenAI provider; `uncensored` for chat and `omni` for guarded auxiliary tasks. The admin connection sets `model_ids` to these two models because discovery is per model, not a global catalog. Existing installations must save the same `model_ids` in the admin UI before the global catalog is removed.
 - **MCP**: native search-tier connection through `/mcp/search` with the `mcp_search` bearer key
-- **State**: shared CNPG for app data and pgvector, app Dragonfly for session/rate-limit state, and the `open-webui` Ceph bucket for uploads and KB files; the data directory is cache-only
+- **State**: shared CNPG for app data and pgvector, app Dragonfly for session/rate-limit state, and the `open-webui` Ceph bucket for uploads and KB files; the entire data directory is rewarmable cache on the `open-webui-cache` ceph-cache PVC
 - **Egress**: agentgateway, CNPG, Dragonfly, Ceph RGW, OTLP collector, kube-dns, and world-except-private for RAG fetching
 
 ### DSH Web
@@ -249,17 +255,17 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
 
-Non-chat vector modalities run on the same oMLX process as the chat lanes, exposed on `agentgateway-media-route` through the **LLM pipeline** (no more static passthrough): each lane is an `AgentgatewayBackend` with a `custom` provider declaring exactly one API format, guarded by the `llm-media-auth` API key (omni key enrolled):
+Non-chat vector modalities run on the same oMLX process as the chat lanes, exposed through independent per-model HTTPRoutes and authentication policies. Embeddings and reranker use `custom` providers declaring exactly one API format; audio uses explicit passthrough routes. Each media credential uses its own field in the shared `agentgateway` 1Password item (`llm_embedding`, `llm_reranker`, `llm_audio`):
 
 | Path             | Backend             | Client model | Upstream (override)      | Model                                   | Timeout |
 | ---------------- | ------------------- | ------------ | ------------------------ | --------------------------------------- | ------- |
-| `/v1/embeddings` | `studio-embeddings` | `embedding`  | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d)            | 120s    |
-| `/v1/rerank`     | `studio-rerank`     | `reranker`   | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
-| `/v1/audio/*`    | `studio-audio`      | `voxcpm2`    | (passthrough — no override) | VoxCPM2 (TTS)                           | 300s    |
+| `/v1/embeddings` | `studio-embedding` | `embedding`  | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d)            | 120s    |
+| `/v1/rerank`     | `studio-reranker`  | `reranker`   | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
+| `/v1/audio/speech`, `/v1/audio/transcriptions` | `studio-audio` | `voxcpm2` | (passthrough — no override) | VoxCPM2 (TTS) | 300s |
 
-The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download sits parked (see Studio Model Registry). `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet. Passthrough applies no LLM parsing — the audio lane has no model override, so clients send the folder id `voxcpm2` (unlike embeddings/rerank aliases).
+The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download remains parked. `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet. Passthrough applies no LLM parsing — the audio lane has no model override, so clients send the folder id `voxcpm2` (unlike embeddings/rerank aliases).
 
-Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backends + route on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with the omni lane key (`llm_omni`, enrolled in `llm-media-auth`) — each media backend injects the oMLX server key upstream via `policies.auth.secretRef: studio-api-auth`, identical to the chat lanes (single credential model: the studio key never leaves the backends). **Consumers**: embeddings — karakeep, hindsight; rerank — **hindsight only**; audio — none yet (TTS lane ready). The direct-to-studio blackbox probe reads the oMLX key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
+Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backends + per-model routes on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with their capability key (`llm_embedding` for karakeep/hindsight embeddings, `llm_reranker` for hindsight rerank, `llm_audio` for future audio consumers) — each media backend injects the oMLX server key upstream via `policies.auth.secretRef: studio-api-auth`, identical to the chat lanes (single credential model: the studio key never leaves the backends). **Consumers**: embeddings — karakeep, hindsight; rerank — **hindsight only**; audio — none yet (TTS lane ready). The direct-to-studio blackbox probe reads the oMLX key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
 
 ---
 
@@ -453,7 +459,7 @@ items:
 | hermes MCP server endpoints | Done: declarative `mcp_servers` in the seed ConfigMap covers search, cluster, home, and agent tiers, with keys from the `agentgateway` item | Watch tool calls across all four tiers |
 | SillyTavern endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
 | mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred, on watch via langfuse decision spans (open-webui and hermes both emit OTEL) | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
-| ASR/TTS model | VoxCPM2-4bit served on the studio via `/v1/audio/*` (`studio-audio` backend) — lane ready, no in-repo consumer | Point a consumer at the lane when one appears; ASR (`/v1/audio/transcriptions`) wired but unused |
+| ASR/TTS model | VoxCPM2-4bit served on the studio via `/v1/audio/speech` and `/v1/audio/transcriptions` (`studio-audio` backend) — lane ready, no in-repo consumer | Point a consumer at the lane when one appears; ASR (`/v1/audio/transcriptions`) wired but unused |
 | backend upstream auth | `policies.auth.secretRef: studio-api-auth` on all chat + media backends (oMLX server key, ES item `omlx`) | Verify at rollout: `/v1/chat/completions` and `/v1/embeddings|rerank|audio` answer 200 through the gateway while oMLX 401s keyless direct calls |
 
 ## Model Routing Summary
@@ -464,7 +470,8 @@ items:
             ├─ uncensored   (OPEN)    ─► qwen3.8-27b        ── dsh-tavern, open-webui
             ├─ agent        (guarded) ─► ornith-1.5-35b     ── hermes, holmes, automation
             ├─ omni         (guarded) ─► minicpm-o-4.5
-/v1/embeddings /v1/rerank /v1/audio/*  (media: alias ─► override ─► folder id; audio: direct)
+/v1/embeddings /v1/rerank /v1/audio/speech /v1/audio/transcriptions  (media: alias ─► override ─► folder id; audio: direct)
+/v1/models/<model>  (same route and credential as the named model; single-object direct response)
 
 /mcp/search /mcp/cluster /mcp/home /mcp/agent  (per-tier key; guardrails ExtMCP on search+agent, FailClosed) ── every MCP client
 ```

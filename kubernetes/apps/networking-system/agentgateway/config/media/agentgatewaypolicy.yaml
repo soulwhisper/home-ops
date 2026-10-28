@@ -1,32 +1,106 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
-# Gateway-synthesized /v1/models: returns the LANE model list (not the
-# studio folder ids) so OpenAI clients (open-webui etc.) discover usable
-# model names. KEEP IN SYNC with docs/application/ai.md Studio Model
-# Registry. oMLX itself only proxies /v1/models on the audio passthrough,
-# which would teach clients folder ids that 404 on the chat route.
+# Each media credential authorizes only its model's inference and discovery.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
-  name: studio-models
+  name: llm-embedding-auth
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-media-route
-      sectionName: models
+      name: agentgateway-embedding-route
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      secretRef:
+        name: llm-embedding-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: llm-reranker-auth
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-reranker-route
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      secretRef:
+        name: llm-reranker-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: llm-audio-auth
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-audio-route
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      secretRef:
+        name: llm-audio-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: studio-embedding-model
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-embedding-route
+      sectionName: discovery
   traffic:
     directResponse:
       status: 200
       headers:
         - name: content-type
           value: '"application/json"'
-      body: |
-        {"object":"list","data":[
-          {"id":"uncensored","object":"model","owned_by":"omlx"},
-          {"id":"agent","object":"model","owned_by":"omlx"},
-          {"id":"omni","object":"model","owned_by":"omlx"},
-          {"id":"embedding","object":"model","owned_by":"omlx"},
-          {"id":"reranker","object":"model","owned_by":"omlx"},
-          {"id":"voxcpm2","object":"model","owned_by":"omlx"}
-        ]}
+      body: '{"id":"embedding","object":"model","created":0,"owned_by":"omlx"}'
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: studio-reranker-model
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-reranker-route
+      sectionName: discovery
+  traffic:
+    directResponse:
+      status: 200
+      headers:
+        - name: content-type
+          value: '"application/json"'
+      body: '{"id":"reranker","object":"model","created":0,"owned_by":"omlx"}'
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: studio-audio-model
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: agentgateway-audio-route
+      sectionName: discovery
+  traffic:
+    directResponse:
+      status: 200
+      headers:
+        - name: content-type
+          value: '"application/json"'
+      body: '{"id":"voxcpm2","object":"model","created":0,"owned_by":"omlx"}'

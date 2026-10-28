@@ -6,7 +6,7 @@
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: llm-backend-complex
+  name: llm-backend-uncensored
 spec:
   ai:
     provider:
