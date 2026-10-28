@@ -5,7 +5,7 @@
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: studio-embeddings
+  name: studio-embedding
 spec:
   ai:
     provider:
@@ -28,7 +28,7 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: studio-rerank
+  name: studio-reranker
 spec:
   ai:
     provider:

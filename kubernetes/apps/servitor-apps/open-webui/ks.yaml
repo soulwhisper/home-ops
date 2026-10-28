@@ -20,6 +20,7 @@ spec:
     - name: hermes-agent
       namespace: servitor-apps
   components:
+    - ../../../../components/cache
     - ../../../../components/authentik
     - ../../../../components/cnpg
     - ../../../../components/dragonfly

@@ -106,6 +106,10 @@ spec:
         type: emptyDir
         globalMounts:
           - path: /app/backend/data
+      cache:
+        existingClaim: open-webui-cache
+        globalMounts:
+          - path: /app/backend/data/cache
       tmpfs:
         type: emptyDir
         globalMounts:

@@ -21,7 +21,7 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: studio-embeddings
+          name: studio-embedding
       timeouts:
         request: 120s
     - name: discovery
@@ -53,7 +53,7 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: studio-rerank
+          name: studio-reranker
       timeouts:
         request: 120s
     - name: discovery
