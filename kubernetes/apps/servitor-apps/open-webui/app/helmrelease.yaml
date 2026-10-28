@@ -72,9 +72,6 @@ spec:
                 valueFrom:
                   secretKeyRef:
                     { name: ceph-bucket-open-webui, key: AWS_SECRET_ACCESS_KEY }
-            envFrom:
-              - secretRef:
-                  name: *name
             resources:
               requests:
                 cpu: 10m
@@ -90,7 +87,7 @@ spec:
       app:
         ports:
           http:
-            port: &port 8080
+            port: 8080
     route:
       app:
         hostnames: ["chat.noirprime.com"]
