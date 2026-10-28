@@ -9,10 +9,10 @@ spec:
   # the response scan. Agent: full pipeline in mcp-guardrails-agent.
   # - search is the untrusted-content tier (arbitrary web/RSS/git content)
   #   feeding an unguarded lane (dsh-tavern / uncensored consumers);
-  # - agent's consumers are EXTERNAL operator agents — they do not ride the
-  #   cluster's guarded LLM lanes, and forgejo ticket bodies carry
-  #   alert/log-derived (hence untrusted) strings, so the sidecar is their
-  #   only cluster-side injection screen.
+  # - agent consumers include external operators and hermes; Hermes uses the
+  #   guarded cluster `agent` LLM lane, while the ExtMCP sidecar additionally
+  #   scans MCP tool calls/results because Forgejo tickets can carry
+  #   alert/log-derived untrusted strings.
   # cluster/home consumers (hermes) ride the guarded `agent` lane — cluster
   # adds CEL allowlists and token/SA boundaries, home is RW-by-design behind
   # the HA token — so a sidecar there is duplication, and FailClosed there

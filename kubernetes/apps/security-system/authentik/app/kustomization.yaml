@@ -51,6 +51,7 @@ configMapGenerator:
       - ./blueprints/forward/hubble.yaml
       - ./blueprints/forward/metube.yaml
       - ./blueprints/forward/dsh-web.yaml
+      - ./blueprints/forward/open-webui.yaml
       - ./blueprints/forward/qbittorrent.yaml
       - ./blueprints/forward/scrypted.yaml
       - ./blueprints/forward/dsh-tavern.yaml

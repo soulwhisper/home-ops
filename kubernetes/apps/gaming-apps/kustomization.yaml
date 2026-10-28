@@ -5,7 +5,7 @@ kind: Kustomization
 namespace: gaming-apps
 components:
   - ../../components/namespace
-  - ../../components/kopiur/secret
+  - ../../components/kopiur/shared
 resources:
   # ref: https://github.com/joryirving/home-ops/tree/main/kubernetes/apps/base/games
   # storage
@@ -13,14 +13,3 @@ resources:
   # app
   - ./crafty-controller/ks.yaml
   - ./foundryvtt/ks.yaml
-patches:
-  # kopiur movers run uid 0 + DAC_OVERRIDE by default; webhook requires opt-in
-  - patch: |-
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: _
-        annotations:
-          kopiur.home-operations.com/privileged-movers: "true"
-    target:
-      kind: Namespace

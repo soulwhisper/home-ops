@@ -45,8 +45,8 @@ flowchart TB
     subgraph Components["Kustomize Components"]
         NS_COMP["namespace
         12 consumers"]
-        KOPIUR_SECRET["kopiur/secret
-        6 consumers"]
+        KOPIUR_SECRET["kopiur/shared
+        5 consumers"]
         KOPIUR_BACKUP["kopiur/backup
         22 consumers"]
         CACHE["cache
@@ -66,7 +66,7 @@ flowchart TB
         OCIRepositories"]
         OCI_TPL["1 app-template
         OCIRepository"]
-        CROSS["40 Cross-namespace
+        CROSS["37 Cross-namespace
         chartRef References"]
     end
 
@@ -262,16 +262,16 @@ spec:
 
 This cross-namespace reference is used by 37 HelmReleases across 8 namespaces:
 
-| Namespace         | Count | Example Apps                                                                                                                                                         |
-| ----------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| media-apps        | 8     | jellyfin, kavita, navidrome, qbittorrent, immich, moviepilot, metube, qbittorrent-ui                                                                                 |
-| selfhosted-apps   | 11    | searxng, sillytavern, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, trendradar, hindsight, firecrawl (app + database) |
-| smarthome-apps    | 7     | home-assistant (app + sgcc), frigate, frigate-vision, zigbee2mqtt, mosquitto, scrypted                                                                                               |
-| servitor-apps     | 4     | hermes-agent, dsh-web, dsh-tavern, toolhive                                                                                                                                                                            |
-| gaming-apps       | 2     | crafty-controller, foundryvtt                                                                                                                                        |
-| monitoring-system | 3     | langfuse (app + worker), webhook-relay                                                                                                                                              |
-| networking-system | 1     | agentgateway MCP config                                                                                                                                              |
-| database-system   | 1     | cnpg maintenance (dr-test cronjob)                                                                                                                                   |
+| Namespace         | Count | Example Apps |
+| ----------------- | ----- | ------------ |
+| media-apps        | 8     | jellyfin, kavita, navidrome, qbittorrent, immich, moviepilot, metube, qbittorrent-ui |
+| selfhosted-apps   | 10    | searxng, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, trendradar, hindsight, firecrawl (app + database) |
+| smarthome-apps    | 7     | home-assistant (app + sgcc), frigate, frigate-vision, zigbee2mqtt, mosquitto, scrypted |
+| servitor-apps     | 4     | hermes-agent, dsh-web, dsh-tavern, open-webui |
+| gaming-apps       | 2     | crafty-controller, foundryvtt |
+| monitoring-system | 4     | langfuse (app + worker), webhook-relay, vmware-exporter |
+| networking-system | 1     | agentgateway MCP config |
+| database-system   | 1     | cnpg maintenance (dr-test cronjob) |
 
 The `flux-repositories` Kustomization is reconciled before `cluster-apps` (via `dependsOn`), ensuring the `app-template` `OCIRepository` is always available before any application HelmRelease references it.
 
@@ -300,11 +300,11 @@ metadata:
 
 The `name: _` is a Kustomize placeholder — postBuild substitution in each namespace's `kustomization.yaml` fills in the actual namespace name.
 
-### Component: kopiur/secret (6 consumers)
+### Component: kopiur/shared (5 consumers)
 
-**Path**: `kubernetes/components/kopiur/secret/`
+**Path**: `kubernetes/components/kopiur/shared/`
 
-Included by namespace-level Kustomizations that host backed-up workloads. Injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
+Combines the shared kopiur namespace resources. It patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"` for uid-0/DAC_OVERRIDE backup movers, and injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
 
 ### Component: kopiur/backup (22 consumers)
 
@@ -543,7 +543,7 @@ kubernetes/
 │   └── values.yaml.gotmpl         #   Values bridge to Flux HelmReleases
 ├── components/                    # Reusable Kustomize Components
 │   ├── namespace/                 #   Namespace + alerts (12 consumers)
-│   ├── kopiur/secret/             #   Namespace-level kopia repo credentials (6 consumers)
+│   ├── kopiur/shared/             #   Namespace-level kopia repo credentials (5 consumers)
 │   ├── kopiur/backup/             #   PVC backup pipeline (20 consumers)
 │   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (4 consumers)
 │   ├── authentik/                 #   SSO traffic policy (14 consumers)

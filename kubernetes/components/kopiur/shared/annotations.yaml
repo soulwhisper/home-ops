@@ -1,0 +1,9 @@
+---
+# Opt in only namespaces whose kopiur movers need uid 0 and DAC_OVERRIDE to
+# read and restore files with arbitrary ownership.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: _
+  annotations:
+    kopiur.home-operations.com/privileged-movers: "true"

@@ -24,5 +24,5 @@ spec:
   postBuild:
     substitute:
       APP: *name
-      APP_HOST: "chat.noirprime.com"
+      APP_HOST: "dsh.noirprime.com"
       CACHE_CAPACITY: 15Gi

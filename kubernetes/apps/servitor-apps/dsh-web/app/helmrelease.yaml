@@ -35,8 +35,8 @@ spec:
                 valueFrom:
                   fieldRef:
                     fieldPath: status.podIP
-              DSH_PUBLIC_URL: "https://chat.noirprime.com"
-              DSH_TRUSTED_HOSTS: "chat.noirprime.com"
+              DSH_PUBLIC_URL: "https://dsh.noirprime.com"
+              DSH_TRUSTED_HOSTS: "dsh.noirprime.com"
               DSH_FORWARD_AUTH_HEADER: x-authentik-username
               DSH_FORWARD_AUTH_TRUSTED_PROXY_CIDRS: 10.100.0.0/17
               DSH_FORWARD_AUTH_MAX_CONNECTION_SECONDS: "900"
@@ -81,10 +81,10 @@ spec:
 
     route:
       app:
-        hostnames: ["chat.noirprime.com"]
+        hostnames: ["dsh.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: /icons/open-webui.svg
+          gethomepage.dev/icon: /icons/deepseek.svg
           gethomepage.dev/name: DSH Web
           gethomepage.dev/group: Service
         parentRefs:

@@ -5,7 +5,7 @@ kind: Kustomization
 namespace: servitor-apps
 components:
   - ../../components/namespace
-  - ../../components/kopiur/secret
+  - ../../components/kopiur/shared
 resources:
   # system
   - ./toolhive/ks.yaml
@@ -15,14 +15,4 @@ resources:
   - ./hermes-agent/ks.yaml
   - ./dsh-web/ks.yaml
   - ./dsh-tavern/ks.yaml
-patches:
-  # kopiur movers run uid 0 + DAC_OVERRIDE by default; webhook requires opt-in
-  - patch: |-
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: _
-        annotations:
-          kopiur.home-operations.com/privileged-movers: "true"
-    target:
-      kind: Namespace
+  - ./open-webui/ks.yaml
