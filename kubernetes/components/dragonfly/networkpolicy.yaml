@@ -1,27 +1,34 @@
 ---
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/networking.k8s.io/networkpolicy_v1.json
-# The dragonfly operator's generated NetworkPolicy only admits operator/peer
-# pods to the admin port (9999), which drops vmagent's /metrics scrapes
-# (TargetDown on every *-dragonfly job). NetworkPolicies are additive, so this
-# one composes with it to allow monitoring in.
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+# Dragonfly operator does not manage NetworkPolicy. This component limits
+# Redis to the owning application and the unauthenticated admin port to the
+# Dragonfly operator and vmagent.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
 metadata:
-  name: ${APP}-dragonfly-metrics
+  name: ${APP}-dragonfly-access
 spec:
-  podSelector:
+  endpointSelector:
     matchLabels:
       app: ${APP}-dragonfly
-  policyTypes:
-    - Ingress
   ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: monitoring-system
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: vmagent
-      ports:
-        - port: 9999
-          protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            "app.kubernetes.io/name": ${APP}
+      toPorts:
+        - ports:
+            - { port: "6379", protocol: TCP }
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": database-system
+            "app.kubernetes.io/name": dragonfly-operator
+      toPorts:
+        - ports:
+            - { port: "9999", protocol: TCP }
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring-system
+            "app.kubernetes.io/name": vmagent
+      toPorts:
+        - ports:
+            - { port: "9999", protocol: TCP }

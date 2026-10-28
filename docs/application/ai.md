@@ -340,6 +340,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 | web       | `ghcr.io/langfuse/langfuse`        | req: 1 CPU, lim: 2Gi |
 | worker    | `ghcr.io/langfuse/langfuse-worker` | req: 2 CPU, lim: 4Gi |
 
+- **Deployment**: one Pod with `app` (web) and `worker` containers sharing the `langfuse` application identity
 - **Backends**: ClickHouse (analytics), Dragonfly Redis (cache/queue), Ceph S3 (events/exports), CloudNativePG (metadata)
 - **Features**: Experimental features enabled, telemetry disabled
 

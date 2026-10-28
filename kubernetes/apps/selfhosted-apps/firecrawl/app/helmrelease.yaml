@@ -41,10 +41,10 @@ spec:
               REDIS_PASSWORD:
                 valueFrom:
                   secretKeyRef:
-                    name: firecrawl-database-dragonfly
+                    name: firecrawl-dragonfly
                     key: password
-              REDIS_RATE_LIMIT_URL: "redis://:$(REDIS_PASSWORD)@firecrawl-database-dragonfly.selfhosted-apps.svc.cluster.local:6379"
-              REDIS_URL: "redis://:$(REDIS_PASSWORD)@firecrawl-database-dragonfly.selfhosted-apps.svc.cluster.local:6379"
+              REDIS_RATE_LIMIT_URL: "redis://:$(REDIS_PASSWORD)@firecrawl-dragonfly.selfhosted-apps.svc.cluster.local:6379"
+              REDIS_URL: "redis://:$(REDIS_PASSWORD)@firecrawl-dragonfly.selfhosted-apps.svc.cluster.local:6379"
             envFrom: &envFrom
               - configMapRef:
                   name: *name
@@ -129,10 +129,10 @@ spec:
               REDIS_PASSWORD:
                 valueFrom:
                   secretKeyRef:
-                    name: firecrawl-database-dragonfly
+                    name: firecrawl-dragonfly
                     key: password
-              REDIS_RATE_LIMIT_URL: "redis://:$(REDIS_PASSWORD)@firecrawl-database-dragonfly.selfhosted-apps.svc.cluster.local:6379"
-              REDIS_URL: "redis://:$(REDIS_PASSWORD)@firecrawl-database-dragonfly.selfhosted-apps.svc.cluster.local:6379"
+              REDIS_RATE_LIMIT_URL: "redis://:$(REDIS_PASSWORD)@firecrawl-dragonfly.selfhosted-apps.svc.cluster.local:6379"
+              REDIS_URL: "redis://:$(REDIS_PASSWORD)@firecrawl-dragonfly.selfhosted-apps.svc.cluster.local:6379"
             envFrom: *envFrom
             probes:
               liveness: &nuq_worker_liveness

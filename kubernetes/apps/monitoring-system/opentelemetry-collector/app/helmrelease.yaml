@@ -174,7 +174,7 @@ spec:
             max_interval: 30s
             max_elapsed_time: 300s
         otlp_http/langfuse:
-          endpoint: "http://langfuse-web.monitoring-system.svc.cluster.local:3000/api/public/otel"
+          endpoint: "http://langfuse.monitoring-system.svc.cluster.local:3000/api/public/otel"
           auth:
             authenticator: basicauth/client
           tls:

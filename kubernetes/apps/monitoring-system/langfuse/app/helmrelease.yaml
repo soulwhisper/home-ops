@@ -3,7 +3,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &name langfuse-web
+  name: &name langfuse
 spec:
   interval: 1h
   chartRef:
@@ -19,12 +19,20 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: "18"
+            envFrom:
+              - secretRef:
+                  name: langfuse-pguser
         containers:
           app:
             image:
               repository: ghcr.io/langfuse/langfuse
               tag: 4.71.0
-            env:
+            env: &env
               DATABASE_URL:
                 valueFrom:
                   secretKeyRef:
@@ -60,7 +68,7 @@ spec:
               LANGFUSE_S3_BATCH_EXPORT_FORCE_PATH_STYLE: *bucket_path_style
               LANGFUSE_S3_BATCH_EXPORT_ACCESS_KEY_ID: *bucket_access_key_id
               LANGFUSE_S3_BATCH_EXPORT_SECRET_ACCESS_KEY: *bucket_secret_access_key
-            envFrom:
+            envFrom: &envFrom
               - configMapRef:
                   name: langfuse
               - secretRef:
@@ -70,10 +78,22 @@ spec:
                 cpu: "1"
               limits:
                 memory: 2Gi
-            securityContext:
+            securityContext: &securityContext
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
+          worker:
+            image:
+              repository: ghcr.io/langfuse/langfuse-worker
+              tag: 4.71.0
+            env: *env
+            envFrom: *envFrom
+            resources:
+              requests:
+                cpu: "2"
+              limits:
+                memory: 4Gi
+            securityContext: *securityContext
 
     service:
       app:

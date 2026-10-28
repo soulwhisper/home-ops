@@ -11,9 +11,9 @@ metadata:
 spec:
   commonMetadata:
     labels:
-      app.kubernetes.io/name: *name
+      app.kubernetes.io/name: langfuse
   targetNamespace: monitoring-system
-  path: "./kubernetes/apps/monitoring-system/langfuse/worker"
+  path: "./kubernetes/apps/monitoring-system/langfuse/app"
   wait: true
   dependsOn:
     - name: clickhouse-cluster
@@ -32,22 +32,3 @@ spec:
       # BullMQ (langfuse queues) requires undeclared-key access and
       # non-atomic Lua scripts; see dragonflydb bullmq compatibility docs.
       DRAGONFLY_LUA_FLAGS: allow-undeclared-keys,disable-atomicity
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: &name langfuse-web
-  annotations:
-    config.home-ops.io/managed: "true"
-  labels:
-    config.home-ops.io/deps: "infra"
-spec:
-  commonMetadata:
-    labels:
-      app.kubernetes.io/name: *name
-  targetNamespace: monitoring-system
-  path: "./kubernetes/apps/monitoring-system/langfuse/app"
-  dependsOn:
-    - name: langfuse-worker
-      namespace: monitoring-system

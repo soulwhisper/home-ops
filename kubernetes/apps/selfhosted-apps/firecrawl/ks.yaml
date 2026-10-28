@@ -14,14 +14,6 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: selfhosted-apps
   path: "./kubernetes/apps/selfhosted-apps/firecrawl/database"
-  dependsOn:
-    - name: dragonfly-operator
-      namespace: database-system
-  components:
-    - ../../../../components/dragonfly
-  postBuild:
-    substitute:
-      APP: *name
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -41,5 +33,12 @@ spec:
   dependsOn:
     - name: firecrawl-database
       namespace: selfhosted-apps
+    - name: dragonfly-operator
+      namespace: database-system
     - name: searxng
       namespace: selfhosted-apps
+  components:
+    - ../../../../components/dragonfly
+  postBuild:
+    substitute:
+      APP: *name

@@ -247,12 +247,12 @@ Headlamp K8s web UI deployed with 1 replica at `headlamp.noirprime.com`. Uses a 
 
 ## Langfuse
 
-LLM observability platform for tracing servitor (agent) interactions. Two components, both using `app-template` chart:
+LLM observability platform for tracing servitor (agent) interactions. One `app-template` Deployment runs web and worker containers in the same Pod, sharing the `langfuse` application identity:
 
-| Component | Image | Resources |
+| Container | Image | Resources |
 |-----------|-------|-----------|
-| `langfuse-web` | `ghcr.io/langfuse/langfuse` | 1 CPU request, 2Gi memory limit |
-| `langfuse-worker` | `ghcr.io/langfuse/langfuse-worker` | 2 CPU request, 4Gi memory limit |
+| `app` | `ghcr.io/langfuse/langfuse` | 1 CPU request, 2Gi memory limit |
+| `worker` | `ghcr.io/langfuse/langfuse-worker` | 2 CPU request, 4Gi memory limit |
 
 ### Storage backends
 
@@ -267,7 +267,7 @@ Web component exposed at `langfuse.noirprime.com`. Telemetry disabled. Experimen
 
 ### Traces ingestion
 
-OTel Collector routes servitor traces to Langfuse's OTLP endpoint (`langfuse-web:3000/api/public/otel`) after credential redaction and gen_ai span filtering. See [OpenTelemetry Collector](#opentelemetry-collector) for pipeline details.
+OTel Collector routes servitor traces to Langfuse's OTLP endpoint (`langfuse:3000/api/public/otel`) after credential redaction and gen_ai span filtering. See [OpenTelemetry Collector](#opentelemetry-collector) for pipeline details.
 
 ## Robusta
 
