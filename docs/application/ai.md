@@ -258,7 +258,7 @@ Non-chat vector modalities run on the same oMLX process as the chat lanes, expos
 | Path             | Backend             | Client model | Upstream (override)      | Model                                   | Timeout |
 | ---------------- | ------------------- | ------------ | ------------------------ | --------------------------------------- | ------- |
 | `/v1/embeddings` | `studio-embeddings` | `embedding`  | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d)            | 120s    |
-| `/v1/rerank`     | `studio-reranker`     | `reranker`   | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
+| `/v1/rerank`     | `studio-rerank`     | `reranker`   | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
 | `/v1/audio/speech`, `/v1/audio/transcriptions` | `studio-audio` | `voxcpm2` | (passthrough — no override) | VoxCPM2 (TTS) | 300s |
 
 The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download remains parked. `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet. Passthrough applies no LLM parsing — the audio lane has no model override, so clients send the folder id `voxcpm2` (unlike embeddings/rerank aliases).

@@ -28,7 +28,7 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: studio-reranker
+  name: studio-rerank
 spec:
   ai:
     provider:

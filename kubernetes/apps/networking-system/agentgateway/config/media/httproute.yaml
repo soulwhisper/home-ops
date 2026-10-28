@@ -53,7 +53,7 @@ spec:
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
-          name: studio-reranker
+          name: studio-rerank
       timeouts:
         request: 120s
     - name: discovery
