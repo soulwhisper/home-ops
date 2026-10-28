@@ -83,8 +83,10 @@ apiKeyAuthentication policy (sectionName-scoped), so a chat key cannot call
 the automation lane. Cross-lane needs are served by enrolling the same key
 in another lane's secret, never by sharing a policy: `llm-omni-auth` also
 enrolls the agent key (hermes aux) and the uncensored key (dsh-tavern background
-generation and open-webui auxiliary tasks); `llm-media-auth` enrolls the omni key (karakeep/hindsight
-embeddings+rerank). Revocation = remove the entry from every lane secret.
+generation and open-webui auxiliary tasks). `llm-agent-auth` and `llm-media-auth`
+also enroll the uncensored key, giving open-webui access to all model lanes;
+`llm-media-auth` enrolls the omni key for karakeep/hindsight embeddings+rerank.
+Revocation = remove the entry from every lane secret.
 There is no cloud fallback — the studio is a deliberate SPOF.
 
 
@@ -120,7 +122,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | dsh-tavern           | `uncensored`      | Qwen3.8-27B        | RP portal (dsh-tavern image); model/key UI-configured on PVC |
 | dsh-web              | `agent`/`omni`    | Ornith-1.5 / MiniCPM-o | Agent workbench (servitor-apps); LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
-| open-webui           | `uncensored`/`omni` | Qwen3.8-27B / MiniCPM-o | Human chat portal; search-tier MCP and OTEL traces |
+| open-webui           | all lanes         | all models       | Human chat portal; model discovery + media lanes, search-tier MCP, and OTEL traces |
 
 Both DSH apps also expose the optional `kimi` provider (`https://api.moonshot.ai/v1`, model `kimi-k3.1-pro`). It is a direct external provider, not an agentgateway lane, and does not override the default model.
 
