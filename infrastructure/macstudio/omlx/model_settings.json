@@ -322,7 +322,7 @@
       "dflash_draft_sink_size": 0,
       "mtp_enabled": false,
       "vlm_mtp_enabled": false,
-      "ttl_seconds": 3600,
+      "ttl_seconds": 1800,
       "is_pinned": false,
       "is_default": false,
       "is_hidden": false,
