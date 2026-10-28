@@ -6,6 +6,7 @@ metadata:
   name: &name home-assistant
 spec:
   interval: 1h
+  timeout: 15m
   chartRef:
     kind: OCIRepository
     name: app-template
@@ -34,13 +35,20 @@ spec:
               HACS_VERSION: "2.0.5"
             command:
               - sh
+              - -eu
               - -c
               - |
-                wget -O /tmp/hacs.zip \
-                  "https://github.com/hacs/integration/releases/download/$${HACS_VERSION}/hacs.zip"
-                mkdir -p /config/custom_components/hacs
-                unzip -o /tmp/hacs.zip -d /config/custom_components/hacs
-                echo "HACS $${HACS_VERSION} installed."
+                marker=/config/custom_components/hacs/.home-ops-version
+                if [ -f "$${marker}" ] && [ "$$(cat "$${marker}")" = "$${HACS_VERSION}" ]; then
+                  echo "HACS $${HACS_VERSION} is already installed; skipping download and unzip."
+                else
+                  wget -O /tmp/hacs.zip \
+                    "https://github.com/hacs/integration/releases/download/$${HACS_VERSION}/hacs.zip"
+                  mkdir -p /config/custom_components/hacs
+                  unzip -o /tmp/hacs.zip -d /config/custom_components/hacs
+                  printf '%s\n' "$${HACS_VERSION}" > "$${marker}"
+                  echo "HACS $${HACS_VERSION} installed."
+                fi
         containers:
           app:
             image:
