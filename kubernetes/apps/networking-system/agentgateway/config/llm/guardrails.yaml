@@ -21,7 +21,8 @@ spec:
       promptGuard:
         request:
           # 1. reject system override
-          - regex:
+          - scope: [SystemPrompt, Messages]
+            regex:
               action: Reject
               matches:
                 - "(?i)(ignore|disregard|forget|override|bypass|skip|dismiss|drop|abandon)\\s+(all\\s+|any\\s+|your\\s+)?(previous|prior|earlier|above|existing|current|original|initial|given|preset)\\s+(instructions|rules|guidelines|directives|constraints|restrictions|prompts|programming|configuration)"
@@ -38,7 +39,8 @@ spec:
               message: "Request blocked: prompt injection detected. Attempts to override system instructions are not permitted."
               statusCode: 403
           # 2. reject role hijacking
-          - regex:
+          - scope: [SystemPrompt, Messages]
+            regex:
               action: Reject
               matches:
                 - "(?i)(you are now|you're now|from now on you are|henceforth you are|you have become|you are no longer)\\s+(a |an |the )?(unrestricted|unfiltered|uncensored|unlimited|jailbroken|evil|malicious|dangerous|DAN|unethical|amoral|rogue|hacker)"
@@ -51,7 +53,8 @@ spec:
               message: "Request blocked: jailbreak attempt detected. Role hijacking and persona manipulation are not permitted."
               statusCode: 403
           # 3. reject system prompt extraction
-          - regex:
+          - scope: [SystemPrompt, Messages]
+            regex:
               action: Reject
               matches:
                 - "(?i)(show|print|display|reveal|output|tell|give|share|repeat|recite|echo|dump|expose|leak|disclose)\\s+(me\\s+)?(your|the)?\\s*(system|initial|original|first|hidden|secret|internal|underlying|prepended)\\s*(prompt|instructions?|message|context|configuration|rules?|directives?|preamble)"
@@ -63,7 +66,8 @@ spec:
               message: "Request blocked: system prompt extraction attempt detected. Internal instructions are confidential."
               statusCode: 403
           # 4. reject evasion injection
-          - regex:
+          - scope: [SystemPrompt, Messages]
+            regex:
               action: Reject
               matches:
                 - "(?i)(decode|decrypt|decipher|translate|interpret|execute|run|follow|obey)\\s+(this|the following|these|the)?\\s*(base64|base-64|b64|rot13|rot-13|hex|hexadecimal|binary|encoded|encrypted|obfuscated)\\s*(string|text|message|instruction|command|payload)?"
@@ -74,7 +78,8 @@ spec:
               message: "Request blocked: encoding evasion or prompt delimiter injection detected."
               statusCode: 403
           # 5. mask sensitive information (request: prevent PII leaving the org)
-          - regex:
+          - scope: [SystemPrompt, Messages]
+            regex:
               action: Mask
               builtins:
                 - Ssn
@@ -83,7 +88,8 @@ spec:
             response:
               message: "Request filtered: PII redacted before reaching the model."
           # 6. mask secrets (request: prevent credential leakage to the model)
-          - regex:
+          - scope: [SystemPrompt, Messages]
+            regex:
               action: Mask
               matches:
                 - "\\bAKIA[0-9A-Z]{16}\\b"
