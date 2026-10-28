@@ -84,7 +84,7 @@ spec:
         hostnames: ["dsh.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/deepseek.svg
+          gethomepage.dev/icon: /icons/deepseek.svg
           gethomepage.dev/name: DSH Web
           gethomepage.dev/group: Service
         parentRefs:

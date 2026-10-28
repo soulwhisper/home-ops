@@ -277,7 +277,7 @@ The `flux-repositories` Kustomization is reconciled before `cluster-apps` (via `
 
 ## Kustomize Component System
 
-Eight Kustomize Components encode cross-cutting concerns as reusable building blocks. Applications declare which components they need in their `ks.yaml` — the component injects all required resources automatically.
+Nine Kustomize Components encode cross-cutting concerns as reusable building blocks. Applications declare which components they need in their `ks.yaml` — the component injects all required resources automatically.
 
 ### Component: namespace (12 consumers)
 
@@ -305,6 +305,12 @@ The `name: _` is a Kustomize placeholder — postBuild substitution in each name
 **Path**: `kubernetes/components/kopiur/secret/`
 
 Included by namespace-level Kustomizations that host backed-up workloads. Injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
+
+### Component: kopiur/namespace (5 consumers)
+
+**Path**: `kubernetes/components/kopiur/namespace/`
+
+Patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"`, opting its backup movers into uid 0 and `DAC_OVERRIDE` for files with arbitrary ownership. Included only by the five namespaces that already require this privilege; the shared namespace component deliberately does not grant it cluster-wide.
 
 ### Component: kopiur/backup (22 consumers)
 

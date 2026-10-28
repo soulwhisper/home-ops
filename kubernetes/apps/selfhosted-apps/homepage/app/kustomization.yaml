@@ -23,6 +23,7 @@ configMapGenerator:
       - icons/cilium.svg
       - icons/cloudflare.svg
       - icons/crafty-controller.svg
+      - icons/deepseek.svg
       - icons/discord.svg
       - icons/dispatcharr.svg
       - icons/foundry-vtt.svg
