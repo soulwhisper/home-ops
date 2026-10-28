@@ -5,17 +5,17 @@ kind: AgentgatewayPolicy
 metadata:
   name: llm-guardrails
 spec:
-  # Guards the guarded rules of the unified /v1 lane (sectionName picks
-  # rules); the `uncensored` rule is deliberately excluded.
+  # Guards only the chat rules of the agent and omni routes. Discovery is
+  # intentionally excluded; the uncensored chat rule is also excluded.
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-llm-route
-      sectionName: agent
+      name: agentgateway-agent-route
+      sectionName: chat
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-llm-route
-      sectionName: omni
+      name: agentgateway-omni-route
+      sectionName: chat
   backend:
     ai:
       promptGuard:

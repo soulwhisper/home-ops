@@ -76,6 +76,9 @@ spec:
               # pre-#3729 direct-vmcp shape).
               TOOL_SERVER_CONNECTIONS: '[{"type":"mcp","url":"http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/search","auth_type":"bearer","key":"$(GATEWAY_API_KEY)","info":{"id":"search","name":"search","description":"ToolHive search (firecrawl, context7, trendradar, github-ro)"},"config":{"enable":true},"path":""}]'  # yamllint disable-line rule:quoted-strings
               ENABLE_OLLAMA_API: "false"
+              # Discovery is per model, so the portal uses an explicit list
+              # instead of a global /v1/models catalog.
+              OPENAI_API_CONFIGS: '{"0":{"enable":true,"model_ids":["uncensored","omni"],"connection_type":"external","auth_type":"bearer"}}'
               # OTLP -> opentelemetry-collector; its traces/servitor pipeline
               # keeps gen_ai spans and exports them to langfuse.
               # OTEL_OTLP_SPAN_EXPORTER=http is REQUIRED: the default grpc

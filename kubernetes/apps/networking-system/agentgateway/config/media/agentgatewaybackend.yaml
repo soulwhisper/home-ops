@@ -1,10 +1,7 @@
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
-# Studio media lanes as LLM-pipeline backends (replaces the former static
-# passthrough). custom.formats declares exactly one API type per backend —
-# undeclared formats are rejected upstream. policies.auth injects the oMLX
-# server key (studio-api-auth, ES item omlx), so media consumers use the
-# regular gateway consumer key like every other app.
+# Each media backend declares exactly one API format; undeclared formats are
+# rejected upstream. policies.auth injects the oMLX key from studio-api-auth.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
@@ -22,9 +19,7 @@ spec:
     auth:
       secretRef:
         name: studio-api-auth
-    # Without this map every path is parsed as Completions ("missing field
-    # `messages`"); the route type drives request parsing, custom.formats
-    # drives the upstream call.
+    # The route type drives request parsing; custom.formats drives upstream.
     ai:
       routes:
         "/v1/embeddings": "Embeddings"
@@ -33,7 +28,7 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: studio-rerank
+  name: studio-reranker
 spec:
   ai:
     provider:
@@ -52,14 +47,12 @@ spec:
         "/v1/rerank": "Rerank"
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
-# Audio lane (VoxCPM2 TTS). openai provider + Passthrough route types:
-# audio payloads (multipart, wav streams) are forwarded unparsed; the
-# backend auth above still injects the oMLX key. `/v1/audio/speech` is not a
-# documented audio route — the `*` Passthrough catch-all covers it.
+# Audio payloads are forwarded unparsed only on the two public routes below;
+# backend auth still injects the oMLX key.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: studio-audio
+  name: studio-voxcpm2
 spec:
   ai:
     provider:
@@ -75,4 +68,3 @@ spec:
       routes:
         "/v1/audio/speech": "Passthrough"
         "/v1/audio/transcriptions": "Passthrough"
-        "*": "Passthrough"
