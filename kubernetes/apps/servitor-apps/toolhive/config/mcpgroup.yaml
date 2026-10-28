@@ -33,4 +33,4 @@ kind: MCPGroup
 metadata:
   name: agent
 spec:
-  description: "Operator-agent tier. Forgejo ticket RW (pat_tickets; the Forgejo-side token scope is the boundary) + incident/RCA memory (hindsight ops bank). Separate credential keeps chat-tier consumers out."
+  description: "Operator-agent tier. Forgejo ticket RW (pat_tickets; the Forgejo-side token scope is the boundary) + incident/RCA memory (hindsight ops bank). Separate credential keeps chat-tier consumers out. Issued to hermes and external operator agents."

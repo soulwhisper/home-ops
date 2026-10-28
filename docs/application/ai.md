@@ -140,7 +140,7 @@ the canonical `/mcp` upstream):
 | `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | hermes, open-webui, dsh-web     |
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
 | `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-home bank                           | `mcp_home`                     | hermes, dsh-web                      |
-| `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | operator agents only         |
+| `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | hermes, external operator agents |
 
 A key minted for one group is invalid on every other route — this is what
 scopes the search consumer to search and keeps chat-tier consumers out of incident
@@ -169,7 +169,7 @@ operator-authored config, not untrusted content), while `prompts/get` /
 `failureMode: FailClosed` (the sidecar being down disables those two tiers
 rather than passing them unguarded). Scope decision (2026-10-20): search is
 the tier where untrusted web content reaches an unguarded lane (dsh-tavern /
-any `uncensored`-lane consumer); the agent tier's consumers are external operator agents with
+any `uncensored`-lane consumer); the agent tier's consumers are operator agents (including hermes) with
 no cluster-side promptGuard in front of them, and forgejo ticket bodies
 carry alert/log-derived (untrusted) strings. cluster/home consumers (hermes)
 ride the guarded `agent` LLM lane — cluster adds CEL allowlists and
@@ -207,12 +207,12 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 - **Runtime**: user namespaces (`hostUsers: false`) + egress CNP (ADR-03; Kata removed)
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
-- **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP (`search`+`cluster`+`home` tiers, declarative `mcp_servers` in the configmap), Agent Gateway LLM
+- **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP (`search`+`cluster`+`home`+`agent` tiers, declarative `mcp_servers` in the configmap), Agent Gateway LLM
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, world-except-private :443 (Feishu WebSocket). No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
 - **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 + webhook ingest :8644 via kgateway-internal (shared rule), webhook ingest :8644 also from frigate + LAN, profile API :8642 same-namespace only; `fromEntities: host` keeps kubelet probes working
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
-  - `ops` — the batching brain: cron/Feishu/automation workload lives here (search, cluster read-only, and home read-write MCP tiers); owns the Feishu adapter, credentials, home channel and new Feishu sessions
+  - `ops` — the batching brain: cron/Feishu/automation workload lives here (search, cluster read-only, home read-write, and agent ticket/incident-memory MCP tiers); owns the Feishu adapter, credentials, home channel and new Feishu sessions
   - `default` — fallback/scratch with no Feishu adapter; the retired `chat` profile was removed 2026-10 when the human interface moved to dedicated portals
   Model/provider config (`model.provider: custom` → agent gateway, `model.default: agent`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression`/`title_generation` → `omni`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. Requires 1Password `hermes-agent` field: `api_server_key_root` (>=16 chars)
 
