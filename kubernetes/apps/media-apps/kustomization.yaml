@@ -5,8 +5,7 @@ kind: Kustomization
 namespace: media-apps
 components:
   - ../../components/namespace
-  - ../../components/kopiur/namespace
-  - ../../components/kopiur/secret
+  - ../../components/kopiur/shared
 resources:
   # storage
   - ./media-nfs/ks.yaml

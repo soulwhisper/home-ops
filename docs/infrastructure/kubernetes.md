@@ -277,7 +277,7 @@ The `flux-repositories` Kustomization is reconciled before `cluster-apps` (via `
 
 ## Kustomize Component System
 
-Nine Kustomize Components encode cross-cutting concerns as reusable building blocks. Applications declare which components they need in their `ks.yaml` — the component injects all required resources automatically.
+Eight Kustomize Components encode cross-cutting concerns as reusable building blocks. Applications declare which components they need in their `ks.yaml` — the component injects all required resources automatically.
 
 ### Component: namespace (12 consumers)
 
@@ -300,17 +300,11 @@ metadata:
 
 The `name: _` is a Kustomize placeholder — postBuild substitution in each namespace's `kustomization.yaml` fills in the actual namespace name.
 
-### Component: kopiur/secret (6 consumers)
+### Component: kopiur/shared (6 consumers)
 
-**Path**: `kubernetes/components/kopiur/secret/`
+**Path**: `kubernetes/components/kopiur/shared/`
 
-Included by namespace-level Kustomizations that host backed-up workloads. Injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
-
-### Component: kopiur/namespace (5 consumers)
-
-**Path**: `kubernetes/components/kopiur/namespace/`
-
-Patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"`, opting its backup movers into uid 0 and `DAC_OVERRIDE` for files with arbitrary ownership. Included only by the five namespaces that already require this privilege; the shared namespace component deliberately does not grant it cluster-wide.
+Combines the shared kopiur namespace resources. It patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"` for uid-0/DAC_OVERRIDE backup movers, and injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
 
 ### Component: kopiur/backup (22 consumers)
 
