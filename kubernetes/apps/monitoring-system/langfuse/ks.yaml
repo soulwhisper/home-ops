@@ -27,4 +27,5 @@ spec:
     - ../../../../components/dragonfly
   postBuild:
     substitute:
+      APP: *name
       DRAGONFLY_LUA_FLAGS: allow-undeclared-keys,disable-atomicity
