@@ -9,8 +9,8 @@ spec:
     matchLabels:
       "app.kubernetes.io/name": open-webui
   egress:
-    # LLM + MCP both via the AI gateway (/chat/raw, /mcp/*) — the only AI
-    # egress. No direct vmcp or hermes paths since the unified-gateway change.
+    # LLM + MCP via the AI gateway (/v1/* and /mcp/search), including model
+    # discovery, chat, embeddings, rerank, and audio.
     - toServices:
         - k8sService:
             serviceName: agentgateway-proxy
@@ -58,8 +58,8 @@ spec:
         - ports:
             - { port: "53", protocol: TCP }
             - { port: "53", protocol: UDP }
-    # Internet: RAG web fetching, version checks (world-except-private,
-    # same convention as karakeep/firecrawl)
+    # Internet: external model providers, RAG fetching, and version checks
+    # (world-except-private, same convention as karakeep/firecrawl)
     - toCIDRSet:
         - cidr: 0.0.0.0/0
           except:

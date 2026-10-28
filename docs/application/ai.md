@@ -83,10 +83,10 @@ apiKeyAuthentication policy (sectionName-scoped), so a chat key cannot call
 the automation lane. Cross-lane needs are served by enrolling the same key
 in another lane's secret, never by sharing a policy: `llm-omni-auth` also
 enrolls the agent key (hermes aux) and the uncensored key (dsh-tavern background
-generation and open-webui auxiliary tasks). `llm-agent-auth` and `llm-media-auth`
-also enroll the uncensored key, giving open-webui access to all model lanes;
-`llm-media-auth` enrolls the omni key for karakeep/hindsight embeddings+rerank.
-Revocation = remove the entry from every lane secret.
+generation and open-webui auxiliary tasks). `llm-media-auth` also enrolls the
+uncensored key so open-webui can discover models and use media lanes, and the
+omni key for karakeep/hindsight embeddings+rerank. Revocation = remove the entry
+from every lane secret.
 There is no cloud fallback — the studio is a deliberate SPOF.
 
 
@@ -122,7 +122,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | dsh-tavern           | `uncensored`      | Qwen3.8-27B        | RP portal (dsh-tavern image); model/key UI-configured on PVC |
 | dsh-web              | `agent`/`omni`    | Ornith-1.5 / MiniCPM-o | Agent workbench (servitor-apps); LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
-| open-webui           | all lanes         | all models       | Human chat portal; model discovery + media lanes, search-tier MCP, and OTEL traces |
+| open-webui           | `uncensored` + media | Qwen3.8-27B, embeddings, reranker, VoxCPM2 | Human chat portal; model discovery + media lanes, external providers, search-tier MCP, and OTEL traces |
 
 Both DSH apps also expose the optional `kimi` provider (`https://api.moonshot.ai/v1`, model `kimi-k3.1-pro`). It is a direct external provider, not an agentgateway lane, and does not override the default model.
 
@@ -228,7 +228,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **LLM**: single agentgateway OpenAI provider; `uncensored` for chat and `omni` for guarded auxiliary tasks
 - **MCP**: native search-tier connection through `/mcp/search` with the `mcp_search` bearer key
 - **State**: shared CNPG for app data and pgvector, app Dragonfly for session/rate-limit state, and the `open-webui` Ceph bucket for uploads and KB files; the data directory is cache-only
-- **Egress**: agentgateway, CNPG, Dragonfly, Ceph RGW, OTLP collector, kube-dns, and world-except-private for RAG fetching
+- **Egress**: agentgateway for chat/model discovery/embeddings/rerank/audio, CNPG, Dragonfly, Ceph RGW, OTLP collector, kube-dns, and world-except-private for external model providers and RAG fetching
 
 ### DSH Web
 
