@@ -58,9 +58,9 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
 | Cilium datapath | `netkit` (L3) — kept |
 | kata | **removed** (RuntimeClass + Talos sysext; sysext drops at next node image upgrade) |
 | `hostUsers: false` | All app-template workloads **except** NFS consumers |
-| Egress CNP | AI/agent workloads plus selected traditional apps: firecrawl, hermes-agent, karakeep, trendradar, hindsight, open-webui (app / oikb / terminals / open-terminal-sandbox), frigate-vision, home-assistant-sgcc, headlamp, robusta. Contains where a compromised workload can *go* — lateral-movement block |
+| Egress CNP | AI/agent workloads plus selected traditional apps: firecrawl, hermes-agent, karakeep, trendradar, hindsight, open-webui (app / oikb), frigate-vision, home-assistant-sgcc, headlamp, robusta. Contains where a compromised workload can *go* — lateral-movement block |
 | Ingress CNP | Different angle — constrains who may *call* a sensitive endpoint: `onepassword-connect-ingress` (only external-secrets reaches the Connect API) and `vmcp-ingress` (only vmagent + hermes-agent reach the virtual-MCP tool plane) |
-| `automountServiceAccountToken: false` | All app-template workloads except `homepage`; `open-webui/terminals` sets the token `true` with a dedicated SA. Audited live: no other app SA holds RoleBindings; `netbox` (official chart, untouched by the sweep) keeps its token for `netbox_prometheus_sd` |
+| `automountServiceAccountToken: false` | All app-template workloads except `homepage`. Audited live: no other app SA holds RoleBindings; `netbox` (official chart, untouched by the sweep) keeps its token for `netbox_prometheus_sd` |
 | `enableServiceLinks: false` | app-template v5 chart default — no action needed |
 | Pod Security Admission | **privileged cluster-wide — open decision, see below** |
 | seccomp | **RuntimeDefault globally** — Talos kubelet default (`defaultRuntimeSeccompEnabled: true`, verified: unannotated pods run with an active filter). Only cilium-agent runs Unconfined (deliberate: needs bpf/mount) |

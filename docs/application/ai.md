@@ -1,5 +1,5 @@
 # AI Infrastructure Summary
-Last updated: 2026-10-24
+Last updated: 2026-10-28
 
 Source: Flux manifests in `kubernetes/apps/`.
 
@@ -11,6 +11,7 @@ flowchart TB
         Hermes["Hermes Agent"]
         Tavern["DSH Tavern"]
         DSHW["dsh-web (cluster)"]
+        OWUI["Open WebUI"]
         HS["Hindsight"]
     end
 
@@ -82,7 +83,7 @@ apiKeyAuthentication policy (sectionName-scoped), so a chat key cannot call
 the automation lane. Cross-lane needs are served by enrolling the same key
 in another lane's secret, never by sharing a policy: `llm-omni-auth` also
 enrolls the agent key (hermes aux) and the uncensored key (dsh-tavern background
-generation); `llm-media-auth` enrolls the omni key (karakeep/hindsight
+generation and open-webui auxiliary tasks); `llm-media-auth` enrolls the omni key (karakeep/hindsight
 embeddings+rerank). Revocation = remove the entry from every lane secret.
 There is no cloud fallback — the studio is a deliberate SPOF.
 
@@ -119,6 +120,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | dsh-tavern           | `uncensored`      | Qwen3.8-27B        | RP portal (dsh-tavern image); model/key UI-configured on PVC |
 | dsh-web              | `agent`/`omni`    | Ornith-1.5 / MiniCPM-o | Agent workbench (servitor-apps); LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
+| open-webui           | `uncensored`/`omni` | Qwen3.8-27B / MiniCPM-o | Human chat portal; search-tier MCP and OTEL traces |
 
 Both DSH apps also expose the optional `kimi` provider (`https://api.moonshot.ai/v1`, model `kimi-k3.1-pro`). It is a direct external provider, not an agentgateway lane, and does not override the default model.
 
@@ -135,7 +137,7 @@ the canonical `/mcp` upstream):
 
 | Route          | vmcp          | Servers (aggregated)                                          | Key (1Password `agentgateway`) | Issued to                    |
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
-| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | dsh-web                      |
+| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | open-webui, dsh-web             |
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
 | `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-home bank                           | `mcp_home`                     | hermes, dsh-web                      |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | operator agents only         |
@@ -216,11 +218,22 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 ---
 
+### Open WebUI
+
+- Human chat portal, image `ghcr.io/open-webui/open-webui:v0.12.4`. Lives in **servitor-apps**
+- **Auth**: Authentik forward-auth gates access at the gateway; with no trusted-header mapping, Open WebUI login is disabled and requests use its shared local system account
+- **Ingress**: `chat.noirprime.com` via kgateway-internal
+- **LLM**: single agentgateway OpenAI provider; `uncensored` for chat and `omni` for guarded auxiliary tasks
+- **MCP**: native search-tier connection through `/mcp/search` with the `mcp_search` bearer key
+- **State**: shared CNPG for app data and pgvector, app Dragonfly for session/rate-limit state, and the `open-webui` Ceph bucket for uploads and KB files; the data directory is cache-only
+- **KB sync**: `open-webui-oikb` stays at zero replicas until a Knowledge Base source is configured
+- **Egress**: agentgateway, oikb, CNPG, Dragonfly, Ceph RGW, OTLP collector, kube-dns, and world-except-private for RAG fetching
+
 ### DSH Web
 
 - Agent workbench, image `ghcr.io/soulwhisper/dsh-web` (DSH Web + `dshmarket` + required forward-auth). Lives in **servitor-apps**
 - **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
-- **Ingress**: `chat.noirprime.com` via kgateway-internal
+- **Ingress**: `dsh.noirprime.com` via kgateway-internal
 - **State**: kopiur-backed PVC `dsh-web` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs` and `/backups` share the `dsh-web-cache` `ceph-cache` PVC; `/tmp` remains emptyDir
 - **MCP/Skills**: the `dsh-web-mcp` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster and home tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/home` with `mcp_search`, `mcp_cluster`, `mcp_home`, never in Git). Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
 - **LLM/MCP**: UI-selectable agentgateway, DeepSeek and Kimi providers; MCP uses the guarded tiers. No default model is pinned
@@ -268,7 +281,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 
 ### MCP Servers (14 total)
 
-#### search (web/docs/news/codebase retrieval — dsh-web)
+#### search (web/docs/news/codebase retrieval — open-webui, dsh-web)
 
 | Server    | Transport             | Notes                    |
 | --------- | --------------------- | ------------------------ |
@@ -338,7 +351,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 - AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`)
 - Delivery: Feishu custom group robot (`FEISHU_WEBHOOK_URL` from 1Password `feishu.newsbot_webhook`); HTML report at `news.noirprime.com` (SSO)
-- MCP server (:3333) registered as `trendradar` in the `search` group (gateway-filtered to query/analysis tools; consumed by dsh-web)
+- MCP server (:3333) registered as `trendradar` in the `search` group (gateway-filtered to query/analysis tools; consumed by open-webui and dsh-web)
 - Config fully in ConfigMap (`config.yaml` + `frequency_words.txt` + `ai_interests.txt`); output on 1Gi ceph-block PVC
 
 ## AI-Adjacent Services
@@ -436,10 +449,9 @@ items:
 
 | Item | State | Path forward |
 | ---- | ----- | ------------ |
-| open-webui MCP bearer key rollout | Moot — open-webui archived 2026-10-20 (dsh appliances) | Search tier idle; revisit when a new consumer appears |
+| open-webui MCP bearer key rollout | Restored with the native search-tier bearer connection | Smoke-verify a native tool call after rollout; check the `tool_server.connections` config row if the persisted shape diverges |
 | promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via langfuse/logs; if painful, expose `omni-raw` (one unguarded rule) as the designed escape hatch |
 | hermes MCP server endpoints | Done (2026-10-20): declarative `mcp_servers` in the seed ConfigMap — `cluster` + `home` tiers via the gateway, keys from the `agentgateway` item | Watch first tool calls; the agent group (`forgejo`/ops memory) can be added later by issuing hermes the `mcp_agent` key |
-| open-terminal sandbox pods → vmcp | Egress allowed, ingress whitelist gap (effectively denies — accidentally enforces the no-open-MCP rule) | Separate PR: add sandbox pods to vmcp-ingress, or drop the egress rule and fix the comment |
 | SillyTavern endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
 | mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred, on watch via langfuse decision spans (open-webui and hermes both emit OTEL) | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
 | ASR/TTS model | VoxCPM2-4bit served on the studio via `/v1/audio/*` (`studio-audio` backend) — lane ready, no in-repo consumer | Point a consumer at the lane when one appears; ASR (`/v1/audio/transcriptions`) wired but unused |
@@ -450,7 +462,7 @@ items:
 ```
 /v1/chat/completions  (strict API key)
             │  model:
-            ├─ uncensored   (OPEN)    ─► qwen3.8-27b        ── dsh-tavern
+            ├─ uncensored   (OPEN)    ─► qwen3.8-27b        ── dsh-tavern, open-webui
             ├─ agent        (guarded) ─► ornith-1.5-35b     ── hermes, holmes, automation
             ├─ omni         (guarded) ─► minicpm-o-4.5
 /v1/embeddings /v1/rerank /v1/audio/*  (media: alias ─► override ─► folder id; audio: direct)

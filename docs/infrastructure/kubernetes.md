@@ -66,7 +66,7 @@ flowchart TB
         OCIRepositories"]
         OCI_TPL["1 app-template
         OCIRepository"]
-        CROSS["40 Cross-namespace
+        CROSS["38 Cross-namespace
         chartRef References"]
     end
 
@@ -230,7 +230,7 @@ Each non-trivial application defines its own `OCIRepository` resource in its `ap
 
 The `OCIRepository` fetches only the chart layer via `layerSelector` with `operation: copy`, which extracts the Helm chart tarball from the OCI manifest without pulling unrelated layers.
 
-### App-Template Pattern (37 Cross-Namespace References)
+### App-Template Pattern (38 Cross-Namespace References)
 
 For applications that don't need a custom Helm chart, the **app-template** pattern is used. A single `OCIRepository` is defined in `kubernetes/flux/repositories/app-template.yaml`:
 
@@ -260,18 +260,18 @@ spec:
     namespace: gitops-system
 ```
 
-This cross-namespace reference is used by 37 HelmReleases across 8 namespaces:
+This cross-namespace reference is used by 38 HelmReleases across 8 namespaces:
 
-| Namespace         | Count | Example Apps                                                                                                                                                         |
-| ----------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| media-apps        | 8     | jellyfin, kavita, navidrome, qbittorrent, immich, moviepilot, metube, qbittorrent-ui                                                                                 |
-| selfhosted-apps   | 11    | searxng, sillytavern, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, trendradar, hindsight, firecrawl (app + database) |
-| smarthome-apps    | 7     | home-assistant (app + sgcc), frigate, frigate-vision, zigbee2mqtt, mosquitto, scrypted                                                                                               |
-| servitor-apps     | 4     | hermes-agent, dsh-web, dsh-tavern, toolhive                                                                                                                                                                            |
-| gaming-apps       | 2     | crafty-controller, foundryvtt                                                                                                                                        |
-| monitoring-system | 3     | langfuse (app + worker), webhook-relay                                                                                                                                              |
-| networking-system | 1     | agentgateway MCP config                                                                                                                                              |
-| database-system   | 1     | cnpg maintenance (dr-test cronjob)                                                                                                                                   |
+| Namespace         | Count | Example Apps |
+| ----------------- | ----- | ------------ |
+| media-apps        | 8     | jellyfin, kavita, navidrome, qbittorrent, immich, moviepilot, metube, qbittorrent-ui |
+| selfhosted-apps   | 10    | searxng, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, trendradar, hindsight, firecrawl (app + database) |
+| smarthome-apps    | 7     | home-assistant (app + sgcc), frigate, frigate-vision, zigbee2mqtt, mosquitto, scrypted |
+| servitor-apps     | 5     | hermes-agent, dsh-web, dsh-tavern, open-webui (app + oikb) |
+| gaming-apps       | 2     | crafty-controller, foundryvtt |
+| monitoring-system | 4     | langfuse (app + worker), webhook-relay, vmware-exporter |
+| networking-system | 1     | agentgateway MCP config |
+| database-system   | 1     | cnpg maintenance (dr-test cronjob) |
 
 The `flux-repositories` Kustomization is reconciled before `cluster-apps` (via `dependsOn`), ensuring the `app-template` `OCIRepository` is always available before any application HelmRelease references it.
 

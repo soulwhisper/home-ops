@@ -1,6 +1,6 @@
 # Application Catalog
 
-77 applications, 13 backend MCP servers, and 4 ToolHive VirtualMCP tiers across 12 namespaces, managed via Flux GitOps.
+79 applications, 13 backend MCP servers, and 4 ToolHive VirtualMCP tiers across 12 namespaces, managed via Flux GitOps.
 
 ## kube-system — Cluster Infrastructure (9)
 
@@ -122,13 +122,15 @@
 | Bambuddy      | 3D printer monitor (Bambu Lab)                                 |
 | Dispatcharr   | IPTV dispatch (iGPU transcode)                                 |
 
-## servitor-apps — AI Infrastructure (4 + 14 MCP servers)
+## servitor-apps — AI Infrastructure (6 + 14 MCP servers)
 
 | App           | Purpose                                                                                     |
 | ------------- | ------------------------------------------------------------------------------------------- |
 | Hermes Agent  | AI agent suite (Feishu, cron/automation)                                                    |
 | DSH Web       | Agent workbench                                                                             |
 | DSH Tavern    | RP chat portal                                                                              |
+| Open WebUI    | Human chat portal with search-tier MCP                                                        |
+| oikb          | Open WebUI Knowledge Base sync daemon (parked until sources are configured)                 |
 | ToolHive      | MCP gateway (4 VirtualMCP tiers: search/cluster/home/agent, gateway-enforced tool allowlists)   |
 | MCP Servers   | context/firecrawl/fluxcd/forgejo/github/grafana/hindsight-home/hindsight-ops/home-assistant/kubernetes/trendradar/victoria-logs/victoria-metrics/victoria-traces |
 
