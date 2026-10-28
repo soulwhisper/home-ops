@@ -45,8 +45,8 @@ flowchart TB
     subgraph Components["Kustomize Components"]
         NS_COMP["namespace
         12 consumers"]
-        KOPIUR_SECRET["kopiur/secret
-        6 consumers"]
+        KOPIUR_SECRET["kopiur/shared
+        5 consumers"]
         KOPIUR_BACKUP["kopiur/backup
         22 consumers"]
         CACHE["cache
@@ -300,17 +300,17 @@ metadata:
 
 The `name: _` is a Kustomize placeholder — postBuild substitution in each namespace's `kustomization.yaml` fills in the actual namespace name.
 
-### Component: kopiur/shared (6 consumers)
+### Component: kopiur/shared (5 consumers)
 
 **Path**: `kubernetes/components/kopiur/shared/`
 
-Combines the shared kopiur namespace resources. It patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"` for uid-0/DAC_OVERRIDE backup movers, and injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
+Injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
 
 ### Component: kopiur/backup (22 consumers)
 
 **Path**: `kubernetes/components/kopiur/backup/`
 
-The most heavily used component. It provisions the backup-and-recovery pipeline for a stateful application:
+The most heavily used component. It patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"` for uid-0/DAC_OVERRIDE backup movers, and provisions the backup-and-recovery pipeline for a stateful application:
 
 | Resource                | Purpose                                                                                 |
 | ----------------------- | --------------------------------------------------------------------------------------- |
@@ -543,7 +543,7 @@ kubernetes/
 │   └── values.yaml.gotmpl         #   Values bridge to Flux HelmReleases
 ├── components/                    # Reusable Kustomize Components
 │   ├── namespace/                 #   Namespace + alerts (12 consumers)
-│   ├── kopiur/secret/             #   Namespace-level kopia repo credentials (6 consumers)
+│   ├── kopiur/shared/             #   Namespace-level kopia repo credentials (5 consumers)
 │   ├── kopiur/backup/             #   PVC backup pipeline (20 consumers)
 │   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (4 consumers)
 │   ├── authentik/                 #   SSO traffic policy (14 consumers)
