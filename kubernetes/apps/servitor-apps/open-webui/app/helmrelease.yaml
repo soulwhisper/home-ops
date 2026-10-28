@@ -102,14 +102,10 @@ spec:
 
     persistence:
       # cache only; durable state lives in CNPG / dragonfly / the ceph bucket
-      app:
-        type: emptyDir
-        globalMounts:
-          - path: /app/backend/data
       cache:
         existingClaim: open-webui-cache
         globalMounts:
-          - path: /app/backend/data/cache
+          - path: /app/backend/data
       tmpfs:
         type: emptyDir
         globalMounts:
