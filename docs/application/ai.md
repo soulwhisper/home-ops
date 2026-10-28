@@ -229,7 +229,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - Human chat portal, image `ghcr.io/open-webui/open-webui`. Lives in **servitor-apps**
 - **Auth**: Authentik forward-auth gates access at the gateway; with no trusted-header mapping, Open WebUI login is disabled and requests use its shared local system account
 - **Ingress**: `chat.noirprime.com` via kgateway-internal
-- **LLM**: single agentgateway OpenAI provider; `uncensored` for chat and `omni` for guarded auxiliary tasks. The admin connection sets `model_ids` to these two models because discovery is per model, not a global catalog
+- **LLM**: single agentgateway OpenAI provider; `uncensored` for chat and `omni` for guarded auxiliary tasks. The admin connection sets `model_ids` to these two models because discovery is per model, not a global catalog. Existing installations must save the same `model_ids` in the admin UI before the global catalog is removed.
 - **MCP**: native search-tier connection through `/mcp/search` with the `mcp_search` bearer key
 - **State**: shared CNPG for app data and pgvector, app Dragonfly for session/rate-limit state, and the `open-webui` Ceph bucket for uploads and KB files; the entire data directory is rewarmable cache on the `open-webui-cache` ceph-cache PVC
 - **Egress**: agentgateway, CNPG, Dragonfly, Ceph RGW, OTLP collector, kube-dns, and world-except-private for RAG fetching
