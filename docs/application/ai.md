@@ -85,7 +85,8 @@ apiKeyAuthentication policy covering both inference and discovery, so a chat
 key cannot call the automation lane. Cross-lane needs are served by enrolling the same key
 in another lane's secret, never by sharing a policy: `llm-omni-auth` also
 enrolls the agent key (hermes aux) and the uncensored key (open-webui auxiliary
-tasks). Each media model has its own route, credential, and 1Password item:
+tasks). Each media model has its own route, credential, and field in the
+`agentgateway` 1Password item:
 `llm-embedding-auth` uses `llm_embedding`, `llm-reranker-auth` uses
 `llm_reranker`, and `llm-audio-auth` uses `llm_audio`. Chat-lane keys do not
 implicitly authorize media inference or discovery. Revocation = remove the
@@ -254,7 +255,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 ### Media lanes (studio-hosted, OpenAI-compatible)
 
-Non-chat vector modalities run on the same oMLX process as the chat lanes, exposed through independent per-model HTTPRoutes and authentication policies. Embeddings and reranker use `custom` providers declaring exactly one API format; audio uses explicit passthrough routes. Each media credential uses its own 1Password item (`llm_embedding`, `llm_reranker`, `llm_audio`):
+Non-chat vector modalities run on the same oMLX process as the chat lanes, exposed through independent per-model HTTPRoutes and authentication policies. Embeddings and reranker use `custom` providers declaring exactly one API format; audio uses explicit passthrough routes. Each media credential uses its own field in the shared `agentgateway` 1Password item (`llm_embedding`, `llm_reranker`, `llm_audio`):
 
 | Path             | Backend             | Client model | Upstream (override)      | Model                                   | Timeout |
 | ---------------- | ------------------- | ------------ | ------------------------ | --------------------------------------- | ------- |
