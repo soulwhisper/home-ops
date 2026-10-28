@@ -292,7 +292,8 @@ Holmes also runs on a schedule via `ScheduledHealthCheck` CRs. Results stay in C
 | `ceph-health-growth` | every 6h | Ceph health, OSD/pool usage trends |
 | `cert-expiry-watch` | daily | cert-manager certs expiring < 14d or not Ready |
 | `node-density-trend` | daily | per-node pod density and request saturation |
-| `alert-rule-quality-weekly` | weekly | top firing/flapping rules, proposed adjustments |
+| `alert-rule-quality-weekly` | weekly | alerting-loop and target health |
+| `resolved-alert-recheck-daily` | every 6h | absent(expression) or vector(0) healing checks for recently resolved alerts |
 | `backup-chain-daily` | daily | kopiur + CNPG backup runs and snapshot age |
 
 ## Alert routing
