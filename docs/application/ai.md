@@ -220,7 +220,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 ### Open WebUI
 
-- Human chat portal, image `ghcr.io/open-webui/open-webui:v0.12.4`. Lives in **servitor-apps**
+- Human chat portal, image `ghcr.io/open-webui/open-webui`. Lives in **servitor-apps**
 - **Auth**: Authentik forward-auth gates access at the gateway; with no trusted-header mapping, Open WebUI login is disabled and requests use its shared local system account
 - **Ingress**: `chat.noirprime.com` via kgateway-internal
 - **LLM**: single agentgateway OpenAI provider; `uncensored` for chat and `omni` for guarded auxiliary tasks
