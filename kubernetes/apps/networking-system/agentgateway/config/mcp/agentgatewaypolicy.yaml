@@ -3,7 +3,7 @@
 # Per-route API-key auth, one credential per ToolHive group. A key minted for
 # one group is invalid on every other group's route — this is what actually
 # scopes search/home/cluster to their consumers (hermes and dsh-web for
-# cluster/home; open-webui and dsh-web for search).
+# cluster/home; hermes, open-webui, and dsh-web for search).
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:

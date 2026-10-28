@@ -18,16 +18,6 @@ spec:
       toPorts:
         - ports:
             - { port: "80", protocol: TCP }
-    # KB sync daemon (optional OpenAPI tool server); same namespace, but
-    # world-except-private below deliberately excludes cluster IPs, so name it
-    # explicitly
-    - toServices:
-        - k8sService:
-            serviceName: open-webui-oikb
-            namespace: servitor-apps
-      toPorts:
-        - ports:
-            - { port: "8080", protocol: TCP }
     # state: shared CNPG, app dragonfly, app ceph bucket (RGW)
     - toServices:
         - k8sService:

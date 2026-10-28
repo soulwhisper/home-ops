@@ -137,7 +137,7 @@ the canonical `/mcp` upstream):
 
 | Route          | vmcp          | Servers (aggregated)                                          | Key (1Password `agentgateway`) | Issued to                    |
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
-| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | open-webui, dsh-web             |
+| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | hermes, open-webui, dsh-web     |
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
 | `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-home bank                           | `mcp_home`                     | hermes, dsh-web                      |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | operator agents only         |
@@ -207,12 +207,12 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 - **Runtime**: user namespaces (`hostUsers: false`) + egress CNP (ADR-03; Kata removed)
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
-- **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP (`cluster`+`home` tiers, declarative `mcp_servers` in the configmap), Agent Gateway LLM
+- **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP (`search`+`cluster`+`home` tiers, declarative `mcp_servers` in the configmap), Agent Gateway LLM
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, world-except-private :443 (Feishu WebSocket). No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
 - **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 + webhook ingest :8644 via kgateway-internal (shared rule), webhook ingest :8644 also from frigate + LAN, profile API :8642 same-namespace only; `fromEntities: host` keeps kubelet probes working
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
-  - `ops` — the batching brain: cron/Feishu/automation workload lives here (cluster read-only + home read-write MCP tiers); owns the Feishu adapter, credentials, home channel and new Feishu sessions
+  - `ops` — the batching brain: cron/Feishu/automation workload lives here (search, cluster read-only, and home read-write MCP tiers); owns the Feishu adapter, credentials, home channel and new Feishu sessions
   - `default` — fallback/scratch with no Feishu adapter; the retired `chat` profile was removed 2026-10 when the human interface moved to dedicated portals
   Model/provider config (`model.provider: custom` → agent gateway, `model.default: agent`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression`/`title_generation` → `omni`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. Requires 1Password `hermes-agent` field: `api_server_key_root` (>=16 chars)
 
@@ -226,8 +226,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **LLM**: single agentgateway OpenAI provider; `uncensored` for chat and `omni` for guarded auxiliary tasks
 - **MCP**: native search-tier connection through `/mcp/search` with the `mcp_search` bearer key
 - **State**: shared CNPG for app data and pgvector, app Dragonfly for session/rate-limit state, and the `open-webui` Ceph bucket for uploads and KB files; the data directory is cache-only
-- **KB sync**: `open-webui-oikb` stays at zero replicas until a Knowledge Base source is configured
-- **Egress**: agentgateway, oikb, CNPG, Dragonfly, Ceph RGW, OTLP collector, kube-dns, and world-except-private for RAG fetching
+- **Egress**: agentgateway, CNPG, Dragonfly, Ceph RGW, OTLP collector, kube-dns, and world-except-private for RAG fetching
 
 ### DSH Web
 
@@ -281,7 +280,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 
 ### MCP Servers (14 total)
 
-#### search (web/docs/news/codebase retrieval — open-webui, dsh-web)
+#### search (web/docs/news/codebase retrieval — hermes, open-webui, dsh-web)
 
 | Server    | Transport             | Notes                    |
 | --------- | --------------------- | ------------------------ |
@@ -351,7 +350,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 - AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`)
 - Delivery: Feishu custom group robot (`FEISHU_WEBHOOK_URL` from 1Password `feishu.newsbot_webhook`); HTML report at `news.noirprime.com` (SSO)
-- MCP server (:3333) registered as `trendradar` in the `search` group (gateway-filtered to query/analysis tools; consumed by open-webui and dsh-web)
+- MCP server (:3333) registered as `trendradar` in the `search` group (gateway-filtered to query/analysis tools; consumed by hermes, open-webui, and dsh-web)
 - Config fully in ConfigMap (`config.yaml` + `frequency_words.txt` + `ai_interests.txt`); output on 1Gi ceph-block PVC
 
 ## AI-Adjacent Services

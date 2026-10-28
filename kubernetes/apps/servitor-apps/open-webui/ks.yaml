@@ -28,25 +28,3 @@ spec:
     substitute:
       APP: *name
       APP_HOST: "chat.noirprime.com"
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: &name open-webui-oikb
-  annotations:
-    config.home-ops.io/managed: "true"
-  labels:
-    config.home-ops.io/deps: "infra"
-spec:
-  commonMetadata:
-    labels:
-      app.kubernetes.io/name: *name
-  targetNamespace: servitor-apps
-  path: "./kubernetes/apps/servitor-apps/open-webui/oikb"
-  dependsOn:
-    - name: open-webui
-      namespace: servitor-apps
-  postBuild:
-    substitute:
-      APP: *name

@@ -9,7 +9,7 @@ kind: MCPGroup
 metadata:
   name: search
 spec:
-  description: "Search tier. Web/docs/news/codebase retrieval: firecrawl, context7, trendradar, github (read-only PAT; the token is the boundary). Issued to open-webui and dsh-web."
+  description: "Search tier. Web/docs/news/codebase retrieval: firecrawl, context7, trendradar, github (read-only PAT; the token is the boundary). Issued to hermes, open-webui, and dsh-web."
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
 apiVersion: toolhive.stacklok.dev/v1beta1
