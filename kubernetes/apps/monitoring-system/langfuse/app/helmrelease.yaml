@@ -31,7 +31,7 @@ spec:
           app:
             image:
               repository: ghcr.io/langfuse/langfuse
-              tag: 4.71.0
+              tag: 4.72.0
             env: &env
               DATABASE_URL:
                 valueFrom:
@@ -85,7 +85,7 @@ spec:
           worker:
             image:
               repository: ghcr.io/langfuse/langfuse-worker
-              tag: 4.71.0
+              tag: 4.72.0
             env: *env
             envFrom: *envFrom
             resources:
