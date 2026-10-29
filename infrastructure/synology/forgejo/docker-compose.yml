@@ -59,7 +59,7 @@ services:
   # kernel lacks CPU CFS scheduler support and rejects NanoCPUs).
   forgejo-runner:
     # renovate: datasource=docker depName=code.forgejo.org/forgejo/runner
-    image: "code.forgejo.org/forgejo/runner:13.2.0"
+    image: "code.forgejo.org/forgejo/runner:13.2.1"
     container_name: "forgejo-runner"
     restart: "unless-stopped"
     working_dir: /data
