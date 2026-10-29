@@ -41,6 +41,24 @@ spec:
         # count:up0/count:up1 are empty whenever all targets are up and trip
         # RecordingRulesNoData by design
         kube-prometheus-general.rules: { enabled: false }
+        # Isolated warnings remain visible in dashboards; alert only on a
+        # sustained burst instead of suppressing notifications.
+        vm-health:
+          rules:
+            TooManyLogs:
+              spec:
+                expr: |-
+                  sum(increase(vm_log_messages_total{level="warn"}[5m]))
+                    without(app_version,location,is_printed) > 50
+        # Rollout churn can miss individual scrapes. Require a sustained
+        # failure ratio rather than alerting on any single miss.
+        vmagent:
+          rules:
+            TooManyScrapeErrors:
+              spec:
+                expr: |-
+                  sum by(instance)(increase(vm_promscrape_scrapes_failed_total[5m]))
+                    / sum by(instance)(increase(vm_promscrape_scrapes_total[5m])) > 0.05
       # etcd mixin rules (upstream monitoring-mixins); fetched by syncJob at
       # deploy time. kubeEtcd scraping stays off — etcd is scraped via the
       # dedicated ScrapeConfig (talos :2381, no in-cluster etcd pods).
