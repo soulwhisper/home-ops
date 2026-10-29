@@ -90,7 +90,7 @@ spec:
             envFrom: *envFrom
             resources:
               requests:
-                cpu: "2"
+                cpu: "1"
               limits:
                 memory: 4Gi
             securityContext: *securityContext

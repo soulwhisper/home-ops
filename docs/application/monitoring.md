@@ -252,7 +252,7 @@ LLM observability platform for tracing servitor (agent) interactions. One `app-t
 | Container | Image | Resources |
 |-----------|-------|-----------|
 | `app` | `ghcr.io/langfuse/langfuse` | 1 CPU request, 2Gi memory limit |
-| `worker` | `ghcr.io/langfuse/langfuse-worker` | 2 CPU request, 4Gi memory limit |
+| `worker` | `ghcr.io/langfuse/langfuse-worker` | 1 CPU request, 4Gi memory limit |
 
 ### Storage backends
 
