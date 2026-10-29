@@ -9,6 +9,40 @@ spec:
   chartRef:
     kind: OCIRepository
     name: robusta
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              group: apps
+              version: v1
+              kind: Deployment
+              name: robusta-operator
+            patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: robusta-operator
+              spec:
+                template:
+                  metadata:
+                    annotations:
+                      home-ops/checks-patch-rev: "14"
+                  spec:
+                    volumes:
+                      - name: holmes-checks-patch
+                        configMap:
+                          name: holmes-checks-patch
+                    containers:
+                      - name: operator
+                        volumeMounts:
+                          - name: holmes-checks-patch
+                            mountPath: /app/holmes_operator/client/holmes_api_client.py
+                            subPath: operator_api_client.py
+                            readOnly: true
+                          - name: holmes-checks-patch
+                            mountPath: /app/holmes_operator/handlers/healthcheck.py
+                            subPath: operator_healthcheck.py
+                            readOnly: true
 
   values:
     clusterName: main
@@ -61,9 +95,8 @@ spec:
       sentryDSN: ""
       extraEnvVarsSecrets:
         - robusta-holmes # OPENAI_API_BASE + OPENAI_API_KEY (ExternalSecret)
-      # LOCAL PATCH: mount a patched checks.py forcing two-phase check execution
-      # on the agent lane (response_format+tools incompatible). Keep the patch
-      # aligned with the deployed Holmes image (currently 0.45.x).
+      # Version-matched API, worker, and evidence patches bound check execution
+      # without changing interactive investigations or their guardrails.
       additionalVolumes:
         - name: holmes-checks-patch
           configMap:
@@ -73,10 +106,25 @@ spec:
           mountPath: /app/holmes/checks/checks.py
           subPath: checks.py
           readOnly: true
+        - name: holmes-checks-patch
+          mountPath: /app/holmes/checks/checks_api.py
+          subPath: checks_api.py
+          readOnly: true
+        - name: holmes-checks-patch
+          mountPath: /app/holmes/checks/home_ops_check_runtime.py
+          subPath: home_ops_check_runtime.py
+          readOnly: true
+        - name: holmes-checks-patch
+          mountPath: /app/holmes/checks/home_ops_check_worker.py
+          subPath: home_ops_check_worker.py
+          readOnly: true
+        - name: holmes-checks-patch
+          mountPath: /app/holmes/checks/home_ops_collectors.py
+          subPath: home_ops_collectors.py
+          readOnly: true
       podAnnotations:
-        # bump when holmes-checks-0.45.0.py changes: subPath mounts never
-        # propagate ConfigMap updates to running pods (coderabbit)
-        home-ops/checks-patch-rev: "13"
+        # subPath mounts require a rollout when any check patch changes.
+        home-ops/checks-patch-rev: "14"
         # the agentgateway lane key lives in the robusta-holmes Secret; without
         # this a key rotation leaves Holmes on the old key (401 every check)
         reloader.stakater.com/auto: "true"

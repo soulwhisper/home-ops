@@ -3,6 +3,10 @@
   "models": {
     "qwen3.8-27b": {
       "max_context_window": 65536,
+      "max_tokens": 8192,
+      "temperature": 1.0,
+      "top_p": 0.95,
+      "top_k": 20,
       "force_sampling": false,
       "qwen4_ple_ssd_offload": false,
       "deepseek_v41_engram_ssd_offload": false,
@@ -50,6 +54,10 @@
       "trust_remote_code": false
     },
     "minicpm-o-4.5": {
+      "max_tokens": 2048,
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
       "force_sampling": false,
       "qwen4_ple_ssd_offload": false,
       "deepseek_v41_engram_ssd_offload": false,
@@ -89,7 +97,8 @@
       "dflash_draft_sink_size": 0,
       "mtp_enabled": false,
       "vlm_mtp_enabled": false,
-      "is_pinned": true,
+      "ttl_seconds": 300,
+      "is_pinned": false,
       "is_default": false,
       "is_hidden": false,
       "is_favorite": false,
@@ -283,6 +292,10 @@
     },
     "ornith-1.5-35b-a3b": {
       "max_context_window": 65536,
+      "max_tokens": 4096,
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
       "force_sampling": false,
       "qwen4_ple_ssd_offload": false,
       "deepseek_v41_engram_ssd_offload": false,
@@ -322,7 +335,7 @@
       "dflash_draft_sink_size": 0,
       "mtp_enabled": false,
       "vlm_mtp_enabled": false,
-      "ttl_seconds": 1800,
+      "ttl_seconds": 900,
       "is_pinned": false,
       "is_default": false,
       "is_hidden": false,

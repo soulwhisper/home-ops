@@ -40,15 +40,15 @@
   "scheduler": {
     "decode_fairness": true,
     "prefill_priority": "context",
-    "max_concurrent_requests": 4,
+    "max_concurrent_requests": 2,
     "embedding_batch_size": 32,
     "chunked_prefill": true
   },
   "sampling": {
-    "top_k": 0,
+    "top_k": 20,
     "repetition_penalty": 1,
     "temperature": 1,
-    "max_tokens": 32768,
+    "max_tokens": 4096,
     "max_context_window": 32768,
     "max_context_window_policy": null,
     "top_p": 0.94999999999999996
