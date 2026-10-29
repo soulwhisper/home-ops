@@ -8,7 +8,7 @@ spec:
   groupRef:
     name: search
   # Gateway tool allowlist: networking-system/agentgateway/config/mcp/filters.yaml
-  # (search policy). Tracked against image v3.34.1 (28 tools enumerated)
+  # (search policy). Tracked against image v3.36.0 (28 tools enumerated)
   # — re-verify the allowlist on every version bump.
   # v3.x serves /mcp (and /health) directly from the node server — no
   # init/seed/rewrite machinery.
@@ -22,6 +22,8 @@ spec:
       value: "http://firecrawl-app.selfhosted-apps.svc.cluster.local:3002"
     - name: HTTP_STREAMABLE_SERVER
       value: "true"
+    - name: FIRECRAWL_MCP_ALLOWED_HOSTS
+      value: "mcp-mcp-firecrawl,mcp-mcp-firecrawl.servitor-apps.svc.cluster.local"
   transport: streamable-http
   mcpPort: 3000
   resources:
