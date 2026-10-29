@@ -277,7 +277,7 @@ Robusta (runner + embedded Holmes) receives a parallel fan-out of every alert fr
 
 Incident identity is source + alert name + scope (namespace/workload/node/container labels, Deployment pod hashes stripped), so a rollout's new pods and a rule-error storm across many rule groups (`AlertingRulesError` carries one series per group) share one ticket. An occurrence marker (instance fingerprint + firing/resolved + `starts_at`/`ends_at`) suppresses Alertmanager re-notifications, whose Robusta id, timestamp and enrichments change every time, while concurrent instances still resolve independently. Lookup uses the Forgejo issue-search index as a hint (verified against the leading marker), so known incidents cost one request; a miss (new incident or index lag) falls back to a full scan, so the index can never cause a duplicate. A new failure reopens a closed incident; replaying an old event does not undo a human close. Resolution never auto-closes a ticket, and an unmatched resolution does not create one.
 
-**Holmes investigation**: on create, and on reopen at most once per 6h, the consumer queues one Holmes `/api/chat` request (`HOLMES_URL`, off the delivery lock, 10 min timeout) and posts the answer as a ticket comment. Holmes 0.42 has no `/api/investigate`, so Robusta's `ask_holmes` action cannot be used. The queue is in memory; a restart loses pending investigations, never tickets.
+**Holmes investigation**: on create, and on reopen at most once per 6h, the consumer queues one Holmes `/api/chat` request (`HOLMES_URL`, off the delivery lock, 10 min timeout) and posts the answer as a ticket comment. The Holmes API has no `/api/investigate`, so Robusta's `ask_holmes` action cannot be used. The queue is in memory; a restart loses pending investigations, never tickets.
 
 **Delivery monitoring**: vmagent scrapes chaski's `:8081/metrics` (ServiceMonitor + CNP). `TicketDeliveryFailing` fires when more than three sends in 15m end `permanent` (consumer rejected the payload) or `retryable` (retries exhausted; the delivery was dropped); `TicketRelayMetricsAbsent` fires when the scrape itself is missing.
 
@@ -293,8 +293,32 @@ Holmes also runs on a schedule via `ScheduledHealthCheck` CRs. Results stay in C
 | `cert-expiry-watch` | daily | cert-manager certs expiring < 14d or not Ready |
 | `node-density-trend` | daily | per-node pod density and request saturation |
 | `alert-rule-quality-weekly` | weekly | alerting-loop and target health |
-| `resolved-alert-recheck-daily` | every 6h | absent(expression) or vector(0) healing checks for recently resolved alerts |
+| `resolved-alert-recheck-daily` | every 6h | single-sample `sum(absent(expression)) or vector(0)` healing checks for recently resolved alerts |
 | `backup-chain-daily` | daily | kopiur + CNPG backup runs and snapshot age |
+
+`backup-chain-daily` and `resolved-alert-recheck-daily` use the reserved query
+markers `home-ops:backup-chain` and `home-ops:resolved-alert-recheck`. Their
+read-only collectors evaluate the fixed questions without an LLM investigation.
+Backup collection covers every page and policy, retaining bounded counts and
+representative records. Rule rechecks preserve every matching rule identity;
+all expressions must be healed, and missing rules or unsupported datasources
+remain evaluation errors. Expressions and annotations are not echoed into
+generated advice. A measured unhealthy condition is `fail`; incomplete or
+failed collection is `error`, never a healthy fallback.
+
+Each API check runs in a fresh worker process group with one execution
+deadline, including model initialization and tool calls. Deadline or client
+disconnect cleanup terminates and reaps the worker and its tool descendants.
+Other scheduled checks retain the guarded AI/evidence path with a bounded
+HealthCheck-only tool-step budget; interactive RCA is unchanged. The operator
+does not replay execution POSTs, and UID/resource-version-protected status
+updates keep completed attempts terminal. The explicit rerun annotation starts
+a separate attempt rather than reviving a late result.
+
+After deployment, verify a clean fixed-check result and a timed-out worker,
+including the absence of surviving subprocesses and consistent child/parent CR
+status. Do not close an alert ticket until its raw condition, consumer
+resolution, and observation-window requirements are met.
 
 ## Alert routing
 
