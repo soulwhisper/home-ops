@@ -35,6 +35,11 @@ def _signal_group(pid, sig):
 
 async def _stop_group(process):
     _signal_group(process.pid, signal.SIGTERM)
+    try:
+        os.killpg(process.pid, 0)
+    except ProcessLookupError:
+        await process.wait()
+        return
     # Give HTTP clients a chance to close their sockets before SIGKILL. The
     # grace is cleanup-only; a result arriving here cannot become a verdict.
     await asyncio.sleep(CLEANUP_GRACE)
@@ -75,7 +80,7 @@ async def run_worker(payload, deadline, disconnected=None, command=None):
         read_fd = None
         env = dict(os.environ, HOME_OPS_CHECK_RESULT_FD=str(write_fd))
         spawn = asyncio.create_task(asyncio.create_subprocess_exec(
-            *(command or [sys.executable, "-m", "holmes.checks.home_ops_check_worker"]),
+            *(command or [sys.executable, "-m", "holmes.checks.check_worker"]),
             stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL, start_new_session=True,
             pass_fds=(write_fd,), env=env))

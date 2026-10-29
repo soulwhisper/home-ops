@@ -9,8 +9,8 @@ import time
 import unittest
 from unittest.mock import patch
 
-SOURCE = Path(__file__).resolve().parents[2] / "kubernetes/apps/monitoring-system/robusta/app/home_ops_collectors.py"
-SPEC = importlib.util.spec_from_file_location("home_ops_collectors", SOURCE)
+SOURCE = Path(__file__).resolve().parents[2] / "kubernetes/apps/monitoring-system/robusta/app/scripts/collectors.py"
+SPEC = importlib.util.spec_from_file_location("collectors", SOURCE)
 collectors = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(collectors)
 NOW = 1793250000.0

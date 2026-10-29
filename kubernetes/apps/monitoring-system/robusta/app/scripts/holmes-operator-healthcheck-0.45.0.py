@@ -30,6 +30,27 @@ def _execution(status):
     return next((c for c in status.get("conditions", []) if c.get("type") == "Execution"), None)
 
 
+def _validation_reason(exc):
+    details = []
+    for error in getattr(exc, "errors", lambda: [])():
+        location = "/".join(str(part) for part in error.get("loc", ()))
+        details.append(f"{location or 'spec'}:{error.get('type', 'invalid')}")
+    # Never include Pydantic input values: destination configs may hold keys.
+    return ";".join(details)[:500] or type(exc).__name__
+
+
+async def _retry_status(exc, attempt):
+    code = getattr(exc, "status", None)
+    if code == 404:
+        return False
+    if code == 409 and attempt < 4:
+        await asyncio.sleep(0.05 * (attempt + 1))
+        return True
+    # A retry can publish a cached verdict, but must not repeat POST.
+    raise kopf.TemporaryError(
+        f"StatusWriteError: {type(exc).__name__}", delay=2) from None
+
+
 async def _status_change(name, namespace, uid, transform):
     """Retry storage conflicts only; transform must never execute the check."""
     for attempt in range(5):
@@ -37,29 +58,29 @@ async def _status_change(name, namespace, uid, transform):
             resource = await asyncio.to_thread(
                 context.k8s_api.get_namespaced_custom_object,
                 **_GROUP, namespace=namespace, name=name, _request_timeout=(5, 10))
-            if resource["metadata"]["uid"] != uid:
-                return None
-            replacement = transform(resource)
-            if replacement is None:
-                return None
-            body = dict(resource, status=replacement)
-            # PUT replaces all status fields together. UID/resourceVersion from
-            # the fresh GET protect deletion/recreation and concurrent writers.
+        except Exception as exc:
+            if await _retry_status(exc, attempt):
+                continue
+            return None
+        if resource["metadata"]["uid"] != uid:
+            return None
+        # Transform/validation programming errors must retain their traceback.
+        replacement = transform(resource)
+        if replacement is None:
+            return None
+        body = dict(resource, status=replacement)
+        # PUT replaces all status fields together. UID/resourceVersion from
+        # the fresh GET protect deletion/recreation and concurrent writers.
+        try:
             await asyncio.to_thread(
                 context.k8s_api.replace_namespaced_custom_object_status,
                 **_GROUP, namespace=namespace, name=name, body=body,
                 _request_timeout=(5, 10))
-            return replacement
         except Exception as exc:
-            code = getattr(exc, "status", None)
-            if code == 404:
-                return None
-            if code == 409 and attempt < 4:
-                await asyncio.sleep(0.05 * (attempt + 1))
+            if await _retry_status(exc, attempt):
                 continue
-            # A retry can publish a cached verdict, but must not repeat POST.
-            raise kopf.TemporaryError(
-                f"StatusWriteError: {type(exc).__name__}", delay=2) from None
+            return None
+        return replacement
     return None
 
 
@@ -103,14 +124,15 @@ async def _publish(name, namespace, uid, started, terminal):
     _RESULTS.pop((uid, started), None)
 
 
-async def _run(name, namespace, uid, request_id, rerun=False):
+async def _run(name, namespace, uid, request_id, rerun=False, logger=None):
     began = time.monotonic()
     wall_started = time.time()
     started = _now()
     parsed = None
+    validation_reason = None
 
     def claim(resource):
-        nonlocal parsed
+        nonlocal parsed, validation_reason
         current = resource.get("status", {})
         owner = _execution(current)
         if owner and owner.get("message") == request_id:
@@ -128,8 +150,9 @@ async def _run(name, namespace, uid, request_id, rerun=False):
         # Invalid input still gets a single durable execution claim + failure.
         try:
             parsed = HealthCheckSpec(**resource.get("spec", {}))
-        except Exception:
+        except Exception as exc:
             parsed = None
+            validation_reason = _validation_reason(exc)
         return dict(phase="Running", startTime=started, conditions=[dict(
             type="Execution", status="True", reason="ExecutionClaimed",
             message=request_id, lastTransitionTime=started)])
@@ -145,7 +168,10 @@ async def _run(name, namespace, uid, request_id, rerun=False):
     _ACTIVE.add(key)
     try:
         if parsed is None:
-            terminal = _terminal(running, error="ValidationError: invalid HealthCheck spec")
+            if logger is not None:
+                logger.warning("HealthCheck spec validation failed: %s", validation_reason)
+            terminal = _terminal(
+                running, error=f"ValidationError: invalid HealthCheck spec ({validation_reason})")
         else:
             try:
                 result = await context.api_client.execute_check(
@@ -177,7 +203,7 @@ async def _run(name, namespace, uid, request_id, rerun=False):
 @kopf.on.create("holmesgpt.dev", "v1alpha1", "healthchecks")
 async def on_healthcheck_create(spec: Dict[str, Any], name: str, namespace: str,
                                 uid: str, logger: kopf.Logger, **kwargs: Any):
-    await _run(name, namespace, uid, f"create:{uid}")
+    await _run(name, namespace, uid, f"create:{uid}", logger=logger)
 
 
 @kopf.on.update("holmesgpt.dev", "v1alpha1", "healthchecks")
@@ -191,7 +217,7 @@ async def on_healthcheck_update(old: Dict[str, Any], new: Dict[str, Any], name: 
         # writes change the resourceVersion before the handler is retried.
         first_attempt = kwargs.get("started")
         token = first_attempt.isoformat() if first_attempt is not None else metadata["resourceVersion"]
-        await _run(name, namespace, metadata["uid"], f"rerun:{token}", rerun=True)
+        await _run(name, namespace, metadata["uid"], f"rerun:{token}", rerun=True, logger=logger)
 
 
 @kopf.on.resume("holmesgpt.dev", "v1alpha1", "healthchecks")

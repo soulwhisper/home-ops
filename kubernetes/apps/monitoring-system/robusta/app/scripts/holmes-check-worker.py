@@ -10,19 +10,20 @@ import time
 from pathlib import Path
 
 
-def _notify(request, result, config):
-    # Preserve the pinned API's supported Slack destination and notification
-    # shape. Delivery is part of the same worker budget, not a detached task.
+def _notify(request, result, cluster_name):
+    # Preserve the pinned delivery destinations. Delivery is part of the same
+    # worker budget, not a detached task.
     if result["status"] != "fail" or request["mode"] != "alert":
         return []
     from holmes.core.issue import Issue, IssueStatus
     from holmes.core.tool_calling_llm import LLMResult
+    from holmes.plugins.destinations.pagerduty.plugin import PagerDutyDestination
     from holmes.plugins.destinations.slack.plugin import SlackDestination
 
     name = request.get("name") or "api-check"
     issue = Issue(
         id=f"healthcheck-{name}-{int(time.time())}", name=f"Health Check Failed: {name}",
-        source_instance_id=config.cluster_name or "unknown", source_type="HealthCheck",
+        source_instance_id=cluster_name or "unknown", source_type="HealthCheck",
         presentation_status=IssueStatus.OPEN,
         presentation_key_metadata=f"*Check:* `{name}`\n*Query:* {request['query']}",
         show_status_in_title=False)
@@ -30,47 +31,57 @@ def _notify(request, result, config):
                            tool_calls=[], messages=[])
     notifications = []
     for destination in request.get("destinations", []):
-        if destination.get("type", "").lower() != "slack":
-            continue
+        kind = destination.get("type", "").lower()
         options = destination.get("config", {})
-        token = options.get("token") or os.environ.get("SLACK_TOKEN")
-        channel = options.get("channel") or os.environ.get("SLACK_CHANNEL")
-        notification = dict(type="slack", status="skipped")
-        if not token or not channel:
-            notification["error"] = "SLACK_TOKEN or SLACK_CHANNEL not configured"
-        else:
-            notification["channel"] = channel
-            try:
-                SlackDestination(token=token, channel=channel).send_issue(issue, llm_result)
-                notification["status"] = "sent"
-            except Exception as exc:
-                notification.update(status="failed", error=f"{type(exc).__name__}: notification delivery failed")
+        notification = dict(type=kind or "unknown", status="skipped")
+        try:
+            if kind == "slack":
+                token = options.get("token") or os.environ.get("SLACK_TOKEN")
+                channel = options.get("channel") or os.environ.get("SLACK_CHANNEL")
+                if not token or not channel:
+                    notification["error"] = "SLACK_TOKEN or SLACK_CHANNEL not configured"
+                else:
+                    notification["channel"] = channel
+                    SlackDestination(token=token, channel=channel).send_issue(issue, llm_result)
+                    notification["status"] = "sent"
+            elif kind == "pagerduty":
+                integration_key = (options.get("integration_key")
+                                   or os.environ.get("PAGERDUTY_INTEGRATION_KEY"))
+                if not integration_key:
+                    notification["error"] = "PagerDuty integration_key not configured"
+                else:
+                    PagerDutyDestination(integration_key).send_issue(issue, llm_result)
+                    notification["status"] = "sent"
+            else:
+                notification["error"] = "unsupported notification destination"
+        except Exception as exc:
+            notification.update(status="failed", error=f"{type(exc).__name__}: notification delivery failed")
         notifications.append(notification)
     return notifications
 
 
 def execute(payload):
     request = payload["request"]
-    from holmes.checks.home_ops_collectors import collect
+    from holmes.checks.collectors import collect
 
     result = collect(request["query"], payload["deadline"])
     if result is not None and (result["status"] != "fail" or request["mode"] != "alert"
                                or not request.get("destinations")):
         return result
 
-    # Exact upstream server initialization sources: the actual Config path
-    # (including relative tool/skill resolution) or the complete env loader.
-    # Model lists/provider settings are loaded by the normal registry and DAL.
-    from holmes.config import Config
-    config_path = payload.get("config_file")
-    if config_path is not None and not Path(config_path).is_file():
-        raise FileNotFoundError("Health check configuration source is unavailable")
-    config = (Config.load_from_file(Path(config_path)) if config_path is not None
-              else Config.load_from_env())
-    # Only this isolated HealthCheck config is bounded; interactive RCA keeps
-    # the server's independently configured tool-step allowance.
-    config.max_steps = min(config.max_steps, 12)
+    # Only generic model-backed investigations need the complete configuration.
+    # Fixed collector failures retain their verdict and notify with the parent's
+    # cluster name, even when model configuration is unavailable.
     if result is None:
+        from holmes.config import Config
+        config_path = payload.get("config_file")
+        if config_path is not None and not Path(config_path).is_file():
+            raise FileNotFoundError("Health check configuration source is unavailable")
+        config = (Config.load_from_file(Path(config_path)) if config_path is not None
+                  else Config.load_from_env())
+        # Only this isolated HealthCheck config is bounded; interactive RCA keeps
+        # the server's independently configured tool-step allowance.
+        config.max_steps = min(config.max_steps, 12)
         from holmes.checks.checks import execute_check
         from holmes.checks.models import Check, CheckMode
         from holmes.core.tools import SERVER_TOOLSET_TAGS, PrerequisiteCacheMode
@@ -105,7 +116,7 @@ def execute(payload):
         # within the parent's absolute budget, including any blocked DAL write.
         from holmes.core.usage_recorder import _RECORDER_EXECUTOR
         _RECORDER_EXECUTOR.shutdown(wait=True)
-    result["notifications"] = _notify(request, result, config)
+    result["notifications"] = _notify(request, result, payload.get("cluster_name"))
     return result
 
 

@@ -111,16 +111,16 @@ spec:
           subPath: checks_api.py
           readOnly: true
         - name: holmes-checks-patch
-          mountPath: /app/holmes/checks/home_ops_check_runtime.py
-          subPath: home_ops_check_runtime.py
+          mountPath: /app/holmes/checks/check_runtime.py
+          subPath: check_runtime.py
           readOnly: true
         - name: holmes-checks-patch
-          mountPath: /app/holmes/checks/home_ops_check_worker.py
-          subPath: home_ops_check_worker.py
+          mountPath: /app/holmes/checks/check_worker.py
+          subPath: check_worker.py
           readOnly: true
         - name: holmes-checks-patch
-          mountPath: /app/holmes/checks/home_ops_collectors.py
-          subPath: home_ops_collectors.py
+          mountPath: /app/holmes/checks/collectors.py
+          subPath: collectors.py
           readOnly: true
       podAnnotations:
         # subPath mounts require a rollout when any check patch changes.

@@ -2,7 +2,7 @@
 
 The injectable reader implements kube_items(path, deadline, params=None) and
 prom_query(expression, deadline), rules(name, group, deadline). The production
-reader uses service-account TLS and GET only. CLI: python home_ops_collectors.py
+reader uses service-account TLS and GET only. CLI: python collectors.py
 home-ops:backup-chain --timeout 300 (or home-ops:resolved-alert-recheck).
 """
 

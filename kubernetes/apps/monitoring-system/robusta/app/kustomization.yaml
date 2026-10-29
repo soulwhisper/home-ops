@@ -19,10 +19,10 @@ configMapGenerator:
     options:
       disableNameSuffixHash: true
     files:
-      - checks.py=holmes-checks-0.45.0.py
-      - checks_api.py=holmes-checks-api-0.45.0.py
-      - home_ops_check_runtime.py=holmes-home-ops-check-runtime.py
-      - home_ops_check_worker.py=holmes-home-ops-check-worker.py
-      - home_ops_collectors.py=home_ops_collectors.py
-      - operator_api_client.py=holmes-operator-api-client-0.45.0.py
-      - operator_healthcheck.py=holmes-operator-healthcheck-0.45.0.py
+      - checks.py=scripts/holmes-checks-0.45.0.py
+      - checks_api.py=scripts/holmes-checks-api-0.45.0.py
+      - check_runtime.py=scripts/holmes-check-runtime.py
+      - check_worker.py=scripts/holmes-check-worker.py
+      - collectors.py=scripts/collectors.py
+      - operator_api_client.py=scripts/holmes-operator-api-client-0.45.0.py
+      - operator_healthcheck.py=scripts/holmes-operator-healthcheck-0.45.0.py

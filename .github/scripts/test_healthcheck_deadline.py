@@ -20,7 +20,7 @@ import unittest
 from unittest.mock import AsyncMock, patch
 
 ROOT = Path(__file__).resolve().parents[2]
-PATCHES = ROOT / "kubernetes/apps/monitoring-system/robusta/app"
+PATCHES = ROOT / "kubernetes/apps/monitoring-system/robusta/app/scripts"
 
 
 def load(name, filename):
@@ -94,7 +94,7 @@ class MemoryAPI:
 
 class RuntimeTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        self.runtime = load("deadline_runtime", "holmes-home-ops-check-runtime.py")
+        self.runtime = load("deadline_runtime", "holmes-check-runtime.py")
         self.temp = tempfile.TemporaryDirectory()
         self.pids = Path(self.temp.name) / "pids.json"
 
@@ -176,6 +176,13 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
             if not task.done():
                 task.cancel()
                 await asyncio.gather(task, return_exceptions=True)
+    async def test_exited_group_skips_cleanup_grace(self):
+        process = await asyncio.create_subprocess_exec(
+            sys.executable, "-c", "pass", start_new_session=True)
+        await process.wait()
+        with patch.object(self.runtime.asyncio, "sleep", new=AsyncMock()) as sleep:
+            await self.runtime._stop_group(process)
+        sleep.assert_not_awaited()
 
 
 class ClientTests(unittest.IsolatedAsyncioTestCase):
@@ -386,12 +393,35 @@ class HandlerTests(unittest.IsolatedAsyncioTestCase):
         await self.create()
         self.client.execute_check.assert_not_awaited()
         self.assert_terminal_consistent("Failed", "Failed")
+    async def test_transform_programming_error_is_not_retried(self):
+        def broken(resource):
+            raise RuntimeError("transform bug")
+        with self.assertRaisesRegex(RuntimeError, "transform bug"):
+            await self.handler._status_change("check", "ns", "uid", broken)
+        self.assertEqual(self.api.writes, [])
+
+    async def test_validation_failure_has_field_detail_without_input_values(self):
+        class InvalidSpec(Exception):
+            def errors(self):
+                return [{"loc": ("destinations", 0, "config", "integration_key"),
+                         "type": "missing", "input": "DO-NOT-LOG"}]
+        def invalid(**kwargs):
+            raise InvalidSpec()
+        self.handler.HealthCheckSpec = invalid
+        self.api.resource["spec"] = {}
+        logs = []
+        logger = types.SimpleNamespace(warning=lambda *args: logs.append(args))
+        await self.handler.on_healthcheck_create({}, "check", "ns", "uid", logger)
+        status = self.assert_terminal_consistent("Failed", "Failed")
+        self.assertIn("destinations/0/config/integration_key:missing", status["error"])
+        self.assertNotIn("DO-NOT-LOG", status["error"])
+        self.assertNotIn("DO-NOT-LOG", str(logs))
 
 
 class WorkerTests(unittest.TestCase):
     def setUp(self):
-        self.worker = load("deadline_worker", "holmes-home-ops-check-worker.py")
-        self.collector = load("worker_real_collectors", "home_ops_collectors.py")
+        self.worker = load("deadline_worker", "holmes-check-worker.py")
+        self.collector = load("worker_real_collectors", "collectors.py")
         self.payload = dict(request=dict(query="question", timeout=30, mode="monitor",
                                          model="configured-model", destinations=[]),
                             deadline=1234.0, config_file=None)
@@ -406,7 +436,7 @@ class WorkerTests(unittest.TestCase):
                 raise AssertionError("fixed checks must not initialize the model")
         config.Config = ForbiddenConfig
         reader = types.SimpleNamespace(prom_query=lambda expression, deadline: [])
-        with patch.dict(sys.modules, {"holmes.checks.home_ops_collectors": self.collector,
+        with patch.dict(sys.modules, {"holmes.checks.collectors": self.collector,
                                      "holmes.config": config}), patch.object(self.collector, "Reader", return_value=reader):
             result = self.worker.execute(self.payload)
         self.assertEqual(result["status"], "pass")
@@ -414,6 +444,63 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(category["candidate_count"], 0)
         self.assertTrue(category["coverage_complete"])
 
+    def test_fixed_failure_preserves_verdict_and_dispatches_pagerduty_without_config(self):
+        candidate = {"metric": {"alertname": "Alert", "alertgroup": "group"}, "value": [0, "1"]}
+        zero = {"metric": {}, "value": [0, "0"]}
+        def prom_query(expression, deadline):
+            if expression == self.collector.CANDIDATES:
+                return [candidate]
+            if expression == "sum(absent(vector(1))) or vector(0)":
+                return [zero]
+            raise AssertionError("unexpected expression")
+        reader = types.SimpleNamespace(
+            prom_query=prom_query,
+            rules=lambda name, group, deadline: [{"name": group, "type": "prometheus", "rules": [
+                {"name": name, "type": "alerting", "query": "vector(1)"}]}])
+        issues, deliveries = [], []
+        def module(name, **attrs):
+            result = types.ModuleType(name)
+            result.__dict__.update(attrs)
+            return result
+        class Issue:
+            def __init__(self, **kwargs):
+                issues.append(kwargs)
+        class LLMResult:
+            def __init__(self, **kwargs):
+                pass
+        class PagerDuty:
+            def __init__(self, integration_key):
+                self.integration_key = integration_key
+            def send_issue(self, issue, result):
+                deliveries.append(self.integration_key)
+        class ForbiddenConfig:
+            @classmethod
+            def load_from_env(cls):
+                raise AssertionError("fixed failure must not load model config")
+            @classmethod
+            def load_from_file(cls, path):
+                raise AssertionError("fixed failure must not load model config")
+        modules = {
+            "holmes.checks.collectors": self.collector,
+            "holmes.config": module("holmes.config", Config=ForbiddenConfig),
+            "holmes.core.issue": module("holmes.core.issue", Issue=Issue,
+                                       IssueStatus=types.SimpleNamespace(OPEN="open")),
+            "holmes.core.tool_calling_llm": module("holmes.core.tool_calling_llm", LLMResult=LLMResult),
+            "holmes.plugins.destinations.pagerduty.plugin": module(
+                "holmes.plugins.destinations.pagerduty.plugin", PagerDutyDestination=PagerDuty),
+            "holmes.plugins.destinations.slack.plugin": module(
+                "holmes.plugins.destinations.slack.plugin", SlackDestination=object),
+        }
+        self.payload["request"].update(
+            query=self.collector.RESOLVED, mode="alert",
+            destinations=[{"type": "pagerduty", "config": {"integration_key": "integration-key"}}])
+        self.payload.update(config_file="/unreadable/config.yaml", cluster_name="main")
+        with patch.dict(sys.modules, modules), patch.object(self.collector, "Reader", return_value=reader):
+            result = self.worker.execute(self.payload)
+        self.assertEqual(result["status"], "fail")
+        self.assertEqual(result["notifications"], [{"type": "pagerduty", "status": "sent"}])
+        self.assertEqual(deliveries, ["integration-key"])
+        self.assertEqual(issues[0]["source_instance_id"], "main")
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ collection/investigation, compaction, verdict, usage recording and notification.
 """
 
 import asyncio
+import logging
 import time
 from typing import Optional
 
@@ -14,7 +15,7 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel, Field
 
 from holmes.checks.models import CheckMode, CheckStatus
-from holmes.checks.home_ops_check_runtime import error_result, run_worker
+from holmes.checks.check_runtime import error_result, run_worker
 from holmes.config import Config
 
 checks_app = FastAPI()
@@ -68,12 +69,14 @@ async def execute_health_check(request: CheckExecutionRequest,
     source = getattr(_CONFIG, "_config_file_path", None)
     payload = {"request": request.model_dump(mode="json"),
                "config_file": str(source) if source is not None else None,
+               "cluster_name": getattr(_CONFIG, "cluster_name", None),
                "deadline": deadline}
     try:
         result = await run_worker(payload, deadline, http_request.is_disconnected)
     except asyncio.CancelledError:
         raise
     except Exception as exc:
+        logging.getLogger(__name__).exception("Health check worker execution failed")
         result = error_result(type(exc).__name__)
     result["duration"] = time.monotonic() - started
     return CheckExecutionResponse(**result)
