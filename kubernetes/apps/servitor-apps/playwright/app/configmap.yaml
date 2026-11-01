@@ -1,0 +1,53 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: playwright-nginx
+data:
+  nginx.conf: |
+    worker_processes 1;
+    pid /tmp/nginx.pid;
+    error_log /tmp/nginx-error.log;
+
+    events {
+      worker_connections 64;
+    }
+
+    http {
+      access_log off;
+      server_tokens off;
+      client_body_temp_path /tmp/client_body;
+      proxy_temp_path /tmp/proxy;
+      fastcgi_temp_path /tmp/fastcgi;
+      uwsgi_temp_path /tmp/uwsgi;
+      scgi_temp_path /tmp/scgi;
+
+      map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
+      }
+
+      server {
+        listen 9222;
+
+        location / {
+          proxy_pass http://127.0.0.1:9223;
+          proxy_http_version 1.1;
+          proxy_set_header Host localhost:9223;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+          proxy_set_header Accept-Encoding "";
+          # DevTools advertises absolute ws:// URLs in its JSON responses.
+          # Rewrite the loopback listener to the Service endpoint used by MCP.
+          sub_filter_types application/json;
+          sub_filter_once off;
+          sub_filter '127.0.0.1:9223' 'playwright:9222';
+          sub_filter 'localhost:9223' 'playwright:9222';
+          sub_filter '[::1]:9223' 'playwright:9222';
+          proxy_buffering off;
+          proxy_read_timeout 3600s;
+          proxy_send_timeout 3600s;
+        }
+      }
+    }

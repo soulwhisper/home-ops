@@ -1,5 +1,5 @@
 # AI Infrastructure Summary
-Last updated: 2026-10-28
+Last updated: 2026-11-01
 
 Source: Flux manifests in `kubernetes/apps/`.
 
@@ -17,7 +17,7 @@ flowchart TB
 
     subgraph Gateway["Agent Gateway"]
         AG-LLM["LLM Routing<br/>header-based: x-model"]
-        AG-MCP["MCP Routing<br/>4 VirtualMCP tiers"]
+        AG-MCP["MCP Routing<br/>6 VirtualMCP tiers"]
     end
 
     subgraph LLM["LLM Providers"]
@@ -30,6 +30,8 @@ flowchart TB
         VMCP-CLUSTER["cluster<br/>(6 servers: monitoring/k8s)"]
         VMCP-HOME["home<br/>(2 servers: smart home/memory)"]
         VMCP-AGENT["agent<br/>(2 servers: forgejo + incident memory)"]
+        VMCP-BROWSER["browser<br/>(1 server: Playwright)"]
+        VMCP-GITHUBPR["github-pr<br/>(1 server: branch/commit/PR)"]
     end
 
     subgraph Obs["Observability"]
@@ -43,6 +45,8 @@ flowchart TB
     AG-MCP --> VMCP-CLUSTER
     AG-MCP --> VMCP-HOME
     AG-MCP --> VMCP-AGENT
+    AG-MCP --> VMCP-BROWSER
+    AG-MCP --> VMCP-GITHUBPR
     Tavern --> External
     DSHW --> External
     Clients --> Obs
@@ -108,7 +112,7 @@ The gateway API surface is exposed to the intranet via `kgateway-internal` (10.1
 - `/v1/chat/completions` — LLM lanes (strict API key; promptGuard on all but `uncensored`)
 - `/v1/models/<model>` — per-model direct-response discovery on the model's own route, authorized by that route's credential
 - `/v1/embeddings`, `/v1/rerank`, `/v1/audio/speech`, `/v1/audio/transcriptions` — media lanes via LLM-pipeline backends (strict API key)
-- `/mcp/search`, `/mcp/cluster`, `/mcp/home`, `/mcp/agent` — tiered MCP routing (per-tier API key; mcp-guardrails ExtMCP on the search + agent tiers, FailClosed)
+- `/mcp/search`, `/mcp/cluster`, `/mcp/home`, `/mcp/agent`, `/mcp/browser`, `/mcp/github-pr` — tiered MCP routing (per-tier API key; mcp-guardrails ExtMCP on the search + agent + browser + github-pr tiers, FailClosed)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)
 
 TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirprime.com`); external-dns auto-creates the AdGuardHome record. Machine clients authenticate with agentgateway API keys — no SSO extAuth on API paths. Reachable from trusted VLANs (10/100/200); IoT VLAN 210 is ACL-blocked from RFC1918.
@@ -125,7 +129,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); queryable via the `search` MCP tier |
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | dsh-tavern           | `uncensored`      | Qwen3.8-27B        | RP portal (dsh-tavern image); model/key UI-configured on PVC |
-| dsh-web              | `agent`/`omni`    | Ornith-1.5 / MiniCPM-o | Agent workbench (servitor-apps); LLM lanes + search tier MCP (`mcp_search` key, `/mcp/search`) |
+| dsh-web              | `agent`/`omni`    | Ornith-1.5 / MiniCPM-o | Agent workbench (servitor-apps); LLM lanes + search/cluster/home/browser/github-pr MCP tiers |
 | open-webui           | `uncensored`/`omni` | Qwen3.8-27B / MiniCPM-o | Human chat portal; search-tier MCP and OTEL traces |
 
 Both DSH apps also expose the optional `kimi` provider (`https://api.moonshot.ai/v1`, model `kimi-k3.1-pro`). It is a direct external provider, not an agentgateway lane, and does not override the default model.
@@ -147,6 +151,8 @@ the canonical `/mcp` upstream):
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
 | `/mcp/home`    | `vmcp-home`   | home-assistant, hindsight-home bank                           | `mcp_home`                     | hermes, dsh-web                      |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | hermes, external operator agents |
+| `/mcp/browser` | `vmcp-browser`| playwright (Chromium via pod-local CDP proxy)                 | `mcp_browser`                  | dsh-web                            |
+| `/mcp/github-pr` | `vmcp-github-pr` | github-pr (branch/commit/create PR, no merge)              | `mcp_github_pr`                | dsh-web                            |
 
 A key minted for one group is invalid on every other route — this is what
 scopes the search consumer to search and keeps chat-tier consumers out of incident
@@ -167,21 +173,23 @@ This requires the vmcp **optimizer to stay off**: it masks real tool names
 behind `find_tool`/`call_tool` meta-tools that gateway authorization cannot
 see through (removed 2026-10; also dropped the vmcp embeddings dependency).
 
-The **search and agent backends only** carry the mcp-guardrails ExtMCP sidecar
+The **search, agent, browser and github-pr backends** carry the mcp-guardrails ExtMCP sidecar
 (agentgateway `mcp.guardrails`): `tools/call` is scanned request+response,
-`tools/list` skips the response scan on both tiers (the catalog is
+`tools/list` skips the response scan on all four tiers (the catalog is
 operator-authored config, not untrusted content), while `prompts/get` /
 `resources/read` stay response-only;
-`failureMode: FailClosed` (the sidecar being down disables those two tiers
+`failureMode: FailClosed` (the sidecar being down disables those four tiers
 rather than passing them unguarded). Scope decision (2026-10-20): search is
 the tier where untrusted web content reaches an unguarded lane (dsh-tavern /
 any `uncensored`-lane consumer); the agent tier combines external operators with hermes;
 hermes rides the guarded `agent` LLM lane, and the ExtMCP sidecar additionally scans MCP
-tool content because forgejo ticket bodies carry alert/log-derived (untrusted) strings. cluster/home consumers (hermes)
-ride the guarded `agent` LLM lane — cluster adds CEL allowlists and
-token/SA boundaries, home is RW-by-design behind the HA token — so the
-sidecar there was duplication, and its FailClosed posture made one sidecar
-an outage for all of MCP.
+tool content because forgejo ticket bodies carry alert/log-derived (untrusted) strings.
+Browser adds untrusted page snapshots and navigation results, while github-pr adds
+untrusted repository content to the same request+response scanning posture.
+cluster/home consumers (hermes) ride the guarded `agent` LLM lane — cluster adds CEL allowlists and
+token/SA boundaries, home is RW-by-design behind the HA token — so those two tiers
+do not carry the sidecar. They still require per-route API keys and retain their
+CEL/RBAC/token boundaries; no MCP route is unauthenticated.
 Response scanning uses four balanced windows (11KiB
 by default) with a 3.5s scanner deadline and a 15s Service-scoped ExtMCP
 callout deadline; readiness completes a full-size warmup before traffic.
@@ -240,7 +248,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
 - **Ingress**: `dsh.noirprime.com` via kgateway-internal
 - **State**: kopiur-backed PVC `dsh-web` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs` and `/backups` share the `dsh-web-cache` `ceph-cache` PVC; `/tmp` remains emptyDir
-- **MCP/Skills**: the `dsh-web-mcp` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster and home tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/home` with `mcp_search`, `mcp_cluster`, `mcp_home`, never in Git). Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
+- **MCP/Skills**: the `dsh-web` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster, home, browser and github-pr tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/home`, `/mcp/browser`, `/mcp/github-pr` with `mcp_search`, `mcp_cluster`, `mcp_home`, `mcp_browser`, `mcp_github_pr`, never in Git). Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
 - **LLM/MCP**: UI-selectable agentgateway, DeepSeek and Kimi providers; MCP uses the guarded tiers. No default model is pinned
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (`/v1/*` + `/mcp/*`), world-except-private :443 for direct DeepSeek/Kimi LLM calls and the user-driven plugin market, kube-dns
 
@@ -274,17 +282,17 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 ### ToolHive
 
 - **Operator**: namespace-scoped RBAC
-- **4 Virtual MCP Servers** (search / cluster / home / agent) with:
+- **6 Virtual MCP Servers** (search / cluster / home / agent / browser / github-pr) with:
   - Circuit breaker (3 failures → 30s timeout)
   - OTEL telemetry (5% sampling)
   - **No optimizer** (removed 2026-10): it hid real tool names behind
     `find_tool`/`call_tool` meta-tools, blocking gateway-level tool
     filtering; its removal also dropped the vmcp embeddings dependency
   - Daily restarter CronJob caps the runner's ~9Mi/h streamable-http leak
-    across all four groups (homelab-tickets#59)
+    across all six groups (homelab-tickets#59)
 - **Ingress restricted**: only agentgateway-proxy (MCP protocol, tiered `/mcp/*`) and vmagent (metrics scrape) can connect; chat frontends reach tools through the gateway, never directly
 
-### MCP Servers (14 total)
+### MCP Servers (16 total)
 
 #### search (web/docs/news/codebase retrieval — hermes, open-webui, dsh-web)
 
@@ -330,6 +338,18 @@ of its group until the filter was dropped. Permission filtering now lives at
 the gateway where needed (see filters.yaml); toolhive `MCPToolConfig` is
 kept ONLY for the hindsight banks' description overrides. No draftbox or
 broad user PAT was provisioned.
+
+#### browser (dsh-web only)
+
+| Server     | Transport             | Notes                                       |
+| ---------- | --------------------- | ------------------------------------------- |
+| playwright | Streamable HTTP :8931 | Connects over CDP to the separate `playwright` Chromium workload on :9222; public web egress only, no private/cluster network access |
+
+#### github-pr (dsh-web only)
+
+| Server    | Transport     | Notes                                                                  |
+| --------- | ------------- | ---------------------------------------------------------------------- |
+| github-pr | HTTP :8082    | Dedicated repository-scoped credential; branch/commit/create-PR tools only, no merge |
 
 #### Obsidian facts workflow
 
@@ -474,7 +494,7 @@ items:
 /v1/embeddings /v1/rerank /v1/audio/speech /v1/audio/transcriptions  (media: alias ─► override ─► folder id; audio: direct)
 /v1/models/<model>  (same route and credential as the named model; single-object direct response)
 
-/mcp/search /mcp/cluster /mcp/home /mcp/agent  (per-tier key; guardrails ExtMCP on search+agent, FailClosed) ── every MCP client
+/mcp/search /mcp/cluster /mcp/home /mcp/agent /mcp/browser /mcp/github-pr  (per-tier key; guardrails ExtMCP on search+agent+browser+github-pr, FailClosed) ── every MCP client
 ```
 
 Agentgateway-managed routing remains internal and centralized for auth, routing, guardrails, and observability. UI-selected external providers (DeepSeek and Kimi) are explicit exceptions for their direct LLM calls; MCP still goes through the gateway.

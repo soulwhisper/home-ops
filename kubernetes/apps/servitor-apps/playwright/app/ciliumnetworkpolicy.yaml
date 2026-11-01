@@ -1,0 +1,47 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: playwright
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/name": playwright
+  ingress:
+    # Only the ToolHive backend and proxy for this MCP may drive CDP.
+    - fromEndpoints:
+        - matchLabels:
+            "toolhive-name": mcp-playwright
+            "k8s:io.kubernetes.pod.namespace": servitor-apps
+      toPorts:
+        - ports:
+            - { port: "9222", protocol: TCP }
+    - fromEntities:
+        - host # kubelet probes
+  egress:
+    # Browser navigation is restricted to public HTTP(S); private, cluster,
+    # link-local and carrier-grade NAT addresses stay unreachable.
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+            - 169.254.0.0/16
+            - 100.64.0.0/10
+      toPorts:
+        - ports:
+            - { port: "80", protocol: TCP }
+            - { port: "443", protocol: TCP }
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - { port: "53", protocol: TCP }
+            - { port: "53", protocol: UDP }
+          rules:
+            dns:
+              - matchPattern: "*"

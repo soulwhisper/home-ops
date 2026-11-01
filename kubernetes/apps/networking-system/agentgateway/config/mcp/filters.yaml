@@ -110,3 +110,47 @@ spec:
             - |
               mcp.tool.name.matches('^mcp-forgejo_(list_repo_issues|get_issue_by_index|list_issue_comments|get_issue_comment|create_issue_comment|edit_issue_comment|issue_state_change|search_issues|list_repo_labels|add_issue_labels|remove_issue_labels|update_issue)$')
               || mcp.tool.name.startsWith('mcp-hindsight-ops_')
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-browser-filter
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-browser
+  backend:
+    mcp:
+      authorization:
+        action: Allow
+        policy:
+          matchExpressions:
+            # This group contains only Playwright browser tools. SSRF and
+            # private-network access are constrained by the browser CNP.
+            # browser_run_code_unsafe executes host-side code in the MCP pod,
+            # outside the browser sandbox and its network boundary.
+            - |
+              mcp.tool.name.startsWith('mcp-playwright_browser_')
+              && mcp.tool.name != 'mcp-playwright_browser_run_code_unsafe'
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-github-pr-filter
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-github-pr
+  backend:
+    mcp:
+      authorization:
+        action: Allow
+        policy:
+          matchExpressions:
+            # Branch/commit/PR only. merge_pull_request and every other tool
+            # are denied both here and by the server's GITHUB_TOOLS allowlist.
+            - mcp.tool.name.matches('^mcp-github-pr_(get_file_contents|create_branch|create_or_update_file|push_files|get_commit|list_commits|pull_request_read|list_pull_requests|search_pull_requests|create_pull_request)$')
