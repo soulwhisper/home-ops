@@ -67,7 +67,7 @@ spec:
             - name: kubectl
               # registry.k8s.io/kubectl is distroless (no sh); this job needs a
               # shell for its retry loop.
-              image: alpine/k8s:1.37.1
+              image: alpine/k8s:1.37.2
               resources:
                 requests:
                   cpu: 5m
