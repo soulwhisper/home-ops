@@ -138,8 +138,8 @@ All `omni` consumers (extractors + hermes aux) ride the **guarded**
 `/v1` route for that model; their prompts carry scraped web content, so a low rate of
 promptGuard false-positive rejections (403) is expected and watched — see
 the TODO table. Bare `jailbreak`/`越狱` are allowed as topical terms;
-structured role-hijacking and mode-switch phrases remain rejected on both
-`agent` and `omni`.
+direct self/model instructions and structured role-hijacking or mode-switch
+phrases remain rejected on both `agent` and `omni`.
 
 ### MCP Backend — tiered, guarded, no open lane
 
@@ -346,7 +346,7 @@ broad user PAT was provisioned.
 
 | Server     | Transport             | Notes                                       |
 | ---------- | --------------------- | ------------------------------------------- |
-| playwright | Streamable HTTP :8931 | Connects over CDP to the separate `playwright` Chromium workload on :9222; public web egress only, no private/cluster network access |
+| playwright | Streamable HTTP :8931 | Connects over CDP to the separate `playwright` Chromium workload on :9222; renderer HTTP(S) is forced through a loopback-only Squid that denies loopback/private/CDP destinations while CDP control stays on a separate nginx channel |
 
 #### github-pr (dsh-web only)
 

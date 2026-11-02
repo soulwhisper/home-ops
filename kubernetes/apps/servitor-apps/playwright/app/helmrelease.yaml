@@ -14,6 +14,7 @@ spec:
   values:
     defaultPodOptions:
       automountServiceAccountToken: false
+      hostUsers: false
     controllers:
       *name :
         pod:
@@ -23,19 +24,28 @@ spec:
             runAsGroup: 1000
             fsGroup: 1000
             fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
         containers:
           app:
             image:
               repository: mcr.microsoft.com/playwright
               tag: v1.64.1-noble
+            env:
+              HOME: /home/pwuser
             command: ["/bin/bash", "-ec"]
             args:
               - |
+                mkdir -p /home/pwuser/.config/google-chrome/Crashpad
                 chrome="$(find /ms-playwright -type f -path '*/chrome-linux*/chrome' -print -quit)"
                 test -n "$chrome"
+                # Renderer HTTP(S), including loopback, must use egress-proxy;
+                # CDP remains a separate control channel through cdp-proxy.
                 exec "$chrome" \
                   --headless=new \
                   --no-sandbox \
+                  --proxy-server=http://127.0.0.1:8888 \
+                  "--proxy-bypass-list=<-loopback>" \
                   --no-first-run \
                   --no-default-browser-check \
                   --remote-debugging-port=9223 \
@@ -100,6 +110,39 @@ spec:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
+          egress-proxy:
+            image:
+              repository: docker.io/ubuntu/squid
+              tag: 6.6-24.04_edge
+            command: ["squid"]
+            args: ["-N", "-f", "/etc/squid/squid.conf"]
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              readOnlyRootFilesystem: true
+            probes:
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket: { port: 8888 }
+                  periodSeconds: 2
+                  failureThreshold: 30
+              liveness: &egress-probe
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket: { port: 8888 }
+                  periodSeconds: 30
+                  failureThreshold: 3
+              readiness: *egress-probe
 
     service:
       app:
@@ -110,11 +153,20 @@ spec:
     persistence:
       nginx-config:
         type: configMap
-        name: playwright-nginx
+        name: playwright-proxy
         globalMounts:
           - path: /etc/nginx/nginx.conf
             subPath: nginx.conf
             readOnly: true
+      squid-config:
+        type: configMap
+        name: playwright-proxy
+        advancedMounts:
+          *name :
+            egress-proxy:
+              - path: /etc/squid/squid.conf
+                subPath: squid.conf
+                readOnly: true
       profile:
         type: emptyDir
         globalMounts:

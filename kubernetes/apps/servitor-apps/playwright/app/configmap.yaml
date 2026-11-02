@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: playwright-nginx
+  name: playwright-proxy
 data:
   nginx.conf: |
     worker_processes 1;
@@ -50,3 +50,31 @@ data:
         }
       }
     }
+  squid.conf: |
+    # Chromium sends all renderer HTTP(S) through this loopback-only proxy.
+    # Reject control-plane and non-public destinations before connecting.
+    http_port 127.0.0.1:8888
+
+    acl chrome src 127.0.0.1/32
+    acl chrome src ::1/128
+    acl safe_ports port 80 443
+    acl ssl_ports port 443
+    acl CONNECT method CONNECT
+    acl forbidden_dst dst 0.0.0.0/32 127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254.0.0/16 100.64.0.0/10 224.0.0.0/4 240.0.0.0/4
+    acl forbidden_dst dst ::/128 ::1/128 fc00::/7 fe80::/10 ff00::/8
+
+    http_access deny forbidden_dst
+    http_access deny !safe_ports
+    http_access deny CONNECT !ssl_ports
+    http_access allow chrome
+    http_access deny all
+
+    cache deny all
+    access_log none
+    cache_log /dev/null
+    logfile_rotate 0
+    pid_filename /tmp/squid.pid
+    coredump_dir /tmp
+    forwarded_for delete
+    httpd_suppress_version_string on
+    shutdown_lifetime 1 seconds
