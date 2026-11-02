@@ -32,8 +32,21 @@ spec:
               - method: "POST"
                 path: "/v1/.*"
               - path: "/mcp(/.*)?"
+    # Mnemon's Hindsight Provider: health, discovery, stats, graph, recall,
+    # retain and forget for the conversational home bank. No UI/API admin access.
+    - toServices:
+        - k8sService:
+            serviceName: hindsight
+            namespace: selfhosted-apps
+      toPorts:
+        - ports:
+            - { port: "8888", protocol: TCP }
+          rules:
+            http:
+              - method: "GET"
+                path: "/health/live"
+              - path: "/v1/default/banks(/.*)?"
     # Plugin market and runtime plugin downloads. Keep this explicit: the
-    # market is user-driven, not part of the model path.
     - toCIDRSet:
         - cidr: 0.0.0.0/0
           except:
