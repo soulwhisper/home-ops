@@ -41,9 +41,8 @@ spec:
         cpu: "1"
         memory: 1Gi
     # app files have arbitrary ownership (root-run apps, 0600 owner-only files);
-    # only uid 0 + DAC_OVERRIDE reads every file reliably, and only root
-    # restores preserve original ownership. Namespace must opt in via
-    # kopiur.home-operations.com/privileged-movers=true (webhook-enforced).
+    # only uid 0 + DAC_OVERRIDE reads every file reliably. Namespace must opt in
+    # via kopiur.home-operations.com/privileged-movers=true (webhook-enforced).
     securityContext:
       runAsNonRoot: false
       runAsUser: 0
