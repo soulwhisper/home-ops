@@ -37,10 +37,10 @@ Perform a read-only diagnosis of the live cluster. Do not edit cluster resources
 6. **AI-ops control plane and recovery evidence**
    - **Holmes**: compare the current `ScheduledHealthCheck.spec.query` with the executing child's query and result. An old child using an old prompt is stale evidence, not proof that a new fixed collector failed. Check the operator and worker patch revisions separately from target health.
    - **MCP tiers**: distinguish connection/authentication, `tools/list`, and an actual read-only `tools/call`. Inspect backend tool registration and gateway CEL allowlists independently. Do not repeat denied calls merely to see whether they recover.
-   - **Guardrails**: record image version and the exact audit reason. `denied-tool-retry-loop` with different tools/arguments indicates stale history poisoning, not a content violation. Do not recommend disabling the invariant or `FailClosed`.
+   - **Guardrails**: record image version and the exact audit reason. A `denied-tool-retry-loop` for different tools/arguments is stale-history evidence only on versions with the old behavior; on the current 1.4.0 contract, treat it as a guardrail regression or configuration/version mismatch rather than dismissing it as content. Do not recommend disabling the invariant or `FailClosed`.
    - **DSH/browser**: check backend readiness and reconnect budget separately from writable paths (`TMPDIR`, `XDG_CACHE_HOME`, and any path named by an ENOENT error). A restart cannot fix a read-only filesystem path.
    - **Mnemon**: distinguish a healthy provider from an active Memory Space. Inspect enabled providers, space mappings and activation state, bank isolation, and existing retain/recall evidence. Do not seed provider registries or infer that provider discovery creates a Space.
-   - Treat user-reported errors as ground truth. Verify the desired-state and current behavior, not whether the same error can be reproduced again.
+   - Treat user-reported errors as ground-truth historical symptoms. Verify the desired state and current behavior from raw evidence, without rerunning solely to reproduce the same error.
 
 ## Report contract
 
@@ -50,7 +50,7 @@ Perform a read-only diagnosis of the live cluster. Do not edit cluster resources
   - confidence and any explicitly unverified assumption;
   - minimal fix plan: Git PR versus one-off live action, verification steps, and rollback/stop condition.
   - when a conservative runbook applies, include `runbook_id`, `target_repo`, `pr_steps`, and `post_merge_verify`. Use IDs from `cluster-remediation.md`; otherwise emit `runbook_id: no_recommendation`.
-  - if the current state already satisfies the runbook, classify it as healthy and recommend `cluster-verification`, never a duplicate PR. If the fix is merged on `main` but not yet applied, classify it as `PENDING_RECONCILE`, never a duplicate PR.
+  - if the current state already satisfies the runbook and a corresponding merged PR exists, classify it as healthy and recommend `cluster-verification`, never a duplicate PR. If no merged PR exists, report the state as healthy or outdated without a post-merge handoff. If the fix is merged on `main` but not yet applied, classify it as `PENDING_RECONCILE`, never a duplicate PR.
   - do not call `ask` during diagnosis. `ask` is reserved for `cluster-remediation` only when no conservative recommendation exists.
 - Separate active failures, imminent risks, stale/noise/expected conditions, and already healthy evidence.
 - Reproduce signals from raw data instead of trusting ticket text or model hypotheses. Do not default to disabling alerts, health checks, or LLM guardrails.

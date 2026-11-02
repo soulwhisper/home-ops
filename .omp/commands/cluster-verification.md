@@ -15,19 +15,19 @@ Verify a merged fix through Flux and the original failure signal, then determine
 ## 2. Merge and rollout verification
 
 1. Confirm the merge commit is present on a clean, current `main` and note any stale branches without deleting them or pruning refs.
-2. Read the GitRepository revision and every affected Flux Kustomization's applied revision, `Ready` condition, rollout status, and non-ready pods. If the merged revision is not applied or Ready, report `PENDING_RECONCILE`; do not annotate or trigger reconciliation.
+2. Read the GitRepository revision and every affected Flux Kustomization's applied revision, `Ready` condition, rollout status, and non-ready pods. If the merged revision is not applied, report `PENDING_RECONCILE`. If it is applied but not Ready, inspect the condition reason and rollout state: report `PENDING` only while reconciliation is progressing and `FAIL` for a completed failure; do not annotate or trigger reconciliation.
 3. Inspect actual deployed values, not only Git: image tag, environment variables, volume mounts, resource limits, allowlists, ConfigMap/patch revision, and CNP paths/methods.
 
 ## 3. Original-signal verification
 
 Use the runbook's `post_merge_verify` contract where present:
 
-- **Holmes**: the current ScheduledHealthCheck and its current child must use the new query/marker and report `pass`. If the only child is old or uses an old prompt, report `PENDING_SCHEDULED_RUN`; do not rerun it as proof. Consumer resolution is separate from the CR result.
+- **Holmes**: when the runbook changes a ScheduledHealthCheck query or marker, the current ScheduledHealthCheck and child must use that expected query/marker and report `pass`; otherwise verify the same question and toolset scope with a clean current result. If the only child is old or uses an old prompt, report `PENDING_SCHEDULED_RUN`; do not rerun it as proof. Consumer resolution is separate from the CR result.
 - **MCP tiers**: run `tools/list` plus a small read-only call with unique arguments. A previous denial is not proof of current failure; use the audit reason and current version/config instead of repeated retries.
-- **Guardrails**: verify normal calls with different fingerprints succeed. An intentionally repeated identical call may be used only when the user explicitly requested the negative test; a different call must still succeed afterward. Do not generate denial traffic during a routine check.
+- **Guardrails**: verify a normal read-only call with a different fingerprint succeeds. An intentionally repeated identical read-only call may be used only when the user explicitly requested the negative test; a different read-only call must still succeed afterward. Do not generate denial traffic during a routine check.
 - **Browser**: navigate once to a unique public URL and inspect the snapshot. Do not retry after content-policy denial or switch tools to bypass it.
 - **Mnemon**: verify `Home` is the only active conversational mapping, non-home mappings are inactive, Hindsight has no pending/failed operation, and an existing fact can be recalled. Do not create a test memory during a read-only check.
-- **Tickets/observation**: the original raw condition must be normal for the same scope, a consumer `resolved` transition must exist, and Alert/Kyverno classes must complete the 24h observation window. Silence or an empty alert response is not resolution.
+- **Tickets/observation**: Alert tickets require a normal raw condition and consumer `resolved`; Kyverno tickets require the live PolicyReport and durable PolicyViolation evidence for 24h; ScheduledHealthCheck tickets require a clean answer to the same question; config/docs tickets require render/lint/CI evidence and one green reconcile. Silence or an empty alert response is not resolution.
 
 If the current evidence is older than the merge or scheduled run, report it as pending rather than healthy.
 
