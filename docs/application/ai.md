@@ -181,7 +181,10 @@ The **search, agent, browser and github-pr backends** carry the mcp-guardrails E
 operator-authored config, not untrusted content), while `prompts/get` /
 `resources/read` stay response-only;
 `failureMode: FailClosed` (the sidecar being down disables those four tiers
-rather than passing them unguarded). Scope decision (2026-10-20): search is
+rather than passing them unguarded). The 1.4.0 LoopRule evaluates only the
+newest call fingerprint: historical retry triads cannot deny new tools or
+arguments, while identical retries still block. This prevents denied attempts
+from permanently locking a trace. Scope decision (2026-10-20): search is
 the tier where untrusted web content reaches an unguarded lane (dsh-tavern /
 any `uncensored`-lane consumer); the agent tier combines external operators with hermes;
 hermes rides the guarded `agent` LLM lane, and the ExtMCP sidecar additionally scans MCP
