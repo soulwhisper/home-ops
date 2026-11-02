@@ -18,10 +18,12 @@ spec:
     - --blocked-origins=http://127.0.0.1:*;http://localhost:*;http://[::1]:*;https://127.0.0.1:*;https://localhost:*;https://[::1]:*
     - --output-dir=/tmp/playwright
   env:
-    # os.tmpdir() is used for pw-<hash> browser socket directories; output-dir
-    # alone does not cover them. Keep readOnlyRootFilesystem with the existing volume.
+    # os.tmpdir() and XDG_CACHE_HOME keep browser sockets and initialization
+    # cache on the existing writable volume; --output-dir alone is insufficient.
     - name: TMPDIR
       value: /tmp/playwright
+    - name: XDG_CACHE_HOME
+      value: /tmp/playwright/.cache
     # ToolHive rewrites Host to the selected upstream Service or backend Pod IP.
     # Those addresses are not stable allowlist inputs; Cilium and ToolHive own
     # the client-facing network and authentication boundaries.

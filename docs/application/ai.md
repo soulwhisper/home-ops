@@ -347,7 +347,7 @@ broad user PAT was provisioned.
 
 | Server     | Transport             | Notes                                       |
 | ---------- | --------------------- | ------------------------------------------- |
-| playwright | Streamable HTTP :8931 | Connects over CDP to the separate `playwright` Chromium workload on :9222; renderer HTTP(S) is forced through a loopback-only Squid that denies loopback/private/CDP destinations while CDP control stays on a separate nginx channel. `TMPDIR=/tmp/playwright` places `pw-<hash>` browser socket directories on the writable emptyDir despite the read-only root filesystem |
+| playwright | Streamable HTTP :8931 | Connects over CDP to the separate `playwright` Chromium workload on :9222; renderer HTTP(S) is forced through a loopback-only Squid that denies loopback/private/CDP destinations while CDP control stays on a separate nginx channel. `TMPDIR=/tmp/playwright` places `pw-<hash>` browser socket directories on the writable emptyDir, and `XDG_CACHE_HOME=/tmp/playwright/.cache` covers MCP initialization cache despite the read-only root filesystem |
 
 #### github-pr (dsh-web only)
 
