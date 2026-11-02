@@ -45,7 +45,23 @@ spec:
             http:
               - method: "GET"
                 path: "/health/live"
-              - path: "/v1/default/banks(/.*)?"
+              - method: "GET"
+                path: "/v1/default/banks"
+              - method: "GET"
+                path: "/v1/default/banks/home/stats"
+              - method: "GET"
+                path: "/v1/default/banks/home/entities"
+              - method: "GET"
+                path: "/v1/default/banks/home/graph"
+              - method: "GET"
+                path: "/v1/default/banks/home/memories/list"
+              - method: "POST"
+                path: "/v1/default/banks/home/memories/recall"
+              - method: "POST"
+                path: "/v1/default/banks/home/memories"
+              # Soft-forget one memory; no bank config or deletion methods.
+              - method: "PATCH"
+                path: "/v1/default/banks/home/memories/[^/]+"
     # Plugin market and runtime plugin downloads. Keep this explicit: the
     - toCIDRSet:
         - cidr: 0.0.0.0/0
