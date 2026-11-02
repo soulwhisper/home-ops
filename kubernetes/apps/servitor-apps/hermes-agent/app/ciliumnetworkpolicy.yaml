@@ -42,6 +42,8 @@ spec:
       toPorts:
         - ports:
             - { port: "443", protocol: TCP }
+          serverNames:
+            - open.feishu.cn
     # MCP reached via the agent gateway (/mcp/*) since the unified-gateway
     # change — no direct vmcp access.
 
