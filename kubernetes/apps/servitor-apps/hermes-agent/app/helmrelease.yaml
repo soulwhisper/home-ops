@@ -118,8 +118,11 @@ spec:
                       - /bin/sh
                       - -c
                       - >-
+                        curl -fsS http://127.0.0.1:8642/health >/dev/null &&
                         hb=$(cut -d. -f1 /opt/data/cron/ticker_heartbeat) &&
-                        [ $(( $(date +%s) - hb )) -lt 300 ]
+                        now=$(date +%s) &&
+                        [ "$hb" -le "$now" ] &&
+                        [ $(( now - hb )) -lt 300 ]
                   failureThreshold: 30
                   periodSeconds: 10
                   timeoutSeconds: 5

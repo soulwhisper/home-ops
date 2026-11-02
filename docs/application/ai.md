@@ -217,7 +217,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 | Component | Port | Notes                       |
 | --------- | ---- | --------------------------- |
 | Dashboard | 9119 | SSO-protected               |
-| Gateway   | 8642 | Internal; probes use the cron ticker heartbeat |
+| Gateway   | 8642 | Internal; probes require `/health` plus a current cron heartbeat |
 
 - **Runtime**: user namespaces (`hostUsers: false`) + RuntimeDefault seccomp + egress CNP (ADR-03; Kata removed)
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM

@@ -123,6 +123,10 @@ data:
     set -eu
     umask 077
 
+    # The PVC heartbeat belongs to the previous container; require this
+    # container's gateway to publish a fresh one before it can become ready.
+    rm -f /opt/data/cron/ticker_heartbeat
+
     cp /seed/config.yaml /opt/data/config.yaml
 
     # root .env — authoritative; prevents first-boot placeholder seeding from
