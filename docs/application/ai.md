@@ -137,7 +137,9 @@ Both DSH apps also expose the optional `kimi` provider (`https://api.moonshot.ai
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
 `/v1` route for that model; their prompts carry scraped web content, so a low rate of
 promptGuard false-positive rejections (403) is expected and watched — see
-the TODO table.
+the TODO table. Bare `jailbreak`/`越狱` are allowed as topical terms;
+structured role-hijacking and mode-switch phrases remain rejected on both
+`agent` and `omni`.
 
 ### MCP Backend — tiered, guarded, no open lane
 
