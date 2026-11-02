@@ -459,5 +459,123 @@ class BoundaryTests(unittest.TestCase):
             list(reader.kube_items(collectors.CNPG, time.monotonic() + 60))
 
 
+def certificate(name, ready="True", renewal_age=-3600, expiry_age=-7200):
+    status = {"conditions": [{"type": "Ready", "status": ready}],
+              "renewalTime": timestamp(renewal_age), "notAfter": timestamp(expiry_age),
+              "message": "DO-NOT-OUTPUT"}
+    return resource(name, status, namespace="security-system")
+
+
+class CephFixtureReader(FixtureReader):
+    def __init__(self):
+        super().__init__(page_size=1)
+        values = {"health": 0, "osd_total": 6, "osd_up": 6, "osd_in": 6,
+                  "pg_clean": 201, "pg_degraded": 0, "pg_incomplete": 0,
+                  "pg_stale": 0, "slow_ops": 0, "nearfull": 0.85}
+        for key, expression in collectors.CEPH_SCALARS.items():
+            self.queries[expression] = [sample(values[key])]
+        self.queries[collectors.CEPH_POOL_USAGE] = [
+            sample(0.10, pool_id="1", name="ceph-blockpool")]
+        self.queries[collectors.CEPH_POOL_GROWTH] = [
+            sample(0.01, pool_id="1", name="ceph-blockpool")]
+
+
+class CephTests(unittest.TestCase):
+    def test_live_health_capacity_and_growth_are_fixed_queries(self):
+        reader = CephFixtureReader()
+        outcome = run(reader, collectors.CEPH)
+        self.assertEqual(outcome["status"], "pass")
+        groups = categories(outcome)
+        self.assertEqual(set(groups), {"ceph_cluster_health", "ceph_pool_capacity", "ceph_pool_growth_24h"})
+        self.assertEqual(groups["ceph_pool_growth_24h"]["largest_increase"]["used_fraction_delta"], 0.01)
+        self.assertNotIn("DO-NOT-OUTPUT", outcome["rationale"])
+
+    def test_unhealthy_cluster_signals_are_findings(self):
+        cases = {"health": 1, "osd_up": 5, "osd_in": 5, "pg_clean": 0, "pg_degraded": 1,
+                 "pg_incomplete": 1, "pg_stale": 1, "slow_ops": 1}
+        for key, value in cases.items():
+            with self.subTest(key=key):
+                reader = CephFixtureReader()
+                reader.queries[collectors.CEPH_SCALARS[key]] = [sample(value)]
+                self.assertEqual(run(reader, collectors.CEPH)["status"], "fail")
+
+    def test_nearfull_pool_is_a_finding(self):
+        reader = CephFixtureReader()
+        reader.queries[collectors.CEPH_POOL_USAGE] = [
+            sample(0.85, pool_id="1", name="ceph-blockpool")]
+        outcome = run(reader, collectors.CEPH)
+        self.assertEqual(outcome["status"], "fail")
+        self.assertEqual(categories(outcome)["ceph_pool_capacity"]["finding_count"], 1)
+
+    def test_missing_required_metric_never_passes(self):
+        reader = CephFixtureReader()
+        reader.queries[collectors.CEPH_SCALARS["health"]] = []
+        outcome = run(reader, collectors.CEPH)
+        self.assertEqual(outcome["status"], "error")
+        self.assertFalse(categories(outcome)["ceph_cluster_health"]["coverage_complete"])
+
+    def test_partial_growth_baseline_is_incomplete(self):
+        reader = CephFixtureReader()
+        reader.queries[collectors.CEPH_POOL_USAGE] = [
+            sample(0.10, pool_id="1", name="ceph-blockpool"),
+            sample(0.20, pool_id="2", name="ceph-cachepool")]
+        outcome = run(reader, collectors.CEPH)
+        self.assertEqual(outcome["status"], "error")
+        growth = categories(outcome)["ceph_pool_growth_24h"]
+        self.assertFalse(growth["coverage_complete"])
+        self.assertEqual(growth["missing_baseline_count"], 1)
+
+
+class CertificateTests(unittest.TestCase):
+    def fixture(self, rows=None):
+        reader = FixtureReader(page_size=1)
+        reader.resources[collectors.CERTIFICATES] = (
+            [certificate("one"), certificate("two")] if rows is None else rows)
+        return reader
+
+    def test_every_certificate_page_is_evaluated(self):
+        outcome = run(self.fixture(), collectors.CERT_EXPIRY)
+        self.assertEqual(outcome["status"], "pass")
+        category = categories(outcome)["cert_manager_certificates"]
+        self.assertEqual(category["evaluated_count"], 2)
+        self.assertTrue(category["coverage_complete"])
+        self.assertNotIn("DO-NOT-OUTPUT", outcome["rationale"])
+
+    def test_not_ready_and_broken_renewal_are_findings(self):
+        rows = [
+            certificate("not-ready", ready="False"),
+            certificate("unknown", ready="Unknown"),
+            certificate("overdue", renewal_age=60),
+            certificate("renewal-after-expiry", renewal_age=-7200, expiry_age=-3600),
+            certificate("expired", renewal_age=-60, expiry_age=60),
+        ]
+        for row in rows:
+            with self.subTest(name=row["metadata"]["name"]):
+                outcome = run(self.fixture([row]), collectors.CERT_EXPIRY)
+                self.assertEqual(outcome["status"], "fail")
+
+        row = certificate("missing-renewal")
+        del row["status"]["renewalTime"]
+        self.assertEqual(run(self.fixture([row]), collectors.CERT_EXPIRY)["status"], "fail")
+
+    def test_missing_or_invalid_evaluation_fields_are_errors(self):
+        rows = []
+        missing_ready = certificate("missing-ready")
+        del missing_ready["status"]["conditions"]
+        rows.append(missing_ready)
+        missing_expiry = certificate("missing-expiry")
+        del missing_expiry["status"]["notAfter"]
+        rows.append(missing_expiry)
+        invalid_renewal = certificate("invalid-renewal")
+        invalid_renewal["status"]["renewalTime"] = "not-a-time"
+        rows.append(invalid_renewal)
+        for row in rows:
+            with self.subTest(name=row["metadata"]["name"]):
+                self.assertEqual(run(self.fixture([row]), collectors.CERT_EXPIRY)["status"], "error")
+
+    def test_empty_certificate_inventory_is_not_healthy_proof(self):
+        self.assertEqual(run(self.fixture([]), collectors.CERT_EXPIRY)["status"], "error")
+
+
 if __name__ == "__main__":
     unittest.main()

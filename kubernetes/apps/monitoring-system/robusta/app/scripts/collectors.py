@@ -3,7 +3,8 @@
 The injectable reader implements kube_items(path, deadline, params=None) and
 prom_query(expression, deadline), rules(name, group, deadline). The production
 reader uses service-account TLS and GET only. CLI: python collectors.py
-home-ops:backup-chain --timeout 300 (or home-ops:resolved-alert-recheck).
+home-ops:backup-chain --timeout 300 (also home-ops:resolved-alert-recheck,
+home-ops:ceph-health, or home-ops:cert-expiry).
 """
 
 import argparse
@@ -21,6 +22,25 @@ import urllib.request
 
 BACKUP = "home-ops:backup-chain"
 RESOLVED = "home-ops:resolved-alert-recheck"
+CEPH = "home-ops:ceph-health"
+CERT_EXPIRY = "home-ops:cert-expiry"
+CERTIFICATES = "/apis/cert-manager.io/v1/certificates"
+CEPH_SCALARS = {
+    "health": "max(ceph_health_status)",
+    "osd_total": "count(ceph_osd_up)",
+    "osd_up": "sum(ceph_osd_up)",
+    "osd_in": "sum(ceph_osd_in)",
+    "pg_clean": "sum(ceph_pg_clean)",
+    "pg_degraded": "sum(ceph_pg_degraded)",
+    "pg_incomplete": "sum(ceph_pg_incomplete)",
+    "pg_stale": "sum(ceph_pg_stale)",
+    "slow_ops": "max(ceph_healthcheck_slow_ops)",
+    "nearfull": "max(ceph_osd_nearfull_ratio)",
+}
+CEPH_POOL_USAGE = ("max by (pool_id, name) (ceph_pool_percent_used * "
+                   "on(pool_id) group_left(name) ceph_pool_metadata)")
+CEPH_POOL_GROWTH = ("max by (pool_id, name) ((ceph_pool_percent_used - "
+                    "ceph_pool_percent_used offset 24h) * on(pool_id) group_left(name) ceph_pool_metadata)")
 CANDIDATES = ('max by (alertname, alertgroup) (max_over_time(ALERTS{alertstate="firing"}[12h])) '
               'unless on(alertname, alertgroup) present_over_time(ALERTS{alertstate="firing"}[5m])')
 CNPG = "/apis/postgresql.cnpg.io/v1/namespaces/database-system/backups"
@@ -534,6 +554,151 @@ def snapshots(category, reader, deadline, now):
         category.example("Failed ENDED within 48 hours (CREATED fallback only if ENDED missing)", newest_failed[1])
 
 
+def scalar(reader, expression, deadline):
+    rows = list(samples(reader.prom_query(expression, deadline)))
+    if len(rows) != 1 or rows[0][0]:
+        raise CollectionError("expected one unlabelled scalar")
+    return rows[0][1]
+
+
+def ceph_cluster(category, reader, deadline):
+    metrics = {name: scalar(reader, expression, deadline)
+               for name, expression in CEPH_SCALARS.items() if name != "nearfull"}
+    category.data["evaluated_count"] = 1
+    category.data["metrics"] = metrics
+    health = metrics["health"]
+    if health not in (0, 1, 2):
+        category.error("ceph health status is invalid")
+    elif health != 0:
+        category.finding("ceph health status is not HEALTH_OK")
+
+    counts = ("osd_total", "osd_up", "osd_in", "pg_clean", "pg_degraded",
+              "pg_incomplete", "pg_stale", "slow_ops")
+    for name in counts:
+        value = metrics[name]
+        if value < 0 or not value.is_integer():
+            category.error(name + " is not a non-negative integer")
+    total, up, in_osds = metrics["osd_total"], metrics["osd_up"], metrics["osd_in"]
+    if total <= 0:
+        category.error("no OSD inventory was returned")
+    if up > total or in_osds > total:
+        category.error("OSD up/in counts exceed inventory")
+    else:
+        if up < total:
+            category.finding("one or more OSDs are not up")
+        if in_osds < total:
+            category.finding("one or more OSDs are not in")
+    if metrics["pg_clean"] <= 0:
+        category.finding("no clean PGs were reported")
+    for name in ("pg_degraded", "pg_incomplete", "pg_stale", "slow_ops"):
+        if metrics[name] > 0:
+            category.finding(name + " is non-zero")
+
+
+def pool_samples(reader, expression, deadline, value_name):
+    seen = set()
+    for labels, value in samples(reader.prom_query(expression, deadline)):
+        pool_id, name = labels.get("pool_id"), labels.get("name")
+        if not isinstance(pool_id, str) or not pool_id or not isinstance(name, str) or not name:
+            raise CollectionError("pool metric identity missing")
+        key = (pool_id, name)
+        if key in seen:
+            raise CollectionError("duplicate aggregated pool metric")
+        seen.add(key)
+        yield {"pool_id": text(pool_id, 20), "name": text(name, 253), value_name: value}
+
+
+def ceph_capacity(category, reader, deadline, pool_state):
+    nearfull = scalar(reader, CEPH_SCALARS["nearfull"], deadline)
+    category.data["nearfull_ratio"] = nearfull
+    valid_threshold = 0 < nearfull <= 1
+    if not valid_threshold:
+        category.error("Ceph nearfull ratio is invalid")
+    largest = None
+    current = set()
+    for row in pool_samples(reader, CEPH_POOL_USAGE, deadline, "used_fraction"):
+        category.data["evaluated_count"] += 1
+        current.add((row["pool_id"], row["name"]))
+        if row["used_fraction"] < 0:
+            category.error("pool usage is negative", row)
+            continue
+        if largest is None or row["used_fraction"] > largest["used_fraction"]:
+            largest = row
+        if valid_threshold and row["used_fraction"] >= nearfull:
+            category.finding("pool usage is at or above the nearfull ratio", row)
+    pool_state["current"] = current
+    if not category.data["evaluated_count"]:
+        category.error("no Ceph pool usage was returned")
+    category.data["largest_usage"] = largest
+
+
+def ceph_growth(category, reader, deadline, pool_state):
+    current = pool_state.get("current")
+    category.data["missing_baseline_count"] = 0
+    if not current:
+        category.error("no current Ceph pool inventory was returned")
+        return
+    largest = None
+    seen = set()
+    for row in pool_samples(reader, CEPH_POOL_GROWTH, deadline, "used_fraction_delta"):
+        key = (row["pool_id"], row["name"])
+        seen.add(key)
+        if key not in current:
+            category.error("24-hour growth metric is outside the current pool inventory", row)
+            continue
+        category.data["evaluated_count"] += 1
+        if largest is None or row["used_fraction_delta"] > largest["used_fraction_delta"]:
+            largest = row
+    missing = sorted(current - seen)
+    category.data["missing_baseline_count"] = len(missing)
+    for pool_id, name in missing:
+        category.error("current pool has no 24-hour growth baseline",
+                       {"pool_id": pool_id, "name": name})
+    category.data["largest_increase"] = largest
+
+
+def cert_manager(category, reader, deadline, now):
+    for obj in reader.kube_items(CERTIFICATES, deadline):
+        category.data["evaluated_count"] += 1
+        row = identity(obj)
+        status = obj.get("status", {})
+        conditions = status.get("conditions")
+        if not isinstance(conditions, list):
+            category.error("certificate Ready condition is missing", row)
+        else:
+            ready = [condition for condition in conditions
+                     if isinstance(condition, dict) and condition.get("type") == "Ready"]
+            if len(ready) != 1 or ready[0].get("status") not in ("True", "False", "Unknown"):
+                category.error("certificate Ready condition is missing or invalid", row)
+            elif ready[0]["status"] != "True":
+                category.finding("certificate is not Ready", row)
+
+        renewal_raw, expiry_raw = status.get("renewalTime"), status.get("notAfter")
+        row.update(renewalTime=text(renewal_raw, 40) if isinstance(renewal_raw, str) else None,
+                   notAfter=text(expiry_raw, 40) if isinstance(expiry_raw, str) else None)
+        renewal = expiry = None
+        if renewal_raw is None:
+            category.finding("certificate renewalTime is missing", row)
+        else:
+            try:
+                renewal = stamp(renewal_raw)
+            except CollectionError:
+                category.error("certificate renewalTime is invalid", row)
+        try:
+            expiry = stamp(expiry_raw)
+        except CollectionError:
+            category.error("certificate notAfter is missing or invalid", row)
+        if expiry is not None and expiry <= now:
+            category.finding("certificate is expired", row)
+        if renewal is not None:
+            if renewal <= now:
+                category.finding("certificate renewal is overdue", row)
+            if expiry is not None and renewal >= expiry:
+                category.finding("certificate renewalTime is not before notAfter", row)
+    if not category.data["evaluated_count"]:
+        category.error("no cert-manager Certificates discovered")
+
+
 def result(name, categories):
     errors = sum(c["error_count"] for c in categories)
     findings = sum(c["finding_count"] for c in categories)
@@ -648,11 +813,22 @@ def collect_with_reader(query, deadline, reader, now=None):
         return backup(reader, deadline, time.time() if now is None else now)
     if query == RESOLVED:
         return resolved(reader, deadline)
+    if query == CEPH:
+        pool_state = {}
+        return result(CEPH, [
+            run_category("ceph_cluster_health", lambda c: ceph_cluster(c, reader, deadline)),
+            run_category("ceph_pool_capacity", lambda c: ceph_capacity(c, reader, deadline, pool_state)),
+            run_category("ceph_pool_growth_24h", lambda c: ceph_growth(c, reader, deadline, pool_state)),
+        ])
+    if query == CERT_EXPIRY:
+        return result(CERT_EXPIRY, [run_category(
+            "cert_manager_certificates",
+            lambda c: cert_manager(c, reader, deadline, time.time() if now is None else now))])
     return None
 
 
 def collect(query: str, deadline: float) -> dict | None:
-    if query not in (BACKUP, RESOLVED):
+    if query not in (BACKUP, RESOLVED, CEPH, CERT_EXPIRY):
         return None
     try:
         return collect_with_reader(query, deadline, Reader())
@@ -663,7 +839,7 @@ def collect(query: str, deadline: float) -> dict | None:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("query", choices=(BACKUP, RESOLVED))
+    parser.add_argument("query", choices=(BACKUP, RESOLVED, CEPH, CERT_EXPIRY))
     parser.add_argument("--timeout", type=float, default=300)
     args = parser.parse_args()
     if not math.isfinite(args.timeout) or args.timeout <= 0:

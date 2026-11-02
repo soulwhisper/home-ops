@@ -10,6 +10,18 @@ import time
 from pathlib import Path
 
 
+def execution_error_message(rationale):
+    """Expose only locally generated failure classes, never model/provider text."""
+    safe = (
+        ("Failed to parse response:", "verdict parsing failed"),
+        ("Check produced no successful tool output", "no successful tool output"),
+        ("Verdict rejected:", "verdict rejected by evidence gate"),
+    )
+    detail = next((message for prefix, message in safe if (rationale or "").startswith(prefix)),
+                  "investigation failed")
+    return "CheckExecutionError: " + detail
+
+
 def _notify(request, result, cluster_name):
     # Preserve the pinned delivery destinations. Delivery is part of the same
     # worker budget, not a detached task.
@@ -110,8 +122,9 @@ def execute(payload):
                       model_used=ai.llm.model)
         if result["status"] == "error":
             # Provider exceptions may embed credentials or full request data.
-            result.update(message="CheckExecutionError: investigation failed",
-                          error="CheckExecutionError: investigation failed")
+            # Preserve only fixed, locally generated execution/evidence classes.
+            message = execution_error_message(checked.rationale)
+            result.update(message=message, error=message, rationale=message)
         # Flush the existing recorder before worker exit. This wait also falls
         # within the parent's absolute budget, including any blocked DAL write.
         from holmes.core.usage_recorder import _RECORDER_EXECUTOR
