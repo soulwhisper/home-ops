@@ -19,7 +19,7 @@ spec:
     - --output-dir=/tmp/playwright
   env:
     - name: PLAYWRIGHT_MCP_ALLOWED_HOSTS
-      value: "mcp-playwright-0.mcp-mcp-playwright-headless,mcp-playwright-0.mcp-mcp-playwright-headless:8931,mcp-mcp-playwright-headless,mcp-mcp-playwright-headless:8931,mcp-mcp-playwright,mcp-mcp-playwright:8931,mcp-mcp-playwright-proxy,mcp-mcp-playwright-proxy:8080,mcp-mcp-playwright-proxy.servitor-apps.svc.cluster.local,mcp-mcp-playwright-proxy.servitor-apps.svc.cluster.local:8080,localhost,localhost:8931"
+      value: "$(POD_IP):8931,mcp-playwright-0.mcp-mcp-playwright-headless,mcp-playwright-0.mcp-mcp-playwright-headless:8931,mcp-mcp-playwright-headless,mcp-mcp-playwright-headless:8931,mcp-mcp-playwright,mcp-mcp-playwright:8931,localhost,localhost:8931"
   transport: streamable-http
   mcpPort: 8931
   resources:
@@ -38,6 +38,13 @@ spec:
           type: RuntimeDefault
       containers:
         - name: mcp
+          # ToolHive pins follow-up requests to the backend Pod IP and rewrites
+          # Host to <pod-ip>:8931. Inject the current address for the allowlist.
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
