@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: servitor-apps
-  path: "./kubernetes/apps/servitor-apps/mcp/github/app"
+  path: "./kubernetes/apps/servitor-apps/mcp/github/ro"
   dependsOn:
     - name: toolhive-config
       namespace: servitor-apps
@@ -32,7 +32,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: servitor-apps
-  path: "./kubernetes/apps/servitor-apps/mcp/github/pr"
+  path: "./kubernetes/apps/servitor-apps/mcp/github/hr"
   dependsOn:
     - name: toolhive-config
       namespace: servitor-apps

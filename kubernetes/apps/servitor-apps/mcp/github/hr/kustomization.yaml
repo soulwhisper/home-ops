@@ -1,0 +1,25 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../app
+patches:
+  - path: mcpserver.patch
+    target:
+      group: toolhive.stacklok.dev
+      version: v1beta1
+      kind: MCPServer
+      name: mcp-github
+  - path: externalsecret.patch
+    target:
+      group: external-secrets.io
+      version: v1
+      kind: ExternalSecret
+      name: mcp-github
+  - path: mcpexternalauthconfig.patch
+    target:
+      group: toolhive.stacklok.dev
+      version: v1beta1
+      kind: MCPExternalAuthConfig
+      name: mcp-github
