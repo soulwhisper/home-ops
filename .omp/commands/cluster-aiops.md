@@ -13,6 +13,8 @@ cluster-aiops run <ticket-number>
 cluster-aiops resume <ticket-number>
 ```
 
+For every Forgejo operation, set `F="${FORGEJO_URL:-http://nas.homelab.internal:9003}/api/v1/repos/${TICKETS_REPO:-soulwhisper/homelab-tickets}"` and `TOKEN_FILE="${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}"`; do not hardcode another repository or token path.
+
 - `run` starts only when no active run exists. If one exists, it behaves as `resume`; it never creates a second PR, comment, runtime action, or lesson for the same incident.
 - `resume` reads the latest lease, stage, and action records and continues from there. `DONE` is a no-op. An unexpired run owned by another worker returns `ALREADY_RUNNING`.
 - Claim with `taking` before new work and read the complete ticket/comment timeline before selecting a stage.

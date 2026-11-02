@@ -8,7 +8,7 @@ Turn a current `cluster-diagnosis` finding or an explicit `runbook_id` into a re
 
 ## 1. Prerequisites and recommendation gate
 
-1. Read `skill://homelab-gitops` and `skill://homelab-tickets`, then confirm the current branch, context, finding evidence, and existing related PRs.
+1. Read `skill://homelab-gitops` and `skill://homelab-tickets`, then confirm the current branch, context, finding evidence, and existing related PRs. For ticket operations, use `F="${FORGEJO_URL:-http://nas.homelab.internal:9003}/api/v1/repos/${TICKETS_REPO:-soulwhisper/homelab-tickets}"` and `TOKEN_FILE="${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}"`.
 2. Verify that the finding still exists and inspect both open PRs and recently merged PRs plus desired state on `main`. If current state already satisfies the runbook, do not create a branch or PR; run `cluster-verification` instead. If a fix is merged but its revision is not yet applied, do not create another PR—classify it as `PENDING_RECONCILE` and run `cluster-verification`.
 3. Select exactly one conservative runbook from the table. A matching runbook is the recommendation: proceed without calling `ask`.
 4. **Call the `ask` tool only when no conservative recommendation exists**—no matching runbook, or several materially different fixes with no boring/safe default. Ask once with 2–5 options that state the tradeoffs. Never use `ask` for information available from tools, for a standard runbook, or to disguise a guessed fix.

@@ -8,7 +8,7 @@ Verify a merged fix through Flux and the original failure signal, then determine
 
 ## 1. Preconditions
 
-1. Read `skill://homelab-gitops` and `skill://homelab-tickets`. Confirm the merged PR, merge SHA, affected Kustomizations, and `main`/origin state.
+1. Read `skill://homelab-gitops` and `skill://homelab-tickets`. Confirm the merged PR, merge SHA, affected Kustomizations, and `main`/origin state. For ticket operations, use `F="${FORGEJO_URL:-http://nas.homelab.internal:9003}/api/v1/repos/${TICKETS_REPO:-soulwhisper/homelab-tickets}"` and `TOKEN_FILE="${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}"`.
 2. Do not invoke a new scheduler execution, restart a workload, create a Memory Space, enable a provider, or close a ticket merely to make verification finish. Those actions need explicit user instruction and are not implied by `cluster-verification`.
 3. Keep all queries bounded and redact credentials. Use unique read-only canary arguments and never retry a denied tool call to make it pass.
 

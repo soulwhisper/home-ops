@@ -5,8 +5,8 @@ description: Use whenever the request involves ai-ops tickets — checking, tria
 
 # homelab-tickets: check → fix → verify → learn → remember
 
-The ai-ops work queue lives in Forgejo `soulwhisper/homelab-tickets` on
-`http://nas.homelab.internal:9003` (intranet-only, plain HTTP, public repo —
+The ai-ops work queue lives in `${TICKETS_REPO:-soulwhisper/homelab-tickets}` on
+`${FORGEJO_URL:-http://nas.homelab.internal:9003}` (intranet-only, plain HTTP, public repo —
 both accepted). The **law** for tickets is `infrastructure/forgejo/skills/` in
 this repo — read `README.md` (anatomy, lifecycle) and `acceptance.md`
 (per-class verification bar) locally before working a ticket. The tickets
@@ -44,7 +44,7 @@ Pair with `homelab-gitops` for every cluster read/change.
 Reads need no token (public repo):
 
 ```bash
-F=http://nas.homelab.internal:9003/api/v1/repos/soulwhisper/homelab-tickets
+F="${FORGEJO_URL:-http://nas.homelab.internal:9003}/api/v1/repos/${TICKETS_REPO:-soulwhisper/homelab-tickets}"
 # paginate: Forgejo caps pages at 50; loop until a short page
 for p in $(seq 1 100); do
   page=$(curl -fsS "$F/issues?state=open&type=issues&limit=50&page=$p")
@@ -93,7 +93,7 @@ Use the public read API where possible and the default token path
 `${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}` when writes are authorized.
 
 ```bash
-F=http://nas.homelab.internal:9003/api/v1/repos/soulwhisper/homelab-tickets
+F="${FORGEJO_URL:-http://nas.homelab.internal:9003}/api/v1/repos/${TICKETS_REPO:-soulwhisper/homelab-tickets}"
 # Read the lesson index and relevant source tickets/comments for the same
 # alert, namespace/workload, symptom and root-cause class.
 curl -fsS "$F/contents/learnings" | jq -r '.[].name'
