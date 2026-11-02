@@ -87,3 +87,53 @@ spec:
       # Four balanced response windows, each bounded by 10s; 45s leaves
       # headroom for tool-call responses that need all four windows.
       requestTimeout: 45s
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-guardrails-browser
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-browser
+  backend:
+    mcp:
+      guardrails:
+        processors:
+          - remote:
+              backendRef:
+                name: mcp-guardrails
+                port: 9001
+              failureMode: FailClosed
+            methods:
+              tools/call: Full
+              tools/list: "Off"
+              prompts/get: Response
+              resources/read: Response
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-guardrails-github-pr
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-github-pr
+  backend:
+    mcp:
+      guardrails:
+        processors:
+          - remote:
+              backendRef:
+                name: mcp-guardrails
+                port: 9001
+              failureMode: FailClosed
+            methods:
+              tools/call: Full
+              tools/list: "Off"
+              prompts/get: Response
+              resources/read: Response

@@ -1,0 +1,17 @@
+---
+- op: replace
+  path: /metadata/name
+  value: mcp-github-pr
+- op: add
+  path: /spec/groupRef
+  value:
+    name: github-pr
+- op: add
+  path: /spec/env
+  value:
+    # Explicit tools only. Toolsets are intentionally unset so pull_requests
+    # cannot re-register merge_pull_request or unrelated writers.
+    - name: GITHUB_TOOLS
+      value: "get_file_contents,create_branch,create_or_update_file,push_files,get_commit,list_commits,pull_request_read,list_pull_requests,search_pull_requests,create_pull_request"
+    - name: GITHUB_LOCKDOWN_MODE
+      value: "1"

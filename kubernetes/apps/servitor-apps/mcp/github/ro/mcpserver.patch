@@ -1,0 +1,16 @@
+---
+- op: add
+  path: /spec/groupRef
+  value:
+    name: search
+- op: add
+  path: /spec/env
+  value:
+    - name: GITHUB_READ_ONLY
+      value: "1"
+    # only the toolsets needed by the search tier
+    - name: GITHUB_TOOLSETS
+      value: "repos,issues,pull_requests"
+    # only serve content from repos the token owns/collaborates on
+    - name: GITHUB_LOCKDOWN_MODE
+      value: "1"

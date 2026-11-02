@@ -1,21 +1,10 @@
 ---
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcptoolconfig_v1alpha1.json
-apiVersion: toolhive.stacklok.dev/v1alpha1
-kind: MCPToolConfig
-metadata:
-  name: mcp-hindsight-ops # incident-memory bank, single-bank mode
-spec:
-  toolsFilter:
-    - retain
-    - recall
-    - reflect
-    - list_mental_models
-    - get_mental_model
-    - refresh_mental_model
-    - get_operation
-    - list_tags
-    - get_bank
-  toolsOverride:
+- op: replace
+  path: /metadata/name
+  value: mcp-hindsight-ops
+- op: add
+  path: /spec/toolsOverride
+  value:
     retain:
       description: >-
         Store incident/RCA memory. Unlike the conversational home bank,

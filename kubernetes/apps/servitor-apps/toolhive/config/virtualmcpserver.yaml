@@ -168,3 +168,84 @@ spec:
           enabled: true
           failureThreshold: 3
           timeout: 30s
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: VirtualMCPServer
+metadata:
+  name: &name browser
+spec:
+  incomingAuth:
+    type: anonymous
+  outgoingAuth:
+    source: inline
+  podTemplateSpec:
+    spec:
+      containers:
+        - name: vmcp
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 1Gi }
+  groupRef:
+    name: *name
+  telemetryConfigRef:
+    name: shared-otel
+    serviceName: *name
+  config:
+    aggregation:
+      conflictResolution: prefix
+      conflictResolutionConfig:
+        prefixFormat: "{workload}_"
+    operational:
+      failureHandling:
+        partialFailureMode: best_effort
+        healthCheckInterval: 30s
+        healthCheckTimeout: 15s
+        unhealthyThreshold: 2
+        circuitBreaker:
+          enabled: true
+          failureThreshold: 3
+          timeout: 30s
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: VirtualMCPServer
+metadata:
+  name: &name github-pr
+spec:
+  incomingAuth:
+    type: anonymous
+  outgoingAuth:
+    source: inline
+    backends:
+      mcp-github-pr:
+        type: externalAuthConfigRef
+        externalAuthConfigRef:
+          name: mcp-github-pr
+  podTemplateSpec:
+    spec:
+      containers:
+        - name: vmcp
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 1Gi }
+  groupRef:
+    name: *name
+  telemetryConfigRef:
+    name: shared-otel
+    serviceName: *name
+  config:
+    aggregation:
+      conflictResolution: prefix
+      conflictResolutionConfig:
+        prefixFormat: "{workload}_"
+    operational:
+      failureHandling:
+        partialFailureMode: best_effort
+        healthCheckInterval: 30s
+        healthCheckTimeout: 15s
+        unhealthyThreshold: 2
+        circuitBreaker:
+          enabled: true
+          failureThreshold: 3
+          timeout: 30s

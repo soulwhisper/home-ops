@@ -1,0 +1,80 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: playwright-proxy
+data:
+  nginx.conf: |
+    worker_processes 1;
+    pid /tmp/nginx.pid;
+    error_log /tmp/nginx-error.log;
+
+    events {
+      worker_connections 64;
+    }
+
+    http {
+      access_log off;
+      server_tokens off;
+      client_body_temp_path /tmp/client_body;
+      proxy_temp_path /tmp/proxy;
+      fastcgi_temp_path /tmp/fastcgi;
+      uwsgi_temp_path /tmp/uwsgi;
+      scgi_temp_path /tmp/scgi;
+
+      map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
+      }
+
+      server {
+        listen 9222;
+
+        location / {
+          proxy_pass http://127.0.0.1:9223;
+          proxy_http_version 1.1;
+          proxy_set_header Host localhost:9223;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+          proxy_set_header Accept-Encoding "";
+          # DevTools advertises absolute ws:// URLs in its JSON responses.
+          # Rewrite the loopback listener to the Service endpoint used by MCP.
+          sub_filter_types application/json;
+          sub_filter_once off;
+          sub_filter '127.0.0.1:9223' 'playwright:9222';
+          sub_filter 'localhost:9223' 'playwright:9222';
+          sub_filter '[::1]:9223' 'playwright:9222';
+          proxy_buffering off;
+          proxy_read_timeout 3600s;
+          proxy_send_timeout 3600s;
+        }
+      }
+    }
+  squid.conf: |
+    # Chromium sends all renderer HTTP(S) through this loopback-only proxy.
+    # Reject control-plane and non-public destinations before connecting.
+    http_port 127.0.0.1:8888
+
+    acl chrome src 127.0.0.1/32
+    acl chrome src ::1/128
+    acl safe_ports port 80 443
+    acl ssl_ports port 443
+    acl CONNECT method CONNECT
+    acl forbidden_dst dst 0.0.0.0/32 127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254.0.0/16 100.64.0.0/10 224.0.0.0/4 240.0.0.0/4
+    acl forbidden_dst dst ::/128 ::1/128 fc00::/7 fe80::/10 ff00::/8
+
+    http_access deny forbidden_dst
+    http_access deny !safe_ports
+    http_access deny CONNECT !ssl_ports
+    http_access allow chrome
+    http_access deny all
+
+    cache deny all
+    access_log none
+    cache_log /dev/null
+    logfile_rotate 0
+    pid_filename /tmp/squid.pid
+    coredump_dir /tmp
+    forwarded_for delete
+    httpd_suppress_version_string on
+    shutdown_lifetime 1 seconds

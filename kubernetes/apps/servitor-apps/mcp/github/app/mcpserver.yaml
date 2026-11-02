@@ -3,10 +3,8 @@
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPServer
 metadata:
-  name: &name mcp-github
+  name: mcp-github
 spec:
-  groupRef:
-    name: search
   # Pinned at v1.14.0: newer github-mcp-server emits nullable-union
   # `type: ["null","object"]` in every tool's outputSchema on the Modern
   # (2026-07-28) protocol path, and toolhive-core mcpcompat decodes schemas
@@ -15,15 +13,6 @@ spec:
   # upgrades.
   image: ghcr.io/github/github-mcp-server:v1.14.0
   args: ["http"]
-  env:
-    - name: GITHUB_READ_ONLY
-      value: "1"
-    # only the toolsets the toolsFilter below uses
-    - name: GITHUB_TOOLSETS
-      value: "repos,issues,pull_requests"
-    # only serve content from repos the token owns/collaborates on
-    - name: GITHUB_LOCKDOWN_MODE
-      value: "1"
   transport: streamable-http
   mcpPort: 8082
   resources:

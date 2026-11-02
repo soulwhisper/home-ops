@@ -48,7 +48,11 @@ spec:
                 - "(?i)(pretend|imagine|simulate|act like|impersonate|roleplay|role-play)\\s+(you are|you're|to be|that you are|being)\\s+(a |an |the )?(unrestricted|uncensored|evil|unfiltered|jailbroken|hacker|criminal|malicious|unethical|amoral)"
                 - "(?:你现在是|从现在起你是|你的新身份是|你是(?:一个|一名|一位)|成为|扮演|充当)[^。\\n]{0,20}(?:无限制|没有(?:任何)?限制|无约束|没有(?:任何)?(?:道德|伦理|法律)?约束|不受(?:任何)?(?:限制|约束|规则|底线)|无视(?:任何|所有)?(?:规则|限制|约束)|没有(?:道德|伦理|底线)|越狱)"
                 - "(?:进入|启用|开启|切换到)(?:开发者|调试|测试|管理员|root|超级)(?:模式|权限)"
-                - "(?i)\\b(DAN\\s+(mode|jailbreak)|enable\\s+DAN|activate\\s+DAN|DAN\\s+[0-9]+\\.[0-9]+|STAN\\s+mode|DUDE\\s+mode|AIM\\s+mode|越狱|jailbreak|无限制模式|do\\s*anything\\s*now)"
+                # Bare topical mentions are allowed; direct self/model instructions
+                # and structured role-hijack phrases remain rejected.
+                - "(?i)\\b(DAN\\s+(mode|jailbreak)|enable\\s+DAN|activate\\s+DAN|DAN\\s+[0-9]+\\.[0-9]+|STAN\\s+mode|DUDE\\s+mode|AIM\\s+mode|无限制模式|do\\s*anything\\s*now)"
+                - "(?i)\\bjailbreak\\s+(?:yourself|you|this\\s+(?:model|assistant|agent|ai)|the\\s+(?:model|assistant|agent|ai))\\b"
+                - "(?:请|现在请|立即|马上)\\s*(?:你|你自己)?\\s*越狱"
             response:
               message: "Request blocked: jailbreak attempt detected. Role hijacking and persona manipulation are not permitted."
               statusCode: 403

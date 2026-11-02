@@ -3,15 +3,9 @@
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPRemoteProxy
 metadata:
-  name: &name mcp-hindsight-home
+  name: mcp-hindsight
 spec:
-  groupRef:
-    name: home
-  toolConfigRef:
-    name: *name
-  # Hindsight creates the bank on first retain; reads (get_bank, list_tags,
-  # recall) require it to exist. This single-bank endpoint is valid; 404s
-  # before the first retain are expected.
+  # Default conversational bank; each overlay selects its own single-bank endpoint.
   remoteUrl: http://hindsight.selfhosted-apps.svc.cluster.local:8888/mcp/home
   # in-cluster DNS suffix is blocked by toolhive's SSRF guard unless opted in
   allowPrivateEndpoint: true

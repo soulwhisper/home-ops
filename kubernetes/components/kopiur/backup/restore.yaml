@@ -14,5 +14,16 @@ spec:
   # passive populator: the PVC claims this Restore via spec.dataSourceRef
   target:
     populator: {}
+  options:
+    # Ownership is part of the restore contract; never silently accept
+    # permission failures and leave files owned by the mover.
+    ignorePermissionErrors: false
+  mover:
+    # Replay arbitrary recorded UID/GID ownership. Root restores receive
+    # CHOWN/DAC_OVERRIDE/FOWNER/FSETID through privilegedMode.
+    privilegedMode: true
+    securityContext:
+      runAsUser: 0
+      runAsNonRoot: false
   policy:
     onMissingSnapshot: Continue

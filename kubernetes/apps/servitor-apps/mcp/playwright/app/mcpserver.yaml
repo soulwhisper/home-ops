@@ -1,0 +1,51 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpserver_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPServer
+metadata:
+  name: &name mcp-playwright
+spec:
+  groupRef:
+    name: browser
+  # The browser runs in the separate playwright workload. CDP avoids coupling
+  # this MCP release to a Playwright Server protocol version.
+  image: mcr.microsoft.com/playwright/mcp:v0.0.83
+  args:
+    - --port=8931
+    - --host=0.0.0.0
+    - --cdp-endpoint=http://playwright.servitor-apps.svc.cluster.local:9222
+    # Prevent web content from driving the unauthenticated pod-local CDP listener.
+    - --blocked-origins=http://127.0.0.1:*;http://localhost:*;http://[::1]:*;https://127.0.0.1:*;https://localhost:*;https://[::1]:*
+    - --output-dir=/tmp/playwright
+  env:
+    - name: PLAYWRIGHT_MCP_ALLOWED_HOSTS
+      value: "mcp-playwright-0.mcp-mcp-playwright-headless,mcp-playwright-0.mcp-mcp-playwright-headless:8931,mcp-mcp-playwright-headless,mcp-mcp-playwright-headless:8931,mcp-mcp-playwright,mcp-mcp-playwright:8931,localhost,localhost:8931"
+  transport: streamable-http
+  mcpPort: 8931
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  podTemplateSpec:
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: mcp
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: output
+              mountPath: /tmp/playwright
+      volumes:
+        - name: output
+          emptyDir: {}

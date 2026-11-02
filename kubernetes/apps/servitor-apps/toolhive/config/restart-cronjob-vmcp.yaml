@@ -52,9 +52,10 @@ spec:
       # alert firing after the next successful run. Expire finished Jobs so
       # the alert clears without manual cleanup.
       ttlSecondsAfterFinished: 3600
-      # 4 groups * (discovery 120s + delete 120s + recreate 300s + ready
-      # 300s) worst case is 56m; cap the whole run at 30m.
-      activeDeadlineSeconds: 1800
+      # Groups are restarted sequentially so one group's outage does not take
+      # down the others. Six groups need up to 84 minutes at the per-group
+      # worst-case waits; retain headroom above that bound.
+      activeDeadlineSeconds: 7200
       template:
         spec:
           serviceAccountName: vmcp-restarter
@@ -111,7 +112,7 @@ spec:
                     return 1
                   }
 
-                  for g in search cluster home agent; do
+                  for g in search cluster home agent browser github-pr; do
                     pod=$(find_pod "$g") || {
                       echo "no runner pod for $g after 120s"; exit 1; }
                     echo "restarting $g/$pod"

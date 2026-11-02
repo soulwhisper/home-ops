@@ -26,6 +26,8 @@ spec:
             runAsGroup: 10000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
         initContainers:
           # Same Talos SELinux relabel as victoria-logs: hermes writes to an
           # unlabeled RBD PVC, and seLinuxOptions is a no-op on Talos —
@@ -111,22 +113,37 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /health
-                    port: &port 8642
+                  exec:
+                    command: &healthcheck
+                      - /bin/sh
+                      - -c
+                      - >-
+                        curl -fsS http://127.0.0.1:8642/health >/dev/null &&
+                        hb=$(cut -d. -f1 /opt/data/cron/ticker_heartbeat) &&
+                        now=$(date +%s) &&
+                        [ "$hb" -le "$now" ] &&
+                        [ $(( now - hb )) -lt 300 ]
                   failureThreshold: 30
                   periodSeconds: 10
-              liveness: &liveness
+                  timeoutSeconds: 5
+              liveness:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /health
-                    port: *port
+                  exec:
+                    command: *healthcheck
+                  failureThreshold: 3
                   periodSeconds: 30
-                  failureThreshold: 5
-                  timeoutSeconds: 10
-              readiness: *liveness
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command: *healthcheck
+                  failureThreshold: 3
+                  periodSeconds: 10
+                  timeoutSeconds: 5
             resources:
               requests:
                 cpu: 200m
@@ -143,7 +160,7 @@ spec:
         ports:
           api:
             primary: true
-            port: *port
+            port: 8642
           http:
             port: 9119
           webhook:
