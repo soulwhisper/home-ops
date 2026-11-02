@@ -1,5 +1,5 @@
 # AI Infrastructure Summary
-Last updated: 2026-11-01
+Last updated: 2026-11-02
 
 Source: Flux manifests in `kubernetes/apps/`.
 
@@ -217,12 +217,12 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 | Component | Port | Notes                       |
 | --------- | ---- | --------------------------- |
 | Dashboard | 9119 | SSO-protected               |
-| Gateway   | 8642 | Internal, health: `/health` |
+| Gateway   | 8642 | Internal; probes use the cron ticker heartbeat |
 
-- **Runtime**: user namespaces (`hostUsers: false`) + egress CNP (ADR-03; Kata removed)
+- **Runtime**: user namespaces (`hostUsers: false`) + RuntimeDefault seccomp + egress CNP (ADR-03; Kata removed)
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
 - **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP (`search`+`cluster`+`home`+`agent` tiers, declarative `mcp_servers` in the configmap), Agent Gateway LLM
-- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, world-except-private :443 (Feishu WebSocket). No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
+- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, world-except-private :443 restricted to TLS SNI `open.feishu.cn` (Feishu WebSocket). No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
 - **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 + webhook ingest :8644 via kgateway-internal (shared rule), webhook ingest :8644 also from frigate + LAN, profile API :8642 same-namespace only; `fromEntities: host` keeps kubelet probes working
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
@@ -282,6 +282,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 ### ToolHive
 
 - **Operator**: namespace-scoped RBAC
+- **Variant layout**: `mcp/hindsight/{app,home,ops}` and `mcp/github/{app,ro,hr}`; each `app` is a shared Kustomize base, while sibling directories are independently reconciled overlays
 - **6 Virtual MCP Servers** (search / cluster / home / agent / browser / github-pr) with:
   - Circuit breaker (3 failures → 30s timeout)
   - OTEL telemetry (5% sampling)
@@ -349,7 +350,7 @@ broad user PAT was provisioned.
 
 | Server    | Transport     | Notes                                                                  |
 | --------- | ------------- | ---------------------------------------------------------------------- |
-| github-pr | HTTP :8082    | Dedicated repository-scoped credential; branch/commit/create-PR tools only, no merge |
+| github-pr | HTTP :8082    | Shared scoped `mcp_github_token`; branch/commit/create-PR tools only, no merge |
 
 #### Obsidian facts workflow
 
