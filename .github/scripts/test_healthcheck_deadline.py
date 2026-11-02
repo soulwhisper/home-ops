@@ -377,6 +377,17 @@ class HandlerTests(unittest.IsolatedAsyncioTestCase):
                                                 started=started, retry=1)
         self.assertEqual(self.client.execute_check.await_count, 2)
 
+    async def test_rerun_uses_kopf_uid_when_update_body_omits_it(self):
+        await self.create()
+        old = copy.deepcopy(self.api.resource)
+        del old["metadata"]["uid"]
+        self.api.resource["metadata"]["annotations"] = {"holmesgpt.dev/rerun": "true"}
+        new = copy.deepcopy(self.api.resource)
+        del new["metadata"]["uid"]
+        await self.handler.on_healthcheck_update(old, new, "check", "ns", None, uid="uid")
+        self.assert_terminal_consistent("Completed", "Complete")
+        self.assertEqual(self.client.execute_check.await_count, 2)
+
     async def test_uncertain_claim_write_never_posts_on_retry(self):
         replace = self.api.replace_namespaced_custom_object_status
         uncertain = True
