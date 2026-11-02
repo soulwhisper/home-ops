@@ -24,7 +24,7 @@ Turn a current `cluster-diagnosis` finding or an explicit `runbook_id` into a re
 | `dsh-mcp-reconnect` | Backend recovers but tools stay disconnected after the default retry budget | Share a non-fatal reconnect policy with bounded backoff and an explicit long-lived attempt budget. Do not force all of DSH to fail at startup. |
 | `mcp-tool-allowlist` | A valid tool is absent from `tools/list` or denied by the gateway | Add only the named tool to the affected backend's registration and matching gateway CEL allowlist; for the GitHub PR backend, update `GITHUB_TOOLS`. Do not enable broad toolsets, merge, or unrelated writers. |
 | `guardrail-retry-loop` | New tools/arguments are denied by `denied-tool-retry-loop` after an old triad | Make LoopRule match only the newest fingerprint; add stale-history and recovery regressions. After human review, wait for the human to merge the upstream source PR and release-please PR and for image publication, then bump home-ops. Never disable the invariant or `FailClosed`. |
-| `mnemon-home-space` | Provider is healthy but there is no active conversational Memory Space | Change only missing Git-managed provider settings and the pinned driver's home-only routes: health/discovery, home stats/entities/graph/list reads, home recall/retain, and PATCH soft-forget for one memory ID. Deny bank configuration/operations, `ops`-bank access, and PUT/DELETE. If those settings already match, do not open a no-op PR: report the separately approved provider activation/Space creation operation as `PENDING`. Do not seed `state/memory-providers.json` or assume a native CLI exists. |
+| `mnemon-home-space` | Provider is healthy but there is no active conversational Memory Space | Change only missing Git-managed provider settings and the pinned driver's home-only routes: health/discovery, home stats/entities/graph/list reads, home recall/retain, and PATCH soft-forget for one memory ID. Deny bank configuration/operations, `ops`-bank access, and PUT/DELETE. If those settings already match, do not open a no-op PR: report the operation as unapproved with its exact scope, preconditions, verification, and risk/stop details. Do not seed `state/memory-providers.json` or assume a native CLI exists. |
 | `playwright-cpu-throttle` | Short proxy bursts are CFS-throttled despite low sustained use and large node headroom | Prefer no proxy CPU limit while retaining a small request and memory limit. Do not replace one arbitrary cap with another or remove limits from other containers. |
 
 If none applies, use the generic evidence-backed minimal-PR plan only after `ask` selects a direction.
@@ -39,10 +39,11 @@ If none applies, use the generic evidence-backed minimal-PR plan only after `ask
 
 ## 4. Open and finish the PR
 
-1. Commit with a focused message and push. Open or update the PR with what, why, verification, and linked incident IDs. Comment the PR URL on each source ticket as soon as it exists. Keep public text terse and free of secrets.
-2. Watch every CI and AI-review check. Reproduce valid findings, fix them with regressions, and resolve/reply to threads. When a finding is wrong, reply with evidence instead of changing correct code.
-3. Do not merge, enable auto-merge, or apply the branch directly to the cluster. Stop only after CI is green and unresolved review threads are zero.
-4. Hand off with the PR head SHA and mark the merge SHA as pending human merge. After the human merges, `cluster-verification` verifies the actual merge commit, Flux revision, rollout readiness, original-signal verification, consumer resolution, and any class-specific observation window.
+1. Commit with a focused message and push. Open or update the PR with what, why, verification, linked incident IDs, and a **head-bound post-merge close/learn plan** covering exact operations, scope, preconditions, verification, and rollback/stop conditions. Write the same plan in the ticket comment immediately, including the PR URL. Keep public text terse and free of secrets.
+2. Before declaring `CI_GREEN`, verify that the PR-body and ticket plans match exactly and are bound to the current head. If either is missing or mismatched, stop as `NEEDS_HUMAN`; do not wait for merge. Recheck the merged plan before close or lesson dispatch.
+3. Watch every CI and AI-review check. Reproduce valid findings, fix them with regressions, and resolve/reply to threads. When a finding is wrong, reply with evidence instead of changing correct code.
+4. Do not merge, enable auto-merge, or apply the branch directly to the cluster. Stop only after CI is green and unresolved review threads are zero.
+5. Hand off with the PR head SHA and matching close/learn plan, and mark the merge SHA as pending human merge. After the human merges, `cluster-aiops resume` reconciles the merged revision and then invokes `cluster-verification`, closure, and lessons. Do not invoke those stages out of order.
 
 ## 5. Report contract
 

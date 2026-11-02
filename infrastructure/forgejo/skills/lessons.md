@@ -29,6 +29,8 @@ log line, a panel, a runbook step.
 
 - One lesson per distinct root cause. A repeat incident gets a comment on the
   existing lesson, not a new file.
+- `learnings/` and ticket comments are the only incident memory and recall
+  backend; no Hindsight/ops-bank or other external memory service is used.
 - No secrets, no credentials, no customer data. Hostnames and namespaces are
   fine — this repo never leaves the LAN.
 - If the fix was "revert", the lesson says why it was wrong the first time.

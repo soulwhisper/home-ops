@@ -22,7 +22,7 @@ Verify a merged fix through Flux and the original failure signal, then determine
 
 Use the runbook's `post_merge_verify` contract where present:
 
-- **Holmes**: when the runbook changes a ScheduledHealthCheck query or marker, the current ScheduledHealthCheck and child must use that expected query/marker and report `pass`; otherwise verify the same question and toolset scope with a clean current result. If the only child is old or uses an old prompt, report `PENDING_SCHEDULED_RUN`; do not rerun it as proof. Consumer resolution is separate from the CR result.
+- **Holmes**: use either acceptance path: (a) the current ScheduledHealthCheck and child use the expected query/marker and report `pass`, or (b) the underlying condition measurably improved with before/after numbers. Scheduled-run freshness applies only to path (a); do not rerun an old prompt or force a scheduler invocation when path (b) already proves correction. Consumer resolution is separate from either result.
 - **MCP tiers**: run `tools/list` plus a small read-only call with unique arguments. A previous denial is not proof of current failure; use the audit reason and current version/config instead of repeated retries.
 - **Guardrails**: verify a normal read-only call with a different fingerprint succeeds. An intentionally repeated identical read-only call may be used only when the user explicitly requested the negative test; a different read-only call must still succeed afterward. Do not generate denial traffic during a routine check.
 - **Browser**: navigate once to a unique public URL and inspect the snapshot. Do not retry after content-policy denial or switch tools to bypass it.
@@ -35,12 +35,14 @@ If the current evidence is older than the merge or scheduled run, report it as p
 
 Classify every incident as `READY_TO_CLOSE`, `OUTDATED`, `PENDING`, or `FAIL`:
 
-- `READY_TO_CLOSE`: fixed behavior verified and the finding class's acceptance gate is met: Alert/Kyverno requires consumer `resolved` plus 24h observation; ScheduledHealthCheck requires a clean answer to the same question; config/docs require one green reconcile.
+- `READY_TO_CLOSE`: fixed behavior verified and the finding class's acceptance gate is met: Alert/Kyverno requires consumer `resolved` plus 24h observation; ScheduledHealthCheck requires a clean answer to the same question or measurable before/after correction of the underlying condition; config/docs require one green reconcile.
 - `OUTDATED`: latest transition is resolved or the old finding no longer matches verified current state. An outdated close still needs a marker and reason; this command only reports it.
 - `PENDING`: merge/reconcile/scheduled run/consumer resolution/class-specific observation is incomplete, or a runtime action needs explicit user instruction.
-- `FAIL`: the original behavior still fails, a regression appeared, or evidence contradicts the fix. Return to `cluster-diagnosis`; if a conservative runbook exists, use `cluster-remediation` without `ask`.
+- `FAIL`: the original behavior still fails, a regression appeared, or evidence contradicts the fix. Report `FAIL` and stop; `cluster-aiops` maps this to `NEEDS_HUMAN` and never invokes automatic remediation.
 
-Lessons and distilled incident memory are separate close steps. Do not treat a memory write as proof that the incident is durable.
+`cluster-aiops` performs the actual close and lesson steps after these gates. Verification itself remains read-only.
+
+Lessons and distilled incident memory in `learnings/` are separate close steps. Do not treat a lesson write as proof that the incident is durable.
 
 ## 5. Report contract
 

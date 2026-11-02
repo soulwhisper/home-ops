@@ -1,6 +1,6 @@
 ---
 name: homelab-tickets
-description: Use whenever the request involves ai-ops tickets — checking, triaging or working Forgejo homelab-tickets issues, fixing/verifying/closing an incident, writing a lesson (learnings/), or recalling/retaining incident memory (hindsight ops bank). Trigger for "check tickets", "work the ticket queue", "what's open in homelab-tickets", "close #N", "write the lesson", "did we see this before".
+description: Use whenever the request involves ai-ops tickets — checking, triaging or working Forgejo homelab-tickets issues, fixing/verifying/closing an incident, writing a lesson (learnings/), or recalling incident memory from Forgejo. Trigger for "check tickets", "work the ticket queue", "what's open in homelab-tickets", "close #N", "write the lesson", "did we see this before".
 ---
 
 # homelab-tickets: check → fix → verify → learn → remember
@@ -87,19 +87,22 @@ Duplicates: comment `duplicate of #<survivor>` and close the loser
 
 ## 3. Recall before diagnosing
 
-Ask incident memory whether this was seen before (ops bank, isolated from
-chat memory). Prefer the `hindsight-ops` MCP `reflect`/`recall` tools via
-`https://api.noirprime.com/mcp/agent` when available; otherwise REST:
+Search incident history only in Forgejo: matching issues/comments and
+`learnings/`. Do not use Hindsight/ops-bank or another external memory service.
+Use the public read API where possible and the default token path
+`${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}` when writes are authorized.
 
 ```bash
-kubectl -n selfhosted-apps port-forward svc/hindsight 18888:8888 &
-curl -fsS -X POST http://127.0.0.1:18888/v1/default/banks/ops/memories/recall \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"<alertname> <namespace>/<workload> <symptom>","max_tokens":2000}' | jq '.results'
+F=http://nas.homelab.internal:9003/api/v1/repos/soulwhisper/homelab-tickets
+# Read the lesson index and relevant source tickets/comments for the same
+# alert, namespace/workload, symptom and root-cause class.
+curl -fsS "$F/contents/learnings" | jq -r '.[].name'
+# A 404 learnings/ listing means no lessons retained yet — not an error.
 ```
 
-Also grep past lessons: `curl -fsS "$F/contents/learnings" | jq -r '.[].name'`.
-A 404 bank means nothing retained yet — not an error.
+For a recurrence, read the existing lesson and its source ticket before
+choosing a runbook. Report the recurrence; the orchestrator decides whether to
+append a keyed recurrence comment to the existing lesson's ticket.
 
 ## 4. Diagnose and fix
 
@@ -148,21 +151,14 @@ Dispatch is operator-only: the Forgejo MCP allowlist deliberately excludes it
 (the NAS runner is root-capable). Repeat incident of a known root cause →
 comment on the existing lesson's ticket instead of a new lesson.
 
-## 8. Remember (incident memory)
+## 8. Remember (incident memory in `learnings/`)
 
-Retain one distilled entry per closed incident into the ops bank — facts
-only, no secrets, no raw log dumps:
-
-```bash
-curl -fsS -X POST http://127.0.0.1:18888/v1/default/banks/ops/memories \
-  -H 'Content-Type: application/json' -d '{"items":[{
-    "content":"<alertname> on <ns>/<workload>: root cause <...>; fixed by home-ops#<PR>; verify with <query>.",
-    "context":"homelab-tickets#<N>",
-    "tags":["<alertname>","<namespace>","<root_cause_class>"]}]}'
-```
-
-Use the same tags as earlier entries (`list_tags` via MCP). Agents with the
-MCP use `retain` with the same content.
+Use `learnings/` and ticket comments as the only incident memory and recall
+backend; do not use Hindsight/ops-bank or another external memory service.
+Verify the lesson file exists (or the recurrence comment on the existing
+lesson's source ticket), then recall it on the next diagnosis by searching
+matching alert, namespace/workload, and root-cause class. Keep only facts and
+verification queries, no secrets or raw log dumps.
 
 ## Don'ts
 

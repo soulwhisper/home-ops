@@ -10,7 +10,8 @@ Perform a read-only diagnosis of the live cluster. Do not edit cluster resources
 
 1. Read `skill://homelab-gitops` and `skill://homelab-tickets` first and follow their lifecycle and acceptance rules.
 2. Read `.mise.toml` and `infrastructure/talos/version.yaml`. Confirm `kubectl config current-context` before collecting evidence.
-3. Keep all queries bounded. Redact credentials, tokens, private keys, and Secret values. Do not dump complete logs or configuration payloads.
+3. **Recall before diagnosing**: search matching Forgejo tickets and `learnings/` for the same alert, resource, and root-cause class. Record whether this is a recurrence, the prior fix and verification, and any lesson that changes the current runbook. Report recurrence evidence only; `cluster-aiops` decides whether to append a keyed recurrence comment to the existing lesson's source ticket.
+4. Keep all queries bounded. Redact credentials, tokens, private keys, and Secret values. Do not dump complete logs or configuration payloads.
 
 ## Evidence collection
 
@@ -50,7 +51,8 @@ Perform a read-only diagnosis of the live cluster. Do not edit cluster resources
   - confidence and any explicitly unverified assumption;
   - minimal fix plan: Git PR versus one-off live action, verification steps, and rollback/stop condition.
   - when a conservative runbook applies, include `runbook_id`, `target_repo`, `pr_steps`, and `post_merge_verify`. Use IDs from `cluster-remediation.md`; otherwise emit `runbook_id: no_recommendation`.
+  - include `aiops_stage` and an idempotency key for `cluster-aiops resume`; diagnosis and verification stages are distinct from consumer fire/resolved transitions.
   - if the current state already satisfies the runbook and a corresponding merged PR exists, classify it as healthy and recommend `cluster-verification`, never a duplicate PR. If no merged PR exists, report the state as healthy or outdated without a post-merge handoff. If the fix is merged on `main` but not yet applied, classify it as `PENDING_RECONCILE`, never a duplicate PR.
-  - do not call `ask` during diagnosis. `ask` is reserved for `cluster-remediation` only when no conservative recommendation exists.
+  - do not call `ask` during diagnosis. `cluster-remediation` may use `ask` only when no conservative recommendation exists; heavy-impact execution always requires separate approval through `cluster-aiops` under `NEEDS_HUMAN`.
 - Separate active failures, imminent risks, stale/noise/expected conditions, and already healthy evidence.
 - Reproduce signals from raw data instead of trusting ticket text or model hypotheses. Do not default to disabling alerts, health checks, or LLM guardrails.

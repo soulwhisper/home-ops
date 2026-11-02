@@ -17,9 +17,7 @@ Ticket intake is implemented by the webhook-relay's single, serialized consumer
 direct POST-per-finding sink. It is runtime code, so it stays with its Pod and
 CI tests here; the tickets repo only holds static docs and workflows. Durable
 incident/event markers provide indexed (search-hint, full-scan fallback)
-lookup and replay suppression. Human merge, verification, closure, and manual
-lessons dispatch remain required; no auto-fixer or complete API audit history
-is implied.
+lookup and replay suppression. Human merge and failure intervention remain required. Closure and lessons dispatch may be manual or evidence-gated through an explicitly merged post-merge plan; no autonomous fixer or complete API audit history is implied.
 
 ## Sync
 

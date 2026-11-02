@@ -38,5 +38,6 @@ fixer agent) works them. This file is the law — synced from
 ## Fixer rules
 
 - The human merges. Agents propose, never merge.
-- Nothing mutates the cluster outside flux. The fix is always a git change.
+- Cluster changes are GitOps-first. Runtime mutations are forbidden except for the enumerated, evidence-gated operations in the merged-plan exception below.
 - Blast radius beats elegance: prefer the boring, reversible fix.
+- **Evidence-gated exception for `cluster-aiops`**: a merged PR whose body and ticket comment explicitly include the post-merge close/learn plan constitutes human approval for that plan. The orchestrator may then close and dispatch lessons after this document's acceptance criteria are met. The same plan may authorize only the enumerated non-disruptive operations: provider activation, Memory Space creation, and production scheduler invocation, each with intent/result records and before/after verification. No merged plan means no automatic close, lesson dispatch, or live operation, and heavy-impact operations still require separate execution-time approval.

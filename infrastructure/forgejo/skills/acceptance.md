@@ -24,7 +24,8 @@ kubectl get --raw '/api/v1/namespaces/monitoring-system/services/http:vmalertman
 
 Suppression is not healing. An empty API result alone is not proof of resolution
 or of a healthy detector. Do not close without the condition and resolution
-evidence; closure remains human-controlled.
+evidence. Closure remains human-controlled directly or through the explicit
+merged-plan approval defined in `skills/README.md`.
 
 ## ScheduledHealthCheck finding
 

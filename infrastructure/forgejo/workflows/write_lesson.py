@@ -20,6 +20,17 @@ LLM_API_BASE = os.environ["LLM_API_BASE"].rstrip("/")
 LLM_API_KEY = os.environ["LLM_API_KEY"]
 LLM_MODEL = os.environ.get("LLM_MODEL", "agent")
 TICKET = os.environ["TICKET"]
+RUN_ID = os.environ.get("RUN_ID", "")
+ACTION_KEY = os.environ.get("ACTION_KEY", "")
+
+
+def marker(value):
+    """Bound machine identifiers to a single safe line, never secret content."""
+    return re.sub(r"[^a-zA-Z0-9_.:/@-]", "_", value)[:160]
+
+
+RUN_ID = marker(RUN_ID)
+ACTION_KEY = marker(ACTION_KEY)
 
 
 def get_json(url, headers):
@@ -90,11 +101,17 @@ resp = post_json(
 )
 text = resp["choices"][0]["message"]["content"].strip()
 if text == "NO_LESSON":
-    print("ticket carries no reusable lesson; nothing written")
+    suffix = f" | aiops-action: {ACTION_KEY} | run_id: {RUN_ID}" if ACTION_KEY else ""
+    print("ticket carries no reusable lesson; nothing written" + suffix)
     sys.exit(0)
 
 # strip a code fence if the model wrapped one
 text = re.sub(r"^```(?:markdown)?\n|\n```$", "", text)
+
+if ACTION_KEY:
+    if not text.startswith("---\n"):
+        sys.exit("lesson missing YAML frontmatter; cannot embed aiops-action")
+    text = f"---\naiops_action: {ACTION_KEY}\naiops_run: {RUN_ID}\n" + text[4:]
 
 os.makedirs("learnings", exist_ok=True)
 today = datetime.date.today().isoformat()

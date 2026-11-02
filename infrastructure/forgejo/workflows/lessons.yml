@@ -1,8 +1,9 @@
 ---
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 # yamllint disable rule:truthy
-# Distills a closed ticket into learnings/ — manual dispatch only (no cron,
-# no auto-fixers; the human decides when a ticket is worth a lesson).
+# Distills a closed ticket into learnings/ — manual dispatch or an explicit
+# merged post-merge close/learn plan through cluster-aiops (no cron and no
+# autonomous fixers; acceptance evidence is always required).
 # Secrets (set once in the tickets repo's Actions settings):
 #   TICKETS_TOKEN — forgejo `pat_tickets` (API read + git push). Forgejo
 #                   rejects secret names starting with FORGEJO_/GITEA_.
@@ -16,6 +17,14 @@ on:
         description: "Ticket number to distill into a lesson"
         required: true
         type: number
+      run_id:
+        description: "cluster-aiops run identifier for crash-safe resume (optional for manual dispatch)"
+        required: false
+        type: string
+      action_key:
+        description: "Full aiops-action idempotency key embedded in the lesson (optional for manual dispatch)"
+        required: false
+        type: string
 
 jobs:
   write-lesson:
@@ -34,6 +43,8 @@ jobs:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_MODEL: agent
           TICKET: ${{ inputs.ticket }}
+          RUN_ID: ${{ inputs.run_id }}
+          ACTION_KEY: ${{ inputs.action_key }}
         run: python3 .forgejo/workflows/write_lesson.py
 
       - name: Commit and push
