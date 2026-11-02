@@ -425,11 +425,7 @@ class WorkerTests(unittest.TestCase):
         self.payload = dict(request=dict(query="question", timeout=30, mode="monitor",
                                          model="configured-model", destinations=[]),
                             deadline=1234.0, config_file=None)
-        self.failures = (
-            ("Failed to parse response:", "verdict parsing failed"),
-            ("Check produced no successful tool output", "no successful tool output"),
-            ("Verdict rejected:", "verdict rejected by evidence gate"),
-        )
+        self.failures = load("check_failures", "holmes-check-failures.py").EXECUTION_FAILURES
 
     def test_fixed_marker_never_initializes_config_or_model(self):
         self.payload["request"]["query"] = self.collector.RESOLVED
@@ -558,9 +554,10 @@ class WorkerTests(unittest.TestCase):
                 modules = {
                     "holmes.checks.collectors": self.collector,
                     "holmes.config": module("holmes.config", Config=Config),
+                    "holmes.checks.check_failures": module(
+                        "holmes.checks.check_failures", EXECUTION_FAILURES=failures),
                     "holmes.checks.checks": module(
-                        "holmes.checks.checks", execute_check=lambda **kwargs: checked,
-                        EXECUTION_FAILURES=failures),
+                        "holmes.checks.checks", execute_check=lambda **kwargs: checked),
                     "holmes.checks.models": module(
                         "holmes.checks.models", Check=Check, CheckMode=lambda value: value),
                     "holmes.core.tools": module(

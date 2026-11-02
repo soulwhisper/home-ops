@@ -89,7 +89,8 @@ def execute(payload):
         # Only this isolated HealthCheck config is bounded; interactive RCA keeps
         # the server's independently configured tool-step allowance.
         config.max_steps = min(config.max_steps, 12)
-        from holmes.checks.checks import EXECUTION_FAILURES, execute_check
+        from holmes.checks.check_failures import EXECUTION_FAILURES
+        from holmes.checks.checks import execute_check
         from holmes.checks.models import Check, CheckMode
         from holmes.core.tools import SERVER_TOOLSET_TAGS, PrerequisiteCacheMode
         from holmes.core.usage_recorder import UsageRecorderState, resolve_provider

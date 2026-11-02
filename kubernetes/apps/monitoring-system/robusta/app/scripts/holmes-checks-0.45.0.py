@@ -20,6 +20,7 @@ import yaml
 from jinja2 import Template
 from rich.console import Console
 
+from holmes.checks.check_failures import EXECUTION_FAILURE_PREFIXES
 from holmes.checks.models import (
     Check,
     CheckMode,
@@ -71,15 +72,6 @@ CHECK_STATUS_COLOR = {
     CheckStatus.FAIL: "red",
     CheckStatus.ERROR: "yellow",
 }
-
-# Fixed, non-sensitive execution classes shared with check_worker.py. Raw
-# provider/model details must never become a public diagnostic category.
-EXECUTION_FAILURES = (
-    ("Failed to parse response:", "verdict parsing failed"),
-    ("Check produced no successful tool output", "no successful tool output"),
-    ("Verdict rejected:", "verdict rejected by evidence gate"),
-)
-EXECUTION_FAILURE_PREFIXES = tuple(prefix for prefix, _ in EXECUTION_FAILURES)
 
 
 def _get_check_prompt() -> str:
