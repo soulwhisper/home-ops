@@ -616,9 +616,12 @@ def ceph_capacity(category, reader, deadline, pool_state):
         category.error("Ceph nearfull ratio is invalid")
     largest = None
     current = set()
+    usage = {}
     for row in pool_samples(reader, CEPH_POOL_USAGE, deadline, "used_fraction"):
         category.data["evaluated_count"] += 1
-        current.add((row["pool_id"], row["name"]))
+        key = (row["pool_id"], row["name"])
+        current.add(key)
+        usage[key] = row["used_fraction"]
         if row["used_fraction"] < 0:
             category.error("pool usage is negative", row)
             continue
@@ -626,7 +629,7 @@ def ceph_capacity(category, reader, deadline, pool_state):
             largest = row
         if valid_threshold and row["used_fraction"] >= nearfull:
             category.finding("pool usage is at or above the nearfull ratio", row)
-    pool_state["current"] = current
+    pool_state.update(current=current, usage=usage, nearfull=nearfull if valid_threshold else None)
     if not category.data["evaluated_count"]:
         category.error("no Ceph pool usage was returned")
     category.data["largest_usage"] = largest
@@ -634,6 +637,8 @@ def ceph_capacity(category, reader, deadline, pool_state):
 
 def ceph_growth(category, reader, deadline, pool_state):
     current = pool_state.get("current")
+    usage = pool_state.get("usage", {})
+    nearfull = pool_state.get("nearfull")
     category.data["missing_baseline_count"] = 0
     if not current:
         category.error("no current Ceph pool inventory was returned")
@@ -647,7 +652,12 @@ def ceph_growth(category, reader, deadline, pool_state):
             category.error("24-hour growth metric is outside the current pool inventory", row)
             continue
         category.data["evaluated_count"] += 1
-        if largest is None or row["used_fraction_delta"] > largest["used_fraction_delta"]:
+        delta = row["used_fraction_delta"]
+        if nearfull is not None:
+            row["projected_usage_24h"] = usage[key] + delta
+            if delta > 0 and row["projected_usage_24h"] >= nearfull:
+                category.finding("24-hour pool growth reaches or exceeds the nearfull ratio", row)
+        if largest is None or delta > largest["used_fraction_delta"]:
             largest = row
     missing = sorted(current - seen)
     category.data["missing_baseline_count"] = len(missing)

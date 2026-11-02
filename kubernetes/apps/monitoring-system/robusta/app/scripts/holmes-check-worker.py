@@ -10,14 +10,9 @@ import time
 from pathlib import Path
 
 
-def execution_error_message(rationale):
+def execution_error_message(rationale, failures):
     """Expose only locally generated failure classes, never model/provider text."""
-    safe = (
-        ("Failed to parse response:", "verdict parsing failed"),
-        ("Check produced no successful tool output", "no successful tool output"),
-        ("Verdict rejected:", "verdict rejected by evidence gate"),
-    )
-    detail = next((message for prefix, message in safe if (rationale or "").startswith(prefix)),
+    detail = next((message for prefix, message in failures if (rationale or "").startswith(prefix)),
                   "investigation failed")
     return "CheckExecutionError: " + detail
 
@@ -94,7 +89,7 @@ def execute(payload):
         # Only this isolated HealthCheck config is bounded; interactive RCA keeps
         # the server's independently configured tool-step allowance.
         config.max_steps = min(config.max_steps, 12)
-        from holmes.checks.checks import execute_check
+        from holmes.checks.checks import EXECUTION_FAILURES, execute_check
         from holmes.checks.models import Check, CheckMode
         from holmes.core.tools import SERVER_TOOLSET_TAGS, PrerequisiteCacheMode
         from holmes.core.usage_recorder import UsageRecorderState, resolve_provider
@@ -123,7 +118,7 @@ def execute(payload):
         if result["status"] == "error":
             # Provider exceptions may embed credentials or full request data.
             # Preserve only fixed, locally generated execution/evidence classes.
-            message = execution_error_message(checked.rationale)
+            message = execution_error_message(checked.rationale, EXECUTION_FAILURES)
             result.update(message=message, error=message, rationale=message)
         # Flush the existing recorder before worker exit. This wait also falls
         # within the parent's absolute budget, including any blocked DAL write.

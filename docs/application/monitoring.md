@@ -289,7 +289,7 @@ Holmes also runs on a schedule via `ScheduledHealthCheck` CRs. Results stay in C
 
 | Check | Schedule | Scope |
 |-------|----------|-------|
-| `ceph-health-growth` | every 6h | Ceph health, OSD/PG state, slow ops, pool capacity and 24h usage delta |
+| `ceph-health-growth` | every 6h | Ceph health, OSD/PG state, slow ops, pool capacity and 24h growth vs nearfull headroom |
 | `cert-expiry-watch` | daily | cert-manager Ready state, overdue/broken renewal and expiry |
 | `node-density-trend` | daily | per-node pod density and request saturation |
 | `alert-rule-quality-weekly` | weekly | alerting-loop and target health |
@@ -301,8 +301,10 @@ Holmes also runs on a schedule via `ScheduledHealthCheck` CRs. Results stay in C
 `home-ops:resolved-alert-recheck`, `home-ops:ceph-health` and
 `home-ops:cert-expiry`. Their read-only collectors evaluate the fixed questions
 without an LLM investigation. Ceph collection uses validated instant PromQL for
-health, OSD/PG state, slow ops, live nearfull thresholds and pool usage/growth;
-certificate collection covers every Certificate page and validates Ready,
+health, OSD/PG state, slow ops, live nearfull thresholds and pool usage/growth.
+Growth fails when the 24h delta would take a pool to or above its live nearfull
+ratio; smaller movements remain evidence without an arbitrary rate threshold.
+Certificate collection covers every Certificate page and validates Ready,
 renewalTime and notAfter. Backup collection covers every page and policy,
 retaining bounded counts and representative records. Rule rechecks preserve
 every matching rule identity; all expressions must be healed, and missing rules

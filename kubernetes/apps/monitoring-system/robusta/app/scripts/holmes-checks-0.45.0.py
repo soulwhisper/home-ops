@@ -72,6 +72,15 @@ CHECK_STATUS_COLOR = {
     CheckStatus.ERROR: "yellow",
 }
 
+# Fixed, non-sensitive execution classes shared with check_worker.py. Raw
+# provider/model details must never become a public diagnostic category.
+EXECUTION_FAILURES = (
+    ("Failed to parse response:", "verdict parsing failed"),
+    ("Check produced no successful tool output", "no successful tool output"),
+    ("Verdict rejected:", "verdict rejected by evidence gate"),
+)
+EXECUTION_FAILURE_PREFIXES = tuple(prefix for prefix, _ in EXECUTION_FAILURES)
+
 
 def _get_check_prompt() -> str:
     current_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -533,11 +542,6 @@ def execute_check(
 
         duration = time.time() - start_time
 
-        execution_failure_prefixes = (
-            "Failed to parse response:",
-            "Check produced no successful tool output",
-            "Verdict rejected:",
-        )
         if check_response.passed:
             result = CheckResult(
                 check_name=check.name,
@@ -547,7 +551,7 @@ def execute_check(
                 duration=duration,
                 rationale=check_response.rationale,
             )
-        elif check_response.rationale.startswith(execution_failure_prefixes):
+        elif check_response.rationale.startswith(EXECUTION_FAILURE_PREFIXES):
             # The lane/toolchain failed before evaluating the target. ERROR keeps
             # HolmesHealthCheckFailed firing (result=~"fail|error") without
             # presenting the target as the diagnosed fault (tickets #13/#19).

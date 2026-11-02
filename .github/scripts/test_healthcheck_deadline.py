@@ -425,6 +425,11 @@ class WorkerTests(unittest.TestCase):
         self.payload = dict(request=dict(query="question", timeout=30, mode="monitor",
                                          model="configured-model", destinations=[]),
                             deadline=1234.0, config_file=None)
+        self.failures = (
+            ("Failed to parse response:", "verdict parsing failed"),
+            ("Check produced no successful tool output", "no successful tool output"),
+            ("Verdict rejected:", "verdict rejected by evidence gate"),
+        )
 
     def test_fixed_marker_never_initializes_config_or_model(self):
         self.payload["request"]["query"] = self.collector.RESOLVED
@@ -510,14 +515,14 @@ class WorkerTests(unittest.TestCase):
         }
         for rationale, detail in cases.items():
             with self.subTest(detail=detail):
-                message = self.worker.execution_error_message(rationale)
+                message = self.worker.execution_error_message(rationale, self.failures)
                 self.assertEqual(message, "CheckExecutionError: " + detail)
                 self.assertNotIn("raw model input", message)
                 self.assertNotIn("original model rationale", message)
 
     def test_provider_exception_text_and_credentials_stay_masked(self):
         secret = "provider failed with api_key=DO-NOT-LEAK"
-        message = self.worker.execution_error_message(secret)
+        message = self.worker.execution_error_message(secret, self.failures)
         self.assertEqual(message, "CheckExecutionError: investigation failed")
         self.assertNotIn("DO-NOT-LEAK", message)
 
@@ -527,9 +532,11 @@ class WorkerTests(unittest.TestCase):
             result.__dict__.update(attrs)
             return result
 
-        for rationale, expected in (
-                ("Failed to parse response: DO-NOT-LEAK", "CheckExecutionError: verdict parsing failed"),
-                ("provider api_key=DO-NOT-LEAK", "CheckExecutionError: investigation failed")):
+        for rationale, expected, failures in (
+                ("Failed to parse response: DO-NOT-LEAK", "CheckExecutionError: verdict parsing failed", self.failures),
+                ("provider api_key=DO-NOT-LEAK", "CheckExecutionError: investigation failed", self.failures),
+                ("Shared boundary: DO-NOT-LEAK", "CheckExecutionError: shared boundary",
+                 self.failures + (("Shared boundary:", "shared boundary"),))):
             with self.subTest(expected=expected):
                 ai = types.SimpleNamespace(
                     llm=types.SimpleNamespace(model="openai/agent", is_robusta_model=False))
@@ -552,7 +559,8 @@ class WorkerTests(unittest.TestCase):
                     "holmes.checks.collectors": self.collector,
                     "holmes.config": module("holmes.config", Config=Config),
                     "holmes.checks.checks": module(
-                        "holmes.checks.checks", execute_check=lambda **kwargs: checked),
+                        "holmes.checks.checks", execute_check=lambda **kwargs: checked,
+                        EXECUTION_FAILURES=failures),
                     "holmes.checks.models": module(
                         "holmes.checks.models", Check=Check, CheckMode=lambda value: value),
                     "holmes.core.tools": module(

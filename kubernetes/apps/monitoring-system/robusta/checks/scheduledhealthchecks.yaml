@@ -10,8 +10,8 @@ spec:
   # Keep the same bounded worker budget as model-backed health checks.
   timeout: 300
   # Fixed read-only collector: current health, OSD/PG state, slow ops, pool
-  # capacity against the live nearfull ratio, and the 24h pool usage delta.
-  # No model-generated PromQL or evidence-gate verdict is involved.
+  # capacity against the live nearfull ratio, and 24h growth that would consume
+  # the remaining nearfull headroom. No model-generated PromQL or verdict.
   query: "home-ops:ceph-health"
 ---
 apiVersion: holmesgpt.dev/v1alpha1

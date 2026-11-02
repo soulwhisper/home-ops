@@ -525,6 +525,20 @@ class CephTests(unittest.TestCase):
         self.assertFalse(growth["coverage_complete"])
         self.assertEqual(growth["missing_baseline_count"], 1)
 
+    def test_growth_reaching_nearfull_headroom_is_a_finding(self):
+        for usage, delta, expected in ((0.80, 0.05, "fail"), (0.80, 0.04, "pass"),
+                                       (0.10, 0.80, "fail")):
+            with self.subTest(usage=usage, delta=delta):
+                reader = CephFixtureReader()
+                reader.queries[collectors.CEPH_POOL_USAGE] = [
+                    sample(usage, pool_id="1", name="ceph-blockpool")]
+                reader.queries[collectors.CEPH_POOL_GROWTH] = [
+                    sample(delta, pool_id="1", name="ceph-blockpool")]
+                outcome = run(reader, collectors.CEPH)
+                self.assertEqual(outcome["status"], expected)
+                growth = categories(outcome)["ceph_pool_growth_24h"]
+                self.assertEqual(growth["finding_count"], 1 if expected == "fail" else 0)
+
 
 class CertificateTests(unittest.TestCase):
     def fixture(self, rows=None):
