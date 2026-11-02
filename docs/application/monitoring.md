@@ -289,22 +289,29 @@ Holmes also runs on a schedule via `ScheduledHealthCheck` CRs. Results stay in C
 
 | Check | Schedule | Scope |
 |-------|----------|-------|
-| `ceph-health-growth` | every 6h | Ceph health, OSD/pool usage trends |
-| `cert-expiry-watch` | daily | cert-manager certs expiring < 14d or not Ready |
+| `ceph-health-growth` | every 6h | Ceph health, OSD/PG state, slow ops, pool capacity and 24h growth vs nearfull headroom |
+| `cert-expiry-watch` | daily | cert-manager Ready state, overdue/broken renewal and expiry |
 | `node-density-trend` | daily | per-node pod density and request saturation |
 | `alert-rule-quality-weekly` | weekly | alerting-loop and target health |
 | `resolved-alert-recheck-daily` | every 6h | single-sample `sum(absent(expression)) or vector(0)` healing checks for recently resolved alerts |
 | `backup-chain-daily` | daily | kopiur + CNPG backup runs and snapshot age |
 
-`backup-chain-daily` and `resolved-alert-recheck-daily` use the reserved query
-markers `home-ops:backup-chain` and `home-ops:resolved-alert-recheck`. Their
-read-only collectors evaluate the fixed questions without an LLM investigation.
-Backup collection covers every page and policy, retaining bounded counts and
-representative records. Rule rechecks preserve every matching rule identity;
-all expressions must be healed, and missing rules or unsupported datasources
-remain evaluation errors. Expressions and annotations are not echoed into
-generated advice. A measured unhealthy condition is `fail`; incomplete or
-failed collection is `error`, never a healthy fallback.
+`backup-chain-daily`, `resolved-alert-recheck-daily`, `ceph-health-growth` and
+`cert-expiry-watch` use the reserved query markers `home-ops:backup-chain`,
+`home-ops:resolved-alert-recheck`, `home-ops:ceph-health` and
+`home-ops:cert-expiry`. Their read-only collectors evaluate the fixed questions
+without an LLM investigation. Ceph collection uses validated instant PromQL for
+health, OSD/PG state, slow ops, live nearfull thresholds and pool usage/growth.
+Growth fails when the 24h delta would take a pool to or above its live nearfull
+ratio; smaller movements remain evidence without an arbitrary rate threshold.
+Certificate collection covers every Certificate page and validates Ready,
+renewalTime and notAfter. Backup collection covers every page and policy,
+retaining bounded counts and representative records. Rule rechecks preserve
+every matching rule identity; all expressions must be healed, and missing rules
+or unsupported datasources remain evaluation errors. Expressions and
+annotations are not echoed into generated advice. A measured unhealthy
+condition is `fail`; incomplete or failed collection is `error`, never a
+healthy fallback.
 
 Each API check runs in a fresh worker process group with one execution
 deadline, including model initialization and tool calls. Deadline or client
@@ -313,7 +320,9 @@ Other scheduled checks retain the guarded AI/evidence path with a bounded
 HealthCheck-only tool-step budget; interactive RCA is unchanged. The operator
 does not replay execution POSTs, and UID/resource-version-protected status
 updates keep completed attempts terminal. The explicit rerun annotation starts
-a separate attempt rather than reviving a late result.
+a separate attempt rather than reviving a late result. Model-backed execution
+errors publish only fixed sanitized categories; provider exception text and
+raw model rationale are never copied into HealthCheck status.
 
 After deployment, verify a clean fixed-check result and a timed-out worker,
 including the absence of surviving subprocesses and consistent child/parent CR

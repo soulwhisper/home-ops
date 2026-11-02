@@ -153,4 +153,4 @@ spec:
           matchExpressions:
             # Branch/commit/PR only. merge_pull_request and every other tool
             # are denied both here and by the server's GITHUB_TOOLS allowlist.
-            - mcp.tool.name.matches('^mcp-github-pr_(get_file_contents|create_branch|create_or_update_file|push_files|get_commit|list_commits|pull_request_read|list_pull_requests|search_pull_requests|create_pull_request)$')
+            - mcp.tool.name.matches('^mcp-github-pr_(get_file_contents|list_branches|create_branch|create_or_update_file|push_files|get_commit|list_commits|pull_request_read|list_pull_requests|search_pull_requests|create_pull_request)$')

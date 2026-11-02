@@ -116,12 +116,13 @@ spec:
               tag: 6.6-24.04_edge
             command: ["/usr/local/bin/entrypoint.sh"]
             args: ["-f", "/etc/squid/squid.conf", "-NYC"]
+            # No CPU limit: short Squid bursts were CFS-throttled despite low
+            # average use; the 10m request retains shares under contention.
             resources:
               requests:
                 cpu: 10m
                 memory: 32Mi
               limits:
-                cpu: 100m
                 memory: 256Mi
             securityContext:
               allowPrivilegeEscalation: false

@@ -26,7 +26,7 @@ spec:
                 template:
                   metadata:
                     annotations:
-                      home-ops/checks-patch-rev: "15"
+                      home-ops/checks-patch-rev: "18"
                   spec:
                     volumes:
                       - name: holmes-checks-patch
@@ -107,6 +107,10 @@ spec:
           subPath: checks.py
           readOnly: true
         - name: holmes-checks-patch
+          mountPath: /app/holmes/checks/check_failures.py
+          subPath: check_failures.py
+          readOnly: true
+        - name: holmes-checks-patch
           mountPath: /app/holmes/checks/checks_api.py
           subPath: checks_api.py
           readOnly: true
@@ -124,7 +128,7 @@ spec:
           readOnly: true
       podAnnotations:
         # subPath mounts require a rollout when any check patch changes.
-        home-ops/checks-patch-rev: "15"
+        home-ops/checks-patch-rev: "18"
         # the agentgateway lane key lives in the robusta-holmes Secret; without
         # this a key rotation leaves Holmes on the old key (401 every check)
         reloader.stakater.com/auto: "true"

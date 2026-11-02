@@ -425,6 +425,7 @@ class WorkerTests(unittest.TestCase):
         self.payload = dict(request=dict(query="question", timeout=30, mode="monitor",
                                          model="configured-model", destinations=[]),
                             deadline=1234.0, config_file=None)
+        self.failures = load("check_failures", "holmes-check-failures.py").EXECUTION_FAILURES
 
     def test_fixed_marker_never_initializes_config_or_model(self):
         self.payload["request"]["query"] = self.collector.RESOLVED
@@ -501,6 +502,78 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(result["notifications"], [{"type": "pagerduty", "status": "sent"}])
         self.assertEqual(deliveries, ["integration-key"])
         self.assertEqual(issues[0]["source_instance_id"], "main")
+
+    def test_execution_error_preserves_only_fixed_safe_classes(self):
+        cases = {
+            "Failed to parse response: raw model input": "verdict parsing failed",
+            "Check produced no successful tool output this run (2 tool calls)": "no successful tool output",
+            "Verdict rejected: original model rationale": "verdict rejected by evidence gate",
+        }
+        for rationale, detail in cases.items():
+            with self.subTest(detail=detail):
+                message = self.worker.execution_error_message(rationale, self.failures)
+                self.assertEqual(message, "CheckExecutionError: " + detail)
+                self.assertNotIn("raw model input", message)
+                self.assertNotIn("original model rationale", message)
+
+    def test_provider_exception_text_and_credentials_stay_masked(self):
+        secret = "provider failed with api_key=DO-NOT-LEAK"
+        message = self.worker.execution_error_message(secret, self.failures)
+        self.assertEqual(message, "CheckExecutionError: investigation failed")
+        self.assertNotIn("DO-NOT-LEAK", message)
+
+    def test_execute_sanitizes_every_error_output_field(self):
+        def module(name, **attrs):
+            result = types.ModuleType(name)
+            result.__dict__.update(attrs)
+            return result
+
+        for rationale, expected, failures in (
+                ("Failed to parse response: DO-NOT-LEAK", "CheckExecutionError: verdict parsing failed", self.failures),
+                ("provider api_key=DO-NOT-LEAK", "CheckExecutionError: investigation failed", self.failures),
+                ("Shared boundary: DO-NOT-LEAK", "CheckExecutionError: shared boundary",
+                 self.failures + (("Shared boundary:", "shared boundary"),))):
+            with self.subTest(expected=expected):
+                ai = types.SimpleNamespace(
+                    llm=types.SimpleNamespace(model="openai/agent", is_robusta_model=False))
+                config = types.SimpleNamespace(
+                    max_steps=12, dal=None, create_toolcalling_llm=lambda **kwargs: ai)
+                class Config:
+                    @classmethod
+                    def load_from_env(cls):
+                        return config
+                class Check:
+                    def __init__(self, **kwargs):
+                        self.name = kwargs["name"]
+                class UsageRecorderState:
+                    def __init__(self, **kwargs):
+                        pass
+                checked = types.SimpleNamespace(
+                    status=types.SimpleNamespace(value="error"), message=rationale,
+                    rationale=rationale, error=rationale)
+                modules = {
+                    "holmes.checks.collectors": self.collector,
+                    "holmes.config": module("holmes.config", Config=Config),
+                    "holmes.checks.check_failures": module(
+                        "holmes.checks.check_failures", EXECUTION_FAILURES=failures),
+                    "holmes.checks.checks": module(
+                        "holmes.checks.checks", execute_check=lambda **kwargs: checked),
+                    "holmes.checks.models": module(
+                        "holmes.checks.models", Check=Check, CheckMode=lambda value: value),
+                    "holmes.core.tools": module(
+                        "holmes.core.tools", SERVER_TOOLSET_TAGS=[],
+                        PrerequisiteCacheMode=types.SimpleNamespace(DISABLED="disabled")),
+                    "holmes.core.usage_recorder": module(
+                        "holmes.core.usage_recorder", UsageRecorderState=UsageRecorderState,
+                        resolve_provider=lambda model: "openai",
+                        _RECORDER_EXECUTOR=types.SimpleNamespace(shutdown=lambda wait: None)),
+                }
+                with patch.dict(sys.modules, modules), patch.object(self.collector, "collect", return_value=None):
+                    result = self.worker.execute(self.payload)
+                self.assertEqual(result["status"], "error")
+                for field in ("message", "error", "rationale"):
+                    self.assertEqual(result[field], expected)
+                self.assertNotIn("DO-NOT-LEAK", json.dumps(result))
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ import yaml
 from jinja2 import Template
 from rich.console import Console
 
+from holmes.checks.check_failures import EXECUTION_FAILURE_PREFIXES
 from holmes.checks.models import (
     Check,
     CheckMode,
@@ -533,11 +534,6 @@ def execute_check(
 
         duration = time.time() - start_time
 
-        execution_failure_prefixes = (
-            "Failed to parse response:",
-            "Check produced no successful tool output",
-            "Verdict rejected:",
-        )
         if check_response.passed:
             result = CheckResult(
                 check_name=check.name,
@@ -547,7 +543,7 @@ def execute_check(
                 duration=duration,
                 rationale=check_response.rationale,
             )
-        elif check_response.rationale.startswith(execution_failure_prefixes):
+        elif check_response.rationale.startswith(EXECUTION_FAILURE_PREFIXES):
             # The lane/toolchain failed before evaluating the target. ERROR keeps
             # HolmesHealthCheckFailed firing (result=~"fail|error") without
             # presenting the target as the diagnosed fault (tickets #13/#19).
