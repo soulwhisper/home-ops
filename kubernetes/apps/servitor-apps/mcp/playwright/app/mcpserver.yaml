@@ -18,8 +18,11 @@ spec:
     - --blocked-origins=http://127.0.0.1:*;http://localhost:*;http://[::1]:*;https://127.0.0.1:*;https://localhost:*;https://[::1]:*
     - --output-dir=/tmp/playwright
   env:
+    # ToolHive rewrites Host to the selected upstream Service or backend Pod IP.
+    # Those addresses are not stable allowlist inputs; Cilium and ToolHive own
+    # the client-facing network and authentication boundaries.
     - name: PLAYWRIGHT_MCP_ALLOWED_HOSTS
-      value: "$(POD_IP):8931,mcp-playwright-0.mcp-mcp-playwright-headless,mcp-playwright-0.mcp-mcp-playwright-headless:8931,mcp-mcp-playwright-headless,mcp-mcp-playwright-headless:8931,mcp-mcp-playwright,mcp-mcp-playwright:8931,localhost,localhost:8931"
+      value: "*"
   transport: streamable-http
   mcpPort: 8931
   resources:
@@ -38,13 +41,6 @@ spec:
           type: RuntimeDefault
       containers:
         - name: mcp
-          # ToolHive pins follow-up requests to the backend Pod IP and rewrites
-          # Host to <pod-ip>:8931. Inject the current address for the allowlist.
-          env:
-            - name: POD_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
