@@ -132,14 +132,19 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  tcpSocket: { port: 8888 }
+                  exec:
+                    command: &egress-healthcheck
+                      - /bin/bash
+                      - -c
+                      - exec 3<>/dev/tcp/127.0.0.1/8888
                   periodSeconds: 2
                   failureThreshold: 30
               liveness: &egress-probe
                 enabled: true
                 custom: true
                 spec:
-                  tcpSocket: { port: 8888 }
+                  exec:
+                    command: *egress-healthcheck
                   periodSeconds: 30
                   failureThreshold: 3
               readiness: *egress-probe
