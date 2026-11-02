@@ -24,6 +24,10 @@ spec:
       value: /tmp/playwright
     - name: XDG_CACHE_HOME
       value: /tmp/playwright/.cache
+    # Relative filenames from screenshot/console/network/evaluate tools resolve
+    # against HOME; it must be writable too.
+    - name: HOME
+      value: /tmp/playwright
     # ToolHive rewrites Host to the selected upstream Service or backend Pod IP.
     # Those addresses are not stable allowlist inputs; Cilium and ToolHive own
     # the client-facing network and authentication boundaries.

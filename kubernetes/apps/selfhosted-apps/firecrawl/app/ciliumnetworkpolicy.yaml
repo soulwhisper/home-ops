@@ -8,6 +8,16 @@ spec:
   endpointSelector:
     matchLabels:
       "app.kubernetes.io/name": firecrawl
+  # Selecting endpoints with only egress leaves ingress default-denied.
+  # Permit only the ToolHive MCP client to the API, not arbitrary consumers.
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "toolhive-name": mcp-firecrawl
+            "k8s:io.kubernetes.pod.namespace": servitor-apps
+      toPorts:
+        - ports:
+            - { port: "3002", protocol: TCP }
   egress:
     # LLM gateway
     - toServices:
