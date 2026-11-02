@@ -217,7 +217,13 @@ async def on_healthcheck_update(old: Dict[str, Any], new: Dict[str, Any], name: 
         # writes change the resourceVersion before the handler is retried.
         first_attempt = kwargs.get("started")
         token = first_attempt.isoformat() if first_attempt is not None else metadata["resourceVersion"]
-        await _run(name, namespace, metadata["uid"], f"rerun:{token}", rerun=True, logger=logger)
+        # Kopf update bodies may omit metadata.uid; the handler kwargs retain
+        # the same object identity. Prefer the body when present for test and
+        # resume compatibility, otherwise use Kopf's uid.
+        uid = metadata.get("uid") or kwargs.get("uid")
+        if uid is None:
+            raise ValueError("HealthCheck rerun UID missing")
+        await _run(name, namespace, uid, f"rerun:{token}", rerun=True, logger=logger)
 
 
 @kopf.on.resume("holmesgpt.dev", "v1alpha1", "healthchecks")

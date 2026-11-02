@@ -320,7 +320,8 @@ Other scheduled checks retain the guarded AI/evidence path with a bounded
 HealthCheck-only tool-step budget; interactive RCA is unchanged. The operator
 does not replay execution POSTs, and UID/resource-version-protected status
 updates keep completed attempts terminal. The explicit rerun annotation starts
-a separate attempt rather than reviving a late result. Model-backed execution
+a separate attempt rather than reviving a late result, using Kopf's UID when an
+update body omits `metadata.uid`. Model-backed execution
 errors publish only fixed sanitized categories; provider exception text and
 raw model rationale are never copied into HealthCheck status.
 
