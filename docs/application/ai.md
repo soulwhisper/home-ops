@@ -250,7 +250,8 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
 - **Ingress**: `dsh.noirprime.com` via kgateway-internal
 - **State**: kopiur-backed PVC `dsh-web` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs` and `/backups` share the `dsh-web-cache` `ceph-cache` PVC; `/tmp` remains emptyDir
-- **MCP/Skills**: the `dsh-web` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster, home, browser and github-pr tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/home`, `/mcp/browser`, `/mcp/github-pr` with `mcp_search`, `mcp_cluster`, `mcp_home`, `mcp_browser`, `mcp_github_pr`, never in Git). Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
+- **MCP/Skills**: the `dsh-web` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster, home, browser and github-pr tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/home`, `/mcp/browser`, `/mcp/github-pr` with `mcp_search`, `mcp_cluster`, `mcp_home`, `mcp_browser`, `mcp_github_pr`, never in Git). Browser startup remains non-fatal, with reconnect enabled from 1s to a 30s ceiling and no practical attempt cap so a long backend outage does not require a DSH restart. Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
+- **Mnemon**: runs inside DSH Web, not as a separate Deployment or CRD. Conversational long-term memory uses the Hindsight `home` bank; the incident-only `ops` bank stays isolated. Provider configuration and Memory Space mappings persist on the `dsh-web` PVC, while memory contents persist in Hindsight/CNPG. Provider health and discovery do not create a Memory Space or bank. A fresh installation requires one authenticated **Memory System → Memory Spaces → Create Memory Space** operation with Provider `hindsight`, name `Home`, description `Durable conversational facts, decisions and preferences for DSH Web.`, connection `bankId=home`, `budget=mid`, and `active=true`; remote writes require `writeEnabled=true` and `remoteAccess=trusted-host`. There is no supported declarative Space manifest—do not seed `state/memory-providers.json`. Hindsight creates `home` lazily on the first retain; verify one retain and recall after creation.
 - **LLM/MCP**: UI-selectable agentgateway, DeepSeek and Kimi providers; MCP uses the guarded tiers. No default model is pinned
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (`/v1/*` + `/mcp/*`), world-except-private :443 for direct DeepSeek/Kimi LLM calls and the user-driven plugin market, kube-dns
 
@@ -346,13 +347,13 @@ broad user PAT was provisioned.
 
 | Server     | Transport             | Notes                                       |
 | ---------- | --------------------- | ------------------------------------------- |
-| playwright | Streamable HTTP :8931 | Connects over CDP to the separate `playwright` Chromium workload on :9222; renderer HTTP(S) is forced through a loopback-only Squid that denies loopback/private/CDP destinations while CDP control stays on a separate nginx channel |
+| playwright | Streamable HTTP :8931 | Connects over CDP to the separate `playwright` Chromium workload on :9222; renderer HTTP(S) is forced through a loopback-only Squid that denies loopback/private/CDP destinations while CDP control stays on a separate nginx channel. `TMPDIR=/tmp/playwright` places `pw-<hash>` browser socket directories on the writable emptyDir despite the read-only root filesystem |
 
 #### github-pr (dsh-web only)
 
 | Server    | Transport     | Notes                                                                  |
 | --------- | ------------- | ---------------------------------------------------------------------- |
-| github-pr | HTTP :8082    | Shared scoped `mcp_github_token`; branch/commit/create-PR tools only, no merge |
+| github-pr | HTTP :8082    | Shared scoped `mcp_github_token`; branch listing/creation, file commit and create-PR tools only, no merge |
 
 #### Obsidian facts workflow
 
