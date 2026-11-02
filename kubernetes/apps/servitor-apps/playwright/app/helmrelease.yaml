@@ -114,8 +114,8 @@ spec:
             image:
               repository: docker.io/ubuntu/squid
               tag: 6.6-24.04_edge
-            command: ["squid"]
-            args: ["-N", "-f", "/etc/squid/squid.conf"]
+            command: ["/usr/local/bin/entrypoint.sh"]
+            args: ["-f", "/etc/squid/squid.conf", "-NYC"]
             resources:
               requests:
                 cpu: 10m
