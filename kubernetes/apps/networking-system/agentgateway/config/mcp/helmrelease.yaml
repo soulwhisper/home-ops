@@ -32,9 +32,9 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/mcp-guardrails
-              # 1.3.0: batched PromptGuard windows + balanced response windows
-              # + full-size readiness warmup for long MCP responses (#146)
-              tag: 1.3.1
+              # 1.4.0: LoopRule only matches the newest fingerprint, so an old
+              # retry triad cannot lock every later tool call in the trace.
+              tag: 1.4.0
             env:
               # App is OTLP/gRPC-only (guardrails/otel.py proto.grpc exporters,
               # insecure derived from the http:// scheme). gRPC must go to :4317;
