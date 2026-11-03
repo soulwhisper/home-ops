@@ -31,7 +31,45 @@ lessons workflow, never by sync; the recipe does not touch it.
 
 The lessons workflow needs two repository Actions secrets in the tickets repo:
 `TICKETS_TOKEN` (`pat_tickets`; Forgejo reserves the `FORGEJO_`/`GITEA_`
-prefixes) and `LLM_API_KEY` (`agentgateway.llm_agent`).
+prefixes) and `LLM_API_KEY` (`agentgateway.llm_agent`). `TICKETS_TOKEN` must
+permit API reads, source-ticket comment writes, and Git pushes. For a keyed
+supervised dispatch, ordinary lesson success requires the pushed Git file's
+exact `aiops_action` **and** `aiops_run` frontmatter. `NO_LESSON` success
+instead requires all three parts in the same source-ticket comment:
+`<!-- aiops-no-lesson -->`, the exact `aiops-action` marker, and the exact
+`aiops_run: <RUN_ID>` line. These artifacts remain valid even when a later
+unrelated workflow step fails; record `run.status` as evidence. A run whose
+`run.status` is `failure` or `cancelled` and which lacks either valid artifact
+routes to `NEEDS_HUMAN(resume_stage=LEARN_PENDING)`, never indefinite pending.
+An adopted nonterminal run without a settled artifact records `next_check_at`
+and a bounded `execution_deadline`; expiry likewise routes to that human state
+with run ID, current `run.status`, and bounded diagnostics. Before resuming,
+recheck status and artifacts: terminal runs or valid artifacts follow normal
+completion. Every other return to `LEARN_PENDING`, including runner repair or
+an explicitly extended wait, requires fresh `next_check_at` and a new bounded
+`execution_deadline`. Human cancellation without a valid artifact uses the
+supersession path. The master never cancels automatically. Only explicit human approval authorizes a same-key retry. Multiple exact-input
+runs require every earlier attempt to have `run.status` of `failure` or
+`cancelled` and be recorded as superseded, with the latest human-authorized
+attempt adopted; all other multiple matches are ambiguous and stop recovery.
+Never blindly retry. The `NO_LESSON` comment is same-run recovery evidence, not
+long-term lesson content.
+
+Deterministic recovery applies only to keyed supervised dispatches. Initial
+dispatch is allowed only for a recorded `not_sent` intent or a response that
+definitively rejected creation. `accepted` with zero matches remains
+`LEARN_PENDING` with `next_check_at` until `dispatch_deadline`, then becomes
+`NEEDS_HUMAN(resume_stage=LEARN_PENDING)`. Timeout/unknown dispatch plus zero
+matches is `UNKNOWN` and immediately follows that human path. Neither case
+proves non-creation or permits redispatch; only independent human-verified
+non-creation evidence may record `rejected` plus `rejection_evidence` and
+resume `LEARN_PENDING`. The approved same-key retry after `run.status` is
+`failure` or `cancelled` above is a separate path. Manual unkeyed unknown outcomes are operator-managed by
+ticket/time/run identity, jobs/logs, or the date/ticket/slug lesson path as
+applicable. Manual `NO_LESSON` is logs-only, has no keyed `DONE` guarantee, and
+must not be automatically redispatched. See `skills/lessons.md` for the
+artifact contract and the `homelab-tickets` operator skill for dispatch
+recovery and recall.
 
 ## Runner
 

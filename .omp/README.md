@@ -49,6 +49,7 @@ Forgejo is the only state and memory backend:
 - External artifacts are checked before repeating an action. An intent alone never proves completion.
 - `WAIT_HUMAN_MERGE`, upstream merge/release/publication waits, `PENDING_RECONCILE`, `PENDING_SCHEDULED_RUN`, and `WAIT_OBSERVATION` are resumable stages, not active retry loops.
 - `NEEDS_HUMAN` records `resume_stage` and the exact decision required. It never invokes automatic remediation.
+- `HUMAN_MANAGED` is a finite no-PR terminal outside merged-plan authority, not `DONE`. It records a stable occurrence key, `na` action key, evidence, and reason; the master releases the lease and performs no close, lesson dispatch, or runtime mutation. Resume is a no-op.
 - A newer firing event supersedes verification and stops the old run. External closure skips only the close API mutation: learning resumes directly only from an already verified `TICKET_CLOSED`; otherwise merged-plan authorization and class-specific verification/refire checks are still required.
 
 Close and learning have separate idempotent stages:
@@ -82,6 +83,16 @@ Do not bypass these interfaces with auto-merge, direct `kubectl apply/edit/delet
 - Heavy operations, unapproved runtime work, unknown runbooks, and incidents without sufficient evidence remain explicit supervised decisions; they are not silently forced through the loop.
 - The current runbooks cover recent incident classes; unknown classes return `no_recommendation` for the master instead of guessing.
 - After changing `infrastructure/forgejo`, `just forgejo sync` remains a required operator step to update the actual tickets repo.
+
+## Current detection gaps
+
+These intake coverage and reliability boundaries remain outside the supervised command contracts:
+
+- Ticket creation accepts only `PROMETHEUS` findings normalized to MEDIUM/HIGH. Lower-severity findings are notification-only; Watchdog, blackholed alerts, and inhibited warnings intentionally do not enter this loop.
+- Robusta builtin OOM/CrashLoop/ImagePull/Evicted findings do not enter the ticket loop. The webhook-relay comment says they still reach Feishu, but the Robusta→Feishu route is disabled and Robusta has only the tickets sink. Corresponding Prometheus alerts may provide separate coverage; the builtin findings themselves have no independent notification path in the current configuration.
+- Intake has no durable queue, dead-letter store, or backfill scan. Short relay retries, delivery backpressure, or a consumer outage can lose a finding before its Forgejo marker exists; a later unmatched resolution does not recreate the incident.
+- Holmes investigation is best-effort: its queue is in-memory and bounded, and investigation/comment failures have no retry or dead-letter path. A missing Holmes comment is not evidence of diagnosis or healing.
+- Ticket intake and Holmes do not invoke the master. A human starts `cluster-aiops run` or `resume`; this is an intentional supervised boundary, not an automatic trigger failure.
 
 ## Future work: forced loop and enforced gates
 

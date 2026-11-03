@@ -9,7 +9,7 @@ Turn a current `cluster-diagnosis` finding or an explicit `runbook_id` into a re
 ## 1. Prerequisites and recommendation gate
 
 1. Read `skill://homelab-gitops` and `skill://homelab-tickets`, then confirm the current branch, context, finding evidence, and existing related PRs. For ticket operations, use `F="${FORGEJO_URL:-http://nas.homelab.internal:9003}/api/v1/repos/${TICKETS_REPO:-soulwhisper/homelab-tickets}"` and `TOKEN_FILE="${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}"`.
-2. Verify that the finding still exists and inspect both open PRs and recently merged PRs plus desired state on `main`. Whenever a corresponding merged PR is applied, do not create a branch or PR; return `VERIFYING` with merge/revision evidence and current behavior, including active or drifted findings. If the corresponding fix is merged but its revision is not applied, return `RECONCILING`; do not invoke verification. If current state is healthy/outdated without a corresponding merged PR, return `NEEDS_HUMAN` with a stable occurrence key and no post-merge handoff. The master performs reconciliation and verification.
+2. Verify that the finding still exists and inspect both open PRs and recently merged PRs plus desired state on `main`. Whenever a corresponding merged PR is applied, do not create a branch or PR; return `VERIFYING` with merge/revision evidence and current behavior, including active or drifted findings. If the corresponding fix is merged but its revision is not applied, return `RECONCILING`; do not invoke verification. If current state is healthy/outdated without a corresponding merged PR, including after a human-performed no-PR action, return `HUMAN_MANAGED` with a stable occurrence key, `na` action key, evidence, reason, and no post-merge handoff. This is a finite terminal, not `DONE`: the master releases the lease, performs no close, lesson dispatch, or runtime mutation, and resume is a no-op. A human-performed action with a corresponding merged PR still returns `VERIFYING`. The master performs reconciliation and verification.
 3. Select exactly one conservative runbook from the table. A matching runbook is the recommendation: proceed without calling `ask`.
 4. If no runbook matches, or several materially different fixes have no boring/safe default, return `runbook_id: no_recommendation` and `NEEDS_HUMAN` with `resume_stage: DIAGNOSED` plus 2–5 evidence-backed options and their tradeoffs. The master owns the human decision; this subcommand does not call `ask`. Proceed with a generic evidence-backed minimal-PR plan only when the master supplies the selected direction.
 5. If the required evidence or repository access is unavailable, finish all reachable work and state the exact prerequisite. Do not invent a runbook or silently narrow the request.
@@ -35,7 +35,7 @@ A generic plan is valid only after the master supplies the human-selected direct
 2. Keep blast radius minimal and reuse existing patterns. Update affected call sites, rollout annotations, tests, and docs together. No secrets or raw credentials in code, logs, tests, or PR text.
 3. Add regressions only for consumer-visible behavior, boundaries, and invariants. Prove new tests fail before the fix and pass after it; do not add source-text, mock-echo, or tautological tests.
 4. Run targeted verification and the relevant full suite plus `prek run`. Exercise the changed behavior when a runtime is available; never weaken alerts, evidence gates, or guardrails to make a check pass.
-5. For upstream fixes, keep the upstream PR separate and return `PR_OPEN` after opening or updating it. The master owns the upstream source-PR and release-please merge waits plus image-publication verification. Resume the home-ops image bump only after the master supplies the published image/digest evidence; do not wait for those events inside this subcommand.
+5. For upstream fixes, keep the upstream PR separate and return `PR_OPEN` after opening or updating it. The master owns the upstream source-PR and release-please merge waits plus image-publication verification. When the master supplies the published image/digest evidence, accept that evidence, implement the home-ops image bump, and return `PR_OPEN` after opening or updating its PR. Do not assign or perform publication waits inside this subcommand.
 
 ## 4. Open the PR and hand off
 
@@ -47,8 +47,9 @@ A generic plan is valid only after the master supplies the human-selected direct
 
 Report in Chinese:
 
-- one typed result: `PR_OPEN`, `RECONCILING`, `VERIFYING`, or `NEEDS_HUMAN`; include the runbook and evidence used;
+- one typed result: `PR_OPEN`, `RECONCILING`, `VERIFYING`, `HUMAN_MANAGED`, or `NEEDS_HUMAN`; include the runbook and evidence used;
 - files/repositories changed and regression/local verification proof;
 - for `PR_OPEN`, the PR URL, head SHA, external marker references, and pending human merge; for `RECONCILING`/`VERIFYING`, the merge SHA and applied-revision evidence;
-- for `NEEDS_HUMAN`, `resume_stage`, the exact decision or prerequisite, `no_recommendation` when applicable, and the evidence-backed options for the master; include the stable occurrence key for healthy/outdated no-PR handoffs;
+- for `HUMAN_MANAGED`, the stable occurrence key, `na` action key, evidence, and reason for the healthy/outdated or human-performed no-PR outcome; state that the master releases the lease without close, lesson dispatch, or runtime mutation and that resume is a no-op;
+- for `NEEDS_HUMAN`, `resume_stage`, the exact decision or prerequisite, `no_recommendation` when applicable, and the evidence-backed options for the master; keep the no-runbook route available for the master selected-direction handoff to remediation;
 - the next master action and anything blocked on human merge, release publication, live approval, or observation time.

@@ -25,15 +25,25 @@ ACTION_KEY = os.environ.get("ACTION_KEY", "")
 
 if ACTION_KEY and not RUN_ID:
     sys.exit("RUN_ID is required when ACTION_KEY is set")
+if RUN_ID and not ACTION_KEY:
+    sys.exit("ACTION_KEY is required when RUN_ID is set")
 
 
-def marker(value):
-    """Keep machine identifiers on a single safe line, never secret content."""
-    return re.sub(r"[^a-zA-Z0-9_.:/@-]", "_", value)
+def marker(name, value):
+    """Reject unsafe machine identifiers without altering valid keys."""
+    if re.search(r"[^a-zA-Z0-9_.:/@-]", value):
+        sys.exit(f"{name} contains characters outside [a-zA-Z0-9_.:/@-]")
+    return value
 
 
-RUN_ID = marker(RUN_ID)
-ACTION_KEY = marker(ACTION_KEY)
+RUN_ID = marker("RUN_ID", RUN_ID)
+ACTION_KEY = marker("ACTION_KEY", ACTION_KEY)
+if RUN_ID and not re.fullmatch(r"[0-9A-HJKMNP-TV-Z]{26}", RUN_ID):
+    sys.exit("RUN_ID must be a canonical 26-character Crockford Base32 ULID")
+if ACTION_KEY and not re.fullmatch(
+    rf"{re.escape(RUN_ID)}:lesson:[0-9a-f]{{40}}", ACTION_KEY
+):
+    sys.exit("ACTION_KEY must exactly match <RUN_ID>:lesson:<40 lowercase hex merge SHA>")
 
 
 def get_json(url, headers):
@@ -104,8 +114,38 @@ resp = post_json(
 )
 text = resp["choices"][0]["message"]["content"].strip()
 if text == "NO_LESSON":
-    suffix = f" | aiops-action: {ACTION_KEY} | run_id: {RUN_ID}" if ACTION_KEY else ""
-    print("ticket carries no reusable lesson; nothing written" + suffix)
+    status = ""
+    if ACTION_KEY:
+        no_lesson_marker = "<!-- aiops-no-lesson -->"
+        action_marker = f"<!-- aiops-action:{ACTION_KEY} -->"
+        run_line = f"aiops_run: {RUN_ID}"
+        already_present = False
+        for comment in comments:
+            body = comment.get("body") or ""
+            if (
+                no_lesson_marker in body
+                and action_marker in body
+                and run_line in body.splitlines()
+            ):
+                already_present = True
+                break
+        if not already_present:
+            post_json(
+                f"{FORGEJO_API}/repos/{REPO}/issues/{TICKET}/comments",
+                {**forgejo, "Content-Type": "application/json"},
+                {
+                    "body": (
+                        f"{no_lesson_marker}\n{action_marker}\n"
+                        f"{run_line}\n"
+                        "No reusable lesson was found for this ticket; recorded for this run."
+                    )
+                },
+            )
+        status = (
+            "keyed comment already present" if already_present else "keyed comment recorded"
+        )
+    suffix = f" | {status}" if status else ""
+    print("ticket carries no reusable lesson; no lesson file written" + suffix)
     sys.exit(0)
 
 # strip a code fence if the model wrapped one
