@@ -24,8 +24,8 @@ spec:
       value: /tmp/playwright
     - name: XDG_CACHE_HOME
       value: /tmp/playwright/.cache
-    # Relative filenames from screenshot/console/network/evaluate tools resolve
-    # against HOME; it must be writable too.
+    # HOME is for tools that honor it; relative screenshot filenames instead
+    # use node:1000's passwd home, made writable below.
     - name: HOME
       value: /tmp/playwright
     # ToolHive rewrites Host to the selected upstream Service or backend Pod IP.
@@ -59,6 +59,11 @@ spec:
           volumeMounts:
             - name: output
               mountPath: /tmp/playwright
+            # node:1000's passwd home is the base for relative screenshot filenames.
+            - name: home
+              mountPath: /home/node
       volumes:
         - name: output
+          emptyDir: {}
+        - name: home
           emptyDir: {}

@@ -350,7 +350,7 @@ broad user PAT was provisioned.
 
 | Server     | Transport             | Notes                                       |
 | ---------- | --------------------- | ------------------------------------------- |
-| playwright | Streamable HTTP :8931 | Connects over CDP to the separate `playwright` Chromium workload on :9222; renderer HTTP(S) is forced through a loopback-only Squid that denies loopback/private/CDP destinations while CDP control stays on a separate nginx channel. `TMPDIR=/tmp/playwright` places `pw-<hash>` browser socket directories on the writable emptyDir, `XDG_CACHE_HOME=/tmp/playwright/.cache` covers MCP initialization cache, and `HOME=/tmp/playwright` keeps relative screenshot/console/network/evaluate filenames writable despite the read-only root filesystem |
+| playwright | Streamable HTTP :8931 | Connects over CDP to the separate `playwright` Chromium workload on :9222; renderer HTTP(S) is forced through a loopback-only Squid that denies loopback/private/CDP destinations while CDP control stays on a separate nginx channel. `TMPDIR=/tmp/playwright` places `pw-<hash>` browser socket directories on the writable emptyDir, `XDG_CACHE_HOME=/tmp/playwright/.cache` covers MCP initialization cache, `HOME=/tmp/playwright` covers environment-based paths, and an emptyDir at `/home/node` keeps relative screenshot/console/network/evaluate filenames writable despite the read-only root filesystem |
 
 #### github-pr (dsh-web only)
 

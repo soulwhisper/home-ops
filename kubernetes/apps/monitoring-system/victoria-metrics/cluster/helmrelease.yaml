@@ -303,6 +303,14 @@ spec:
                   description: 'Service {{$labels.service}} (pod {{ index $labels "kubernetes.pod" }}) generated {{$labels.errorLog}} error logs in the last 5 minutes'
                 labels:
                   severity: critical
+              - alert: GuardrailRetryLoop
+                expr: '_time:15m AND "denied-tool-retry-loop" | stats count() as retryLoopDenials | filter retryLoopDenials:>0'
+                for: 5m
+                annotations:
+                  summary: 'Guardrail retry loop denied {{$value}} calls in 15m'
+                  description: 'Repeated identical calls hit denied-tool-retry-loop. Inspect the audit reason and originating stream with _time:15m "denied-tool-retry-loop" | fields _time,_stream. Do not disable FailClosed or generate denial traffic.'
+                labels:
+                  severity: critical
           - name: ServiceRequest
             type: vlogs
             interval: 5m
