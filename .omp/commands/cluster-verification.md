@@ -39,7 +39,7 @@ Classify every incident as exactly one typed result; do not return a generic `PE
 | --- | --- | --- |
 | `READY_TO_CLOSE` | Fixed behavior and the finding class's acceptance gate are verified: Alert/Kyverno requires consumer `resolved` plus 24h observation; ScheduledHealthCheck requires a clean answer or measurable before/after correction; config/docs require one green reconcile. | `CLOSE_COMMENT_INTENT` |
 | `OUTDATED` | Latest transition is resolved or the old finding no longer matches verified current state. Include the scope-specific reason; verification does not write the outdated marker. | `OUTDATED_COMMENT_INTENT` |
-| `PENDING_RECONCILE` | Merged revision is not applied, or reconciliation/rollout is still progressing. Include the observed and target revisions. | `PENDING_RECONCILE` |
+| `PENDING_RECONCILE` | Merged revision is not applied, or reconciliation/rollout is still progressing. Include observed/target revisions and `next_check_at`; an unchanged revision uses fresh rollout-progress evidence. | `PENDING_RECONCILE` |
 | `PENDING_SCHEDULED_RUN` | Acceptance requires a current ScheduledHealthCheck result that does not exist yet. Include the next scheduled time; never rerun an old prompt as proof. | `PENDING_SCHEDULED_RUN` |
 | `WAIT_OBSERVATION` | Consumer resolution, evidence freshness, or the class-specific observation window is incomplete. Include `next_check_at`. | `WAIT_OBSERVATION` |
 | `FAIL` | Original behavior still fails, a regression appeared, evidence contradicts the fix, or reconciliation/rollout completed with failure. | `NEEDS_HUMAN` with `resume_stage: VERIFYING`; no automatic remediation |

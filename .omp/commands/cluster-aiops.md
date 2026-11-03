@@ -62,14 +62,12 @@ external_ref: <PR/comment/lesson path/workflow run/image digest>
 | Stage | Master action | Next state |
 | --- | --- | --- |
 | `INTAKE` | Recall matching tickets and `learnings/`, then invoke `cluster-diagnosis`. | `DIAGNOSED` |
-| `DIAGNOSED` needs a fix | Invoke `cluster-remediation` and route the actual result, not an assumed PR. | `REMEDIATION_RESULT` |
-| `DIAGNOSED` healthy with merged PR | Do not open another PR. Reconcile if unapplied; otherwise verify. | `RECONCILING` or `VERIFYING` |
-| `DIAGNOSED` healthy/outdated without a PR | Do not invent PR/CI work or auto-close without merged-plan approval. Record a stable occurrence key and stop for manual direction. | `NEEDS_HUMAN` |
-| `DIAGNOSED` merged but unapplied | Do not open another PR; wait for the merged revision. | `RECONCILING` |
-| `DIAGNOSED` no conservative runbook | Record evidence and stop. | `NEEDS_HUMAN` |
+| `DIAGNOSED` needs a new fix with no corresponding merged PR | Invoke `cluster-remediation` and route the actual result, not an assumed PR. | `REMEDIATION_RESULT` |
+| `DIAGNOSED` with a corresponding merged PR | Do not open another PR. Reconcile if unapplied; otherwise verify current behavior, including active or drifted findings. | `RECONCILING` or `VERIFYING` |
+| `DIAGNOSED` healthy/outdated without a corresponding merged PR | Do not invent PR/CI work or auto-close without merged-plan approval. Record a stable occurrence key and stop for manual direction. | `NEEDS_HUMAN` |
+| `DIAGNOSED` no conservative runbook and no corresponding merged PR | Record evidence and stop. | `NEEDS_HUMAN` |
 | `REMEDIATION_RESULT` PR opened/updated | Verify the `open-pr` and `link-pr` external markers and record their results without repeating either artifact, then run targeted/full tests, prek, CI, and AI review. | `PR_OPEN` |
-| `REMEDIATION_RESULT` healthy with merged PR | Do not open another PR; verify whether the merged revision is applied. | `RECONCILING` or `VERIFYING` |
-| `REMEDIATION_RESULT` merged but unapplied | Do not open another PR; wait for the merged revision. | `RECONCILING` |
+| `REMEDIATION_RESULT` with a corresponding merged PR | Do not open another PR. Reconcile if unapplied; otherwise verify current behavior, including active or drifted findings. | `RECONCILING` or `VERIFYING` |
 | `REMEDIATION_RESULT` no PR/no merge | Do not invoke post-merge verification or auto-close. Record the occurrence and stop for manual direction. | `NEEDS_HUMAN` |
 | `PR_OPEN` | Run targeted/full tests, prek, CI, and AI review. | `CI_GREEN` or `CI_FAILED` |
 | `CI_FAILED` | Reproduce and fix valid failures in the same PR; only a new direction or unavailable prerequisite goes to human. | `CI_GREEN` or `NEEDS_HUMAN` |
@@ -79,7 +77,7 @@ external_ref: <PR/comment/lesson path/workflow run/image digest>
 | `WAIT_IMAGE_PUBLICATION` | Verify published image/digest, then create the home-ops PR. | `PR_OPEN` |
 | `WAIT_HUMAN_MERGE` | After user confirms home-ops merge, update `main`, read the actual merge SHA, and confirm it is the merge of this PR and its approved head. Re-read the unchanged, matching head-bound plans and bind subsequent action records to the merge SHA; prune merged branches. Missing, changed, divergent, or wrong-head plans stop. | `RECONCILING` or `NEEDS_HUMAN` |
 | `RECONCILING` | Reconcile source plus affected Kustomizations and inspect applied revision/rollout. | `PENDING_RECONCILE`, `EXECUTING_APPROVED_PLAN`, `VERIFYING`, or `NEEDS_HUMAN` on completed failure |
-| `PENDING_RECONCILE` | Record next check and yield; never treat as healthy or completed failure. Resume only after new revision evidence. | `RECONCILING` |
+| `PENDING_RECONCILE` | Record `next_check_at` plus target/applied revisions and yield; never treat as healthy or completed failure. For an unapplied merged revision, resume after new revision evidence. For an in-progress rollout, resume at `next_check_at` with fresh rollout-progress evidence even when the revision is unchanged. | `RECONCILING` |
 | `EXECUTING_APPROVED_PLAN` | Before each non-disruptive operation, recheck the actual merge SHA/approved head and unchanged, matching plans; then check preconditions and execute with intent/result records. Missing, changed, divergent, or wrong-head plans stop. | `VERIFYING` or `NEEDS_HUMAN` on failed precondition/action or invalid approval |
 | `VERIFYING` | Invoke `cluster-verification` and route its exact typed result with class-specific evidence. | `CLOSE_COMMENT_INTENT`, `OUTDATED_COMMENT_INTENT`, `PENDING_RECONCILE`, `PENDING_SCHEDULED_RUN`, `WAIT_OBSERVATION`, or `NEEDS_HUMAN` |
 | `PENDING_SCHEDULED_RUN` | Record next scheduled time and yield; do not rerun an old prompt or invent a clean result. Resume after the current run. | `VERIFYING` |
