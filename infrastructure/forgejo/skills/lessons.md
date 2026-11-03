@@ -56,10 +56,10 @@ No reusable lesson was found for this ticket; recorded for this run.
 
 A repeat dispatch skips the write only when the same already-fetched comment
 contains all four exact lines and its `user.id` equals the adopted run's
-`trigger_user.id`, with `created_at` between that run's `created` and nonzero
-`stopped` timestamps. `NO_LESSON` recovery requires this run-bound
-author/time evidence in addition to all four lines; marker text alone cannot
-prove the workflow produced the result. Workflow success alone is
+`trigger_user.id`, with `created_at` at or after the run's `created` and, only
+when `stopped` is nonzero, at or before `stopped`. `NO_LESSON` recovery requires
+this run-bound author/time evidence in addition to all four lines; marker text
+alone cannot prove the workflow produced the result. Workflow success alone is
 insufficient. The comment is evidence for this run only, not long-term lesson
 content or a substitute recurrence record.
 

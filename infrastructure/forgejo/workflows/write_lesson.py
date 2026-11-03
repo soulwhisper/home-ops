@@ -139,8 +139,6 @@ user_prompt = (
     "carries no reusable lesson, output exactly: NO_LESSON"
 )
 
-WORKFLOW_RUN = current_workflow_run() if ACTION_KEY else None
-
 resp = post_json(
     f"{LLM_API_BASE}/chat/completions",
     {"Authorization": f"Bearer {LLM_API_KEY}", "Content-Type": "application/json"},
@@ -157,6 +155,7 @@ text = resp["choices"][0]["message"]["content"].strip()
 if text == "NO_LESSON":
     status = ""
     if ACTION_KEY:
+        WORKFLOW_RUN = current_workflow_run()
         no_lesson_marker = "<!-- aiops-no-lesson -->"
         action_marker = f"<!-- aiops-action:{ACTION_KEY} -->"
         run_line = f"aiops_run: {RUN_ID}"

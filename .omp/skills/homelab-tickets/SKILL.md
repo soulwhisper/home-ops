@@ -208,9 +208,9 @@ original run before considering another dispatch:
    `<!-- aiops-action:<RUN_ID>:lesson:<MERGE_SHA> -->`, the exact line
    `aiops_run: <RUN_ID>`, and `aiops_workflow_run: <WORKFLOW_RUN_ID>`. The
    comment's `user.id` must equal the adopted run's `trigger_user.id`, and its
-   `created_at` must be between that run's `created` and nonzero `stopped`
-   timestamps. Marker text without this run-bound author/time evidence is not
-   proof that the workflow produced `NO_LESSON`. Either exact artifact remains
+   `created_at` must be at or after the run's `created` and, only when `stopped`
+   is nonzero, at or before `stopped`. Marker text without this run-bound
+   author/time evidence is not proof that the workflow produced `NO_LESSON`. Either exact artifact remains
    valid even after a later unrelated workflow failure; record `run.status` as
    evidence. This comment is same-run recovery evidence, not long-term lesson
    content.

@@ -39,8 +39,9 @@ instead requires all four exact lines in the same source-ticket comment:
 `<!-- aiops-no-lesson -->`, the exact `aiops-action` marker, exact
 `aiops_run: <RUN_ID>`, and `aiops_workflow_run: <WORKFLOW_RUN_ID>`. The
 comment's `user.id` must equal the adopted run's `trigger_user.id`, with
-`created_at` between the run's `created` and nonzero `stopped` timestamps;
-marker text without this run-bound author/time evidence is insufficient.
+`created_at` at or after the run's `created` and, only when `stopped` is
+nonzero, at or before `stopped`; marker text without this run-bound author/time
+evidence is insufficient.
 These artifacts remain valid even when a later
 unrelated workflow step fails; record `run.status` as evidence. A run whose
 `run.status` is `failure` or `cancelled` and which has no valid artifact
