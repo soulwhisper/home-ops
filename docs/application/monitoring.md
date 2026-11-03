@@ -100,6 +100,7 @@ Alerting rules engine with datasource pointed at VMAuth (`8427`). Internal endpo
 | Group | Alerts |
 |-------|--------|
 | `vlogs.rules` | `HasErrorLog` — prod error/warn log count > 0 |
+| `vlogs.rules` | `GuardrailRetryLoop` — any `denied-tool-retry-loop` audit event in 15m (critical) |
 | `ServiceRequest` | `TooManyFailedRequest` — IPs with >1% failed requests |
 
 ### Alertmanager

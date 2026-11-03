@@ -307,8 +307,8 @@ spec:
                 expr: '_time:15m AND "denied-tool-retry-loop" | stats count() as retryLoopDenials | filter retryLoopDenials:>0'
                 for: 5m
                 annotations:
-                  summary: 'Guardrail retry loop denied {{$labels.retryLoopDenials}} calls in 15m'
-                  description: 'Repeated identical calls hit denied-tool-retry-loop. Inspect the newest fingerprint and stream with _time:15m "denied-tool-retry-loop" | fields _time,_stream. Do not disable FailClosed or generate denial traffic.'
+                  summary: 'Guardrail retry loop denied {{$value}} calls in 15m'
+                  description: 'Repeated identical calls hit denied-tool-retry-loop. Inspect the audit reason and originating stream with _time:15m "denied-tool-retry-loop" | fields _time,_stream. Do not disable FailClosed or generate denial traffic.'
                 labels:
                   severity: critical
           - name: ServiceRequest
