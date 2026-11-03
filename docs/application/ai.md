@@ -350,7 +350,7 @@ broad user PAT was provisioned.
 
 | Server     | Transport             | Notes                                       |
 | ---------- | --------------------- | ------------------------------------------- |
-| playwright | Streamable HTTP :8931 | Connects over CDP to the separate `playwright` Chromium workload on :9222; renderer HTTP(S) is forced through a loopback-only Squid that denies loopback/private/CDP destinations while CDP control stays on a separate nginx channel. `TMPDIR=/tmp/playwright` places `pw-<hash>` browser socket directories on the writable emptyDir, and `XDG_CACHE_HOME=/tmp/playwright/.cache` covers MCP initialization cache despite the read-only root filesystem |
+| playwright | Streamable HTTP :8931 | Connects over CDP to the separate `playwright` Chromium workload on :9222; renderer HTTP(S) is forced through a loopback-only Squid that denies loopback/private/CDP destinations while CDP control stays on a separate nginx channel. `TMPDIR=/tmp/playwright` places `pw-<hash>` browser socket directories on the writable emptyDir, `XDG_CACHE_HOME=/tmp/playwright/.cache` covers MCP initialization cache, and `HOME=/tmp/playwright` keeps relative screenshot/console/network/evaluate filenames writable despite the read-only root filesystem |
 
 #### github-pr (dsh-web only)
 
@@ -398,6 +398,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 - Web scraping pipeline for AI data ingestion
 - 3 containers: api (:3002), nuq-worker (:3006), playwright-service (:3000)
 - `ghcr.io/firecrawl/firecrawl` (api + nuq-worker; playwright-service pinned by digest), sandboxed per ADR-03 (`hostUsers: false` + egress CNP)
+- Network: egress CNP plus default-deny ingress allowing ToolHive MCP and blackbox scrape/search canaries on `firecrawl-app:3002`, kubelet health probes, and internal Firecrawl callers to Playwright on `:3000`; ingress rules enable ingress default-deny, while egress-only selection does not restrict ingress
 - Backed by SearXNG, Dragonfly Redis, nuq-postgres
 - Exposed as MCP server + internal endpoint for Hermes
 

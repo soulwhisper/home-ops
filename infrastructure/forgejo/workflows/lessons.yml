@@ -1,11 +1,21 @@
 ---
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 # yamllint disable rule:truthy
-# Distills a closed ticket into learnings/ — manual dispatch only (no cron,
-# no auto-fixers; the human decides when a ticket is worth a lesson).
+# Distills a closed ticket into learnings/ — manual dispatch or an explicit
+# merged post-merge close/learn plan through cluster-aiops (no cron and no
+# autonomous fixers; acceptance evidence is always required). Supervised runs
+# key either result: a lesson embeds exact aiops_action/aiops_run Git
+# frontmatter, while NO_LESSON writes one source-ticket comment containing the
+# no-lesson marker, exact action marker, exact aiops_run line, and exact
+# aiops_workflow_run line. Its user.id must match run.trigger_user.id and its
+# creation time must fall within that run's lifetime; marker text alone is
+# insufficient. No lesson file is written.
+# Recovery records run.status; logical terminal failure means status failure
+# or cancelled, while an exact result artifact remains authoritative.
 # Secrets (set once in the tickets repo's Actions settings):
-#   TICKETS_TOKEN — forgejo `pat_tickets` (API read + git push). Forgejo
-#                   rejects secret names starting with FORGEJO_/GITEA_.
+#   TICKETS_TOKEN — forgejo `pat_tickets` (issue/Actions run read + source-ticket
+#                   comment write + git push). Forgejo rejects secret names starting
+#                   with FORGEJO_/GITEA_.
 #   LLM_API_KEY   — `agentgateway.llm_agent` (agent lane consumer key)
 name: lessons
 
@@ -16,6 +26,14 @@ on:
         description: "Ticket number to distill into a lesson"
         required: true
         type: number
+      run_id:
+        description: "Canonical 26-character Crockford Base32 ULID for crash-safe resume (both identifiers omitted for manual dispatch)"
+        required: false
+        type: string
+      action_key:
+        description: "Exact <RUN_ID>:lesson:<40 lowercase hex merge SHA> key for lesson frontmatter or NO_LESSON (both identifiers omitted for manual dispatch)"
+        required: false
+        type: string
 
 jobs:
   write-lesson:
@@ -34,10 +52,16 @@ jobs:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_MODEL: agent
           TICKET: ${{ inputs.ticket }}
-        run: python3 .forgejo/workflows/write_lesson.py
-
-      - name: Commit and push
+          RUN_ID: ${{ inputs.run_id }}
+          ACTION_KEY: ${{ inputs.action_key }}
         run: |
+          set -euo pipefail
+          output="$(python3 .forgejo/workflows/write_lesson.py)"
+          printf '%s\n' "$output"
+          case "$output" in
+            "ticket carries no reusable lesson; no lesson file written"*) exit 0 ;;
+          esac
+
           git config user.name "ai-ops[bot]"
           git config user.email "ai-ops@noirprime.com"
           git add learnings/
