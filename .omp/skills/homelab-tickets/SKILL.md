@@ -96,8 +96,14 @@ Use the public read API where possible and the default token path
 F="${FORGEJO_URL:-http://nas.homelab.internal:9003}/api/v1/repos/${TICKETS_REPO:-soulwhisper/homelab-tickets}"
 # Read the lesson index and relevant source tickets/comments for the same
 # alert, namespace/workload, symptom and root-cause class.
-curl -fsS "$F/contents/learnings" | jq -r '.[].name'
-# A 404 learnings/ listing means no lessons retained yet — not an error.
+response=$(curl -sS -w '\n%{http_code}' "$F/contents/learnings") || exit $?
+status="${response##*$'\n'}"
+case "$status" in
+  200) printf '%s\n' "${response%$'\n'*}" | jq -r '.[].name' ;;
+  # A 404 learnings/ listing means no lessons retained yet — not an error.
+  404) ;;
+  *) printf 'Forgejo returned HTTP %s\n' "$status" >&2; exit 1 ;;
+esac
 ```
 
 For a recurrence, read the existing lesson and its source ticket before

@@ -23,10 +23,13 @@ TICKET = os.environ["TICKET"]
 RUN_ID = os.environ.get("RUN_ID", "")
 ACTION_KEY = os.environ.get("ACTION_KEY", "")
 
+if ACTION_KEY and not RUN_ID:
+    sys.exit("RUN_ID is required when ACTION_KEY is set")
+
 
 def marker(value):
-    """Bound machine identifiers to a single safe line, never secret content."""
-    return re.sub(r"[^a-zA-Z0-9_.:/@-]", "_", value)[:160]
+    """Keep machine identifiers on a single safe line, never secret content."""
+    return re.sub(r"[^a-zA-Z0-9_.:/@-]", "_", value)
 
 
 RUN_ID = marker(RUN_ID)

@@ -398,7 +398,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 - Web scraping pipeline for AI data ingestion
 - 3 containers: api (:3002), nuq-worker (:3006), playwright-service (:3000)
 - `ghcr.io/firecrawl/firecrawl` (api + nuq-worker; playwright-service pinned by digest), sandboxed per ADR-03 (`hostUsers: false` + egress CNP)
-- Network: egress CNP plus ingress limited to `toolhive-name=mcp-firecrawl` on `firecrawl-app:3002`; endpoint selection with only egress otherwise leaves API ingress default-denied
+- Network: egress CNP plus default-deny ingress allowing ToolHive MCP and blackbox scrape/search canaries on `firecrawl-app:3002`, kubelet health probes, and internal Firecrawl callers to Playwright on `:3000`; ingress rules enable ingress default-deny, while egress-only selection does not restrict ingress
 - Backed by SearXNG, Dragonfly Redis, nuq-postgres
 - Exposed as MCP server + internal endpoint for Hermes
 

@@ -8,9 +8,10 @@ spec:
   endpointSelector:
     matchLabels:
       "app.kubernetes.io/name": firecrawl
-  # Selecting endpoints with only egress leaves ingress default-denied.
-  # Permit only the ToolHive MCP client to the API, not arbitrary consumers.
+  # Ingress rules enable ingress default-deny for selected endpoints;
+  # egress-only selection does not restrict ingress.
   ingress:
+    # Permit the ToolHive MCP client to the API, not arbitrary consumers.
     - fromEndpoints:
         - matchLabels:
             "toolhive-name": mcp-firecrawl
@@ -18,6 +19,36 @@ spec:
       toPorts:
         - ports:
             - { port: "3002", protocol: TCP }
+    # Firecrawl scrape/search canaries
+    - fromEndpoints:
+        - matchLabels:
+            "app.kubernetes.io/name": prometheus-blackbox-exporter
+            "app.kubernetes.io/instance": blackbox-exporter
+            "k8s:io.kubernetes.pod.namespace": monitoring-system
+      toPorts:
+        - ports:
+            - { port: "3002", protocol: TCP }
+    # kubelet health probes for api, nuq-worker and playwright-service
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - { port: "3002", protocol: TCP }
+            - { port: "3006", protocol: TCP }
+            - { port: "3000", protocol: TCP }
+    # Playwright browser service callers
+    - fromEndpoints:
+        - matchLabels:
+            "app.kubernetes.io/name": firecrawl
+            "app.kubernetes.io/controller": firecrawl-api
+            "k8s:io.kubernetes.pod.namespace": selfhosted-apps
+        - matchLabels:
+            "app.kubernetes.io/name": firecrawl
+            "app.kubernetes.io/controller": firecrawl-nuq-worker
+            "k8s:io.kubernetes.pod.namespace": selfhosted-apps
+      toPorts:
+        - ports:
+            - { port: "3000", protocol: TCP }
   egress:
     # LLM gateway
     - toServices:

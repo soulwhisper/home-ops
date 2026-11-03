@@ -42,12 +42,12 @@ flowchart LR
 
 Forgejo is the only state and memory backend:
 
-- `aiops-run` comments hold `run_id`, owner, stage, heartbeat, and expiry.
+- `aiops-run` comments hold `run_id`, owner, stage, heartbeat, and expiry as recovery/ownership records; they are not compare-and-swap or fencing.
 - `aiops-action` comments hold `run_id`, stable `action_id`, head/merge SHA (or `na`), intent/result, and an external artifact reference.
 - External artifacts are checked before repeating an action. An intent alone never proves completion.
 - `WAIT_HUMAN_MERGE`, upstream merge/release/publication waits, `PENDING_RECONCILE`, `PENDING_SCHEDULED_RUN`, and `WAIT_OBSERVATION` are resumable stages, not active retry loops.
 - `NEEDS_HUMAN` records `resume_stage` and the exact decision required. It never invokes automatic remediation.
-- A newer firing event supersedes verification and stops the old run. An externally closed ticket resumes only the unfinished learning step.
+- A newer firing event supersedes verification and stops the old run. External closure skips only the close API mutation: learning resumes directly only from an already verified `TICKET_CLOSED`; otherwise merged-plan authorization and class-specific verification/refire checks are still required.
 
 Close and learning have separate idempotent stages:
 
@@ -66,7 +66,7 @@ CLOSE_COMMENT_INTENT
 
 Only two are intended:
 
-1. **Merge the PR.** CI and review must be green and the PR body plus ticket comment must contain matching head-bound close/learn plans. A merge also authorizes only the exact non-disruptive operations listed there.
+1. **Merge the PR.** Before merge, CI and review must be green and the PR body plus ticket comment must contain matching close/learn plans bound to the exact head SHA. After merge, the orchestrator reads the actual merge SHA, confirms it is the merge of that PR and approved head, and rechecks the same unchanged plans before every plan-authorized operation, close, or lesson dispatch. A merge authorizes only the exact non-disruptive operations listed there.
 2. **Resolve `NEEDS_HUMAN`.** This covers unknown runbooks, verification failure, refire, missing prerequisites, unapproved operations, and heavy-impact actions. Heavy operations additionally require the `homelab-gitops` risk/recovery disclosure and `ask`.
 
 Do not bypass these interfaces with auto-merge, direct `kubectl apply/edit/delete`, extra approval prompts, or repeated content-denied canaries.
@@ -75,7 +75,7 @@ Do not bypass these interfaces with auto-merge, direct `kubectl apply/edit/delet
 
 - The master is a command contract, not an always-running executor. Someone still invokes `run` or `resume`.
 - There is no scheduler to wake blocked runs after merge, `next_check_at`, or observation deadlines.
-- Forgejo comments provide a shared lease, not a true transactional compare-and-swap. A production executor must serialize per ticket or use an atomic lease implementation.
+- Forgejo comments record leases but do not provide transactional compare-and-swap or fencing. A production executor must hold exclusive per-ticket serialization for each invocation; without it, automated side effects are disabled.
 - Existing PRs are not proof that merged plans, verification, or close/learn are complete. They still require runtime verification.
 - Some operations cannot be made fully automatic safely: heavy operations, unapproved runtime work, new root causes without a conservative runbook, and incidents requiring manual closure without a merged PR.
 - The current runbooks cover recent incident classes; unknown classes intentionally escalate instead of guessing.
@@ -85,7 +85,7 @@ Do not bypass these interfaces with auto-merge, direct `kubectl apply/edit/delet
 
 Build a small executor around `cluster-aiops`, not another orchestration framework:
 
-1. **Serialized workers:** one active worker per ticket, with an atomic owner/heartbeat lease and stale-owner recovery. Keep the existing run/action records for crash idempotency.
+1. **Serialized workers:** hold an exclusive per-ticket executor serialization lock for the entire `run`/`resume` invocation before any external side effect. A single-process queue or single-host `flock` is valid; without guaranteed serialization, stop as `NEEDS_HUMAN` before side effects. Keep the Forgejo run/action records for ownership, crash recovery, and idempotency, and acquire the same serialization before expired-run recovery.
 2. **Wake-up sources:** GitHub merge webhooks, periodic scans of open tickets, and `next_check_at` timers for pending/reconcile/observation stages. Never poll in a tight loop or retry content-denied tools.
 3. **Fixed invocation API:** call `cluster-aiops run <ticket>` for new incidents and `cluster-aiops resume <ticket>` for every pending stage. Do not duplicate the state machine in executor code.
 4. **Safe automation gates:** execute automatically only through CI-green, human-merged, non-disruptive, verified stages. `NEEDS_HUMAN` and heavy operations stop the worker and notify a human; they never auto-resume.
