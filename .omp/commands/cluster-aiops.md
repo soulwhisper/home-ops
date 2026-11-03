@@ -20,7 +20,7 @@ For every Forgejo operation, set `F="${FORGEJO_URL:-http://nas.homelab.internal:
 - Claim with `taking` before new work and read the complete ticket/comment timeline before selecting a stage.
 - Human interfaces are limited to **merging a PR** and **handling `NEEDS_HUMAN`**. Do not call `ask` for a known runbook or hide failure behind another approval prompt. Heavy-impact operations still follow `skill://homelab-gitops` and require an explicit risk disclosure plus `ask` as part of `NEEDS_HUMAN`.
 
-Canonical incident state lives in the Forgejo ticket and `learnings/`; no external memory service is used. Execution locks provide serialization only and are never authoritative state.
+Canonical incident state lives in the Forgejo ticket and `learnings/`; no external memory service is used. Any local execution lock is advisory in the supervised model and is never authoritative state.
 
 ## 2. Shared lease and action idempotency
 
@@ -36,8 +36,8 @@ heartbeat_at: <UTC timestamp>
 expires_at: <UTC timestamp>
 ```
 
-- Forgejo serializes individual comment creation, but comment writes and re-reads are not compare-and-swap or fencing. `aiops-run` comments are recovery/ownership records only. The executor must acquire an exclusive per-ticket serialization lock before any external side effect and hold it for the entire `run`/`resume` invocation; a single-process per-ticket queue or single-host `flock` is valid. If guaranteed serialization is unavailable, stop as `NEEDS_HUMAN` before external side effects. After acquiring serialization, an unexpired different owner returns `ALREADY_RUNNING`.
-- A blocked stage is resumable by its existing `run_id`, not a new run. An expired lease may be reclaimed only while holding the same per-ticket serialization, by resuming that run after checking its last action record; never start over.
+- Forgejo serializes individual comment creation, but comment writes and re-reads are not compare-and-swap or fencing. `aiops-run` comments are recovery/ownership records only. In the current supervised model, the human invoking the master must ensure that only one master invocation works a ticket at a time; concurrent invocation is unsupported. After writing the lease, re-read it and continue only if your `run_id` and owner are current. An unexpired different owner returns `ALREADY_RUNNING`. No automated mutual exclusion is claimed.
+- A blocked stage is resumable by its existing `run_id`, not a new run. An expired lease may be reclaimed only by resuming that run in a new human-driven invocation after confirming that no other owner is active and checking its last action record; never start over.
 - Release the lease on `DONE`. On error or yield, leave accurate stage/heartbeat so another worker can resume rather than duplicate work.
 
 ### Intent/result records
@@ -67,7 +67,7 @@ external_ref: <PR/comment/lesson path/workflow run/image digest>
 | `DIAGNOSED` healthy/outdated without a PR | Do not invent PR/CI work or auto-close without merged-plan approval. Record a stable occurrence key and stop for manual direction. | `NEEDS_HUMAN` |
 | `DIAGNOSED` merged but unapplied | Do not open another PR; wait for the merged revision. | `RECONCILING` |
 | `DIAGNOSED` no conservative runbook | Record evidence and stop. | `NEEDS_HUMAN` |
-| `REMEDIATION_RESULT` PR opened/updated | Comment the PR URL immediately with a separate keyed `link-pr` action on each source ticket, then run targeted/full tests, prek, CI, and AI review. | `PR_OPEN` |
+| `REMEDIATION_RESULT` PR opened/updated | Verify the `open-pr` and `link-pr` external markers and record their results without repeating either artifact, then run targeted/full tests, prek, CI, and AI review. | `PR_OPEN` |
 | `REMEDIATION_RESULT` healthy with merged PR | Do not open another PR; verify whether the merged revision is applied. | `RECONCILING` or `VERIFYING` |
 | `REMEDIATION_RESULT` merged but unapplied | Do not open another PR; wait for the merged revision. | `RECONCILING` |
 | `REMEDIATION_RESULT` no PR/no merge | Do not invoke post-merge verification or auto-close. Record the occurrence and stop for manual direction. | `NEEDS_HUMAN` |
@@ -81,7 +81,7 @@ external_ref: <PR/comment/lesson path/workflow run/image digest>
 | `RECONCILING` | Reconcile source plus affected Kustomizations and inspect applied revision/rollout. | `PENDING_RECONCILE`, `EXECUTING_APPROVED_PLAN`, `VERIFYING`, or `NEEDS_HUMAN` on completed failure |
 | `PENDING_RECONCILE` | Record next check and yield; never treat as healthy or completed failure. Resume only after new revision evidence. | `RECONCILING` |
 | `EXECUTING_APPROVED_PLAN` | Before each non-disruptive operation, recheck the actual merge SHA/approved head and unchanged, matching plans; then check preconditions and execute with intent/result records. Missing, changed, divergent, or wrong-head plans stop. | `VERIFYING` or `NEEDS_HUMAN` on failed precondition/action or invalid approval |
-| `VERIFYING` | Invoke `cluster-verification` and record class-specific evidence. | `CLOSE_COMMENT_INTENT`, `OUTDATED_COMMENT_INTENT`, `PENDING_SCHEDULED_RUN`, `WAIT_OBSERVATION`, or `NEEDS_HUMAN` |
+| `VERIFYING` | Invoke `cluster-verification` and route its exact typed result with class-specific evidence. | `CLOSE_COMMENT_INTENT`, `OUTDATED_COMMENT_INTENT`, `PENDING_RECONCILE`, `PENDING_SCHEDULED_RUN`, `WAIT_OBSERVATION`, or `NEEDS_HUMAN` |
 | `PENDING_SCHEDULED_RUN` | Record next scheduled time and yield; do not rerun an old prompt or invent a clean result. Resume after the current run. | `VERIFYING` |
 | `WAIT_OBSERVATION` | Record `next_check_at` and yield until observation is complete; incomplete evidence loops here, never to success or failure. | `VERIFYING` |
 | `CLOSE_COMMENT_INTENT` | Recheck the merged close/learn plan, then write one keyed closing comment with PR/evidence/root cause/timestamp. | `CLOSE_COMMENT_WRITTEN` |
@@ -93,7 +93,7 @@ external_ref: <PR/comment/lesson path/workflow run/image digest>
 | `TICKET_CLOSED` no reusable lesson | Persist successful `NO_LESSON`/`LESSON_SKIPPED` with the action key and workflow run ID; do not redispatch. | `DONE` |
 | `LESSON_CREATED` | Verify the keyed lesson or recurrence comment is included in subsequent recall, then release the lease. | `DONE` or `LEARN_PENDING` on missing evidence |
 | `LEARN_PENDING` | Resume only the missing lesson step; `NO_LESSON` transitions to `DONE`, other missing evidence resumes dispatch/checks. Never duplicate close or comments. | `LESSON_CREATED`, `DONE`, or `LEARN_PENDING` |
-| `NEEDS_HUMAN` | Record `resume_stage` and the exact human decision. Resolved prerequisites resume there; a heavy action goes to `EXECUTING_HEAVY_PLAN` only after explicit approval; a human-performed action goes to `VERIFYING`. No automatic remediation. | recorded `resume_stage`, `EXECUTING_HEAVY_PLAN`, or `VERIFYING` |
+| `NEEDS_HUMAN` | Record `resume_stage` and the exact human decision. For `no_recommendation`, invoke `cluster-remediation` with the recorded human-selected direction and route its typed result through `REMEDIATION_RESULT`. Other resolved prerequisites resume at their recorded stage; an already approved non-disruptive action resumes through `EXECUTING_APPROVED_PLAN` after its plan recheck; a heavy action goes to `EXECUTING_HEAVY_PLAN` only after explicit approval; a human-performed action goes to `VERIFYING`. No automatic remediation. | `REMEDIATION_RESULT`, recorded `resume_stage`, `EXECUTING_APPROVED_PLAN`, `EXECUTING_HEAVY_PLAN`, or `VERIFYING` |
 | `EXECUTING_HEAVY_PLAN` | Only after the `homelab-gitops` risk/recovery disclosure and `ask` confirmation, execute with intent/result records and the documented stop condition. | `VERIFYING` or `NEEDS_HUMAN` on failure/stop |
 
 `READY_TO_CLOSE` requires the finding class's acceptance: Alert/Kyverno observation, a clean answer for ScheduledHealthCheck **or measurable before/after correction of the underlying condition**, or one green reconcile for config/docs. Do not force a scheduler invocation when the underlying-condition path already proves correction.
