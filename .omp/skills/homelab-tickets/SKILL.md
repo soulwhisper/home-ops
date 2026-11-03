@@ -158,7 +158,7 @@ fj -X POST "$F/actions/workflows/lessons.yml/dispatches" -d '{"ref":"main","inpu
 
 A manual dispatch with both `run_id` and `action_key` omitted retains the
 unkeyed behavior; supplying only one is invalid. A keyed `run_id` must exactly
-match `[0-9A-HJKMNP-TV-Z]{26}`, for example
+match `[0-7][0-9A-HJKMNP-TV-Z]{25}`, for example
 `01K8ZC3N4FQ4N6FJ3F3K8D5E6A`, and `action_key` must be exactly
 `<RUN_ID>:lesson:<40 lowercase hex merge SHA>`. Dispatch is operator-only: the
 Forgejo MCP allowlist deliberately excludes it (the NAS runner is
@@ -203,12 +203,17 @@ original run before considering another dispatch:
 3. Verify the result artifact and treat it as authoritative over a later
    workflow failure. Ordinary lesson success requires a file pushed to Git
    whose frontmatter has both the exact `aiops_action` and exact `aiops_run`.
-   `NO_LESSON` success requires all three of these in the **same**
+   `NO_LESSON` success requires all four of these in the **same**
    source-ticket comment: `<!-- aiops-no-lesson -->`, the exact
-   `<!-- aiops-action:<RUN_ID>:lesson:<MERGE_SHA> -->`, and the exact line
-   `aiops_run: <RUN_ID>`. Either exact artifact remains valid even after a
-   later unrelated workflow failure; record `run.status` as evidence. This
-   comment is same-run recovery evidence, not long-term lesson content.
+   `<!-- aiops-action:<RUN_ID>:lesson:<MERGE_SHA> -->`, the exact line
+   `aiops_run: <RUN_ID>`, and `aiops_workflow_run: <WORKFLOW_RUN_ID>`. The
+   comment's `user.id` must equal the adopted run's `trigger_user.id`, and its
+   `created_at` must be between that run's `created` and nonzero `stopped`
+   timestamps. Marker text without this run-bound author/time evidence is not
+   proof that the workflow produced `NO_LESSON`. Either exact artifact remains
+   valid even after a later unrelated workflow failure; record `run.status` as
+   evidence. This comment is same-run recovery evidence, not long-term lesson
+   content.
 4. Inspect `GET $F/actions/runs/<WORKFLOW_RUN_ID>/jobs` and, only when job
    detail is needed to explain an inconclusive run or missing artifact,
    `GET $F/actions/jobs/<JOB_ID>/logs`. A green job alone does not replace
@@ -236,8 +241,11 @@ Zero matching runs after `dispatching`/`unknown` is **UNKNOWN**, retains
 `dispatch_state=unknown`, and routes to
 `NEEDS_HUMAN(resume_stage=LEARN_PENDING)`. `accepted` with zero matches instead
 remains `LEARN_PENDING` with `next_check_at` only until `dispatch_deadline`,
-then routes to the same human state. No zero-match result authorizes another
-dispatch. Multiple matches outside the supersession rule above and
+then routes to the same human state. At that deadline, first recheck
+`actions/runs` and artifacts and adopt anything now present. Any continued wait
+requires fresh `next_check_at` and a new bounded `dispatch_deadline`;
+independent non-creation evidence follows the `rejected` path above. No
+zero-match result authorizes another dispatch. Multiple matches outside the supersession rule above and
 undecodable/mismatched payloads likewise stop as unknown dispatch identity.
 Only independent human-verified non-creation evidence may later record
 `rejected` plus `rejection_evidence` and resume `LEARN_PENDING`; zero matches

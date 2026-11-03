@@ -6,12 +6,15 @@
 # autonomous fixers; acceptance evidence is always required). Supervised runs
 # key either result: a lesson embeds exact aiops_action/aiops_run Git
 # frontmatter, while NO_LESSON writes one source-ticket comment containing the
-# no-lesson marker, exact action marker, and exact aiops_run line, with no file.
+# no-lesson marker, exact action marker, exact aiops_run line, and exact
+# aiops_workflow_run line. Its user.id must match run.trigger_user.id and its
+# creation time must fall within that run's lifetime; marker text alone is
+# insufficient. No lesson file is written.
 # Recovery records run.status; logical terminal failure means status failure
 # or cancelled, while an exact result artifact remains authoritative.
 # Secrets (set once in the tickets repo's Actions settings):
-#   TICKETS_TOKEN — forgejo `pat_tickets` (API read + source-ticket comment
-#                   write + git push). Forgejo rejects secret names starting
+#   TICKETS_TOKEN — forgejo `pat_tickets` (issue/Actions run read + source-ticket
+#                   comment write + git push). Forgejo rejects secret names starting
 #                   with FORGEJO_/GITEA_.
 #   LLM_API_KEY   — `agentgateway.llm_agent` (agent lane consumer key)
 name: lessons

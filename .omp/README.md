@@ -88,7 +88,7 @@ Do not bypass these interfaces with auto-merge, direct `kubectl apply/edit/delet
 
 These intake coverage and reliability boundaries remain outside the supervised command contracts:
 
-- Ticket creation accepts only `PROMETHEUS` findings normalized to MEDIUM/HIGH. Lower-severity findings are notification-only; Watchdog, blackholed alerts, and inhibited warnings intentionally do not enter this loop.
+- Ticket creation accepts only `PROMETHEUS` findings normalized to MEDIUM/HIGH. Lower-severity findings are outside the ticket loop and have no guaranteed notification path; separately routed Alertmanager alerts may still notify. Watchdog, blackholed alerts, and inhibited warnings intentionally do not enter this loop.
 - Robusta builtin OOM/CrashLoop/ImagePull/Evicted findings do not enter the ticket loop. The webhook-relay comment says they still reach Feishu, but the Robusta→Feishu route is disabled and Robusta has only the tickets sink. Corresponding Prometheus alerts may provide separate coverage; the builtin findings themselves have no independent notification path in the current configuration.
 - Intake has no durable queue, dead-letter store, or backfill scan. Short relay retries, delivery backpressure, or a consumer outage can lose a finding before its Forgejo marker exists; a later unmatched resolution does not recreate the incident.
 - Holmes investigation is best-effort: its queue is in-memory and bounded, and investigation/comment failures have no retry or dead-letter path. A missing Holmes comment is not evidence of diagnosis or healing.

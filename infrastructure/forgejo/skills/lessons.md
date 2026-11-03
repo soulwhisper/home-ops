@@ -28,7 +28,7 @@ log line, a panel, a runbook step.
 ## Keyed workflow results
 
 A supervised dispatch passes `ticket`, `run_id`, and the full `action_key`.
-`run_id` must exactly match `[0-9A-HJKMNP-TV-Z]{26}`, for example
+`run_id` must exactly match `[0-7][0-9A-HJKMNP-TV-Z]{25}`, for example
 `01K8ZC3N4FQ4N6FJ3F3K8D5E6A`; `action_key` must exactly match
 `<run_id>:lesson:<40 lowercase hex merge SHA>`. These are YAML-safe plain
 strings. An ordinary lesson is successful only after its file is committed and
@@ -50,14 +50,18 @@ posts at most one comment on the source ticket with this same-run evidence:
 <!-- aiops-no-lesson -->
 <!-- aiops-action:<run_id>:lesson:<merge_sha> -->
 aiops_run: <run_id>
+aiops_workflow_run: <workflow_run_id>
 No reusable lesson was found for this ticket; recorded for this run.
 ```
 
 A repeat dispatch skips the write only when the same already-fetched comment
-contains both HTML markers and the exact `aiops_run: <run_id>` line.
-`NO_LESSON` recovery requires all three parts in that keyed source-ticket
-comment; workflow success alone is insufficient. The comment is evidence for
-this run only, not long-term lesson content or a substitute recurrence record.
+contains all four exact lines and its `user.id` equals the adopted run's
+`trigger_user.id`, with `created_at` between that run's `created` and nonzero
+`stopped` timestamps. `NO_LESSON` recovery requires this run-bound
+author/time evidence in addition to all four lines; marker text alone cannot
+prove the workflow produced the result. Workflow success alone is
+insufficient. The comment is evidence for this run only, not long-term lesson
+content or a substitute recurrence record.
 
 Either exact result artifact is authoritative over a later unrelated workflow
 failure; retain `run.status` as evidence without discarding the pushed lesson
@@ -92,7 +96,11 @@ Zero matching runs after `dispatching`/`unknown` remains `UNKNOWN` with
 `dispatch_state=unknown` and routes to
 `NEEDS_HUMAN(resume_stage=LEARN_PENDING)`. `accepted` with zero matches remains
 `LEARN_PENDING` with `next_check_at` only until `dispatch_deadline`, then routes
-to the same human state. No zero-match result authorizes redispatch. Only
+to the same human state. At that deadline, recheck `actions/runs` and artifacts
+and adopt anything now present. Any continued wait requires fresh
+`next_check_at` and a new bounded `dispatch_deadline`; independent
+non-creation evidence follows the `rejected` path above. No zero-match result
+authorizes redispatch. Only
 independent human-verified non-creation evidence may later record `rejected`
 plus `rejection_evidence` and resume `LEARN_PENDING`; zero matches alone never
 proves non-creation. The human-approved retry after `run.status` is `failure`

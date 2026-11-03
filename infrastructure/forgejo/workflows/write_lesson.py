@@ -38,7 +38,7 @@ def marker(name, value):
 
 RUN_ID = marker("RUN_ID", RUN_ID)
 ACTION_KEY = marker("ACTION_KEY", ACTION_KEY)
-if RUN_ID and not re.fullmatch(r"[0-9A-HJKMNP-TV-Z]{26}", RUN_ID):
+if RUN_ID and not re.fullmatch(r"[0-7][0-9A-HJKMNP-TV-Z]{25}", RUN_ID):
     sys.exit("RUN_ID must be a canonical 26-character Crockford Base32 ULID")
 if ACTION_KEY and not re.fullmatch(
     rf"{re.escape(RUN_ID)}:lesson:[0-9a-f]{{40}}", ACTION_KEY
@@ -73,6 +73,45 @@ def get_all(url, headers, limit=50):
         page += 1
 
 
+def workflow_timestamp(value):
+    """Parse Forgejo timestamps, treating its zero time as absent."""
+    if not value or value.startswith("0001-"):
+        return None
+    parsed = datetime.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=datetime.timezone.utc)
+
+
+def current_workflow_run():
+    """Find the unique active supervised dispatch that is executing this script."""
+    matches = []
+    terminal = {"success", "failure", "cancelled", "skipped"}
+    page = 1
+    while True:
+        payload = get_json(
+            f"{FORGEJO_API}/repos/{REPO}/actions/runs?limit=50&page={page}", forgejo
+        )
+        runs = payload if isinstance(payload, list) else payload.get("workflow_runs", [])
+        for run in runs:
+            if run.get("workflow_id") != "lessons.yml" or run.get("status") in terminal:
+                continue
+            event = json.loads(run.get("event_payload") or "{}")
+            if run.get("prettyref") != "main" and event.get("ref") != "refs/heads/main":
+                continue
+            inputs = event.get("inputs") or {}
+            if (
+                str(inputs.get("ticket")) == TICKET
+                and str(inputs.get("run_id")) == RUN_ID
+                and str(inputs.get("action_key")) == ACTION_KEY
+            ):
+                matches.append(run)
+        if len(runs) < 50:
+            break
+        page += 1
+    if len(matches) != 1:
+        sys.exit(f"expected one active lessons workflow run, found {len(matches)}")
+    return matches[0]
+
+
 def slugify(title):
     """Lowercase, filesystem-safe slug of the ticket title (max 60 chars)."""
     slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
@@ -100,6 +139,8 @@ user_prompt = (
     "carries no reusable lesson, output exactly: NO_LESSON"
 )
 
+WORKFLOW_RUN = current_workflow_run() if ACTION_KEY else None
+
 resp = post_json(
     f"{LLM_API_BASE}/chat/completions",
     {"Authorization": f"Bearer {LLM_API_KEY}", "Content-Type": "application/json"},
@@ -119,16 +160,28 @@ if text == "NO_LESSON":
         no_lesson_marker = "<!-- aiops-no-lesson -->"
         action_marker = f"<!-- aiops-action:{ACTION_KEY} -->"
         run_line = f"aiops_run: {RUN_ID}"
+        workflow_run_line = f"aiops_workflow_run: {WORKFLOW_RUN['id']}"
+        required_lines = (no_lesson_marker, action_marker, run_line, workflow_run_line)
+        trigger_id = (WORKFLOW_RUN.get("trigger_user") or {}).get("id")
+        if trigger_id is None:
+            sys.exit("workflow run has no trigger_user identity")
+        started = workflow_timestamp(WORKFLOW_RUN.get("created"))
+        stopped = workflow_timestamp(WORKFLOW_RUN.get("stopped"))
         already_present = False
         for comment in comments:
             body = comment.get("body") or ""
-            if (
-                no_lesson_marker in body
-                and action_marker in body
-                and run_line in body.splitlines()
-            ):
-                already_present = True
-                break
+            lines = body.splitlines()
+            if any(line not in lines for line in required_lines):
+                continue
+            if (comment.get("user") or {}).get("id") != trigger_id:
+                continue
+            created = workflow_timestamp(comment.get("created_at"))
+            if started and (created is None or created < started):
+                continue
+            if stopped and (created is None or created > stopped):
+                continue
+            already_present = True
+            break
         if not already_present:
             post_json(
                 f"{FORGEJO_API}/repos/{REPO}/issues/{TICKET}/comments",
@@ -136,7 +189,7 @@ if text == "NO_LESSON":
                 {
                     "body": (
                         f"{no_lesson_marker}\n{action_marker}\n"
-                        f"{run_line}\n"
+                        f"{run_line}\n{workflow_run_line}\n"
                         "No reusable lesson was found for this ticket; recorded for this run."
                     )
                 },

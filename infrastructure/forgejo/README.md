@@ -32,14 +32,18 @@ lessons workflow, never by sync; the recipe does not touch it.
 The lessons workflow needs two repository Actions secrets in the tickets repo:
 `TICKETS_TOKEN` (`pat_tickets`; Forgejo reserves the `FORGEJO_`/`GITEA_`
 prefixes) and `LLM_API_KEY` (`agentgateway.llm_agent`). `TICKETS_TOKEN` must
-permit API reads, source-ticket comment writes, and Git pushes. For a keyed
+permit issue reads, Actions run/job reads, source-ticket comment writes, and Git pushes. For a keyed
 supervised dispatch, ordinary lesson success requires the pushed Git file's
 exact `aiops_action` **and** `aiops_run` frontmatter. `NO_LESSON` success
-instead requires all three parts in the same source-ticket comment:
-`<!-- aiops-no-lesson -->`, the exact `aiops-action` marker, and the exact
-`aiops_run: <RUN_ID>` line. These artifacts remain valid even when a later
+instead requires all four exact lines in the same source-ticket comment:
+`<!-- aiops-no-lesson -->`, the exact `aiops-action` marker, exact
+`aiops_run: <RUN_ID>`, and `aiops_workflow_run: <WORKFLOW_RUN_ID>`. The
+comment's `user.id` must equal the adopted run's `trigger_user.id`, with
+`created_at` between the run's `created` and nonzero `stopped` timestamps;
+marker text without this run-bound author/time evidence is insufficient.
+These artifacts remain valid even when a later
 unrelated workflow step fails; record `run.status` as evidence. A run whose
-`run.status` is `failure` or `cancelled` and which lacks either valid artifact
+`run.status` is `failure` or `cancelled` and which has no valid artifact
 routes to `NEEDS_HUMAN(resume_stage=LEARN_PENDING)`, never indefinite pending.
 An adopted nonterminal run without a settled artifact records `next_check_at`
 and a bounded `execution_deadline`; expiry likewise routes to that human state
@@ -59,7 +63,11 @@ Deterministic recovery applies only to keyed supervised dispatches. Initial
 dispatch is allowed only for a recorded `not_sent` intent or a response that
 definitively rejected creation. `accepted` with zero matches remains
 `LEARN_PENDING` with `next_check_at` until `dispatch_deadline`, then becomes
-`NEEDS_HUMAN(resume_stage=LEARN_PENDING)`. Timeout/unknown dispatch plus zero
+`NEEDS_HUMAN(resume_stage=LEARN_PENDING)`. At that deadline, recheck
+`actions/runs` and artifacts and adopt anything now present. Any continued wait
+requires fresh `next_check_at` and a new bounded `dispatch_deadline`;
+independent non-creation evidence follows the `rejected` path above.
+Timeout/unknown dispatch plus zero
 matches is `UNKNOWN` and immediately follows that human path. Neither case
 proves non-creation or permits redispatch; only independent human-verified
 non-creation evidence may record `rejected` plus `rejection_evidence` and
