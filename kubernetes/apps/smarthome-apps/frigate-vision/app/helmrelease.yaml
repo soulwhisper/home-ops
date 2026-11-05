@@ -28,7 +28,7 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/frigate-vision
-              tag: "2026.10.07"
+              tag: "2026.11.05"
             # deps (paho-mqtt, httpx) are baked into the image at build time;
             # no runtime pip install (the CNP grants no Internet egress, and
             # pypi.org availability stops being a boot dependency)
