@@ -438,9 +438,12 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 | **VictoriaMetrics**         | `monitoring-system` | Metrics for ToolHive + OTEL                         |
 | **OpenTelemetry Collector** | `monitoring-system` | Traces/metrics pipeline                             |
 
-The host-side contract. oMLX serves each model under its **folder name**
-in `~/models/` — the folder name IS the API-visible model id (there is no
-oMLX-side alias layer). Chat lane names (`uncensored`/`agent`/`omni`) map to folder ids via each backend's `openai.model` override
+The host-side contract. oMLX discovers models from their **folder name**
+in `~/models/`; `~/.omlx/model_settings.json` assigns each one a
+`model_alias`, the API-visible name. Both the alias and the folder id resolve
+on direct calls, and `/v1/models` lists the alias. Chat lane names
+(`uncensored`/`agent`/`omni`) match their aliases, but each backend's
+`openai.model` override still pins the folder id
 (`kubernetes/apps/networking-system/agentgateway/config/llm/`). Media
 lanes: clients send `embedding` / `reranker` and the media backends'
 `custom.model` override rewrites them to folder ids; the audio lane is a
@@ -458,18 +461,25 @@ Alignment table (keep in sync with the bootstrap downloads):
 | Order | Lane        | Studio id (folder)       | Model                        | HF source                                   | Format / size   | Served by |
 | ----- | ----------- | ------------------------ | ---------------------------- | ------------------------------------------- | --------------- | --------- |
 | 1     | `uncensored` | `qwen3.8-27b`           | Qwen3.8-27B Uncensored       | `orcarouter/Qwen3.8-27B-Uncensored-MLX`     | MLX 4bit, ~15.7G | oMLX :8000 |
-| 2     | `agent`     | `ornith-1.5-35b-a3b`     | Ornith-1.5-35B               | DeepReinforce Ornith-1.5-35B, local MLX 4bit conversion | MLX 4bit, ~19G | oMLX :8000 |
-| 3     | `omni`      | `minicpm-o-4.5`          | MiniCPM-O-4.5                | `mlx-community/MiniCPM-o-4_5-4bit`          | MLX 4bit, ~7G   | oMLX :8000 |
-| 4     | `embedding` | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d) | `mlx-community/Qwen3-Embedding-0.6B-4bit-DWQ` | MLX, ~1.3G    | oMLX :8000 (`/v1/embeddings`) |
-| 5     | `reranker`  | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B          | `mlx-community/Qwen3-Reranker-0.6B-4bit`    | MLX, ~1.3G      | oMLX :8000 (`/v1/rerank`) |
-| 6     | `audio`     | `voxcpm2`                | VoxCPM2                      | `mlx-community/VoxCPM2-4bit`              | MLX 4bit        | oMLX :8000 (`/v1/audio/speech`) |
+| 2     | `persona`   | `orion-1.1-26b-a4b-6bit` | Orion-26B-A4B-v1.1          | `ailexleon/Orion-26B-A4B-v1.1-mlx-6Bit`     | MLX 6bit, ~20G  | oMLX :8000 (direct) |
+| 3     | `agent`     | `ornith-1.5-35b-a3b`     | Ornith-1.5-35B               | DeepReinforce Ornith-1.5-35B, local MLX 4bit conversion | MLX 4bit, ~19G | oMLX :8000 |
+| 4     | `omni`      | `minicpm-o-4.5`          | MiniCPM-O-4.5                | `mlx-community/MiniCPM-o-4_5-4bit`          | MLX 4bit, ~7G   | oMLX :8000 |
+| 5     | `embedding` | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d) | `mlx-community/Qwen3-Embedding-0.6B-4bit-DWQ` | MLX, ~1.3G    | oMLX :8000 (`/v1/embeddings`) |
+| 6     | `reranker`  | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B          | `mlx-community/Qwen3-Reranker-0.6B-4bit`    | MLX, ~1.3G      | oMLX :8000 (`/v1/rerank`) |
+| 7     | `audio`     | `voxcpm2`                | VoxCPM2                      | `mlx-community/VoxCPM2-4bit`              | MLX 4bit        | oMLX :8000 (`/v1/audio/speech`) |
+
+oMLX aliases: `uncensored`, `persona`, `agent`, `omni`, `embedding`,
+`reranker`, `voice` (`voxcpm2`), and `image` (`qwen-image-2.1`, not
+discovered by oMLX 0.7). The 4-bit Orion variant is downloaded but hidden;
+`persona` uses the 6-bit conversion. `persona` has no agentgateway lane or
+credential yet — it is direct-to-studio only.
 
 Downloaded but **parked — no lane, no consumers** (re-add deliberately
 when a consumer appears; see Media lanes):
 
 | Studio dir (`~/models/`) | Model            | HF source                                 | Intended role |
 | ------------------------ | ---------------- | ----------------------------------------- | ------------- |
-| `qwen-image-2.1`         | Qwen-Image 2.1   | `abenzerps/Qwen-Image-2.1-Uncensored-GGUF` (MLX 4bit safetensors) | image gen |
+| `qwen-image-2.1`         | Qwen-Image 2.1   | `abenzerps/Qwen-Image-2.1-Uncensored-GGUF` (MLX 4bit safetensors) | image gen (oMLX alias `image`; model type not discovered by oMLX 0.7, so inert) |
 
 Host prerequisites (out of band): models present at `~/models/<folder>`
 with folder names exactly as the Studio id column (bootstrap
@@ -500,7 +510,8 @@ items:
             ├─ agent        (guarded) ─► ornith-1.5-35b     ── hermes, holmes, automation
             ├─ omni         (guarded) ─► minicpm-o-4.5
 /v1/embeddings /v1/rerank /v1/audio/speech /v1/audio/transcriptions  (media: alias ─► override ─► folder id; audio: direct)
-/v1/models/<model>  (same route and credential as the named model; single-object direct response)
+/v1/models/<model>  (alias or folder id; single-object direct response)
+/v1/chat/completions  model=`persona`  (direct-to-studio alias ─► orion-1.1-26b-a4b-6bit; no gateway lane yet)
 
 /mcp/search /mcp/cluster /mcp/home /mcp/agent /mcp/browser /mcp/github-pr  (per-tier key; guardrails ExtMCP on search+agent+browser+github-pr, FailClosed) ── every MCP client
 ```
