@@ -1,0 +1,62 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: krr
+spec:
+  schedule: "0 12 * * 1"
+  timeZone: Asia/Shanghai
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 3600
+      ttlSecondsAfterFinished: 604800
+      template:
+        spec:
+          serviceAccountName: krr
+          restartPolicy: Never
+          containers:
+            - name: krr
+              image: robustadev/krr:v1.30.0
+              imagePullPolicy: IfNotPresent
+              command: ["python", "/scripts/krr_report.py"]
+              env:
+                - name: FORGEJO_REPO_URL
+                  value: "https://git.noirprime.com/api/v1/repos/soulwhisper/homelab-tickets"
+                - name: PROMETHEUS_URL
+                  value: "http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428"
+                - name: KRR_NAMESPACES
+                  value: ".*-apps"
+                - name: CLUSTER_NAME
+                  value: "main"
+                - name: TZ
+                  value: "Asia/Shanghai"
+                - name: FORGEJO_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: webhook-relay
+                      key: FORGEJO_TICKETS_TOKEN
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+                limits:
+                  cpu: "1"
+                  memory: 2Gi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities: { drop: ["ALL"] }
+                seccompProfile: { type: RuntimeDefault }
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+          volumes:
+            - name: scripts
+              configMap:
+                name: krr-report
+                defaultMode: 0444
