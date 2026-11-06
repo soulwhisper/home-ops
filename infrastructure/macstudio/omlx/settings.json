@@ -90,8 +90,8 @@
     "hard_threshold": 0.94999999999999996,
     "prefill_min_chunk_tokens": 32,
     "soft_threshold": 0.84999999999999998,
-    "memory_guard_tier": "safe",
-    "memory_guard_custom_ceiling_gb": 0
+    "memory_guard_tier": "custom",
+    "memory_guard_custom_ceiling_gb": 50
   },
   "modelscope": {
     "endpoint": ""

@@ -6,7 +6,8 @@ metadata:
   name: llm-guardrails
 spec:
   # Guards only the chat rules of the agent and omni routes. Discovery is
-  # intentionally excluded; the uncensored chat rule is also excluded.
+  # intentionally excluded; the uncensored and persona chat rules are also
+  # excluded.
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute

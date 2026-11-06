@@ -28,8 +28,8 @@ Desktop install into `~/ComfyUI/default_workflow.json`.
   `free_memory=true` after both queue lists are empty for five minutes.
 - ComfyUI starts with `--vram-headroom 8`, `--preview-method none`, and
   `--disable-assets`; launchd runs it at `Nice=10` with low-priority I/O.
-- oMLX remains the production LLM service on port 8000 with
-  `memory_guard_tier=safe` and `max_concurrent_requests=2` (see `../omlx/`).
+- oMLX remains the production LLM service on port 8000 with a 50 GiB custom
+  memory guard and `max_concurrent_requests=2` (see `../omlx/`).
 
 The previous Comfy Desktop app was removed only after the clean install passed
 an API generation. Its app and support directory were moved to

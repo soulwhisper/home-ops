@@ -56,19 +56,43 @@ data:
                 [Frigate alert] camera={camera} severity={severity}: {description}
                 (label={label}, zones={zones}, event={event_id}, ts={timestamp})
               deliver: log
-    # side tasks pinned to cheap gateway lanes (body model -> x-model header)
+    # Side tasks pinned to the cheap omni lane (body model -> x-model header).
+    # Each task carries the omni lane key; the main agent lane key never
+    # reaches the omni route.
     auxiliary:
-      vision: { provider: main, model: omni, timeout: 30 }
-      web_extract: { provider: main, model: omni, reasoning_effort: low }
+      vision:
+        provider: main
+        model: omni
+        base_url: $${OPENAI_BASE_URL}
+        key_env: OPENAI_AUX_API_KEY
+        timeout: 30
+      web_extract:
+        provider: main
+        model: omni
+        base_url: $${OPENAI_BASE_URL}
+        key_env: OPENAI_AUX_API_KEY
+        reasoning_effort: low
       title_generation:
         enabled: true
         provider: main
         model: omni
+        base_url: $${OPENAI_BASE_URL}
+        key_env: OPENAI_AUX_API_KEY
         timeout: 30
         extra_body:
           chat_template_kwargs: { enable_thinking: false }
-      session_search: { provider: main, model: omni, max_concurrency: 3 }
-      compression: { provider: main, model: omni, reasoning_effort: low }
+      session_search:
+        provider: main
+        model: omni
+        base_url: $${OPENAI_BASE_URL}
+        key_env: OPENAI_AUX_API_KEY
+        max_concurrency: 3
+      compression:
+        provider: main
+        model: omni
+        base_url: $${OPENAI_BASE_URL}
+        key_env: OPENAI_AUX_API_KEY
+        reasoning_effort: low
 
   ops-config.yaml: |
     model:
@@ -101,9 +125,24 @@ data:
     plugins:
       enabled: [rtk-rewrite]
     auxiliary:
-      vision: { provider: main, model: omni, timeout: 30 }
-      web_extract: { provider: main, model: omni, reasoning_effort: low }
-      compression: { provider: main, model: omni, reasoning_effort: low }
+      vision:
+        provider: main
+        model: omni
+        base_url: $${OPENAI_BASE_URL}
+        key_env: OPENAI_AUX_API_KEY
+        timeout: 30
+      web_extract:
+        provider: main
+        model: omni
+        base_url: $${OPENAI_BASE_URL}
+        key_env: OPENAI_AUX_API_KEY
+        reasoning_effort: low
+      compression:
+        provider: main
+        model: omni
+        base_url: $${OPENAI_BASE_URL}
+        key_env: OPENAI_AUX_API_KEY
+        reasoning_effort: low
   ops-profile.yaml: |
     description: "Batching brain: cron, WeChat, automation"
     display_name: "Ops"

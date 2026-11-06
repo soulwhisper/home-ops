@@ -10,7 +10,7 @@ the source of truth for manual (re)deployment and drift reference.
 | File | Deploys to | Purpose |
 |---|---|---|
 | `settings.json` | `~/.omlx/settings.json` | Global server settings (secrets stripped) |
-| `model_settings.json` | `~/.omlx/model_settings.json` | Per-model overrides (e.g. `ornith-1.5-35b-a3b` set to `max_context_window: 65536`) |
+| `model_settings.json` | `~/.omlx/model_settings.json` | Per-model aliases, TTLs, pinning, and sampling/context overrides |
 
 Intentionally **not** tracked: `stats.json`, `usage.sqlite3`, `logs/`,
 `cache/` (telemetry/runtime state, regenerable), `~/models/*` (weights,
@@ -18,24 +18,49 @@ re-downloadable from Hugging Face — see model ids in `docs/application/ai.md`)
 
 ## Shared-memory policy
 
-The server shares unified memory with ComfyUI. Keep the `safe` memory guard,
-prefill guard, chunked prefill, and decode fairness enabled. The concurrency
-setting is a per-engine batch limit, not a global lock between models.
+The server shares unified memory with ComfyUI. Pin a 50 GiB custom memory
+guard on the 64 GiB host, and keep the prefill guard, chunked prefill, and
+decode fairness enabled. The concurrency setting is a per-engine batch limit,
+not a global lock between models.
 
 - Limit each engine to two concurrent requests. Serialize image generation
   (`batch_size=1`) and avoid overlapping it with long LLM prefills.
 - Keep the SSD prefix cache enabled and the RAM hot cache disabled. GDN
   sidecars retain FP32 precision; speculative decoding and ANE offload remain
   disabled until separately measured.
-- Keep embeddings and reranking pinned. MiniCPM-o unloads after five idle
-  minutes; Ornith after fifteen; the chat model after ten.
-- Default output budgets are 4K globally, 8K for chat, 4K for Ornith, and 2K
-  for MiniCPM-o. Client-supplied output limits override these defaults.
-- Preserve the 64K model ceiling for chat and Ornith; use a 32K client window
-  for ordinary requests. A smaller ceiling does not reduce weight residency.
+- Keep embeddings pinned. Reranking is on demand with a five-minute TTL.
+  Persona unloads after thirty idle minutes, Ornith after twenty, MiniCPM-o
+  after ten, and the chat model after five.
+- Default output budgets are 4K globally, 8K for chat and persona, 4K for
+  Ornith, and 2K for MiniCPM-o. Client-supplied output limits override these
+  defaults.
+- Preserve the 64K model ceiling for chat, persona, and Ornith; use a 32K
+  client window for ordinary requests. A smaller ceiling does not reduce
+  weight residency.
 - ComfyUI keeps its five-minute idle unload, disabled previews, and 8 GiB
   headroom. Keep infrequent image weights demand-loaded rather than pinning
   every LLM and image model together.
+
+## Model plan
+
+`model_alias` is the API-visible name; the directory under `~/models/` remains
+the studio id accepted by direct calls.
+
+| Alias | Role | Studio id | Quant | TTL | Pinned |
+|---|---|---|---|---|---|
+| `embedding` | RAG recall, offline semantic clustering fallback | `qwen3-embedding-0.6b` | 0.6B / MLX | — | yes |
+| `persona` | RP persona, dialogue, knowledge base | `orion-1.1-26b-a4b` | 26B-A4B / MLX 4bit | 30m | no |
+| `agent` | AI-OPS automation, audits, MCP batches | `ornith-1.5-35b-a3b` | 35B-A3B / MLX 4bit | 20m | no |
+| `omni` | Batch/app copilot, tags, summaries, OCR, memory extraction | `minicpm-o-4.5` | 9B / MLX 4bit | 10m | no |
+| `uncensored` | Sensitive/open chat | `qwen3.8-27b` | 27.8B / MLX 4bit | 5m | no |
+| `reranker` | Rerank and regression checks | `qwen3-reranker-0.6b` | 0.6B / MLX | 5m | no |
+| `voice` | TTS and voice cloning | `voxcpm2` | 2B / MLX 4bit | 5m | no |
+| `image` | Image generation | `qwen-image-2.1` | 7B / int8 safetensors | 5m | no |
+
+`persona` is the renamed 4-bit Orion folder and is served through the
+agentgateway persona lane. oMLX 0.7 does not currently discover
+`qwen-image-2.1`, so its `image` alias is inert until that model type is
+served again.
 
 ## Initial restore
 

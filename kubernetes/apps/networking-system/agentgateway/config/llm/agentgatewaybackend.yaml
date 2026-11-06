@@ -20,6 +20,24 @@ spec:
         name: studio-api-auth
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
+# Persona lane (RP / identity-bound chat). Same open posture as uncensored.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: llm-backend-persona
+spec:
+  ai:
+    provider:
+      openai:
+        model: "orion-1.1-26b-a4b"
+      host: studio.homelab.internal
+      port: 8000
+  policies:
+    auth:
+      secretRef:
+        name: studio-api-auth
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaybackend_v1alpha1.json
 # AI-ops automation lane (alert RCA / ScheduledHealthChecks / MCP batch).
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
