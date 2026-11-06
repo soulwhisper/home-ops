@@ -74,8 +74,8 @@ spec:
                     { name: ceph-bucket-open-webui, key: AWS_SECRET_ACCESS_KEY }
             resources:
               requests:
-                cpu: 10m
-                memory: 512Mi
+                cpu: 140m
+                memory: 1648Mi
               limits:
                 memory: 2Gi
             securityContext:

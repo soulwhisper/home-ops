@@ -53,7 +53,7 @@ spec:
                   name: *name
             resources:
               requests:
-                memory: 1Gi
+                memory: 1536Mi
                 gpu.intel.com/i915: 1
               limits:
                 memory: 3Gi

@@ -101,9 +101,20 @@ spec:
     # fix stuck at 'init'
     updateStrategy:
       type: Recreate
+    resources:
+      requests:
+        cpu: 400m
+        memory: 1536Mi
+      limits:
+        cpu: 750m
+        memory: 2Gi
     worker:
       updateStrategy:
         type: Recreate
+      resources:
+        requests:
+          cpu: 60m
+          memory: 432Mi
     # below is the reason using official chart
     image:
       # chart default is already ghcr.io; explicit key lets renovate's

@@ -42,7 +42,7 @@ spec:
   serviceAccount: mcp-kubernetes-view
   resources:
     requests:
-      cpu: 100m
+      cpu: 10m
       memory: 128Mi
     limits:
       cpu: 500m

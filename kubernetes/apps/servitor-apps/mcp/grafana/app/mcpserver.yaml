@@ -32,7 +32,7 @@ spec:
       targetEnvName: GRAFANA_SERVICE_ACCOUNT_TOKEN
   resources:
     requests:
-      cpu: 100m
+      cpu: 10m
       memory: 128Mi
     limits:
       cpu: 500m

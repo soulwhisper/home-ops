@@ -184,7 +184,7 @@ spec:
       containers:
         - name: vmcp
           resources:
-            requests: { cpu: 100m, memory: 256Mi }
+            requests: { cpu: 10m, memory: 256Mi }
             limits: { cpu: "1", memory: 1Gi }
   groupRef:
     name: *name
@@ -227,7 +227,7 @@ spec:
       containers:
         - name: vmcp
           resources:
-            requests: { cpu: 100m, memory: 256Mi }
+            requests: { cpu: 10m, memory: 256Mi }
             limits: { cpu: "1", memory: 1Gi }
   groupRef:
     name: *name

@@ -65,7 +65,8 @@ spec:
                   key: oidc_client_secret
             resources:
               requests:
-                cpu: 40m
+                cpu: 300m
+                memory: 704Mi
               limits:
                 memory: 2Gi
 

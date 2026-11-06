@@ -94,7 +94,8 @@ spec:
                   successThreshold: 1
             resources:
               requests: &requests
-                cpu: 100m
+                cpu: 50m
+                memory: 512Mi
               limits:
                 memory: 2Gi
             securityContext: &securityContext
@@ -115,7 +116,9 @@ spec:
               - name: http
                 containerPort: &mlPort 3003
             resources:
-              requests: *requests
+              requests:
+                cpu: 50m
+                memory: 1Gi
               limits:
                 gpu.intel.com/i915: 1
                 memory: 8Gi
