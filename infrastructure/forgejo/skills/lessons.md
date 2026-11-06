@@ -1,8 +1,14 @@
 # Lessons learnt format
 
 Distilled memory, written by whoever fixed the ticket (agent or human), at
-ticket close. Lives in `learnings/` — plain markdown, half a page max, only
-what would make the next incident faster.
+ticket close. Lives in the `homelab-tickets` repository's `learnings/` —
+plain markdown, half a page max, only what would make the next incident faster.
+
+## Location
+
+All `learnings/` paths in this document are relative to the
+`soulwhisper/homelab-tickets` repository, alongside the tickets and this
+workflow. Do not create a `learnings/` directory in `home-ops`.
 
 ## File
 
@@ -109,15 +115,16 @@ with `supersedes`.
 
 Manual unkeyed unknown outcomes are operator-managed: identify the run by
 ticket, dispatch time, and available run identity, then inspect jobs/logs or
-`learnings/YYYY-MM-DD-ticket<N>-<slug>.md` as applicable. They have no keyed
+the `homelab-tickets` repo's `learnings/YYYY-MM-DD-ticket<N>-<slug>.md` as applicable. They have no keyed
 `DONE` guarantee and must never be automatically redispatched.
 
 ## Rules
 
 - One lesson per distinct root cause. A repeat incident gets a comment on the
   existing lesson, not a new file.
-- `learnings/` and ticket comments are the only incident memory and recall
-  backend; no Hindsight/ops-bank or other external memory service is used.
+- The `homelab-tickets` repo's `learnings/` and ticket comments are the only
+  incident memory and recall backend; no Hindsight/ops-bank or other external
+  memory service is used.
 - Recurrence recall includes matching source-ticket bodies and all comments.
   Full lesson recall reads the lesson file and its source ticket, including
   comments; listing `learnings/` filenames is discovery, not recall.

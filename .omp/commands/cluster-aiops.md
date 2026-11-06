@@ -20,7 +20,7 @@ For every Forgejo operation, set `F="${FORGEJO_URL:-http://nas.homelab.internal:
 - Claim with `taking` before new work and read the complete ticket/comment timeline before selecting a stage.
 - Human interfaces are limited to **merging a PR** and **handling `NEEDS_HUMAN`**. Do not call `ask` for a known runbook or hide failure behind another approval prompt. Heavy-impact operations still follow `skill://homelab-gitops` and require an explicit risk disclosure plus `ask` as part of `NEEDS_HUMAN`.
 
-Canonical incident state lives in the Forgejo ticket and `learnings/`; no external memory service is used. Any local execution lock is advisory in the supervised model and is never authoritative state.
+Canonical incident state lives in the Forgejo ticket and the `homelab-tickets` repo's `learnings/`; no external memory service is used. Any local execution lock is advisory in the supervised model and is never authoritative state.
 
 ## 2. Shared lease and action idempotency
 
@@ -71,7 +71,7 @@ rejection_evidence: <bounded definitive response or independent human-verified n
 
 | Stage | Master action | Next state |
 | --- | --- | --- |
-| `INTAKE` | Recall matching tickets and `learnings/`, then invoke `cluster-diagnosis`. | `DIAGNOSED` |
+| `INTAKE` | Recall matching tickets and the tickets repo's `learnings/`, then invoke `cluster-diagnosis`. | `DIAGNOSED` |
 | `DIAGNOSED` needs a new fix with no corresponding open or merged PR | Invoke `cluster-remediation` and route the actual result, not an assumed PR. | `REMEDIATION_RESULT` |
 | `DIAGNOSED` with a corresponding open PR | Invoke `cluster-remediation` with the existing-PR evidence to adopt/update its current head, exact `open-pr`/`link-pr` markers, and plans instead of creating another PR or selecting a terminal; route its typed result. | `REMEDIATION_RESULT` |
 | `DIAGNOSED` with a corresponding merged PR | Do not open another PR. Reconcile if unapplied; otherwise verify current behavior, including active or drifted findings. | `RECONCILING` or `VERIFYING` |
@@ -120,10 +120,10 @@ rejection_evidence: <bounded definitive response or independent human-verified n
 ## 5. Close and learn
 
 - `READY_TO_CLOSE` follows the finding class's acceptance evidence; `OUTDATED` uses a marker and reason rather than a fixed claim.
-- Generate one distilled lesson per distinct root cause in `learnings/`. A recurrence gets a keyed comment on the existing lesson's source ticket, not another file.
-- `learnings/` is the sole long-term memory and recall source; no external memory service is used. Retain facts only: root cause, fix PR, verification query, and recurrence cue.
+- Generate one distilled lesson per distinct root cause in the `homelab-tickets` repo's `learnings/`. A recurrence gets a keyed comment on the existing lesson's source ticket, not another file.
+- The tickets repo's `learnings/` is the sole long-term memory and recall source; no external memory service is used. Retain facts only: root cause, fix PR, verification query, and recurrence cue.
 - Before resumed close or learning, compare issue state and the latest consumer event with the verified occurrence. A newer firing event supersedes the old run. External closure skips only the close API mutation: resume unfinished learning directly only from an already verified `TICKET_CLOSED`; otherwise recheck merged-plan authorization and invoke `cluster-verification` for class-specific acceptance and refire checks. Missing plan/merge metadata becomes `NEEDS_HUMAN`; incomplete evidence remains in verification or observation.
-- The next `cluster-diagnosis` must recall matching tickets and `learnings/` before proposing another fix.
+- The next `cluster-diagnosis` must recall matching tickets and the tickets repo's `learnings/` before proposing another fix.
 
 ## 6. Report contract
 
