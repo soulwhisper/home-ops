@@ -26,6 +26,8 @@ spec:
   resources:
     requests:
       cpu: 100m
-      memory: 96Mi
+      # Separate from REDIS_MEM: raising the cache limit must not silently
+      # raise the scheduler reservation.
+      memory: "${REDIS_MEM_REQUEST:=96Mi}"
     limits:
       memory: "${REDIS_MEM:=1024Mi}"

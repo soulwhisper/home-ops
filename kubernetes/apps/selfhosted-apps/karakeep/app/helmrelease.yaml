@@ -50,6 +50,7 @@ spec:
             ports:
               - name: http
                 containerPort: &port 3000
+            # 512Mi per container (app, chrome, meilisearch) = 1.5Gi pod reservation.
             resources: &resources
               requests:
                 cpu: 10m
