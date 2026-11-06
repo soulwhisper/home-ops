@@ -96,8 +96,17 @@ omni credential. Each media model has its own route, credential, and field in
 the `agentgateway` 1Password item:
 `llm-embedding-auth` uses `llm_embedding`, `llm-reranker-auth` uses
 `llm_reranker`, and `llm-audio-auth` uses `llm_audio`. Chat-lane keys do not
-implicitly authorize media inference or discovery. Revocation = remove the
-field from 1Password and let the owning ExternalSecret stop issuing it.
+implicitly authorize media inference or discovery.
+
+**Key rotation/revocation:** update the value in the 1Password `agentgateway`
+item, force the owning ExternalSecret to reconcile
+(`kubectl annotate externalsecret -n <namespace> <name> force-sync="$(date +%s)" --overwrite`),
+confirm the rendered Secret changed, then verify the gateway rejects the old
+key. Deleting a field alone is not revocation: if a template reference is
+missing, External Secrets Operator leaves the previously rendered Secret in
+place. Rotating `llm_omni` affects every omni consumer (extractors and hermes
+aux), so rotate deliberately.
+
 There is no cloud fallback — the studio is a deliberate SPOF.
 
 
@@ -282,7 +291,7 @@ Non-chat vector modalities run on the same oMLX process as the chat lanes, expos
 
 The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download remains parked. `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet. Passthrough applies no LLM parsing — the audio lane has no model override, so clients send the folder id `voxcpm2` (unlike embeddings/rerank aliases).
 
-Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backends + per-model routes on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with their capability key (`llm_embedding` for karakeep/hindsight embeddings, `llm_reranker` for hindsight rerank, `llm_audio` for future audio consumers) — each media backend injects the oMLX server key upstream via `policies.auth.secretRef: studio-api-auth`, identical to the chat lanes (single credential model: the studio key never leaves the backends). **Consumers**: embeddings — karakeep, hindsight; rerank — **hindsight only**; audio — none yet (TTS lane ready). The direct-to-studio blackbox probe reads the oMLX key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
+Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backends + per-model routes on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with their capability key (`llm_embedding` for karakeep/hindsight embeddings, `llm_reranker` for hindsight rerank, `llm_audio` for future audio consumers) — each media backend injects the oMLX server key upstream via `policies.auth.secretRef: studio-api-auth`, identical to the chat lanes (the studio key is held by the backends and a read-only `blackbox-exporter` copy for direct probes; it is not issued to lane consumers). **Consumers**: embeddings — karakeep, hindsight; rerank — **hindsight only**; audio — none yet (TTS lane ready). The direct-to-studio blackbox probe reads the oMLX key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
 
 ---
 
@@ -457,7 +466,8 @@ only needed for direct-to-studio calls.
 `api_key`). Every backend — chat and media alike — injects it upstream via
 `policies.auth.secretRef: studio-api-auth`; consumers always present a
 per-lane gateway key (`agentgateway` item, `llm_<lane>` fields). The studio
-key never leaves the backends.
+key is held by the backends and a read-only `blackbox-exporter` copy in
+`monitoring-system` for direct probes; it is not issued to lane consumers.
 
 Alignment table (keep in sync with the bootstrap downloads):
 
