@@ -25,6 +25,8 @@ spec:
     controllers:
       restarter:
         type: cronjob
+        serviceAccount:
+          identifier: restarter
         cronjob:
           schedule: "20 4 * * *"
           timeZone: Asia/Shanghai

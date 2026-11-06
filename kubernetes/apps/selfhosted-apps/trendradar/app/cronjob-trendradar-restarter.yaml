@@ -25,6 +25,8 @@ spec:
     controllers:
       restarter:
         type: cronjob
+        serviceAccount:
+          identifier: restarter
         cronjob:
           # 10 min after hindsight-restarter; both off the Renovate/backup windows
           schedule: "30 4 * * *"

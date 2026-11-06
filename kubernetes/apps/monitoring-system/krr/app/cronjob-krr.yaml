@@ -25,6 +25,8 @@ spec:
     controllers:
       krr:
         type: cronjob
+        serviceAccount:
+          identifier: krr
         cronjob:
           schedule: "0 12 * * 1"
           timeZone: Asia/Shanghai
