@@ -1,0 +1,118 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
+# Daily pod delete caps the vmcp runner's memory growth. The runner Deployment
+# is operator-owned and reconciled from the VirtualMCPServer CR, so delete the
+# pod instead of patching the template.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: vmcp-restarter
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: gitops-system
+
+  values:
+    serviceAccount:
+      restarter:
+        enabled: true
+        forceRename: vmcp-restarter
+
+    defaultPodOptions:
+      automountServiceAccountToken: true
+
+    controllers:
+      restarter:
+        type: cronjob
+        cronjob:
+          schedule: "40 4 * * *"
+          timeZone: Asia/Shanghai
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 1
+          failedJobsHistory: 2
+          backoffLimit: 1
+          # KubeJobFailed is evaluated per Job: expire finished Jobs so a
+          # retained failure cannot keep the alert firing after success.
+          ttlSecondsAfterFinished: 3600
+          # Six groups run sequentially; retain headroom above the per-group
+          # worst-case waits.
+          activeDeadlineSeconds: 7200
+        pod:
+          securityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile: { type: RuntimeDefault }
+        containers:
+          kubectl:
+            # registry.k8s.io/kubectl is distroless (no sh); this job needs a
+            # shell for its retry loop.
+            image:
+              repository: alpine/k8s
+              tag: 1.37.2
+            resources:
+              requests:
+                cpu: 5m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+            command:
+              - sh
+              - -c
+            args:
+              - |
+                set -u
+                ns=servitor-apps
+
+                find_pod() {
+                  group="$1"
+                  i=0
+                  while [ "$i" -lt 24 ]; do
+                    pod=$(kubectl get pod --namespace="$ns" \
+                      -l "toolhive-name=$group" \
+                      -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+                    if [ -n "$pod" ]; then
+                      printf '%s' "$pod"
+                      return 0
+                    fi
+                    i=$((i + 1))
+                    sleep 5
+                  done
+                  return 1
+                }
+
+                for g in search cluster home agent browser github-pr; do
+                  pod=$(find_pod "$g") || {
+                    echo "no runner pod for $g after 120s"; exit 1; }
+                  echo "restarting $g/$pod"
+                  kubectl delete pod --namespace="$ns" "$pod" \
+                    --wait=false --ignore-not-found=true || exit 1
+                  kubectl wait --for=delete "pod/$pod" \
+                    --namespace="$ns" --timeout=120s || exit 1
+
+                  newpod=""
+                  i=0
+                  while [ "$i" -lt 60 ]; do
+                    candidate=$(kubectl get pod --namespace="$ns" \
+                      -l "toolhive-name=$g" \
+                      -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+                    if [ -n "$candidate" ] && [ "$candidate" != "$pod" ]; then
+                      newpod="$candidate"
+                      break
+                    fi
+                    i=$((i + 1))
+                    sleep 5
+                  done
+                  if [ -z "$newpod" ]; then
+                    echo "no replacement pod for $g after 300s"
+                    exit 1
+                  fi
+                  echo "waiting for $g/$newpod"
+                  kubectl wait --for=condition=ready "pod/$newpod" \
+                    --namespace="$ns" --timeout=300s || exit 1
+                done
+                echo "all runner pods restarted"
+            securityContext:
+              allowPrivilegeEscalation: false

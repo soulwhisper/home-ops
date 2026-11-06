@@ -1,0 +1,23 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vmcp-restarter
+rules:
+  # pod delete (not rollout restart): the runner Deployment is operator-owned
+  # and reconciled from the VirtualMCPServer CR; deleting the pod is drift-free.
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vmcp-restarter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vmcp-restarter
+subjects:
+  - kind: ServiceAccount
+    name: vmcp-restarter
