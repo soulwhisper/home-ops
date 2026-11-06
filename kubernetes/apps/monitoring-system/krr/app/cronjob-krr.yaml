@@ -153,7 +153,7 @@ spec:
           krr:
             image:
               repository: robustadev/krr
-              tag: v1.30.0
+              tag: v1.31.3
             command: ["python", "/scripts/krr_report.py"]
             env:
               - name: FORGEJO_REPO_URL
