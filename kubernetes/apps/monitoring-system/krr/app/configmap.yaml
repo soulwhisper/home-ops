@@ -39,13 +39,20 @@ data:
             raw = resp.read()
         return json.loads(raw) if raw else {}
 
-    def post_report(markdown):
-        issue = None
-        issues = api("/issues?state=open&type=issues&limit=50")
-        for item in issues:
-            if item.get("title") == TITLE or MARKER in (item.get("body") or ""):
-                issue = item
+    def find_report_issue():
+        page = 1
+        while page <= 20:
+            issues = api(f"/issues?state=all&type=issues&limit=50&page={page}")
+            for item in issues:
+                if item.get("title") == TITLE or MARKER in (item.get("body") or ""):
+                    return item
+            if len(issues) < 50:
                 break
+            page += 1
+        return None
+
+    def post_report(markdown):
+        issue = find_report_issue()
         if issue:
             api(f"/issues/{issue['number']}/comments", "POST", {"body": markdown})
             print(f"Report posted to Forgejo issue {issue['number']}")
@@ -62,7 +69,7 @@ data:
             PROM_URL,
             "-n",
             NAMESPACES,
-            "--format",
+            "-f",
             "csv",
         ]
         proc = subprocess.run(cmd, cwd="/app", capture_output=True, text=True, timeout=3300)

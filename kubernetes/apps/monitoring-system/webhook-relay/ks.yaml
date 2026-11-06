@@ -12,3 +12,5 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: monitoring-system
   path: "./kubernetes/apps/monitoring-system/webhook-relay/app"
+  # KRR reuses the ExternalSecret-backed token; wait for the app and secret.
+  wait: true

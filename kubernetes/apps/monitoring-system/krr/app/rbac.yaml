@@ -2,13 +2,37 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: krr-read
+  name: krr-cluster-read
 rules:
+  # KRR filters namespaces with a regex and reads node metadata for sizing.
+  - apiGroups: [""]
+    resources:
+      - namespaces
+      - nodes
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: krr-cluster-read
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: krr-cluster-read
+subjects:
+  - kind: ServiceAccount
+    name: krr
+    namespace: monitoring-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: krr-apps-read
+rules:
+  # Bound only in the *-apps namespaces via RoleBindings.
   - apiGroups: [""]
     resources:
       - configmaps
-      - namespaces
-      - nodes
       - pods
       - replicationcontrollers
       - services
@@ -35,16 +59,3 @@ rules:
     resources:
       - ingresses
     verbs: ["get", "list", "watch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: krr-read
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: krr-read
-subjects:
-  - kind: ServiceAccount
-    name: krr
-    namespace: monitoring-system
