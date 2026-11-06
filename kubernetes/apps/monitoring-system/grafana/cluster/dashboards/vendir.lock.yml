@@ -44,12 +44,12 @@ directories:
     path: dragonfly
   path: _sources/database
 - contents:
-  - configDigest: 2634e7a328fc4bfab00088042e727a6997806954ed1ba4b8ed8a1831f5603bdd
+  - configDigest: 437f12e5e75e806d746ee4c2f30426a9388781dc533396ff1d50d9f65a9c3c59
     git:
-      commitTitle: '[release-1.9] cherrypick for v1.9.3 (#10394)...'
-      sha: ec0171b20585a36de7124328c0ceaae72ad0f79f
+      commitTitle: '[release/v1.10] cherry pick v1.10.0 (#10541)...'
+      sha: 02e9f89d1c1dc16b723de48fa3289dfa413a6e01
       tags:
-      - v1.9.3
+      - v1.10.0
     path: gateway
   path: _sources/envoy
 - contents:
