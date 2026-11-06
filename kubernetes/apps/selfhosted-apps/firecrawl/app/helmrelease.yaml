@@ -64,7 +64,7 @@ spec:
             resources:
               requests:
                 cpu: 100m
-                memory: 256Mi
+                memory: 464Mi
               limits:
                 cpu: 500m
                 memory: 768Mi
@@ -149,7 +149,7 @@ spec:
               readiness: *nuq_worker_liveness
             resources:
               requests:
-                cpu: 200m
+                cpu: 110m
                 memory: 512Mi
               limits:
                 cpu: "1"
@@ -181,8 +181,8 @@ spec:
                 enabled: false
             resources:
               requests:
-                cpu: 200m
-                memory: 512Mi
+                cpu: 100m
+                memory: 1136Mi
               limits:
                 cpu: "1"
                 memory: 1536Mi

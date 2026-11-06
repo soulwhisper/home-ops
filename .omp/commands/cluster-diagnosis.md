@@ -23,6 +23,7 @@ Perform a read-only diagnosis of the live cluster. Do not edit cluster resources
 2. **Metrics**
    - Node/pod CPU and memory, Ceph PG/OSD state, etcd quorum and latency, PostgreSQL replication lag, Kopiur freshness and backlog, VictoriaMetrics scrape/rule errors, and ticket-delivery failure rates.
    - Prefer raw PromQL and exact timestamps over dashboard impressions.
+   - When capacity or resource optimization is in scope, estimate effective requests/limits for `*-apps` workloads against 7d P95, 24h P95, and 7d P99 CPU/memory. A limit without a request is defaulted to that limit; lowering a request requires an explicit `requests` field. Report both KRR-style (1.2x P95 / 1.05x P99) and conservative (1.5x P95 / 1.5x P99) scenarios, net CPU/memory deltas, top over/under-provisioned workloads, and the 7-day-window caveat. Do not edit resources during diagnosis.
 
 3. **Logs and traces**
    - Recent Warning events, previous/current logs for failing workloads, Flux reconcile errors, controller/CSI/Talos errors, VolumeAttachment and other condition timelines.
@@ -58,4 +59,5 @@ Perform a read-only diagnosis of the live cluster. Do not edit cluster resources
   - for an active finding with no conservative runbook and no corresponding open or merged PR, return `next_action: NEEDS_HUMAN` with `resume_stage: DIAGNOSED` and the evidence/options required for the master decision. The master routes a recorded human-selected direction to `cluster-remediation`; do not turn this route into `HUMAN_MANAGED` or create a post-merge handoff without a merged PR. Healthy/outdated findings always use the terminal route above, even when no runbook applies.
   - do not call `ask` or invoke another subcommand. The master invokes remediation/verification and owns every human question; heavy-impact execution always requires separate approval through `cluster-aiops` under `NEEDS_HUMAN`.
 - Separate active failures, imminent risks, stale/noise/expected conditions, and already healthy evidence.
+- When capacity or resource optimization is in scope, include a resource estimate section: scope/method, current vs recommended totals, top over/under-provisioned workloads, confidence, and the 7-day-window limitation.
 - Reproduce signals from raw data instead of trusting ticket text or model hypotheses. Do not default to disabling alerts, health checks, or LLM guardrails.

@@ -31,7 +31,8 @@ spec:
                   name: *name
             resources:
               requests:
-                cpu: 10m
+                cpu: 150m
+                memory: 1536Mi
               limits:
                 # -Xmx4g + LibreOffice/Tesseract native sidecar processes
                 # need headroom above the JVM heap (upstream: limit >= 1.5x Xmx)

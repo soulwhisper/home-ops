@@ -95,6 +95,7 @@ spec:
             resources:
               requests:
                 cpu: 20m
+                memory: 512Mi
                 gpu.intel.com/i915: 1
               limits:
                 # BIG_MEMORY_MODE=true assumes >1Gi

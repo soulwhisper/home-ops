@@ -26,6 +26,6 @@ spec:
   resources:
     requests:
       cpu: 100m
-      memory: "${REDIS_MEM:=1024Mi}"
+      memory: 96Mi
     limits:
       memory: "${REDIS_MEM:=1024Mi}"

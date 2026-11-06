@@ -50,7 +50,8 @@ spec:
                   successThreshold: 1
             resources:
               requests:
-                cpu: 10m
+                cpu: 30m
+                memory: 1280Mi
                 gpu.intel.com/i915: 1
               limits:
                 memory: 8Gi
