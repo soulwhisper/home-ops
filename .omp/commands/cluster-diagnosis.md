@@ -10,8 +10,8 @@ Perform a read-only diagnosis of the live cluster. Do not edit cluster resources
 
 1. Read `skill://homelab-gitops` and `skill://homelab-tickets` first and follow their lifecycle and acceptance rules.
 2. Read `.mise.toml` and `infrastructure/talos/version.yaml`. Confirm `kubectl config current-context` before collecting evidence.
-3. **Recall before diagnosing**: search matching Forgejo tickets and the `homelab-tickets` repo's `learnings/` (via `$F/contents/learnings`) for the same alert, resource, and root-cause class. Record whether this is a recurrence, the prior fix and verification, and any lesson that changes the current runbook. Report recurrence evidence only; `cluster-aiops` decides whether to append a keyed recurrence comment to the existing lesson's source ticket.
-4. Set `F="${FORGEJO_URL:-http://nas.homelab.internal:9003}/api/v1/repos/${TICKETS_REPO:-soulwhisper/homelab-tickets}"` and `TOKEN_FILE="${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}"`. These are environment defaults, not a second hardcoded repository or credential path.
+3. Set `F="${FORGEJO_URL:-http://nas.homelab.internal:9003}/api/v1/repos/${TICKETS_REPO:-soulwhisper/homelab-tickets}"` and `TOKEN_FILE="${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}"`. These are environment defaults, not a second hardcoded repository or credential path.
+4. **Recall before diagnosing**: search matching Forgejo tickets and the `homelab-tickets` repo's `learnings/` (via `$F/contents/learnings`) for the same alert, resource, and root-cause class. Record whether this is a recurrence, the prior fix and verification, and any lesson that changes the current runbook. Report recurrence evidence only; `cluster-aiops` decides whether to append a keyed recurrence comment to the existing lesson's source ticket.
 5. Keep all queries bounded. Redact credentials, tokens, private keys, and Secret values. Do not dump complete logs or configuration payloads.
 
 ## Evidence collection

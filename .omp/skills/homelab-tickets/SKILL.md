@@ -157,7 +157,7 @@ Root cause: <one line>.
 ## 7. Learn (lesson file)
 
 For a distinct root cause, dispatch the lessons workflow (writes
-`learnings/YYYY-MM-DD-<slug>.md` in the `homelab-tickets` repository, per its
+`learnings/YYYY-MM-DD-ticket<N>-<slug>.md` in the `homelab-tickets` repository, per its
 `skills/lessons.md`). A supervised run
 passes all three inputs; `action_key` is the full occurrence key:
 

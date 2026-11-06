@@ -12,7 +12,7 @@ workflow. Do not create a `learnings/` directory in `home-ops`.
 
 ## File
 
-`learnings/YYYY-MM-DD-<slug>.md`
+`learnings/YYYY-MM-DD-ticket<N>-<slug>.md`
 
 ```markdown
 ---
