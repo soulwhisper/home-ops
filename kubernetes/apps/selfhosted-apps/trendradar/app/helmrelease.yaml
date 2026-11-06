@@ -86,7 +86,7 @@ spec:
               limits:
                 # MCP query serving over /app/output grows past 512Mi within
                 # ~39h; 1Gi matches the app container. Growth is a linear
-                # leak, bounded by restart-cronjob.yaml.
+                # leak, bounded by cronjob-trendradar-restarter.yaml.
                 memory: 1Gi
             securityContext:
               allowPrivilegeEscalation: false
