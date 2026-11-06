@@ -86,17 +86,18 @@ inject the oMLX server key via `policies.auth.secretRef`
 (ExternalSecret-managed from the 1Password `agentgateway` item; format
 `llm-<lane>-<hex16>`): `llm_uncensored` (open chat / open-webui),
 `llm_persona` (dsh-tavern RP), `llm_agent` (hermes, robusta), `llm_omni`
-(extractors). Each model route carries its own
+(extractors, hermes aux). Each model route carries its own
 apiKeyAuthentication policy covering both inference and discovery, so a chat
-key cannot call the automation lane. Cross-lane needs are served by enrolling the same key
-in another lane's secret, never by sharing a policy: `llm-omni-auth` also
-enrolls the agent key (hermes aux) and the uncensored key (open-webui auxiliary
-tasks). Each media model has its own route, credential, and field in the
-`agentgateway` 1Password item:
+key cannot call the automation lane. Each route accepts only its own lane key;
+a consumer that needs a second lane holds that lane's key directly — hermes
+keeps `llm_agent` for its main brain and `llm_omni` as `OPENAI_AUX_API_KEY`
+for auxiliary tasks. open-webui uses only `llm_uncensored` for chat and has no
+omni credential. Each media model has its own route, credential, and field in
+the `agentgateway` 1Password item:
 `llm-embedding-auth` uses `llm_embedding`, `llm-reranker-auth` uses
 `llm_reranker`, and `llm-audio-auth` uses `llm_audio`. Chat-lane keys do not
 implicitly authorize media inference or discovery. Revocation = remove the
-entry from every lane and media capability secret.
+field from 1Password and let the owning ExternalSecret stop issuing it.
 There is no cloud fallback — the studio is a deliberate SPOF.
 
 
@@ -132,7 +133,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | dsh-tavern           | `persona`         | Orion-26B-A4B-v1.1 | RP portal (dsh-tavern image); provider/key GitOps-managed via `llm_persona` |
 | dsh-web              | `agent`/`omni`    | Ornith-1.5 / MiniCPM-o | Agent workbench (servitor-apps); LLM lanes + search/cluster/home/browser/github-pr MCP tiers |
-| open-webui           | `uncensored`/`omni` | Qwen3.8-27B / MiniCPM-o | Human chat portal; search-tier MCP and OTEL traces |
+| open-webui           | `uncensored`      | Qwen3.8-27B        | Human chat portal; search-tier MCP and OTEL traces |
 
 Both DSH apps also expose the optional `kimi` provider (`https://api.moonshot.ai/v1`, model `kimi-k3.1-pro`). It is a direct external provider, not an agentgateway lane, and does not override the default model.
 
@@ -235,7 +236,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
   - `ops` — the batching brain: cron/Feishu/automation workload lives here (search, cluster read-only, home read-write, and agent ticket/incident-memory MCP tiers); owns the Feishu adapter, credentials, home channel and new Feishu sessions
   - `default` — fallback/scratch with no Feishu adapter; the retired `chat` profile was removed 2026-10 when the human interface moved to dedicated portals
-  Model/provider config (`model.provider: custom` → agent gateway, `model.default: agent`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression`/`title_generation` → `omni`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. Requires 1Password `hermes-agent` field: `api_server_key_root` (>=16 chars)
+  Model/provider config (`model.provider: custom` → agent gateway, `model.default: agent`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression`/`title_generation` → `omni`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. The main brain uses `OPENAI_API_KEY` (`llm_agent`); each aux task selects `OPENAI_AUX_API_KEY` (`llm_omni`) via `key_env`, so the agent key is never accepted on the omni route. Requires 1Password `hermes-agent` field: `api_server_key_root` (>=16 chars)
 
 ---
 
@@ -244,7 +245,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - Human chat portal, image `ghcr.io/open-webui/open-webui`. Lives in **servitor-apps**
 - **Auth**: Authentik forward-auth gates access at the gateway; with no trusted-header mapping, Open WebUI login is disabled and requests use its shared local system account
 - **Ingress**: `chat.noirprime.com` via kgateway-internal
-- **LLM**: single agentgateway OpenAI provider; `uncensored` for chat and `omni` for guarded auxiliary tasks. The admin connection sets `model_ids` to these two models because discovery is per model, not a global catalog. Existing installations must save the same `model_ids` in the admin UI before the global catalog is removed.
+- **LLM**: single agentgateway OpenAI provider; `uncensored` only. The admin connection sets `model_ids` to `[uncensored]`; open-webui does not use the `omni` lane or hold an omni credential. Existing installations must save the same `model_ids` in the admin UI before the global catalog is removed.
 - **MCP**: native search-tier connection through `/mcp/search` with the `mcp_search` bearer key
 - **State**: shared CNPG for app data and pgvector, app Dragonfly for session/rate-limit state, and the `open-webui` Ceph bucket for uploads and KB files; the entire data directory is rewarmable cache on the `open-webui-cache` ceph-cache PVC
 - **Egress**: agentgateway, CNPG, Dragonfly, Ceph RGW, OTLP collector, kube-dns, and world-except-private for RAG fetching
