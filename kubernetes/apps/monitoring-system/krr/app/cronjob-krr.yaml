@@ -129,22 +129,6 @@ spec:
             - kind: ServiceAccount
               name: krr
               namespace: monitoring-system
-      rbac-worker-apps:
-        manifest:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: RoleBinding
-          metadata:
-            name: krr-read
-            namespace: worker-apps
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: krr-apps-read
-          subjects:
-            - kind: ServiceAccount
-              name: krr
-              namespace: monitoring-system
-
     defaultPodOptions:
       # KRR reads the cluster with the krr ServiceAccount; the app-template
       # default is to not mount the token.
@@ -177,7 +161,7 @@ spec:
               - name: PROMETHEUS_URL
                 value: "http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428"
               - name: KRR_NAMESPACES
-                value: ".*-apps"
+                value: "(gaming|media|selfhosted|servitor|smarthome)-apps"
               - name: CLUSTER_NAME
                 value: "main"
               - name: TZ
