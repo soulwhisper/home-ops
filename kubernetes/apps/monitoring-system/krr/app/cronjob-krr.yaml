@@ -17,6 +17,134 @@ spec:
         enabled: true
         forceRename: krr
 
+    rbac:
+      roles:
+        cluster-read:
+          type: ClusterRole
+          forceRename: krr-cluster-read
+          rules:
+            - apiGroups: [""]
+              resources: ["namespaces", "nodes"]
+              verbs: ["get", "list", "watch"]
+        apps-read:
+          type: ClusterRole
+          forceRename: krr-apps-read
+          rules:
+            - apiGroups: [""]
+              resources: ["configmaps", "pods", "replicationcontrollers", "services"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["apps"]
+              resources: ["daemonsets", "deployments", "deployments/scale", "replicasets", "replicasets/scale", "statefulsets"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["batch"]
+              resources: ["cronjobs", "jobs"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["autoscaling"]
+              resources: ["horizontalpodautoscalers"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["networking.k8s.io"]
+              resources: ["ingresses"]
+              verbs: ["get", "list", "watch"]
+      bindings:
+        cluster-read:
+          type: ClusterRoleBinding
+          roleRef:
+            identifier: cluster-read
+          subjects:
+            - identifier: krr
+
+    rawResources:
+      rbac-gaming-apps:
+        manifest:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: krr-read
+            namespace: gaming-apps
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: krr-apps-read
+          subjects:
+            - kind: ServiceAccount
+              name: krr
+              namespace: monitoring-system
+      rbac-media-apps:
+        manifest:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: krr-read
+            namespace: media-apps
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: krr-apps-read
+          subjects:
+            - kind: ServiceAccount
+              name: krr
+              namespace: monitoring-system
+      rbac-selfhosted-apps:
+        manifest:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: krr-read
+            namespace: selfhosted-apps
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: krr-apps-read
+          subjects:
+            - kind: ServiceAccount
+              name: krr
+              namespace: monitoring-system
+      rbac-servitor-apps:
+        manifest:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: krr-read
+            namespace: servitor-apps
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: krr-apps-read
+          subjects:
+            - kind: ServiceAccount
+              name: krr
+              namespace: monitoring-system
+      rbac-smarthome-apps:
+        manifest:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: krr-read
+            namespace: smarthome-apps
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: krr-apps-read
+          subjects:
+            - kind: ServiceAccount
+              name: krr
+              namespace: monitoring-system
+      rbac-worker-apps:
+        manifest:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: krr-read
+            namespace: worker-apps
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: krr-apps-read
+          subjects:
+            - kind: ServiceAccount
+              name: krr
+              namespace: monitoring-system
+
     defaultPodOptions:
       # KRR reads the cluster with the krr ServiceAccount; the app-template
       # default is to not mount the token.

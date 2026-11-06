@@ -20,6 +20,22 @@ spec:
         enabled: true
         forceRename: vmcp-restarter
 
+    rbac:
+      roles:
+        restarter:
+          type: Role
+          rules:
+            - apiGroups: [""]
+              resources: ["pods"]
+              verbs: ["get", "list", "watch", "delete"]
+      bindings:
+        restarter:
+          type: RoleBinding
+          roleRef:
+            identifier: restarter
+          subjects:
+            - identifier: restarter
+
     defaultPodOptions:
       automountServiceAccountToken: true
 

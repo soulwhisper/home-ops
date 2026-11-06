@@ -19,6 +19,23 @@ spec:
         enabled: true
         forceRename: trendradar-restarter
 
+    rbac:
+      roles:
+        restarter:
+          type: Role
+          rules:
+            - apiGroups: ["apps"]
+              resources: ["deployments"]
+              resourceNames: ["trendradar"]
+              verbs: ["get", "patch"]
+      bindings:
+        restarter:
+          type: RoleBinding
+          roleRef:
+            identifier: restarter
+          subjects:
+            - identifier: restarter
+
     defaultPodOptions:
       automountServiceAccountToken: true
 

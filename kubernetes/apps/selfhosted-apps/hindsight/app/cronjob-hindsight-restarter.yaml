@@ -19,6 +19,23 @@ spec:
         enabled: true
         forceRename: hindsight-restarter
 
+    rbac:
+      roles:
+        restarter:
+          type: Role
+          rules:
+            - apiGroups: ["apps"]
+              resources: ["deployments"]
+              resourceNames: ["hindsight"]
+              verbs: ["get", "patch"]
+      bindings:
+        restarter:
+          type: RoleBinding
+          roleRef:
+            identifier: restarter
+          subjects:
+            - identifier: restarter
+
     defaultPodOptions:
       automountServiceAccountToken: true
 

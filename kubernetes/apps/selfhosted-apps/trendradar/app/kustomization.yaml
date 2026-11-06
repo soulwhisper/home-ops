@@ -13,4 +13,3 @@ resources:
   - ./ciliumnetworkpolicy.yaml
   # bounded restart for upstream memory leak (see file header)
   - ./cronjob-trendradar-restarter.yaml
-  - ./rbac.yaml
