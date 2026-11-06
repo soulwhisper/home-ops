@@ -479,7 +479,7 @@ when a consumer appears; see Media lanes):
 
 | Studio dir (`~/models/`) | Model            | HF source                                 | Intended role |
 | ------------------------ | ---------------- | ----------------------------------------- | ------------- |
-| `qwen-image-2.1`         | Qwen-Image 2.1   | `abenzerps/Qwen-Image-2.1-Uncensored-GGUF` (MLX 4bit safetensors) | image gen (oMLX alias `image`; model type not discovered by oMLX 0.7, so inert) |
+| `qwen-image-2.1`         | Qwen-Image 2.1   | `abenzerps/Qwen-Image-2.1-Uncensored-GGUF` (ComfyUI int8 safetensors) | image gen (oMLX alias `image`; model type not discovered by oMLX 0.7, so inert) |
 
 Host prerequisites (out of band): models present at `~/models/<folder>`
 with folder names exactly as the Studio id column (bootstrap

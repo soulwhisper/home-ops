@@ -55,7 +55,7 @@ the studio id accepted by direct calls.
 | `uncensored` | Sensitive/open chat | `qwen3.8-27b` | 27.8B / MLX 4bit | 5m | no |
 | `reranker` | Rerank and regression checks | `qwen3-reranker-0.6b` | 0.6B / MLX | 5m | no |
 | `voice` | TTS and voice cloning | `voxcpm2` | 2B / MLX 4bit | 5m | no |
-| `image` | Image generation | `qwen-image-2.1` | 7B / GGUF 4bit | 5m | no |
+| `image` | Image generation | `qwen-image-2.1` | 7B / int8 safetensors | 5m | no |
 
 The 4-bit Orion variant stays downloaded but hidden. oMLX 0.7 does not
 currently discover `qwen-image-2.1`, so its `image` alias is inert until that
