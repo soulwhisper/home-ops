@@ -1,0 +1,197 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: krr
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: gitops-system
+
+  values:
+    serviceAccount:
+      krr:
+        enabled: true
+        forceRename: krr
+
+    rbac:
+      roles:
+        cluster-read:
+          type: ClusterRole
+          forceRename: krr-cluster-read
+          rules:
+            - apiGroups: [""]
+              resources: ["namespaces", "nodes"]
+              verbs: ["get", "list", "watch"]
+        apps-read:
+          type: ClusterRole
+          forceRename: krr-apps-read
+          rules:
+            - apiGroups: [""]
+              resources: ["configmaps", "pods", "replicationcontrollers", "services"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["apps"]
+              resources: ["daemonsets", "deployments", "deployments/scale", "replicasets", "replicasets/scale", "statefulsets"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["batch"]
+              resources: ["cronjobs", "jobs"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["autoscaling"]
+              resources: ["horizontalpodautoscalers"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["networking.k8s.io"]
+              resources: ["ingresses"]
+              verbs: ["get", "list", "watch"]
+      bindings:
+        cluster-read:
+          type: ClusterRoleBinding
+          roleRef:
+            identifier: cluster-read
+          subjects:
+            - identifier: krr
+
+    rawResources:
+      rbac-gaming-apps:
+        manifest:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: krr-read
+            namespace: gaming-apps
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: krr-apps-read
+          subjects:
+            - kind: ServiceAccount
+              name: krr
+              namespace: monitoring-system
+      rbac-media-apps:
+        manifest:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: krr-read
+            namespace: media-apps
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: krr-apps-read
+          subjects:
+            - kind: ServiceAccount
+              name: krr
+              namespace: monitoring-system
+      rbac-selfhosted-apps:
+        manifest:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: krr-read
+            namespace: selfhosted-apps
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: krr-apps-read
+          subjects:
+            - kind: ServiceAccount
+              name: krr
+              namespace: monitoring-system
+      rbac-servitor-apps:
+        manifest:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: krr-read
+            namespace: servitor-apps
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: krr-apps-read
+          subjects:
+            - kind: ServiceAccount
+              name: krr
+              namespace: monitoring-system
+      rbac-smarthome-apps:
+        manifest:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: krr-read
+            namespace: smarthome-apps
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: krr-apps-read
+          subjects:
+            - kind: ServiceAccount
+              name: krr
+              namespace: monitoring-system
+    defaultPodOptions:
+      # KRR reads the cluster with the krr ServiceAccount; the app-template
+      # default is to not mount the token.
+      automountServiceAccountToken: true
+
+    controllers:
+      krr:
+        type: cronjob
+        serviceAccount:
+          identifier: krr
+        cronjob:
+          schedule: "0 12 * * 1"
+          timeZone: Asia/Shanghai
+          concurrencyPolicy: Forbid
+          startingDeadlineSeconds: 3600
+          successfulJobsHistory: 3
+          failedJobsHistory: 3
+          activeDeadlineSeconds: 3600
+          backoffLimit: 1
+          ttlSecondsAfterFinished: 604800
+        containers:
+          krr:
+            image:
+              repository: robustadev/krr
+              tag: v1.30.0
+            command: ["python", "/scripts/krr_report.py"]
+            env:
+              - name: FORGEJO_REPO_URL
+                value: "https://git.noirprime.com/api/v1/repos/soulwhisper/homelab-tickets"
+              - name: PROMETHEUS_URL
+                value: "http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428"
+              - name: KRR_NAMESPACES
+                value: "(gaming|media|selfhosted|servitor|smarthome)-apps"
+              - name: CLUSTER_NAME
+                value: "main"
+              - name: TZ
+                value: "Asia/Shanghai"
+              - name: FORGEJO_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: webhook-relay
+                    key: FORGEJO_TICKETS_TOKEN
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                cpu: "1"
+                memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              seccompProfile: { type: RuntimeDefault }
+
+    persistence:
+      scripts:
+        type: configMap
+        name: krr-report
+        defaultMode: 0555
+        globalMounts:
+          - path: /scripts
+            readOnly: true
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp

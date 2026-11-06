@@ -9,4 +9,4 @@ resources:
   - ./externalsecret.yaml
   - ./ciliumnetworkpolicy.yaml
   # bounded restart for upstream memory leak (see file header)
-  - ./restart-cronjob.yaml
+  - ./cronjob-hindsight-restarter.yaml

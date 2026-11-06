@@ -7,7 +7,7 @@ resources:
   - ./ciliumnetworkpolicy.yaml
   - ./mcptelemetryconfig.yaml
   - ./prometheusrule.yaml
-  - ./restart-cronjob-vmcp.yaml
+  - ./cronjob-vmcp-restarter.yaml
   # groups
   - ./mcpgroup.yaml
   - ./scrapeconfig.yaml

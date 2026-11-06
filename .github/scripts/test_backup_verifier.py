@@ -11,7 +11,7 @@ import unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
-MANIFEST = ROOT / "kubernetes/apps/database-system/cnpg-operator/maintenance/cronjob-dr-test.yaml"
+MANIFEST = ROOT / "kubernetes/apps/database-system/cnpg-operator/maintenance/cronjob-postgres-backup-verify.yaml"
 SCRIPT = textwrap.dedent(
     MANIFEST.read_text().split("          verify-backup-chain.py: |\n", 1)[1]
     .split("\n    controllers:", 1)[0]

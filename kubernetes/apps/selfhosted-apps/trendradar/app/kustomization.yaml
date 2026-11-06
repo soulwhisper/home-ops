@@ -12,4 +12,4 @@ resources:
   - ./trafficpolicy.yaml
   - ./ciliumnetworkpolicy.yaml
   # bounded restart for upstream memory leak (see file header)
-  - ./restart-cronjob.yaml
+  - ./cronjob-trendradar-restarter.yaml

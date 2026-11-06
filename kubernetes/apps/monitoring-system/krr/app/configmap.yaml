@@ -1,0 +1,153 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: krr-report
+data:
+  krr_report.py: |
+    import csv
+    import io
+    import json
+    import os
+    import subprocess
+    import sys
+    import urllib.error
+    import urllib.request
+    from datetime import datetime, timezone
+
+    REPO_URL = os.environ["FORGEJO_REPO_URL"].rstrip("/")
+    TOKEN = os.environ["FORGEJO_TOKEN"]
+    PROM_URL = os.environ["PROMETHEUS_URL"]
+    CLUSTER = os.environ.get("CLUSTER_NAME", "main")
+    NAMESPACES = os.environ.get("KRR_NAMESPACES", "(gaming|media|selfhosted|servitor|smarthome)-apps")
+    TITLE = "[INFO] Weekly KRR resource recommendations"
+    MARKER = "<!-- aiops-krr-report -->"
+    MAX_TABLE_ROWS = 80
+
+    def now():
+        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    def api(path, method="GET", data=None):
+        body = json.dumps(data).encode() if data is not None else None
+        req = urllib.request.Request(
+            REPO_URL + path,
+            data=body,
+            method=method,
+            headers={"Authorization": f"token {TOKEN}", "Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read()
+        return json.loads(raw) if raw else {}
+
+    def find_report_issue():
+        page = 1
+        while page <= 20:
+            issues = api(f"/issues?state=all&type=issues&limit=50&page={page}")
+            for item in issues:
+                if item.get("title") == TITLE or MARKER in (item.get("body") or ""):
+                    return item
+            if len(issues) < 50:
+                break
+            page += 1
+        return None
+
+    def post_report(markdown):
+        issue = find_report_issue()
+        if issue:
+            api(f"/issues/{issue['number']}/comments", "POST", {"body": markdown})
+            print(f"Report posted to Forgejo issue {issue['number']}")
+        else:
+            created = api("/issues", "POST", {"title": TITLE, "body": markdown})
+            print(f"Report created Forgejo issue {created.get('number')}")
+
+    def run_krr():
+        cmd = [
+            "python",
+            "krr.py",
+            "simple",
+            "-p",
+            PROM_URL,
+            "-n",
+            NAMESPACES,
+            "-f",
+            "csv",
+        ]
+        proc = subprocess.run(cmd, cwd="/app", capture_output=True, text=True, timeout=3300)
+        if proc.returncode != 0:
+            raise RuntimeError(f"krr exited {proc.returncode}: " + proc.stderr.strip()[-3000:])
+        return proc.stdout
+
+    def md_table(rows, columns):
+        def esc(value):
+            return str(value or "").replace("|", "\\|").replace("\n", " ")
+
+        lines = [
+            "| " + " | ".join(columns) + " |",
+            "| " + " | ".join(["---"] * len(columns)) + " |",
+        ]
+        for row in rows:
+            lines.append("| " + " | ".join(esc(row.get(c, "")) for c in columns) + " |")
+        return "\n".join(lines)
+
+    def main():
+        try:
+            csv_text = run_krr()
+            rows = list(csv.DictReader(io.StringIO(csv_text)))
+        except Exception as exc:
+            body = (
+                f"{MARKER}\n## Weekly KRR scan failed\n\n"
+                f"- Cluster: `{CLUSTER}`\n- Time: `{now()}`\n- Scope: `{NAMESPACES}`\n\n"
+                f"```text\n{str(exc)[-3500:]}\n```\n"
+            )
+            try:
+                post_report(body)
+            except Exception as post_exc:
+                print(f"Failed to post failure report: {post_exc}", file=sys.stderr)
+            print(str(exc), file=sys.stderr)
+            return 1
+
+        # KRR's CSV formatter leaves Namespace/Name blank for the second and
+        # later containers of the same workload; carry the group fields forward.
+        grouped = []
+        for row in rows:
+            if row.get("Namespace") or row.get("Name"):
+                grouped.append(row)
+            elif grouped:
+                for key in ("Namespace", "Name", "Type", "Pods", "Severity"):
+                    if not row.get(key):
+                        row[key] = grouped[-1].get(key, "")
+                grouped.append(row)
+
+        columns = ["Namespace", "Name", "Type", "Container", "Pods", "CPU Requests", "Memory Requests", "Severity"]
+        table = md_table(grouped[:MAX_TABLE_ROWS], columns)
+        more = "" if len(grouped) <= MAX_TABLE_ROWS else f"\n_({len(grouped) - MAX_TABLE_ROWS} more rows in the raw CSV below.)_\n"
+        raw = csv_text.strip()
+        if len(raw) > 50000:
+            raw = raw[:50000] + "\n... (truncated)"
+        body = f"""{MARKER}
+    ## Weekly KRR resource recommendations
+
+    - Cluster: `{CLUSTER}`
+    - Scope: `{NAMESPACES}`
+    - Generated: `{now()}`
+    - Strategy: `simple` (KRR default history)
+    - Rows: `{len(grouped)}`
+
+    {table}
+    {more}
+
+    <details><summary>Raw KRR CSV</summary>
+
+    ```csv
+    {raw}
+    ```
+
+    </details>
+
+    KRR recommendations are advisory; requests are not auto-applied. Check the current limits and the 14-day history before changing manifests.
+    """
+        post_report(body)
+        return 0
+
+    if __name__ == "__main__":
+        sys.exit(main())
