@@ -50,5 +50,11 @@
       matchPackageNames: ["ghcr.io/immich-app/immich-machine-learning"],
       overrideDatasource: "custom.immich-machine-learning",
     },
+    {
+      description: "forgejo-mcp tags are tracked from the GitHub mirror; the image registry's tag API does not reliably answer lookups",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["git.b4mad.industries/agentic-forges/forgejo-mcp"],
+      enabled: false,
+    },
   ],
 }
