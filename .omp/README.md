@@ -1,12 +1,12 @@
 # AI-ops cluster loop
 
-This directory contains command contracts for a supervised incident loop. A human invokes `cluster-aiops run` or `resume`; the master command invokes the subcommands and records their typed results. Forgejo tickets and `learnings/` hold all incident state and memory. The current implementation is not a daemon, has no background force-loop, and does not autonomously wake or chain subcommands.
+This directory contains command contracts for a supervised incident loop. A human invokes `cluster-aiops run` or `resume`; the master command invokes the subcommands and records their typed results. Forgejo tickets and the tickets repo's `learnings/` hold all incident state and memory. The current implementation is not a daemon, has no background force-loop, and does not autonomously wake or chain subcommands.
 
 ## Commands
 
 | Command | Role | Mutation boundary |
 | --- | --- | --- |
-| `cluster-diagnosis` | Read-only evidence collection, ticket correlation, and runbook selection. Starts by recalling matching tickets and `learnings/`. | No cluster, ticket, or file edits. |
+| `cluster-diagnosis` | Read-only evidence collection, ticket correlation, and runbook selection. Starts by recalling matching tickets and the tickets repo's `learnings/`. | No cluster, ticket, or file edits. |
 | `cluster-remediation` | Implements a conservative fix on a Git branch, tests it, and opens/updates a PR with a head-bound close/learn plan. | Git and PR changes only; no live mutation or auto-merge. |
 | `cluster-verification` | Checks the merged revision, rollout, actual configuration, original failure signal, and close readiness. | Strictly read-only; no reconcile, restart, provider activation, scheduler execution, or closure. |
 | `cluster-aiops` | Master orchestrator with `run` and `resume`. Coordinates the other commands and records leases, stages, action intents/results, approvals, observation deadlines, closure, and lessons in Forgejo. | May execute only explicitly approved, non-disruptive steps in a merged plan. Heavy operations require `NEEDS_HUMAN` plus `ask`. |
@@ -63,7 +63,7 @@ CLOSE_COMMENT_INTENT
   → DONE or LEARN_PENDING
 ```
 
-`learnings/` is the sole long-term memory. New root causes produce a lesson; recurrences produce a keyed comment on the existing lesson's source ticket. `NO_LESSON` is a successful terminal outcome, not a reason to redispatch forever.
+The `homelab-tickets` repo's `learnings/` is the sole long-term memory. New root causes produce a lesson; recurrences produce a keyed comment on the existing lesson's source ticket. `NO_LESSON` is a successful terminal outcome, not a reason to redispatch forever.
 
 ## Human interfaces
 

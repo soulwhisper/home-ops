@@ -39,6 +39,13 @@ Pair with `homelab-gitops` for every cluster read/change.
 - Labels in the repo: none by default. Only add `flap` (repeated transitions)
   — don't invent a taxonomy.
 
+## Learnings location
+
+`learnings/` is a directory in the Forgejo `soulwhisper/homelab-tickets`
+repository, alongside the tickets and the lessons workflow. It is not a
+home-ops directory. Read it through the Forgejo API (`$F/contents/learnings`)
+or the web UI; write it only through the lessons workflow.
+
 ## 1. Check the queue
 
 Reads need no token (public repo):
@@ -87,8 +94,9 @@ Duplicates: comment `duplicate of #<survivor>` and close the loser
 
 ## 3. Recall before diagnosing
 
-Search incident history only in Forgejo: matching issues/comments and
-`learnings/`. Do not use Hindsight/ops-bank or another external memory service.
+Search incident history only in Forgejo: matching issues/comments and the
+tickets repo's `learnings/`. Do not use Hindsight/ops-bank or another external
+memory service.
 Use the public read API where possible and the default token path
 `${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}` when writes are authorized.
 
@@ -100,7 +108,7 @@ response=$(curl -sS -w '\n%{http_code}' "$F/contents/learnings") || exit $?
 status="${response##*$'\n'}"
 case "$status" in
   200) printf '%s\n' "${response%$'\n'*}" | jq -r '.[].name' ;;
-  # A 404 learnings/ listing means no lessons retained yet — not an error.
+  # A 404 listing of the tickets repo's learnings/ means no lessons retained yet — not an error.
   404) ;;
   *) printf 'Forgejo returned HTTP %s\n' "$status" >&2; exit 1 ;;
 esac
@@ -108,7 +116,7 @@ esac
 
 For a recurrence, read the existing lesson file and its full source ticket,
 including every page of source-ticket comments, before choosing a runbook.
-Listing `learnings/` filenames is only discovery, not full lesson recall.
+Listing the tickets repo's `learnings/` filenames is only discovery, not full lesson recall.
 Report the recurrence; the orchestrator decides whether to append a keyed
 recurrence comment to the existing lesson's ticket.
 
@@ -149,7 +157,8 @@ Root cause: <one line>.
 ## 7. Learn (lesson file)
 
 For a distinct root cause, dispatch the lessons workflow (writes
-`learnings/YYYY-MM-DD-<slug>.md` per `skills/lessons.md`). A supervised run
+`learnings/YYYY-MM-DD-ticket<N>-<slug>.md` in the `homelab-tickets` repository, per its
+`skills/lessons.md`). A supervised run
 passes all three inputs; `action_key` is the full occurrence key:
 
 ```bash
@@ -259,17 +268,19 @@ allowed path only after logical terminal failure (`status` is `failure` or
 Keyed deterministic recovery and its `DONE` guarantee do not apply to manual
 unkeyed dispatches. The operator identifies an unknown outcome by ticket,
 dispatch time, and available run identity, then inspects the matching run's
-jobs/logs or `learnings/YYYY-MM-DD-ticket<N>-<slug>.md` as applicable. Manual
-`NO_LESSON` writes no keyed source-ticket comment and remains logs-only. Never
+jobs/logs or the tickets repo's `learnings/YYYY-MM-DD-ticket<N>-<slug>.md` as
+applicable. Manual `NO_LESSON` writes no keyed source-ticket comment and
+remains logs-only. Never
 automatically redispatch an unknown manual outcome.
 
-## 8. Remember (incident memory in `learnings/`)
+## 8. Remember (incident memory in the tickets repo's `learnings/`)
 
-Use `learnings/` and ticket comments as the only incident memory and recall
-backend; do not use Hindsight/ops-bank or another external memory service.
+Use the `homelab-tickets` repo's `learnings/` and ticket comments as the only
+incident memory and recall backend; do not use Hindsight/ops-bank or another
+external memory service.
 Verify a supervised keyed lesson file exists with exact `aiops_action` and
 `aiops_run` frontmatter. For a manual unkeyed lesson, verify the expected
-`learnings/YYYY-MM-DD-ticket<N>-<slug>.md` path exists and its content matches
+tickets repo's `learnings/YYYY-MM-DD-ticket<N>-<slug>.md` path exists and its content matches
 the source ticket's evidence; keyed frontmatter is not required. In either
 case, verify a recurrence comment on the existing lesson's source ticket when
 applicable. A keyed `NO_LESSON` comment only closes recovery for its own run;
@@ -283,5 +294,6 @@ raw log dumps.
 - Don't close on Holmes' word, on a silence, or before the fix reconciled.
 - Don't create tickets by hand for alerts — the consumer owns intake;
   hand-made tickets lack the marker and will be duplicated.
-- Don't rsync or delete `learnings/` files you did not write.
+- Don't rsync or delete `learnings/` files in the tickets repo you did not
+  write.
 - Don't paste tokens, kubeconfig or Secret values into tickets, PRs or memory.

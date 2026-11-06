@@ -47,7 +47,7 @@ Classify every incident as exactly one typed result; do not return a generic `PE
 
 `cluster-aiops` performs the actual close and lesson steps after these results. Verification itself remains read-only.
 
-Lessons and distilled incident memory in `learnings/` are separate close steps. Do not treat a lesson write as proof that the incident is durable.
+Lessons and distilled incident memory in the `homelab-tickets` repo's `learnings/` are separate close steps. Do not treat a lesson write as proof that the incident is durable.
 
 ## 5. Report contract
 
