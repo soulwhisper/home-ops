@@ -24,10 +24,6 @@ data:
         url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/cluster
         headers:
           Authorization: "Bearer $${MCP_CLUSTER_KEY}"
-      persona:
-        url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/persona
-        headers:
-          Authorization: "Bearer $${MCP_HOME_KEY}"
     gateway:
       multiplex_profiles: true
     # rtk-rewrite: plugin files are image-baked and mirrored by the
@@ -100,7 +96,7 @@ data:
       provider: custom
       base_url: $${OPENAI_BASE_URL}
       api_key: $${OPENAI_API_KEY}
-    # ops profile is the automation brain — cluster/home tiers like default,
+    # ops profile is the automation brain
     # plus agent (forgejo ticket RW + hindsight-ops memory) and search
     # (web/docs retrieval). agent/search ride the FailClosed mcp-guardrails
     # sidecar: if the sidecar is down, those two tiers are suspended for ops.
@@ -109,10 +105,6 @@ data:
         url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/cluster
         headers:
           Authorization: "Bearer $${MCP_CLUSTER_KEY}"
-      persona:
-        url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/persona
-        headers:
-          Authorization: "Bearer $${MCP_HOME_KEY}"
       agent:
         url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/agent
         headers:
@@ -175,7 +167,6 @@ data:
     OPENAI_BASE_URL=$${OPENAI_BASE_URL}
     OPENAI_API_KEY=$${OPENAI_API_KEY}
     MCP_CLUSTER_KEY=$${MCP_CLUSTER_KEY}
-    MCP_HOME_KEY=$${MCP_HOME_KEY}
     API_SERVER_ENABLED=true
     API_SERVER_HOST=0.0.0.0
     API_SERVER_KEY=$${API_SERVER_KEY}
@@ -200,7 +191,6 @@ data:
     OPENAI_BASE_URL=$${OPENAI_BASE_URL}
     OPENAI_API_KEY=$${OPENAI_API_KEY}
     MCP_CLUSTER_KEY=$${MCP_CLUSTER_KEY}
-    MCP_HOME_KEY=$${MCP_HOME_KEY}
     MCP_AGENT_KEY=$${MCP_AGENT_KEY}
     MCP_SEARCH_KEY=$${MCP_SEARCH_KEY}
     FEISHU_APP_ID=$${FEISHU_APP_ID}
