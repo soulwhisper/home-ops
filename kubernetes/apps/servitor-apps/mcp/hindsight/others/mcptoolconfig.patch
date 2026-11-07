@@ -1,0 +1,17 @@
+---
+- op: replace
+  path: /metadata/name
+  value: mcp-hindsight-others
+- op: add
+  path: /spec/toolsOverride
+  value:
+    retain:
+      description: >-
+        Store a derived memory that fits neither the persona nor the work bank.
+        Prefer an explicit bank when one applies. NEVER retain credentials,
+        secrets, raw tool dumps, or verbatim log payloads; distill first. Tag
+        consistently using existing tags (see list_tags).
+    recall:
+      description: >-
+        Search catch-all memories. Prefer reflect for synthesized answers; use
+        recall only when individual memory entries are needed.

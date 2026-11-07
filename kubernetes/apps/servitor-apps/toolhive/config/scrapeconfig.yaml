@@ -17,10 +17,10 @@ spec:
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
-  name: &name vmcp-home
+  name: &name vmcp-persona
 spec:
   staticConfigs:
-    - targets: ["vmcp-home.servitor-apps.svc.cluster.local:4483"]
+    - targets: ["vmcp-persona.servitor-apps.svc.cluster.local:4483"]
   metricsPath: /metrics
   relabelings:
     - action: replace

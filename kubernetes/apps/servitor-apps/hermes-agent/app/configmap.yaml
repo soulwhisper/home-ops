@@ -24,8 +24,8 @@ data:
         url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/cluster
         headers:
           Authorization: "Bearer $${MCP_CLUSTER_KEY}"
-      home:
-        url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/home
+      persona:
+        url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/persona
         headers:
           Authorization: "Bearer $${MCP_HOME_KEY}"
     gateway:
@@ -109,8 +109,8 @@ data:
         url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/cluster
         headers:
           Authorization: "Bearer $${MCP_CLUSTER_KEY}"
-      home:
-        url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/home
+      persona:
+        url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/persona
         headers:
           Authorization: "Bearer $${MCP_HOME_KEY}"
       agent:

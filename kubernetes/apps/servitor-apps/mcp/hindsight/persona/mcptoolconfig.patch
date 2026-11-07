@@ -1,0 +1,18 @@
+---
+- op: replace
+  path: /metadata/name
+  value: mcp-hindsight-persona
+- op: add
+  path: /spec/toolsOverride
+  value:
+    retain:
+      description: >-
+        Store a derived persona memory (real preferences, experiences,
+        relationships). NEVER retain raw tool outputs, file contents,
+        credentials, or verbatim API responses; distill first. Do not write
+        fictional/simulation state here. Tag consistently using existing tags
+        (see list_tags).
+    recall:
+      description: >-
+        Search persona memories. Prefer reflect for synthesized answers; use
+        recall only when individual memory entries are needed.

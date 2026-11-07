@@ -3,7 +3,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: &name mcp-hindsight-home
+  name: &name mcp-hindsight-persona
   annotations:
     config.home-ops.io/managed: "true"
   labels:
@@ -13,7 +13,49 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: servitor-apps
-  path: "./kubernetes/apps/servitor-apps/mcp/hindsight/home"
+  path: "./kubernetes/apps/servitor-apps/mcp/hindsight/persona"
+  dependsOn:
+    - name: toolhive-config
+      namespace: servitor-apps
+    - name: hindsight
+      namespace: selfhosted-apps
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name mcp-hindsight-work
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/mcp/hindsight/work"
+  dependsOn:
+    - name: toolhive-config
+      namespace: servitor-apps
+    - name: hindsight
+      namespace: selfhosted-apps
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name mcp-hindsight-others
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: servitor-apps
+  path: "./kubernetes/apps/servitor-apps/mcp/hindsight/others"
   dependsOn:
     - name: toolhive-config
       namespace: servitor-apps
