@@ -497,6 +497,17 @@ oMLX aliases: `uncensored`, `persona`, `agent`, `omni`, `embedding`,
 discovered by oMLX 0.7). `persona` is the renamed 4-bit Orion conversion and
 is consumed by dsh-tavern through `llm-persona-auth` / `llm_persona`.
 
+oMLX reports context windows via `/v1/models`: `uncensored`/`persona`/`agent`
+65536, `omni`/`reranker` 40960, `embedding`/`voice` 32768. DSH provider
+entries declare the matching `contextWindow`. The host `cordis.patch.yml`
+cannot override the nested `compaction-basic` inside the active agent preset;
+apply the 64K policy in the selected preset (Agent presets UI or a custom
+preset) with `thresholdRatio: 0.75`, `headroomTokens: 8192`,
+`retainTokens: 4096`, per-model policies, and a local summarizer. Until that
+preset is selected, use `/compact` or a bounded handoff before a 64K lane.
+Moving a long cloud-model analysis to a 64K lane must use a bounded handoff
+brief, not the same session with raw tool output.
+
 Downloaded but **parked — no lane, no consumers** (re-add deliberately
 when a consumer appears; see Media lanes):
 

@@ -304,15 +304,25 @@ edit.
    to continue. Only after the user's go-ahead: implement on a branch and
    open a PR.
 3. **Post-PR loop.** After the PR is pushed: watch CI, fix CI errors until
-   green. When the user says the PR is merged: switch to main, pull, clean
-   up stale local branches/state, run `just reconcile` once, check post-merge
-   status read-only (pods, kustomizations, health warnings), then close with
-   a summary report and suggested post-fixes if anything is off.
+   green. When the user says the PR is merged: switch to main, pull, clean up
+   stale local branches/state, run `just reconcile` once, then wait read-only.
    `just reconcile` is exactly `flux reconcile kustomization gitops-system
    --with-source`: it pulls the new Git revision and applies the top-level
    Kustomization only. Child Kustomizations and HelmReleases then reconcile
    on their own interval and `dependsOn` order. Do not force-reconcile
    individual child Kustomizations or HelmReleases — that races their
-   dependencies and can abort. Wait for each affected Kustomization's applied
-   Git revision and each HelmRelease's Ready/observed state to catch up
-   instead.
+   dependencies and can abort.
+   First read the PR's merge commit SHA and bind the gate to that exact
+   target. Wait until every affected child Kustomization has applied that
+   Git revision and is `Ready=True` (record its condition reason), and each
+   affected HelmRelease is `Ready=True` with `status.observedGeneration`
+   caught up to `metadata.generation`. An applied revision alone is not
+   health; a stale `Ready` without the merged generation is not convergence.
+   Do not report the intermediate state (old revision, dependency-pending,
+   rollout in progress) as the post-merge result. Only after convergence,
+   close with a summary and post-fixes.
+   Use a bounded read-only check. After the bound, record the target SHA,
+   applied revisions, and `next_check_at` and return `PENDING_RECONCILE`;
+   never poll indefinitely. Report failure only on a completed error or after
+   the bound expires, with the exact failing resource, condition reason, and
+   a concrete fix. Never report an intermediate state as success.
