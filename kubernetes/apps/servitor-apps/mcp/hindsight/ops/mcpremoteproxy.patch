@@ -6,7 +6,7 @@
   path: /spec/groupRef
   value:
     # operator-agent tier (virtualmcpserver/agent via agentgateway /mcp/agent) —
-    # chat-tier consumers on search/cluster/home can never retain into
+    # chat-tier consumers on search/cluster/persona can never retain into
     # incident memory
     name: agent
 - op: add

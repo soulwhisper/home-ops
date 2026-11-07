@@ -2,8 +2,8 @@
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
 # Per-route API-key auth, one credential per ToolHive group. A key minted for
 # one group is invalid on every other group's route — this is what actually
-# scopes search/home/cluster to their consumers (hermes and dsh-web for
-# cluster/home; hermes, open-webui, and dsh-web for search).
+# scopes search/persona/cluster to their consumers (hermes and dsh-web for
+# cluster/persona; hermes, open-webui, and dsh-web for search).
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
@@ -39,17 +39,17 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
-  name: mcp-home-auth
+  name: mcp-persona-auth
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: agentgateway-mcp-home-route
+      name: agentgateway-mcp-persona-route
   traffic:
     apiKeyAuthentication:
       mode: Strict
       secretRef:
-        name: mcp-home-auth
+        name: mcp-persona-auth
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
 # operator-agent tier: distinct credential, issued only to operator agents.

@@ -7,10 +7,10 @@
   value:
     retain:
       description: >-
-        Store a derived summary to long-term memory. NEVER retain raw tool
-        outputs, file contents, credentials, or verbatim API responses;
-        distill first. Tag consistently using existing tags (see list_tags).
+        Store a derived home-bank memory. NEVER retain credentials, raw tool
+        outputs, file contents, or verbatim API responses; distill first. Tag
+        consistently using existing tags (see list_tags).
     recall:
       description: >-
-        Search memories. Prefer reflect for synthesized answers; use recall
-        only when individual memory entries are needed.
+        Search home-bank memories. Prefer reflect for synthesized answers; use
+        recall only when individual memory entries are needed.

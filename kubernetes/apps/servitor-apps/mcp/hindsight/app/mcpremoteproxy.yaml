@@ -5,8 +5,8 @@ kind: MCPRemoteProxy
 metadata:
   name: mcp-hindsight
 spec:
-  # Default conversational bank; each overlay selects its own single-bank endpoint.
-  remoteUrl: http://hindsight.selfhosted-apps.svc.cluster.local:8888/mcp/home
+  # Default persona bank; each overlay selects its own single-bank endpoint.
+  remoteUrl: http://hindsight.selfhosted-apps.svc.cluster.local:8888/mcp/persona
   # in-cluster DNS suffix is blocked by toolhive's SSRF guard unless opted in
   allowPrivateEndpoint: true
   proxyPort: 8080

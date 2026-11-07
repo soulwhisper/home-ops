@@ -97,7 +97,7 @@ spec:
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: VirtualMCPServer
 metadata:
-  name: &name home
+  name: &name persona
 spec:
   incomingAuth:
     type: anonymous
@@ -186,6 +186,14 @@ spec:
           resources:
             requests: { cpu: 10m, memory: 256Mi }
             limits: { cpu: "1", memory: 1Gi }
+          volumeMounts:
+            # vmcp writes under HOME/XDG_CONFIG_HOME=/tmp; the operator rootfs
+            # is read-only, so give the process a writable tmp.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
   groupRef:
     name: *name
   telemetryConfigRef:

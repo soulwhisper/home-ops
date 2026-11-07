@@ -226,10 +226,10 @@ The two kgateway gateways use the `kgateway` GatewayClass with TLS termination v
 | ------------- | -------------------------------------- |
 | `/mcp/search` | search (hermes, open-webui, dsh-web: web/news/code) |
 | `/mcp/cluster`| cluster read-only (hermes)             |
-| `/mcp/home`   | home read-write (hermes)               |
+| `/mcp/persona`| persona read-write (dsh-web)           |
 | `/mcp/agent`  | operator agents (hermes and external operators; Forgejo RW + ops memory) |
 
-The search + agent tiers carry the mcp-guardrails ExtMCP sidecar (FailClosed) — untrusted web content feeding an unguarded LLM lane, and operator agents (including hermes) reading alert-derived ticket content; hermes also uses the guarded `agent` LLM lane, while the ExtMCP sidecar adds tool-content scanning; cluster relies on guarded lanes + CEL allowlists + token/SA boundaries; home is RW-by-design behind the guarded lane and the HA token. Tool allowlists are enforced per tier via `backend.mcp.authorization` CEL (`config/mcp/filters.yaml`).
+The search + agent tiers carry the mcp-guardrails ExtMCP sidecar (FailClosed) — untrusted web content feeding an unguarded LLM lane, and operator agents (including hermes) reading alert-derived ticket content; hermes also uses the guarded `agent` LLM lane, while the ExtMCP sidecar adds tool-content scanning; cluster relies on guarded lanes + CEL allowlists + token/SA boundaries; persona is RW-by-design behind the guarded lane and the HA token. Tool allowlists are enforced per tier via `backend.mcp.authorization` CEL (`config/mcp/filters.yaml`).
 
 API key authentication is enforced via `AgentgatewayPolicy` in strict mode for all LLM and MCP routes — per-model keys on `/v1` (route-scoped, covering inference and discovery), per-group keys on `/mcp/*`. The gateway is the single choke point for auth, routing, guardrails, and observability.
 

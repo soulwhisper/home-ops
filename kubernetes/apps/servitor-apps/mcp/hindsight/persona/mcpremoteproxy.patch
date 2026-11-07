@@ -1,0 +1,18 @@
+---
+- op: replace
+  path: /metadata/name
+  value: mcp-hindsight-persona
+- op: add
+  path: /spec/groupRef
+  value:
+    name: persona
+- op: add
+  path: /spec/toolConfigRef
+  value:
+    name: mcp-hindsight-persona
+# Separate persona bank, alongside the existing home bank. Hindsight creates
+# a bank on first retain; reads (get_bank, list_tags, recall) require it to
+# exist, so 404s before the first retain are expected.
+- op: add
+  path: /spec/remoteUrl
+  value: http://hindsight.selfhosted-apps.svc.cluster.local:8888/mcp/persona

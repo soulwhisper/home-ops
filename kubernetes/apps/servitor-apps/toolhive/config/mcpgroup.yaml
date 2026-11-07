@@ -23,9 +23,9 @@ spec:
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPGroup
 metadata:
-  name: home
+  name: persona
 spec:
-  description: "In-cluster, read-write. No egress; Home Assistant control + conversational memory (hindsight home bank). Side-effecting tools on a separate endpoint. For hermes."
+  description: "In-cluster, read-write. No egress; Home Assistant control + Hindsight home/persona/work/others banks. Side-effecting tools on a separate endpoint. For dsh-web only."
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
 apiVersion: toolhive.stacklok.dev/v1beta1

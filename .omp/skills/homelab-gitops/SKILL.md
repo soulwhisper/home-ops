@@ -305,6 +305,14 @@ edit.
    open a PR.
 3. **Post-PR loop.** After the PR is pushed: watch CI, fix CI errors until
    green. When the user says the PR is merged: switch to main, pull, clean
-   up stale local branches/state, reconcile the cluster (flux sync), check
-   post-merge status (pods, kustomizations, health warnings), then close
-   with a summary report and suggested post-fixes if anything is off.
+   up stale local branches/state, run `just reconcile` once, check post-merge
+   status read-only (pods, kustomizations, health warnings), then close with
+   a summary report and suggested post-fixes if anything is off.
+   `just reconcile` is exactly `flux reconcile kustomization gitops-system
+   --with-source`: it pulls the new Git revision and applies the top-level
+   Kustomization only. Child Kustomizations and HelmReleases then reconcile
+   on their own interval and `dependsOn` order. Do not force-reconcile
+   individual child Kustomizations or HelmReleases — that races their
+   dependencies and can abort. Wait for each affected Kustomization's applied
+   Git revision and each HelmRelease's Ready/observed state to catch up
+   instead.

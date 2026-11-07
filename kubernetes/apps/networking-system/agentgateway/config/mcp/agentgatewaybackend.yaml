@@ -33,13 +33,13 @@ spec:
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
-  name: mcp-backend-home
+  name: mcp-backend-persona
 spec:
   mcp:
     targets:
-      - name: vmcp-home
+      - name: vmcp-persona
         static:
-          host: vmcp-home.servitor-apps.svc.cluster.local
+          host: vmcp-persona.servitor-apps.svc.cluster.local
           path: /mcp
           port: 4483
           protocol: StreamableHTTP
