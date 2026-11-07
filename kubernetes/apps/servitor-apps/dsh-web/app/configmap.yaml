@@ -83,9 +83,8 @@ data:
     const existingServers = new Set(profile.items.map(serverOf).filter(Boolean));
 
     let raw = profile.raw;
-    for (const item of profile.items) {
-      if (idOf(item) === 'mnemon') raw = removeItem(raw, item);
-    }
+    const mnemonItems = profile.items.filter((item) => idOf(item) === 'mnemon');
+    for (const item of mnemonItems.reverse()) raw = removeItem(raw, item);
 
     const additions = [];
     for (const item of seed.items) {
