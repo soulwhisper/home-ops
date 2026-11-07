@@ -16,14 +16,6 @@ data:
       provider: custom
       base_url: $${OPENAI_BASE_URL}
       api_key: $${OPENAI_API_KEY}
-    # ToolHive tiers via the agent gateway; per-group keys live in the pod
-    # env (ExternalSecret) and reach this file via $${VAR} interpolation
-    # against the seeded .env (hermes _load_mcp_config resolves them)
-    mcp_servers:
-      cluster:
-        url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/cluster
-        headers:
-          Authorization: "Bearer $${MCP_CLUSTER_KEY}"
     gateway:
       multiplex_profiles: true
     # rtk-rewrite: plugin files are image-baked and mirrored by the
@@ -166,7 +158,6 @@ data:
     cat > /opt/data/.env <<EOF
     OPENAI_BASE_URL=$${OPENAI_BASE_URL}
     OPENAI_API_KEY=$${OPENAI_API_KEY}
-    MCP_CLUSTER_KEY=$${MCP_CLUSTER_KEY}
     API_SERVER_ENABLED=true
     API_SERVER_HOST=0.0.0.0
     API_SERVER_KEY=$${API_SERVER_KEY}

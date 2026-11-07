@@ -144,7 +144,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | dsh-web              | `persona`/`deepseek` | Orion-26B-A4B / DeepSeek | Agent workbench (servitor-apps); LLM providers + search/cluster/persona/browser/github-pr MCP tiers |
 | open-webui           | `uncensored`      | Qwen3.8-27B        | Human chat portal; search-tier MCP and OTEL traces |
 
-Both DSH apps also expose the direct `deepseek` provider (`https://api.deepseek.com/v1`, models `deepseek-chat`/`deepseek-reasoner`). It is a direct external provider, not an agentgateway lane, and does not override the default model.
+Both DSH apps also expose DeepSeek through `DEEPSEEK_API_KEY`. It is a direct external provider, not an agentgateway lane, and does not override the default model.
 
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
 `/v1` route for that model; their prompts carry scraped web content, so a low rate of
@@ -163,7 +163,7 @@ the canonical `/mcp` upstream):
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
 | `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | hermes, open-webui, dsh-web     |
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
-| `/mcp/persona` | `vmcp-persona`| home-assistant, hindsight persona/work/others banks           | `mcp_home`                     | hermes, dsh-web                      |
+| `/mcp/persona` | `vmcp-persona`| home-assistant, hindsight persona/work/others banks           | `mcp_persona`                  | dsh-web                              |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | hermes, external operator agents |
 | `/mcp/browser` | `vmcp-browser`| playwright (Chromium via pod-local CDP proxy)                 | `mcp_browser`                  | dsh-web                            |
 | `/mcp/github-pr` | `vmcp-github-pr` | github-pr (branch/commit/create PR, no merge)              | `mcp_github_pr`                | dsh-web                            |
@@ -171,10 +171,10 @@ the canonical `/mcp` upstream):
 A key minted for one group is invalid on every other route — this is what
 scopes the search consumer to search and keeps chat-tier consumers out of incident
 memory and the tickets repo.
-The persona group keeps the 1Password field name `mcp_home`; only the group and
-route were renamed, so the credential does not rotate. The legacy `home` bank
-must be aliased/renamed to `persona` (native Hindsight alias or transfer) before
-this route is relied on; until then `/mcp/persona` returns 404 for reads. `mcp_agent` is never distributed to in-cluster
+The persona group uses the `mcp_persona` credential; `mcp_home` is no longer
+issued. The legacy `home` bank must be aliased/renamed to `persona` (native
+Hindsight alias or transfer) before this route is relied on; until then
+`/mcp/persona` returns 404 for reads. `mcp_agent` is never distributed to in-cluster
 chat apps. **Grouping rule:** create a group only for a new consumer or a
 new permission class; a new server joins the matching existing group.
 
@@ -207,7 +207,7 @@ hermes rides the guarded `agent` LLM lane, and the ExtMCP sidecar additionally s
 tool content because forgejo ticket bodies carry alert/log-derived (untrusted) strings.
 Browser adds untrusted page snapshots and navigation results, while github-pr adds
 untrusted repository content to the same request+response scanning posture.
-cluster/persona consumers (hermes, dsh-web) ride the guarded `agent` LLM lane — cluster adds CEL allowlists and
+cluster (hermes) and persona (dsh-web) consumers ride the guarded `agent` LLM lane — cluster adds CEL allowlists and
 token/SA boundaries, persona is RW-by-design behind the HA token — so those two tiers
 do not carry the sidecar. They still require per-route API keys and retain their
 CEL/RBAC/token boundaries; no MCP route is unauthenticated.
@@ -242,13 +242,13 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 
 - **Runtime**: user namespaces (`hostUsers: false`) + RuntimeDefault seccomp + egress CNP (ADR-03; Kata removed)
 - **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
-- **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP (`search`+`cluster`+`persona`+`agent` tiers, declarative `mcp_servers` in the configmap), Agent Gateway LLM
+- **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP (`search`+`cluster`+`agent` tiers in the ops profile; the default profile has no MCP access), Agent Gateway LLM
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, world-except-private :443 restricted to TLS SNI `open.feishu.cn` (Feishu WebSocket). No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
 - **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 + webhook ingest :8644 via kgateway-internal (shared rule), webhook ingest :8644 also from frigate + LAN, profile API :8642 same-namespace only; `fromEntities: host` keeps kubelet probes working
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
-  - `ops` — the batching brain: cron/Feishu/automation workload lives here (search, cluster read-only, persona read-write, and agent ticket/incident-memory MCP tiers); owns the Feishu adapter, credentials, home channel and new Feishu sessions
-  - `default` — fallback/scratch with no Feishu adapter; the retired `chat` profile was removed 2026-10 when the human interface moved to dedicated portals
+  - `ops` — the batching brain: cron/Feishu/automation workload lives here (search, cluster read-only, and agent ticket/incident-memory MCP tiers); owns the Feishu adapter, credentials, home channel and new Feishu sessions
+  - `default` — fallback/scratch with no Feishu adapter and no MCP servers (chat through the provider only); the retired `chat` profile was removed 2026-10 when the human interface moved to dedicated portals
   Model/provider config (`model.provider: custom` → agent gateway, `model.default: agent`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression`/`title_generation` → `omni`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. The main brain uses `OPENAI_API_KEY` (`llm_agent`); each aux task selects `OPENAI_AUX_API_KEY` (`llm_omni`) via `key_env`, so the agent key is never accepted on the omni route. Requires 1Password `hermes-agent` field: `api_server_key_root` (>=16 chars)
 
 ---
@@ -269,7 +269,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
 - **Ingress**: `dsh.noirprime.com` via kgateway-internal
 - **State**: kopiur-backed PVC `dsh-web` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs` and `/backups` share the `dsh-web-cache` `ceph-cache` PVC; `/tmp` remains emptyDir
-- **MCP/Skills**: the `dsh-web` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster, persona, browser and github-pr tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/persona`, `/mcp/browser`, `/mcp/github-pr` with `mcp_search`, `mcp_cluster`, `mcp_home`, `mcp_browser`, `mcp_github_pr`, never in Git). MCP startup remains non-fatal, and every MCP tier reconnects from 1s to a 30s ceiling with no practical attempt cap so long backend outages do not require a DSH restart. Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
+- **MCP/Skills**: the `dsh-web` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster, persona, browser and github-pr tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/persona`, `/mcp/browser`, `/mcp/github-pr` with `mcp_search`, `mcp_cluster`, `mcp_persona`, `mcp_browser`, `mcp_github_pr`, never in Git). MCP startup remains non-fatal, and every MCP tier reconnects from 1s to a 30s ceiling with no practical attempt cap so long backend outages do not require a DSH restart. Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
 - **Mnemon**: runs inside DSH Web, not as a separate Deployment or CRD. The pinned image has no native `mnemon` CLI, so conversational long-term memory uses the Hindsight `persona` bank; Memory Spaces can select `persona`/`work`/`others` per-space bankIds, and the incident-only `ops` bank stays isolated. Enable it via **Memory System → Memory Spaces → Providers → Hindsight → Enable/Save** with endpoint `http://hindsight.selfhosted-apps.svc.cluster.local:8888`, `bankId=persona`, and `budget=mid` when the redacted provider catalog reports it disabled. Provider activation is live; only `remoteAccess` changes require a DSH restart. Provider configuration and Memory Space mappings persist on the `dsh-web` PVC, while memory contents persist in Hindsight/CNPG. Provider health and discovery do not create a Memory Space or bank. A fresh installation requires one authenticated **Memory System → Memory Spaces → Create Memory Space** operation with Provider `hindsight`, name `Home`, description `Durable conversational facts, decisions and preferences for DSH Web.`, connection `bankId=home`, `budget=mid`, and `active=true`; remote writes require `writeEnabled=true` and `remoteAccess=trusted-host`. There is no supported declarative Space manifest—do not seed `state/memory-providers.json`. Hindsight creates `home` lazily on the first retain; verify one retain and recall after creation.
 - **LLM/MCP**: UI-selectable agentgateway (persona/uncensored) and DeepSeek providers; MCP uses the guarded tiers. No default model is pinned
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (`/v1/*` + `/mcp/*`), hindsight:8888 (health/discovery plus persona/work/others stats/entities/graph/list/recall/retain/soft-forget; home is the legacy bank until cutover), world-except-private :443 for direct DeepSeek LLM calls and the user-driven plugin market, kube-dns
@@ -277,7 +277,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 ### DSH Tavern
 
 - RP chat portal, image `ghcr.io/soulwhisper/dsh-tavern` (dsh-tavern profile + eco plugins baked). Lives in **servitor-apps**
-- **LLM**: GitOps-managed `persona` gateway lane (`llm_persona`, Orion-26B-A4B-v1.1 4-bit) plus a direct DeepSeek provider; no default model is pinned
+- **LLM**: GitOps-managed `persona` gateway lane (`llm_persona`, Orion-26B-A4B-v1.1 4-bit) plus DeepSeek via `DEEPSEEK_API_KEY`; no default model is pinned
 - **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
 - **Ingress**: `tavern.noirprime.com` via kgateway-internal
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (LLM only), world-except-private :443 for direct DeepSeek LLM calls, card/preset fetches and tavern-image backends, kube-dns
@@ -337,7 +337,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | victoria-metrics | Streamable HTTP :8081 | VictoriaMetrics; gateway-filtered to the query surface |
 | victoria-traces | Streamable HTTP :8081 | VictoriaTraces                |
 
-#### persona (read-write, no egress — hermes, dsh-web)
+#### persona (read-write, no egress — dsh-web)
 
 | Server            | Transport            | Connects To            |
 | ----------------- | -------------------- | ---------------------- |
@@ -516,7 +516,7 @@ items:
 | ---- | ----- | ------------ |
 | open-webui MCP bearer key rollout | Restored with the native search-tier bearer connection | Smoke-verify a native tool call after rollout; check the `tool_server.connections` config row if the persisted shape diverges |
 | promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via langfuse/logs; if painful, expose `omni-raw` (one unguarded rule) as the designed escape hatch |
-| hermes MCP server endpoints | Done: declarative `mcp_servers` in the seed ConfigMap covers search, cluster, persona, and agent tiers, with keys from the `agentgateway` item | Watch tool calls across all four tiers |
+| hermes MCP server endpoints | Done: the ops profile covers search, cluster, and agent tiers; the default profile has no MCP access | Watch ops-profile tool calls |
 | SillyTavern endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
 | mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred, on watch via langfuse decision spans (open-webui and hermes both emit OTEL) | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
 | ASR/TTS model | VoxCPM2-4bit served on the studio via `/v1/audio/speech` and `/v1/audio/transcriptions` (`studio-audio` backend) — lane ready, no in-repo consumer | Point a consumer at the lane when one appears; ASR (`/v1/audio/transcriptions`) wired but unused |
