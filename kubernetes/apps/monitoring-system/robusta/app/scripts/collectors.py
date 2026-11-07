@@ -39,8 +39,11 @@ CEPH_SCALARS = {
 }
 CEPH_POOL_USAGE = ("max by (pool_id, name) (ceph_pool_percent_used * "
                    "on(pool_id) group_left(name) ceph_pool_metadata)")
-CEPH_POOL_GROWTH = ("max by (pool_id, name) ((ceph_pool_percent_used - "
-                    "ceph_pool_percent_used offset 24h) * on(pool_id) group_left(name) ceph_pool_metadata)")
+# Aggregate both samples by pool_id: pod/instance labels change when the
+# ceph-mgr pod is recreated, and the 24h difference would otherwise be empty.
+CEPH_POOL_GROWTH = ("max by (pool_id, name) ((max by (pool_id) (ceph_pool_percent_used) - "
+                    "max by (pool_id) (ceph_pool_percent_used offset 24h)) "
+                    "* on(pool_id) group_left(name) max by (pool_id, name) (ceph_pool_metadata))")
 CANDIDATES = ('max by (alertname, alertgroup) (max_over_time(ALERTS{alertstate="firing"}[12h])) '
               'unless on(alertname, alertgroup) present_over_time(ALERTS{alertstate="firing"}[5m])')
 CNPG = "/apis/postgresql.cnpg.io/v1/namespaces/database-system/backups"
