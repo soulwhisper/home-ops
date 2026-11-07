@@ -88,10 +88,10 @@ data:
       provider: custom
       base_url: $${OPENAI_BASE_URL}
       api_key: $${OPENAI_API_KEY}
-    # ops profile is the automation brain
-    # plus agent (forgejo ticket RW + hindsight-ops memory) and search
-    # (web/docs retrieval). agent/search ride the FailClosed mcp-guardrails
-    # sidecar: if the sidecar is down, those two tiers are suspended for ops.
+    # ops profile is the automation brain: cluster read-only, agent (forgejo
+    # ticket RW + hindsight-ops memory), and search (web/docs retrieval).
+    # agent/search ride the FailClosed mcp-guardrails sidecar: if the sidecar
+    # is down, those two tiers are suspended for ops.
     mcp_servers:
       cluster:
         url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/cluster

@@ -201,15 +201,17 @@ newest call fingerprint: historical retry triads cannot deny new tools or
 arguments, while identical retries still block. This prevents denied attempts
 from permanently locking a trace. Scope decision (2026-10-20): search is
 the tier where untrusted web content reaches an unguarded lane (dsh-tavern /
-any `uncensored`- or `persona`-lane consumer); the agent tier combines external operators with hermes;
-hermes rides the guarded `agent` LLM lane, and the ExtMCP sidecar additionally scans MCP
-tool content because forgejo ticket bodies carry alert/log-derived (untrusted) strings.
-Browser adds untrusted page snapshots and navigation results, while github-pr adds
+any `uncensored`- or `persona`-lane consumer). Hermes rides the guarded
+`agent` LLM lane, and the ExtMCP sidecar additionally scans MCP tool content
+because forgejo ticket bodies carry alert/log-derived (untrusted) strings.
+DSH Web can select the unguarded `persona`/`uncensored` lanes or direct
+DeepSeek; those LLM calls are not covered by the agent promptGuard. Browser
+adds untrusted page snapshots and navigation results, while github-pr adds
 untrusted repository content to the same request+response scanning posture.
-cluster (hermes) and persona (dsh-web) consumers ride the guarded `agent` LLM lane — cluster adds CEL allowlists and
-token/SA boundaries, persona is RW-by-design behind the HA token — so those two tiers
-do not carry the sidecar. They still require per-route API keys and retain their
-CEL/RBAC/token boundaries; no MCP route is unauthenticated.
+The cluster tier (hermes) adds CEL allowlists and token/SA boundaries; the
+persona tier (dsh-web) is RW-by-design behind the HA token. Neither carries
+the ExtMCP sidecar; both still require per-route API keys and retain their
+CEL/RBAC/token boundaries. No MCP route is unauthenticated.
 Response scanning uses four balanced windows (11KiB
 by default) with a 3.5s scanner deadline and a 15s Service-scoped ExtMCP
 callout deadline; readiness completes a full-size warmup before traffic.
@@ -314,7 +316,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
     across all six groups (homelab-tickets#59)
 - **Ingress restricted**: only agentgateway-proxy (MCP protocol, tiered `/mcp/*`) and vmagent (metrics scrape) can connect; chat frontends reach tools through the gateway, never directly
 
-### MCP Servers (16 total)
+### MCP Servers (19 total)
 
 #### search (web/docs/news/codebase retrieval — hermes, open-webui, dsh-web)
 

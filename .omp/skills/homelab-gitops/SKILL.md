@@ -313,5 +313,6 @@ edit.
    Kustomization only. Child Kustomizations and HelmReleases then reconcile
    on their own interval and `dependsOn` order. Do not force-reconcile
    individual child Kustomizations or HelmReleases — that races their
-   dependencies and can abort. Wait for their `lastAppliedRevision` to catch
-   up instead.
+   dependencies and can abort. Wait for each affected Kustomization's applied
+   Git revision and each HelmRelease's Ready/observed state to catch up
+   instead.
