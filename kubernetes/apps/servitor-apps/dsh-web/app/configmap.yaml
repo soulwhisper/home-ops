@@ -37,14 +37,14 @@ data:
       const raw = fs.readFileSync(file, 'utf8');
       const doc = YAML.parseDocument(raw);
       if (doc.errors.length > 0) {
-        throw new Error(`${label}: ${doc.errors[0].message}`);
+        throw new Error(label + ': ' + doc.errors[0].message);
       }
       if (doc.contents !== null && !YAML.isSeq(doc.contents)) {
-        throw new Error(`${label} must be a YAML array`);
+        throw new Error(label + ' must be a YAML array');
       }
       const items = doc.contents?.items ?? [];
       if (!items.every((item) => YAML.isMap(item))) {
-        throw new Error(`${label} must contain only mapping entries`);
+        throw new Error(label + ' must contain only mapping entries');
       }
       return { raw, items };
     }
@@ -73,7 +73,7 @@ data:
 
     const appendRows = (raw, rows) => {
       if (rows.length === 0) return raw;
-      return `${raw.replace(/\s*$/, '\n')}${rows.join('\n')}\n`;
+      return raw.replace(/\s*$/, '\n') + rows.join('\n') + '\n';
     };
 
     const seed = readArray(seedPath, 'seed');
@@ -102,7 +102,7 @@ data:
     }
 
     if (profile.items.length === 0) {
-      raw = `${seed.raw.trim()}\n`;
+      raw = seed.raw.trim() + '\n';
     } else {
       raw = appendRows(raw, additions);
     }
@@ -113,10 +113,10 @@ data:
       process.exit(0);
     }
 
-    const backupPath = `${profilePath}.pre-profile-seed`;
+    const backupPath = profilePath + '.pre-profile-seed';
     fs.copyFileSync(profilePath, backupPath);
-    const tmpPath = `${profilePath}.tmp-${process.pid}`;
+    const tmpPath = profilePath + '.tmp-' + process.pid;
     fs.writeFileSync(tmpPath, raw, { mode: 0o600 });
     fs.renameSync(tmpPath, profilePath);
     fs.writeFileSync(markerPath, 'seeded\n', { mode: 0o600 });
-    console.log(`seeded ${additions.length} profile rows; backup ${backupPath}`);
+    console.log('seeded ' + additions.length + ' profile rows; backup ' + backupPath);
