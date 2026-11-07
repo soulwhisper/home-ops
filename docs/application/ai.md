@@ -497,6 +497,12 @@ oMLX aliases: `uncensored`, `persona`, `agent`, `omni`, `embedding`,
 discovered by oMLX 0.7). `persona` is the renamed 4-bit Orion conversion and
 is consumed by dsh-tavern through `llm-persona-auth` / `llm_persona`.
 
+oMLX reports context windows via `/v1/models`: `uncensored`/`persona`/`agent`
+65536, `omni`/`reranker` 40960, `embedding`/`voice` 32768. DSH provider
+entries declare the matching `contextWindow`; the 64K lanes use compaction at
+~49K tokens. Moving a long cloud-model analysis to a 64K lane must use a
+bounded handoff brief, not the same session with raw tool output.
+
 Downloaded but **parked — no lane, no consumers** (re-add deliberately
 when a consumer appears; see Media lanes):
 
