@@ -312,12 +312,17 @@ edit.
    on their own interval and `dependsOn` order. Do not force-reconcile
    individual child Kustomizations or HelmReleases — that races their
    dependencies and can abort.
-   Wait until every affected child Kustomization has applied the merged Git
-   revision and its HelmReleases/workloads are Ready. Do not report the
-   intermediate state (old revision, dependency-pending, rollout in progress)
-   as the post-merge result. Only after convergence, close with a summary and
-   post-fixes.
-   If the wait does not converge, reconciliation/verification fails, or the
-   live state disagrees with the merged manifests, report the exact failing
-   resource and reason plus a concrete fix or next action. Never report an
-   intermediate state as success.
+   First read the PR's merge commit SHA and bind the gate to that exact
+   target. Wait until every affected child Kustomization has applied that
+   Git revision and is `Ready=True` (record its condition reason), and each
+   affected HelmRelease is `Ready=True` with `status.observedGeneration`
+   caught up to `metadata.generation`. An applied revision alone is not
+   health; a stale `Ready` without the merged generation is not convergence.
+   Do not report the intermediate state (old revision, dependency-pending,
+   rollout in progress) as the post-merge result. Only after convergence,
+   close with a summary and post-fixes.
+   Use a bounded read-only check. After the bound, record the target SHA,
+   applied revisions, and `next_check_at` and return `PENDING_RECONCILE`;
+   never poll indefinitely. Report failure only on a completed error or after
+   the bound expires, with the exact failing resource, condition reason, and
+   a concrete fix. Never report an intermediate state as success.
