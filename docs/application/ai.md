@@ -28,7 +28,7 @@ flowchart TB
     subgraph MCP["MCP Gateway (ToolHive)"]
         VMCP-SEARCH["search<br/>(4 servers: web/news/code)"]
         VMCP-CLUSTER["cluster<br/>(6 servers: monitoring/k8s)"]
-        VMCP-HOME["persona<br/>(4 servers: smart home/persona/work/others)"]
+        VMCP-HOME["persona<br/>(5 servers: smart home/home/persona/work/others)"]
         VMCP-AGENT["agent<br/>(2 servers: forgejo + incident memory)"]
         VMCP-BROWSER["browser<br/>(1 server: Playwright)"]
         VMCP-GITHUBPR["github-pr<br/>(1 server: branch/commit/PR)"]
@@ -163,7 +163,7 @@ the canonical `/mcp` upstream):
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
 | `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | hermes, open-webui, dsh-web     |
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
-| `/mcp/persona` | `vmcp-persona`| home-assistant, hindsight persona/work/others banks           | `mcp_persona`                  | dsh-web                              |
+| `/mcp/persona` | `vmcp-persona`| home-assistant, hindsight home/persona/work/others banks     | `mcp_persona`                  | dsh-web                              |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | hermes, external operator agents |
 | `/mcp/browser` | `vmcp-browser`| playwright (Chromium via pod-local CDP proxy)                 | `mcp_browser`                  | dsh-web                            |
 | `/mcp/github-pr` | `vmcp-github-pr` | github-pr (branch/commit/create PR, no merge)              | `mcp_github_pr`                | dsh-web                            |
@@ -172,9 +172,8 @@ A key minted for one group is invalid on every other route — this is what
 scopes the search consumer to search and keeps chat-tier consumers out of incident
 memory and the tickets repo.
 The persona group uses the `mcp_persona` credential; `mcp_home` is no longer
-issued. The legacy `home` bank must be aliased/renamed to `persona` (native
-Hindsight alias or transfer) before this route is relied on; until then
-`/mcp/persona` returns 404 for reads. `mcp_agent` is never distributed to in-cluster
+issued. It aggregates the existing `home` bank with `persona`/`work`/`others`;
+Hindsight creates the new banks on first retain, so reads return 404 until then. `mcp_agent` is never distributed to in-cluster
 chat apps. **Grouping rule:** create a group only for a new consumer or a
 new permission class; a new server joins the matching existing group.
 
@@ -270,9 +269,9 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **Ingress**: `dsh.noirprime.com` via kgateway-internal
 - **State**: kopiur-backed PVC `dsh-web` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs` and `/backups` share the `dsh-web-cache` `ceph-cache` PVC; `/tmp` remains emptyDir
 - **MCP/Skills**: the `dsh-web` ExternalSecret is mounted as `/data/dsh/cordis.patch.yml` for the guarded search, cluster, persona, browser and github-pr tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/persona`, `/mcp/browser`, `/mcp/github-pr` with `mcp_search`, `mcp_cluster`, `mcp_persona`, `mcp_browser`, `mcp_github_pr`, never in Git). MCP startup remains non-fatal, and every MCP tier reconnects from 1s to a 30s ceiling with no practical attempt cap so long backend outages do not require a DSH restart. Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
-- **Mnemon**: runs inside DSH Web, not as a separate Deployment or CRD. The pinned image has no native `mnemon` CLI, so conversational long-term memory uses the Hindsight `persona` bank; Memory Spaces can select `persona`/`work`/`others` per-space bankIds, and the incident-only `ops` bank stays isolated. Enable it via **Memory System → Memory Spaces → Providers → Hindsight → Enable/Save** with endpoint `http://hindsight.selfhosted-apps.svc.cluster.local:8888`, `bankId=persona`, and `budget=mid` when the redacted provider catalog reports it disabled. Provider activation is live; only `remoteAccess` changes require a DSH restart. Provider configuration and Memory Space mappings persist on the `dsh-web` PVC, while memory contents persist in Hindsight/CNPG. Provider health and discovery do not create a Memory Space or bank. A fresh installation requires one authenticated **Memory System → Memory Spaces → Create Memory Space** operation with Provider `hindsight`, name `Home`, description `Durable conversational facts, decisions and preferences for DSH Web.`, connection `bankId=home`, `budget=mid`, and `active=true`; remote writes require `writeEnabled=true` and `remoteAccess=trusted-host`. There is no supported declarative Space manifest—do not seed `state/memory-providers.json`. Hindsight creates `home` lazily on the first retain; verify one retain and recall after creation.
+- **Mnemon**: runs inside DSH Web, not as a separate Deployment or CRD. The pinned image has no native `mnemon` CLI, so conversational long-term memory uses the Hindsight `persona` bank; Memory Spaces can select `home`/`persona`/`work`/`others` per-space bankIds, and the incident-only `ops` bank stays isolated. Enable it via **Memory System → Memory Spaces → Providers → Hindsight → Enable/Save** with endpoint `http://hindsight.selfhosted-apps.svc.cluster.local:8888`, `bankId=persona`, and `budget=mid` when the redacted provider catalog reports it disabled. Provider activation is live; only `remoteAccess` changes require a DSH restart. Provider configuration and Memory Space mappings persist on the `dsh-web` PVC, while memory contents persist in Hindsight/CNPG. Provider health and discovery do not create a Memory Space or bank. A fresh installation requires one authenticated **Memory System → Memory Spaces → Create Memory Space** operation with Provider `hindsight`, name `Home`, description `Durable conversational facts, decisions and preferences for DSH Web.`, connection `bankId=home`, `budget=mid`, and `active=true`; remote writes require `writeEnabled=true` and `remoteAccess=trusted-host`. There is no supported declarative Space manifest—do not seed `state/memory-providers.json`. Hindsight creates `home` lazily on the first retain; verify one retain and recall after creation.
 - **LLM/MCP**: UI-selectable agentgateway (persona/uncensored) and DeepSeek providers; MCP uses the guarded tiers. No default model is pinned
-- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (`/v1/*` + `/mcp/*`), hindsight:8888 (health/discovery plus persona/work/others stats/entities/graph/list/recall/retain/soft-forget; home is the legacy bank until cutover), world-except-private :443 for direct DeepSeek LLM calls and the user-driven plugin market, kube-dns
+- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (`/v1/*` + `/mcp/*`), hindsight:8888 (health/discovery plus home/persona/work/others stats/entities/graph/list/recall/retain/soft-forget), world-except-private :443 for direct DeepSeek LLM calls and the user-driven plugin market, kube-dns
 
 ### DSH Tavern
 
@@ -304,7 +303,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 ### ToolHive
 
 - **Operator**: namespace-scoped RBAC
-- **Variant layout**: `mcp/hindsight/{app,persona,work,others,ops}` and `mcp/github/{app,ro,hr}`; each `app` is a shared Kustomize base, while sibling directories are independently reconciled overlays
+- **Variant layout**: `mcp/hindsight/{app,home,persona,work,others,ops}` and `mcp/github/{app,ro,hr}`; each `app` is a shared Kustomize base, while sibling directories are independently reconciled overlays
 - **6 Virtual MCP Servers** (search / cluster / persona / agent / browser / github-pr) with:
   - Circuit breaker (3 failures → 30s timeout)
   - OTEL telemetry (5% sampling)
@@ -342,6 +341,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | Server            | Transport            | Connects To            |
 | ----------------- | -------------------- | ---------------------- |
 | home-assistant    | HTTP (FastMCP) :8086 | Home Assistant         |
+| hindsight-home    | HTTP proxy :8080     | Hindsight `home` bank (existing; single-bank MCPToolConfig) |
 | hindsight-persona | HTTP proxy :8080     | Hindsight `persona` bank (single-bank MCPToolConfig) |
 | hindsight-work    | HTTP proxy :8080     | Hindsight `work` bank (project/work memory) |
 | hindsight-others  | HTTP proxy :8080     | Hindsight `others` bank (catch-all) |
