@@ -18,7 +18,7 @@ spec:
   # (agent policy — ticket workflow only). Tracked against forgejo-mcp v3.3.0
   # (163 tools enumerated) — re-verify on every version bump.
   # renovate: datasource=github-tags depName=goern/forgejo-mcp
-  image: git.b4mad.industries/agentic-forges/forgejo-mcp:v3.3.0
+  image: git.b4mad.industries/agentic-forges/forgejo-mcp:v3.4.0
   transport: streamable-http
   mcpPort: 8080
   args:
