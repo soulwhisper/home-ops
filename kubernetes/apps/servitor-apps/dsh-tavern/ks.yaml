@@ -21,6 +21,15 @@ spec:
     - ../../../../components/cache
     - ../../../../components/authentik
     - ../../../../components/kopiur/backup
+  patches:
+    # Keep the Tavern PVC empty on recreation; backups remain via the kopiur
+    # SnapshotPolicy and can be restored manually.
+    - target:
+        kind: PersistentVolumeClaim
+        name: dsh-tavern
+      patch: |
+        - op: remove
+          path: /spec/dataSourceRef
   postBuild:
     substitute:
       APP: *name
