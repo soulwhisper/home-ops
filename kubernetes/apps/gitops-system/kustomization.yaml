@@ -6,6 +6,6 @@ namespace: gitops-system
 components:
   - ../../components/namespace
 resources:
-  - ./flux-operator
-  - ./flux-instance
-  - ./system-upgrade-controller
+  - ./flux-operator/ks.yaml
+  - ./flux-instance/ks.yaml
+  - ./system-upgrade-controller/ks.yaml

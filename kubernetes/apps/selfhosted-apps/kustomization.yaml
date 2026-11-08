@@ -7,13 +7,13 @@ components:
   - ../../components/namespace
   - ../../components/kopiur/shared
 resources:
-  - ./bambuddy
-  - ./dispatcharr
-  - ./firecrawl
-  - ./hindsight
-  - ./homepage
-  - ./karakeep
-  - ./netbox
-  - ./searxng
-  - ./stirling-pdf
-  - ./trendradar
+  - ./bambuddy/ks.yaml
+  - ./dispatcharr/ks.yaml
+  - ./firecrawl/ks.yaml
+  - ./hindsight/ks.yaml
+  - ./homepage/ks.yaml
+  - ./karakeep/ks.yaml
+  - ./netbox/ks.yaml
+  - ./searxng/ks.yaml
+  - ./stirling-pdf/ks.yaml
+  - ./trendradar/ks.yaml

@@ -6,8 +6,8 @@ namespace: security-system
 components:
   - ../../components/namespace
 resources:
-  - ./authentik
-  - ./cert-manager
-  - ./kyverno
-  - ./external-secrets
-  - ./onepassword-connect
+  - ./authentik/ks.yaml
+  - ./cert-manager/ks.yaml
+  - ./kyverno/ks.yaml
+  - ./external-secrets/ks.yaml
+  - ./onepassword-connect/ks.yaml
