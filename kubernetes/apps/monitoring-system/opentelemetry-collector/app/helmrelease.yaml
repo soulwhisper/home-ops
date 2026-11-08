@@ -140,13 +140,16 @@ spec:
         filter/gen_ai:
           traces:
             span:
-              # drop-condition semantics (filter processor drops matches):
-              # keep gen_ai spans plus the mcp-guardrails decision spans so
-              # guardrail verdicts correlate with the LLM calls that triggered
-              # them (langfuse is the analysis surface; alerting stays on
-              # vmalert + vlogs LogsQL)
+              # Drop-condition semantics. Keep gen_ai spans and the
+              # mcp-guardrails spans so guardrail verdicts correlate with the
+              # LLM calls that triggered them. The service name is checked on
+              # both resource and span attributes, plus the span-name prefix,
+              # because the resource attribute can be absent at this stage.
               - >-
-                  attributes["gen_ai.system"] == nil and resource.attributes["service.name"] != "mcp-guardrails"
+                  attributes["gen_ai.system"] == nil and
+                  resource.attributes["service.name"] != "mcp-guardrails" and
+                  attributes["service.name"] != "mcp-guardrails" and
+                  not IsMatch(name, "^(guardrail|scanner)\\.")
       exporters:
         otlp_http/policy-events:
           logs_endpoint: http://victoria-logs-server.monitoring-system.svc.cluster.local:9428/insert/opentelemetry/v1/logs
