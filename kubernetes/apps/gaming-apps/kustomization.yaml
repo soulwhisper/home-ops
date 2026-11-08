@@ -9,7 +9,7 @@ components:
 resources:
   # ref: https://github.com/joryirving/home-ops/tree/main/kubernetes/apps/base/games
   # storage
-  - ./gaming-nfs/ks.yaml
+  - ./gaming-nfs
   # app
-  - ./crafty-controller/ks.yaml
-  - ./foundryvtt/ks.yaml
+  - ./crafty-controller
+  - ./foundryvtt

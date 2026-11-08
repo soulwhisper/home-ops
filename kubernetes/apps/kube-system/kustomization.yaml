@@ -6,12 +6,12 @@ namespace: kube-system
 components:
   - ../../components/namespace
 resources:
-  - ./cilium/ks.yaml
-  - ./coredns/ks.yaml
-  - ./descheduler/ks.yaml
-  - ./frr-k8s/ks.yaml
-  - ./gateway-api-crds/ks.yaml
-  - ./intel-device-plugins/ks.yaml
-  - ./metrics-server/ks.yaml
-  - ./reloader/ks.yaml
-  - ./spegel/ks.yaml
+  - ./cilium
+  - ./coredns
+  - ./descheduler
+  - ./frr-k8s
+  - ./gateway-api-crds
+  - ./intel-device-plugins
+  - ./metrics-server
+  - ./reloader
+  - ./spegel

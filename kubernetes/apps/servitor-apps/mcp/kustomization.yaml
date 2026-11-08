@@ -3,17 +3,17 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ./context/ks.yaml
-  - ./firecrawl/ks.yaml
-  - ./fluxcd/ks.yaml
-  - ./forgejo/ks.yaml
-  - ./github/ks.yaml
-  - ./grafana/ks.yaml
-  - ./hindsight/ks.yaml
-  - ./home-assistant/ks.yaml
-  - ./kubernetes/ks.yaml
-  - ./playwright/ks.yaml
-  - ./trendradar/ks.yaml
-  - ./victoria-logs/ks.yaml
-  - ./victoria-metrics/ks.yaml
-  - ./victoria-traces/ks.yaml
+  - ./context
+  - ./firecrawl
+  - ./fluxcd
+  - ./forgejo
+  - ./github
+  - ./grafana
+  - ./hindsight
+  - ./home-assistant
+  - ./kubernetes
+  - ./playwright
+  - ./trendradar
+  - ./victoria-logs
+  - ./victoria-metrics
+  - ./victoria-traces
