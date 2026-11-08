@@ -53,16 +53,12 @@ Mount options: discard
 
 #### CephFileSystem: `ceph-filesystem`
 
-The CephFS pool provides **RWX** (`ReadWriteMany`) access for workloads that require concurrent mounting across pods — for example, shared media library ingestion or configuration directories.
-
-```yaml
-StorageClass:  ceph-filesystem
-Provisioner:   storage-system.cephfs.csi.ceph.com
-FS type:       ext4
-Binding:       WaitForFirstConsumer
-Expansion:     enabled
-MDS:           1 active + 1 standby (host anti-affinity via topologySpreadConstraints)
-```
+The `ceph-filesystem` resource provides a replicated filesystem with one active
+and one standby metadata server. Its chart values describe a StorageClass but
+do not enable its creation; the current rendered manifests do **not** include a
+`ceph-filesystem` StorageClass. Do not select that class merely because the
+filesystem and CephFS CSI driver exist. Shared application files use the
+Synology NFS classes below.
 
 The metadata server placement uses a `DoNotSchedule` topology spread across `kubernetes.io/hostname`, ensuring the active and standby MDS land on separate nodes.
 
@@ -87,7 +83,9 @@ The snapshot-controller operator is deployed with `installCRDs: true` and provid
 |---------------|:-------:|--------|:---------------:|
 | `ceph-block-snapshot` | yes | `storage-system.rbd.csi.ceph.com` | Delete |
 
-Snapshots are used by kopiur's `copyMethod: Snapshot` to create consistent, instant point-in-time copies before backup.
+kopiur uses `copyMethod: Snapshot` to stage an RBD point-in-time copy before
+uploading it to Kopia. A CSI snapshot alone is not an independent backup or an
+application-consistency guarantee.
 
 
 ### CSI Driver NFS — Synology Integration
@@ -101,9 +99,46 @@ The [CSI NFS Driver](https://github.com/kubernetes-csi/csi-driver-nfs) mounts Sy
 
 Both classes use `subDir: ${pvc.metadata.name}` to isolate PVCs under the share, with `onDelete: retain` to prevent the provisioner from removing subdirectories when a PVC is deleted. Common mount tuning includes 128 KiB `rsize`/`wsize`, `actimeo=60` (attribute cache timeout), and `timeo=30`/`retrans=3` for soft-recovery. The Synology NAS limits NFS access to `10.10.0.0/24` with `MapAllToAdmin` for simplified UID mapping.
 
+The StorageClasses have `reclaimPolicy: Delete`; `onDelete: retain` applies to
+the NAS subdirectory, not to the Kubernetes PVC/PV binding. Deleting a claim
+does not promise automatic rebinding to its old directory. PVC names must be
+unique within each NAS share because `subDir` does not include the namespace.
+
+#### Application Data and Lifecycle Boundaries
+
+Application definitions and Secret references in Git are separate from the
+files they consume. The namespace indexes select shared storage alongside
+applications; see the [catalog](../application/catalog.md) for definition links.
+
+| Data | Definition owner | Lifecycle expectation |
+|------|------------------|-----------------------|
+| Photos, video, music, documents and downloads | `media-apps/media-nfs` KS; NAS `/volume1/{photo,video,music,document}` and `/volume2/downloads` | Keep the shared claims and NAS files independent of an individual media application's deployment selection |
+| Media application configuration and indexes | Application KS or HelmRelease; usually Ceph PVCs | Rebuildable configuration may be discarded and recreated from Git, ESO/1Password and a library rescan; preserving every old Kopiur snapshot is not required |
+| Transcode, machine-learning and mover caches | Application or kopiur controller; `ceph-cache` | Rewarmable, not a durable-data retention boundary |
+| PostgreSQL and application RGW buckets | Shared CNPG cluster or application OBC | Separate business state; do not infer that it is disposable because media files are on NFS |
+
+Jellyfin's `/config` is on Ceph while `/media` uses the shared NAS `video`
+claim. Immich's `/data` uses `photo`, but its PostgreSQL metadata is separate.
+MeTube writes to subdirectories of `downloads`. Losing an application's cache,
+rebuildable configuration or optional Kopiur snapshots is not the same as losing
+these NAS files.
+
+This is a data-value boundary, not an instruction to delete resources. Any
+service retirement still needs an explicit application or batch decision;
+stopping an application must not silently remove `media-nfs`, its namespace,
+the Secret supply chain or shared databases. NAS-side backup and offsite copies
+are outside the Kubernetes PVC backup mechanism.
+
 ### kopiur — PVC Backup
 
-[kopiur](https://github.com/home-operations/kopiur) (Kopia-native Rust operator) provides automated PVC backup and restore, covering **22 consumers** across the cluster. The pattern uses two reusable Kustomize components under `kubernetes/components/kopiur/`: `backup/` (referenced by each app's `ks.yaml`) and `secret/` (attached once per namespace at the group-level `kustomization.yaml`). Migrated from VolSync (perfectra1n kopia fork) via per-app kopiur `Repository` resources to a single shared `ClusterRepository`.
+[kopiur](https://github.com/home-operations/kopiur) (Kopia-native Rust operator)
+provides automated PVC backup and restore for **21 application definitions**.
+The reusable components are
+[`backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
+(referenced by each consumer's `ks.yaml`) and
+[`shared/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/shared)
+(attached once per consumer namespace). They use one shared `ClusterRepository`
+named `nas`; this count does not include every chart- or operator-created PVC.
 
 #### Architecture
 
@@ -113,7 +148,7 @@ A single cluster-scoped repository plus per-app resources generated from the `ba
 
 2. **`SnapshotPolicy`** (`${APP}`) + **`SnapshotSchedule`**: the recipe (`repository: {kind: ClusterRepository, name: nas}`, CSI `copyMethod: Snapshot` via `ceph-block-snapshot`, `zstd-fastest`, keep-daily 14) and its cron invocation (every 6 hours, configurable via `KOPIUR_SCHEDULE`).
 
-3. **`Restore`** (`${APP}-bootstrap`) + **`PVC`** (`${APP}`): the Restore acts as a passive volume populator; the working PVC claims it via `dataSourceRef`, so first boot restores from the latest snapshot, then the PVC becomes the backup source.
+3. **`Restore`** (`${APP}-bootstrap`) + **`PVC`** (`${APP}`): the Restore is a passive volume populator, referenced by the working PVC's `dataSourceRef`. It selects the latest policy snapshot when available. The configured `onMissingSnapshot: Continue` also permits initial creation without a snapshot; a completed bootstrap is therefore not proof that old application data was restored. The resulting working PVC becomes the backup source.
 
 ```
 ┌──────────────┐    periodic    ┌─────────────────┐   Kopia snapshot   ┌──────────────────┐
@@ -149,7 +184,13 @@ approved operation.
 
 #### S3 Destination
 
-All backups target the Synology-hosted **VersityGW** S3 gateway at `http://nas.homelab.internal:9000`, in the dedicated `s3://kopiur` bucket (provisioned by `just versity init`). S3 credentials are sourced from 1Password via the `secret/` component — an `ExternalSecret` per consumer namespace materializing `kopiur-repository-secret`, which backup movers read in their own namespace:
+kopiur backups target the Synology-hosted **VersityGW** S3 gateway at
+`http://nas.homelab.internal:9000`, in the dedicated `s3://kopiur` bucket.
+The bucket setup recipe is `just infra versity init` (with the endpoint set for
+the intended gateway). S3 credentials are sourced from 1Password through the
+`shared/` component: one `ExternalSecret` per consumer namespace materializes
+`kopiur-repository-secret` for its movers. The shared repository references the
+same Secret name in `storage-system`:
 
 ```
 ClusterRepository.spec.backend.s3:
@@ -190,6 +231,19 @@ plugins:
 
 S3 credentials live in the `cloudnative-pg` Kubernetes Secret (populated via ExternalSecret from 1Password). A `ScheduledBackup` triggers periodic full backups through the barman-cloud plugin. The weekly `postgres-backup-verify` CronJob checks the latest backup's `backup.info`, including `xlog_segment_size`, and requires complete archived WAL objects from `begin_wal` through `end_wal` with no gaps. It ignores unrelated retained ranges and timelines. This checks object presence, not base-backup contents, an actual PostgreSQL restore, or PITR beyond `end_wal`; `barman-cloud-check-wal-archive` is a new-server pre-flight check and is not used here. Prometheus alerts cover failed verification, stale verification, and entirely missing completion metrics.
 
+The current
+[`postgres` Cluster definition](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/database-system/cnpg-operator/cluster/postgres.yaml)
+uses `bootstrap.initdb`, not `bootstrap.recovery`. Reapplying that definition
+after data loss is not a database restore. A restore must explicitly select the
+backup/archive source, preserve the required extensions and credentials, and
+verify database startup and application queries in an approved target.
+
+Do not apply that requirement to a media application's deliberately discarded
+cache or rebuildable configuration. Keep PostgreSQL business state and the NAS
+library separate from optional application snapshots. The archived Woodpecker
+DR workflow is historical reference, not evidence of a currently scheduled
+restore drill.
+
 ### Synology NAS Services
 
 The Synology DS1825+ runs several Docker Compose services critical to the storage stack:
@@ -227,7 +281,6 @@ Each MS-01 node boots from a 256 GB industrial SSD. Production Talos configs pin
 |-------------|:-------:|:------:|------------|---------|
 | `ceph-block` | yes | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (3-replica) |
 | `ceph-cache` | no | RWO | `storage-system.rbd.csi.ceph.com` | Ceph RBD (two replicas on separate hosts, rewarmable cache) |
-| `ceph-filesystem` | no | RWX | `storage-system.cephfs.csi.ceph.com` | CephFS (3-replica) |
 | `synology-volume1` | no | RWX | `nfs.csi.k8s.io` | NAS `/volume1` |
 | `synology-volume2` | no | RWX | `nfs.csi.k8s.io` | NAS `/volume2` |
 | `ceph-bucket` | no | — | `storage-system.ceph.rook.io/bucket` | Ceph RGW (S3) |
