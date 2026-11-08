@@ -8,12 +8,12 @@ components:
   - ../../components/kopiur/shared
 resources:
   # storage
-  - ./smarthome-nfs
+  - ./smarthome-nfs/ks.yaml
   # app
-  - ./frigate
-  - ./frigate-vision
-  - ./home-assistant
-  - ./home-assistant-sgcc
-  - ./mosquitto
-  - ./scrypted
-  - ./zigbee2mqtt
+  - ./frigate/ks.yaml
+  - ./frigate-vision/ks.yaml
+  - ./home-assistant/ks.yaml
+  - ./home-assistant-sgcc/ks.yaml
+  - ./mosquitto/ks.yaml
+  - ./scrypted/ks.yaml
+  - ./zigbee2mqtt/ks.yaml

@@ -4,9 +4,7 @@
 
 The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 12 first-level namespace directories. Together, those namespaces have 83 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 96 definition files declare 129 child Flux Kustomizations and lead to 93 HelmReleases. There are 53 OCIRepositories across the source tree: 52 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
-This catalog is documentation, not a deployment selector. Each namespace's linked `kustomization.yaml` selects application directories and shared resources.
-
-Every definition has a sibling application-local `kustomization.yaml` that includes only `ks.yaml`. This local entrypoint sets `metadata.namespace` on its child Flux Kustomizations, so direct builds do not need a parent index to assign the namespace. Definitions remain in place, and the root Flux defaults still apply. See [Application Entrypoints](../infrastructure/kubernetes.md#application-entrypoints) and [Storage](../infrastructure/storage.md) for build and data boundaries.
+This catalog is documentation, not a deployment selector. Each namespace's linked `kustomization.yaml` is the current application selection and shared-resource entry point. Definitions remain in their existing directories. See [Cluster Architecture](../infrastructure/kubernetes.md) and [Storage](../infrastructure/storage.md) for reconciliation and data boundaries.
 
 [`.archived`](https://github.com/soulwhisper/home-ops/tree/main/.archived) contains historical implementations with old paths; it does not guarantee that an application can be redeployed or its data restored.
 

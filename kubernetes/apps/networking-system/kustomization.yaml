@@ -6,8 +6,8 @@ namespace: networking-system
 components:
   - ../../components/namespace
 resources:
-  - ./agentgateway
-  - ./kgateway-crds
-  - ./kgateway
-  - ./externaldns
-  - ./forgejo-proxy
+  - ./agentgateway/ks.yaml
+  - ./kgateway-crds/ks.yaml
+  - ./kgateway/ks.yaml
+  - ./externaldns/ks.yaml
+  - ./forgejo-proxy/ks.yaml
