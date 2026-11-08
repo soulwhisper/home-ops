@@ -282,6 +282,10 @@ Each definition may contain several children pointing to `app/`, `cluster/`,
 resources, and 129 children. Source/static tooling counts 131 because the
 operator creates the root; local Kustomize indexes are not Flux resources.
 
+Local builds are application references, not standalone deployment bundles;
+do not apply them directly. [Application Entrypoints](../infrastructure/kubernetes.md#application-entrypoints)
+explains the remaining root-patch and shared-resource requirements.
+
 Root patches set child reconciliation defaults and HelmRelease policies.
 For the 65 children labelled `config.home-ops.io/deps=infra`, they intentionally
 replace local dependency lists with cert-manager, onepassword-connect,
