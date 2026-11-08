@@ -113,15 +113,22 @@ applications; see the [catalog](../application/catalog.md) for definition links.
 | Data | Definition owner | Lifecycle expectation |
 |------|------------------|-----------------------|
 | Photos, video, music, documents and downloads | `media-apps/media-nfs` KS; NAS `/volume1/{photo,video,music,document}` and `/volume2/downloads` | Keep the shared claims and NAS files independent of an individual media application's deployment selection |
-| Media application configuration and indexes | Application KS or HelmRelease; usually Ceph PVCs | Rebuildable configuration may be discarded and recreated from Git, ESO/1Password and a library rescan; preserving every old Kopiur snapshot is not required |
+| Media application configuration and indexes | Application KS or HelmRelease; usually Ceph PVCs | Git/ESO-managed settings and rebuildable indexes may be recreated. Other application state in the same PVC needs a backup if it must survive; explicitly accepting its loss does not require preserving every old Kopiur snapshot |
 | Transcode, machine-learning and mover caches | Application or kopiur controller; `ceph-cache` | Rewarmable, not a durable-data retention boundary |
 | PostgreSQL and application RGW buckets | Shared CNPG cluster or application OBC | Separate business state; do not infer that it is disposable because media files are on NFS |
 
 Jellyfin's `/config` is on Ceph while `/media` uses the shared NAS `video`
-claim. Immich's `/data` uses `photo`, but its PostgreSQL metadata is separate.
-MeTube writes to subdirectories of `downloads`. Losing an application's cache,
-rebuildable configuration or optional Kopiur snapshots is not the same as losing
-these NAS files.
+claim. That config volume also contains application database state; Git,
+ESO/1Password and a library rescan cannot recreate all of it. See
+[Jellyfin's backup guidance](https://jellyfin.org/docs/general/administration/backup-and-restore/).
+Keep a usable Kopiur backup when that state matters, or explicitly accept its
+loss for the application being retired. Rebuilding settings or indexes is not
+a promise to restore application-owned state.
+
+Immich's `/data` uses `photo`, but its PostgreSQL metadata is separate.
+MeTube writes to subdirectories of `downloads`. Losing a cache, optional
+snapshot or explicitly disposable application state is not the same as losing
+the NAS library files.
 
 This is a data-value boundary, not an instruction to delete resources. Any
 service retirement still needs an explicit application or batch decision;
