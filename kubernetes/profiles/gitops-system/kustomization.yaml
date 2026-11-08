@@ -1,0 +1,8 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../apps/gitops-system/flux-operator
+  - ../../apps/gitops-system/flux-instance
+  - ../../apps/gitops-system/system-upgrade-controller

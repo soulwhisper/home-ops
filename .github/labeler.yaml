@@ -23,7 +23,10 @@ area/kubernetes:
       - any-glob-to-any-file:
           - "kubernetes/apps/**/*"
           - "kubernetes/components/**/*"
+          - "kubernetes/deployments/**/*"
           - "kubernetes/flux/**/*"
+          - "kubernetes/namespaces/**/*"
+          - "kubernetes/profiles/**/*"
 area/renovate:
   - changed-files:
       - any-glob-to-any-file:

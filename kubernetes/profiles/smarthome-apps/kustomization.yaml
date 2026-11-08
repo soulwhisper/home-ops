@@ -1,0 +1,15 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # storage
+  - ../../apps/smarthome-apps/smarthome-nfs
+  # app
+  - ../../apps/smarthome-apps/frigate
+  - ../../apps/smarthome-apps/frigate-vision
+  - ../../apps/smarthome-apps/home-assistant
+  - ../../apps/smarthome-apps/home-assistant-sgcc
+  - ../../apps/smarthome-apps/mosquitto
+  - ../../apps/smarthome-apps/scrypted
+  - ../../apps/smarthome-apps/zigbee2mqtt

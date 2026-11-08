@@ -1,0 +1,31 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # Shared namespace resources
+  - ../../namespaces/database-system
+  - ../../namespaces/gaming-apps
+  - ../../namespaces/gitops-system
+  - ../../namespaces/kube-system
+  - ../../namespaces/media-apps
+  - ../../namespaces/monitoring-system
+  - ../../namespaces/networking-system
+  - ../../namespaces/security-system
+  - ../../namespaces/selfhosted-apps
+  - ../../namespaces/servitor-apps
+  - ../../namespaces/smarthome-apps
+  - ../../namespaces/storage-system
+  # Application selection
+  - ../../profiles/database-system
+  - ../../profiles/gaming-apps
+  - ../../profiles/gitops-system
+  - ../../profiles/kube-system
+  - ../../profiles/media-apps
+  - ../../profiles/monitoring-system
+  - ../../profiles/networking-system
+  - ../../profiles/security-system
+  - ../../profiles/selfhosted-apps
+  - ../../profiles/servitor-apps
+  - ../../profiles/smarthome-apps
+  - ../../profiles/storage-system

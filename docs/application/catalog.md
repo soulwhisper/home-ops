@@ -4,7 +4,7 @@
 
 The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 12 first-level namespace directories. Together, those namespaces have 83 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 96 definition files declare 129 child Flux Kustomizations and lead to 93 HelmReleases. There are 53 OCIRepositories across the source tree: 52 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
-This catalog is documentation, not a deployment selector. Each namespace's linked `kustomization.yaml` selects application directories and shared resources.
+This catalog lists available definitions, not a deployment selector. The [main deployment](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/deployments/main/kustomization.yaml) explicitly selects Profiles and shared namespace resources. The Profile links below show the current selection; adding a definition to `apps/` alone does not deploy it. See [Deployment Selection](../infrastructure/kubernetes.md#deployment-selection) for composition and ownership rules.
 
 Every definition has a sibling application-local `kustomization.yaml` that includes only `ks.yaml`. This local entrypoint sets `metadata.namespace` on its child Flux Kustomizations, so direct builds do not need a parent index to assign the namespace. Definitions remain in place, and the root Flux defaults still apply. See [Application Entrypoints](../infrastructure/kubernetes.md#application-entrypoints) and [Storage](../infrastructure/storage.md) for build and data boundaries.
 
@@ -12,7 +12,7 @@ Every definition has a sibling application-local `kustomization.yaml` that inclu
 
 ## kube-system — Cluster Infrastructure (9)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/kube-system/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
@@ -28,7 +28,7 @@ Every definition has a sibling application-local `kustomization.yaml` that inclu
 
 ## gitops-system — GitOps Engine (3)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/gitops-system/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
@@ -38,7 +38,7 @@ Every definition has a sibling application-local `kustomization.yaml` that inclu
 
 ## security-system — Security (5)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/security-system/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/security-system/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
@@ -50,7 +50,7 @@ Every definition has a sibling application-local `kustomization.yaml` that inclu
 
 ## networking-system — Network Services (5)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/networking-system/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
@@ -62,7 +62,7 @@ Every definition has a sibling application-local `kustomization.yaml` that inclu
 
 ## storage-system — Storage (4)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/storage-system/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
@@ -73,7 +73,7 @@ Every definition has a sibling application-local `kustomization.yaml` that inclu
 
 ## database-system — Database Operators (3)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/database-system/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/database-system/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
@@ -83,7 +83,7 @@ Every definition has a sibling application-local `kustomization.yaml` that inclu
 
 ## monitoring-system — Observability (17)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/monitoring-system/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
@@ -107,7 +107,7 @@ Every definition has a sibling application-local `kustomization.yaml` that inclu
 
 ## smarthome-apps — Smart Home (8)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/smarthome-apps/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
@@ -122,7 +122,7 @@ Every definition has a sibling application-local `kustomization.yaml` that inclu
 
 ## media-apps — Media (9)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/media-apps/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
@@ -138,7 +138,7 @@ Every definition has a sibling application-local `kustomization.yaml` that inclu
 
 ## selfhosted-apps — Self-Hosted Services (10)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/selfhosted-apps/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
@@ -155,7 +155,7 @@ Every definition has a sibling application-local `kustomization.yaml` that inclu
 
 ## servitor-apps — AI Infrastructure (20)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/servitor-apps/kustomization.yaml)
 
 Six direct application definitions and 14 nested MCP definitions. ToolHive configures six VirtualMCP groups: `search`, `cluster`, `persona`, `agent`, `browser`, and `github-pr`.
 
@@ -170,7 +170,7 @@ Six direct application definitions and 14 nested MCP definitions. ToolHive confi
 
 ### MCP Definitions (14)
 
-The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/kustomization.yaml) selects 14 definition files declaring 19 child Flux Kustomizations: GitHub has two identities, Hindsight has five, and each other definition has one. These are not 14 individual backend server instances.
+The [MCP Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/servitor-apps/mcp/kustomization.yaml) selects 14 definition files declaring 19 child Flux Kustomizations: GitHub has two identities, Hindsight has five, and each other definition has one. These are not 14 individual backend server instances.
 
 | Definition | Purpose |
 | --- | --- |
@@ -191,7 +191,7 @@ The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/app
 
 ## gaming-apps — Gaming (3)
 
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gaming-apps/kustomization.yaml)
+[Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/gaming-apps/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |

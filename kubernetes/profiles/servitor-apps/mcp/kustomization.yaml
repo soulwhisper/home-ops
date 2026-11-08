@@ -1,0 +1,19 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../../apps/servitor-apps/mcp/context
+  - ../../../apps/servitor-apps/mcp/firecrawl
+  - ../../../apps/servitor-apps/mcp/fluxcd
+  - ../../../apps/servitor-apps/mcp/forgejo
+  - ../../../apps/servitor-apps/mcp/github
+  - ../../../apps/servitor-apps/mcp/grafana
+  - ../../../apps/servitor-apps/mcp/hindsight
+  - ../../../apps/servitor-apps/mcp/home-assistant
+  - ../../../apps/servitor-apps/mcp/kubernetes
+  - ../../../apps/servitor-apps/mcp/playwright
+  - ../../../apps/servitor-apps/mcp/trendradar
+  - ../../../apps/servitor-apps/mcp/victoria-logs
+  - ../../../apps/servitor-apps/mcp/victoria-metrics
+  - ../../../apps/servitor-apps/mcp/victoria-traces

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The home-ops Kubernetes cluster runs on Talos Linux, managed entirely through GitOps with Flux CD. Every resource — from cluster-wide operators to individual applications — is declared in this repository and reconciled automatically. The architecture is built around four design principles:
+The home-ops Kubernetes cluster runs on Talos Linux, managed entirely through GitOps with Flux CD. Selected resources — from cluster-wide operators to individual applications — are declared in this repository and reconciled automatically; storing a definition in the Catalog does not select it for deployment. The architecture is built around four design principles:
 
 1. **Git as the single source of truth** — Permanent application changes flow through Flux; Helmfile installs the initial bootstrap releases.
 2. **Composability through Kustomize** — Eight reusable Kustomize Components encode cross-cutting concerns so individual applications stay lean.
@@ -39,9 +39,12 @@ flowchart TB
         ROOT --> CA["cluster-apps
         Kustomization"]
         FR --> CA
-        CA --> NS["12 namespace
-        Kustomize indexes"]
-        NS --> ENTRY["96 application-local
+        CA --> DEPLOY["main deployment
+        Kustomize entrypoint"]
+        DEPLOY --> NS["12 shared
+        namespace bundles"]
+        DEPLOY --> PROFILES["12 top-level Profiles"]
+        PROFILES --> ENTRY["96 application-local
         Kustomize entrypoints"]
         ENTRY --> APPS["129 child
         Flux Kustomizations"]
@@ -85,7 +88,7 @@ flowchart TB
 
 ## Flux Topology
 
-The Flux Operator creates a root `gitops-system` Kustomization from the FluxInstance sync configuration. It reads two cluster-level Flux `Kustomization` resources, which in turn register shared chart sources and build the application indexes.
+The Flux Operator creates a root `gitops-system` Kustomization from the FluxInstance sync configuration. It reads two cluster-level Flux `Kustomization` resources, which register shared chart sources and build the explicit main deployment selection.
 
 ### GitRepository → Cluster Kustomizations
 
@@ -104,17 +107,51 @@ The two cluster-level `Kustomization` resources live in [`kubernetes/flux/cluste
 | Kustomization       | Path                             | Depends On          | Purpose                                                |
 | ------------------- | -------------------------------- | ------------------- | ------------------------------------------------------ |
 | `flux-repositories` | `./kubernetes/flux/repositories` | _(none)_            | Registers shared OCI chart sources                     |
-| `cluster-apps`      | `./kubernetes/apps`              | `flux-repositories` | Builds namespace indexes, shared resources, and child Flux Kustomizations |
+| `cluster-apps`      | `./kubernetes/deployments/main` | `flux-repositories` | Builds the explicit main deployment under its existing Flux ownership |
 
-### Recursive Discovery
+### Deployment Selection
 
-Neither [`kubernetes/apps/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) nor [`kubernetes/flux/cluster/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/flux/cluster) has a root `kustomization.yaml`. Flux autogenerates these build entrypoints by discovering manifests and explicit Kustomize indexes. Adding resources under an auto-discovered root can therefore affect deployment; `apps/` is not an inactive definition library.
+[`kubernetes/flux/cluster/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/flux/cluster) still has no root `kustomization.yaml`; Flux autogenerates that bootstrap entrypoint. The existing `cluster-apps` then builds the explicit [`deployments/main/kustomization.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/deployments/main/kustomization.yaml), not the `apps/` tree. Adding a definition under `apps/` does not automatically select it.
 
-The 12 namespace directories each have an explicit **Kustomize index**, not a separate namespace-level Flux Kustomization. For example, the [`media-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/kustomization.yaml) selects application directories and shared namespace/Kopiur components. Its `namespace: media-apps` names those shared resources. Each selected application directory has its own `kustomization.yaml` that sets the same namespace and includes only its original `ks.yaml`, so the application no longer relies on the namespace index to name its Flux Kustomizations. `spec.targetNamespace` still controls the child resources rather than the Flux Kustomization itself.
+The main deployment selects 12 shared bundles from `namespaces/<namespace>/` and 12 top-level Profiles from `profiles/<namespace>/`. For example, the [`media-apps` namespace bundle](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/namespaces/media-apps/kustomization.yaml) contains namespace/notification and shared Kopiur Components; the [`media-apps` Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/media-apps/kustomization.yaml) selects application directories. Profiles do not declare shared Namespaces or inject namespace into applications. Each application-local entrypoint already sets its own child Flux Kustomization namespace.
 
-There are **96 `ks.yaml` definition units**, containing one or more Flux Kustomizations each, and **93 HelmReleases**. A `ks.yaml` selects resource build paths such as `app/`, `cluster/`, `drivers/`, or `config/`; it is not interchangeable with an `app/kustomization.yaml`, which builds workload resources. For example, [`rook-ceph/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/rook-ceph/ks.yaml) defines three child Kustomizations. The [`servitor-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml) also includes a nested `mcp/` index.
+The existing `apps/<namespace>/kustomization.yaml` indexes still assemble the full Catalog for inspection, including the same shared namespace bundles. They are not imported by the main deployment, so Catalog membership is independent of actual selection. Keeping these Catalog exports also makes a controller reading the new Git revision through the old `apps/` path render the same objects during the initial path switch; clearing them in the same commit could open a prune window before `cluster-apps` receives its new path.
+
+The Catalog contains **96 `ks.yaml` definition units** and **93 HelmReleases**; the main deployment currently selects all of them. A `ks.yaml` selects resource build paths such as `app/`, `cluster/`, `drivers/`, or `config/`; it is not interchangeable with an `app/kustomization.yaml`, which builds workload resources. For example, [`rook-ceph/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/rook-ceph/ks.yaml) defines three child Kustomizations. The [`servitor-apps` Profile](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/profiles/servitor-apps/kustomization.yaml) includes the nested `mcp/` Profile.
 
 The source/static count is **131 Flux Kustomizations** (129 children plus the two in `cluster.yaml`). The operator-created root adds one, giving **132 in the deployed topology**. See the [Application Catalog](../application/catalog.md) for definition paths and counts, and [Storage](storage.md) for data ownership and lifecycle boundaries.
+
+To select definitions:
+
+1. Keep application definitions under `apps/`; reference their local directories, not raw `ks.yaml`, from an explicitly chosen Profile.
+2. Select Profiles in `deployments/main/kustomization.yaml`. Include each required shared namespace bundle once, separately from the Profiles.
+3. Keep a deployment's Profile combination disjoint. An application can appear in alternative Profiles, but importing the same resource twice into one deployment fails with Kustomize's native duplicate-identity error. Do not deploy overlapping environments into the same cluster objects.
+4. Check the effective `dependsOn` closure before changing selection. Profiles are composition, not readiness gates; they do not replace root policies.
+
+The deployment and Profile indexes are native Kustomize files, **not additional
+Flux Kustomizations**. The existing `cluster-apps` remains the sole owner of
+their rendered child Kustomizations and shared resources; no inventory handoff
+or second controller is introduced.
+
+From the repository root, validate composition and the effective root output:
+
+```shell
+kustomize build kubernetes/deployments/main
+flux build kustomization cluster-apps --namespace gitops-system \
+  --path ./kubernetes/deployments/main \
+  --kustomization-file kubernetes/flux/cluster/cluster.yaml \
+  --dry-run --in-memory-build
+```
+
+The plain Kustomize output has not received the root Flux patches and is not
+a directly deployable bundle. The Flux command applies those patches in memory
+without changing the cluster. `flate build all --path kubernetes/flux/cluster`
+also renders the selected workloads, Components and substitution.
+
+Removing a selected child Kustomization can trigger pruning and Helm uninstall.
+Namespace prune protection does not retain all namespaced resources or data.
+This selection mechanism does not authorize stopping services; such transitions
+require a separately approved lifecycle plan.
 
 ### Application Entrypoints
 
@@ -139,7 +176,7 @@ This builds that definition's Flux Kustomizations with explicit
 `metadata.namespace`, including all children of a multi-Kustomization
 definition. It does not create a new Flux controller, duplicate a HelmRelease,
 create the Namespace, or include the namespace's shared Kopiur Secret.
-Those shared resources remain in the namespace index.
+Those shared resources remain in the namespace bundle selected by the deployment.
 
 The local output is an **application reference**, not a complete standalone
 Flux deployment or a workload render. The existing `cluster-apps` still
@@ -154,7 +191,7 @@ To inspect an application's composed output from the repository root:
 just k8s render-ks media-apps moviepilot
 ```
 
-This runs `flate build ks --namespace media-apps moviepilot` without applying resources. A plain `kustomize build .../app` does not include the parent namespace index, cluster patches, or Flux `spec.components` and substitution. In contrast, `just k8s apply-ks <namespace> <name>` applies rendered resources, and `just reconcile` requests root reconciliation; both mutate the cluster and are not validation commands.
+This runs `flate build ks` against the explicit `kubernetes/flux/cluster` entrypoint without applying resources or scanning unrelated repository directories. A plain `kustomize build .../app` does not include root patches or Flux `spec.components` and substitution. In contrast, `just k8s apply-ks <namespace> <name>` applies rendered resources, and `just reconcile` requests root reconciliation; both mutate the cluster and are not validation commands.
 
 ### Flux Controller Tuning
 
@@ -326,7 +363,7 @@ Eight Kustomize Components encode cross-cutting concerns as reusable building bl
 
 **Path**: [`kubernetes/components/namespace/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/namespace)
 
-Every namespace Kustomize index includes this component. It provides:
+Each shared namespace bundle includes this component and is selected once by the deployment, separately from application Profiles. It provides:
 
 1. **Namespace resource** with label `kustomize.toolkit.fluxcd.io/prune: disabled` — excludes the Namespace itself from Flux pruning, not the objects inside it.
 2. **Alert resources** — Flux `Alert` and `Provider` definitions that send notifications to the notification-controller for all Flux resources in the namespace.
@@ -341,7 +378,7 @@ metadata:
     kustomize.toolkit.fluxcd.io/prune: disabled
 ```
 
-The `name: _` is a Kustomize placeholder. The namespace index's `namespace:` transformer sets the actual Namespace name and namespaces the Alert and Provider; this is not Flux `postBuild` substitution.
+The `name: _` is a Kustomize placeholder. The namespace bundle's `namespace:` transformer sets the actual Namespace name and namespaces the Alert and Provider; this is not Flux `postBuild` substitution.
 
 ### Component: kopiur/shared (5 consumers)
 
@@ -453,7 +490,7 @@ Application definitions are grouped into 12 namespace directories. The numbering
 
 ### Dependency Order
 
-Reconciliation order comes from the Helmfile bootstrap `needs` graph and the effective child Flux `dependsOn` lists, not this namespace table. The `deps=infra` label selects the uniform four-dependency policy described above; unlabelled children retain their explicit dependencies. Namespace indexes select resources but do not act as Flux readiness gates.
+Reconciliation order comes from the Helmfile bootstrap `needs` graph and the effective child Flux `dependsOn` lists, not this namespace table. The `deps=infra` label selects the uniform four-dependency policy described above; unlabelled children retain their explicit dependencies. Profiles select resources but do not act as Flux readiness gates.
 
 ## Bootstrap Chain
 
@@ -549,15 +586,15 @@ A typical application `ks.yaml` with both markers receives:
 2. **From Layer 2** (`deps=infra` label): replacement `dependsOn` list (cert-manager, onepassword-connect, rook-ceph-cluster, kopiur)
 3. **From Layer 3** (automatic): HelmRelease defaults (CRD management, retry, remediation, rollback)
 
-The local `ks.yaml` declares the path, target namespace, labels, dependencies, components, and substitution inputs. Its sibling Kustomize entrypoint fixes the Flux Kustomization namespace; namespace indexes select these directories and shared resources. Root patches still determine the effective common configuration, including replacement of labelled children's local dependency lists.
+The local `ks.yaml` declares the path, target namespace, labels, dependencies, components, and substitution inputs. Its sibling Kustomize entrypoint fixes the Flux Kustomization namespace. Profiles select these application directories, while the deployment separately selects shared namespace bundles. Root patches still determine the effective common configuration, including replacement of labelled children's local dependency lists.
 
 ## Directory Structure
 
 ```
 kubernetes/
-├── apps/                          # Auto-discovered root; no kustomization.yaml
+├── apps/                          # Application Catalog; not the deployment root
 │   ├── kube-system/
-│   │   ├── kustomization.yaml     # Namespace index + shared components
+│   │   ├── kustomization.yaml     # Full namespace Catalog preview, not selection
 │   │   └── <app>/                 # Definition unit
 │   │       ├── kustomization.yaml # Local namespace + reference to ks.yaml
 │   │       ├── ks.yaml            # One or more Flux Kustomizations
@@ -591,6 +628,13 @@ kubernetes/
 │   ├── cnpg/                      #   PostgreSQL secret (8 consumers)
 │   ├── dragonfly/                 #   Redis-compatible cache (7 consumers)
 │   └── ceph-bucket/               #   S3 object bucket (2 consumers)
+├── namespaces/
+│   └── <namespace>/kustomization.yaml # Shared namespace/alerts/Kopiur only
+├── deployments/
+│   └── main/kustomization.yaml    # Explicit shared bundles + Profile selection
+├── profiles/
+│   ├── <namespace>/kustomization.yaml # Application selection only
+│   └── servitor-apps/mcp/kustomization.yaml # Nested MCP selection
 └── flux/                          # Flux cluster configuration
     ├── cluster/                   # No root kustomization.yaml; Flux autogenerates
     │   └── cluster.yaml           #   flux-repositories + cluster-apps Kustomizations

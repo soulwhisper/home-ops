@@ -1,0 +1,16 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # storage
+  - ../../apps/media-apps/media-nfs
+  # app
+  - ../../apps/media-apps/jellyfin
+  - ../../apps/media-apps/immich
+  - ../../apps/media-apps/kavita
+  - ../../apps/media-apps/metube
+  - ../../apps/media-apps/moviepilot
+  - ../../apps/media-apps/navidrome
+  - ../../apps/media-apps/qbittorrent
+  - ../../apps/media-apps/qbittorrent-ui

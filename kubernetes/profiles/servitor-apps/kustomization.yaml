@@ -1,0 +1,15 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # system
+  - ../../apps/servitor-apps/toolhive
+  # mcp
+  - ./mcp
+  # app
+  - ../../apps/servitor-apps/playwright
+  - ../../apps/servitor-apps/hermes-agent
+  - ../../apps/servitor-apps/dsh-web
+  - ../../apps/servitor-apps/dsh-tavern
+  - ../../apps/servitor-apps/open-webui

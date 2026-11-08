@@ -35,14 +35,12 @@ prune-rs:
     fi
   done
 
-# no-cd: keep the invocation cwd (repo root by convention) — module recipes
-# otherwise anchor to .justfiles/, which breaks flate's repo-root --path
-# discovery. The whole render-ks -> apply/delete chain carries it so nested
-# calls inherit the root cwd.
+# Keep nested render/apply/delete calls at the repository root so the explicit
+# Flux entrypoint resolves consistently.
 [doc('Render local Flux Kustomization'), no-cd]
 [script]
 render-ks ns ks:
-  flate build ks --namespace "{{ ns }}" "{{ ks }}"
+  flate build ks --path ./kubernetes/flux/cluster --namespace "{{ ns }}" "{{ ks }}"
 
 [doc('Apply local Flux Kustomization'), no-cd]
 [script]

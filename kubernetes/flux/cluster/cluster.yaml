@@ -23,7 +23,7 @@ metadata:
   namespace: gitops-system
 spec:
   interval: 10m
-  path: ./kubernetes/apps
+  path: ./kubernetes/deployments/main
   prune: true
   sourceRef:
     kind: GitRepository

@@ -1,0 +1,10 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../apps/security-system/authentik
+  - ../../apps/security-system/cert-manager
+  - ../../apps/security-system/kyverno
+  - ../../apps/security-system/external-secrets
+  - ../../apps/security-system/onepassword-connect

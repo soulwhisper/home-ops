@@ -1,0 +1,15 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../apps/selfhosted-apps/bambuddy
+  - ../../apps/selfhosted-apps/dispatcharr
+  - ../../apps/selfhosted-apps/firecrawl
+  - ../../apps/selfhosted-apps/hindsight
+  - ../../apps/selfhosted-apps/homepage
+  - ../../apps/selfhosted-apps/karakeep
+  - ../../apps/selfhosted-apps/netbox
+  - ../../apps/selfhosted-apps/searxng
+  - ../../apps/selfhosted-apps/stirling-pdf
+  - ../../apps/selfhosted-apps/trendradar

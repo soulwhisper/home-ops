@@ -107,8 +107,9 @@ unique within each NAS share because `subDir` does not include the namespace.
 #### Application Data and Lifecycle Boundaries
 
 Application definitions and Secret references in Git are separate from the
-files they consume. The namespace indexes select shared storage alongside
-applications; see the [catalog](../application/catalog.md) for definition links.
+files they consume. Profiles select shared storage definitions alongside
+applications; the deployment selects namespace-level shared resources separately.
+See the [catalog](../application/catalog.md) for definition and Profile links.
 
 | Data | Definition owner | Lifecycle expectation |
 |------|------------------|-----------------------|

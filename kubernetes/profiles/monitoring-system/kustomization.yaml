@@ -1,0 +1,26 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # exporters
+  - ../../apps/monitoring-system/blackbox-exporter
+  - ../../apps/monitoring-system/node-exporter
+  - ../../apps/monitoring-system/smartctl-exporter
+  - ../../apps/monitoring-system/vmware-exporter
+  # monitoring stack
+  - ../../apps/monitoring-system/grafana
+  - ../../apps/monitoring-system/langfuse
+  - ../../apps/monitoring-system/kube-state-metrics
+  - ../../apps/monitoring-system/opentelemetry-collector
+  - ../../apps/monitoring-system/prometheus-crds
+  - ../../apps/monitoring-system/silence-operator
+  # monitoring backend
+  - ../../apps/monitoring-system/victoria-logs
+  - ../../apps/monitoring-system/victoria-metrics
+  - ../../apps/monitoring-system/victoria-traces
+  # others
+  - ../../apps/monitoring-system/headlamp
+  - ../../apps/monitoring-system/krr
+  - ../../apps/monitoring-system/robusta
+  - ../../apps/monitoring-system/webhook-relay

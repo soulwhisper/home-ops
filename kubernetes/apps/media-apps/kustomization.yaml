@@ -3,10 +3,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: media-apps
-components:
-  - ../../components/namespace
-  - ../../components/kopiur/shared
 resources:
+  - ../../namespaces/media-apps
   # storage
   - ./media-nfs
   # app
