@@ -8,13 +8,13 @@ components:
   - ../../components/kopiur/shared
 resources:
   # storage
-  - ./media-nfs/ks.yaml
+  - ./media-nfs
   # app
-  - ./jellyfin/ks.yaml
-  - ./immich/ks.yaml
-  - ./kavita/ks.yaml
-  - ./metube/ks.yaml
-  - ./moviepilot/ks.yaml
-  - ./navidrome/ks.yaml
-  - ./qbittorrent/ks.yaml
-  - ./qbittorrent-ui/ks.yaml
+  - ./jellyfin
+  - ./immich
+  - ./kavita
+  - ./metube
+  - ./moviepilot
+  - ./navidrome
+  - ./qbittorrent
+  - ./qbittorrent-ui

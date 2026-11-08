@@ -7,23 +7,23 @@ components:
   - ../../components/namespace
 resources:
   # exporters
-  - ./blackbox-exporter/ks.yaml
-  - ./node-exporter/ks.yaml
-  - ./smartctl-exporter/ks.yaml
-  - ./vmware-exporter/ks.yaml
+  - ./blackbox-exporter
+  - ./node-exporter
+  - ./smartctl-exporter
+  - ./vmware-exporter
   # monitoring stack
-  - ./grafana/ks.yaml
-  - ./langfuse/ks.yaml
-  - ./kube-state-metrics/ks.yaml
-  - ./opentelemetry-collector/ks.yaml
-  - ./prometheus-crds/ks.yaml
-  - ./silence-operator/ks.yaml
+  - ./grafana
+  - ./langfuse
+  - ./kube-state-metrics
+  - ./opentelemetry-collector
+  - ./prometheus-crds
+  - ./silence-operator
   # monitoring backend
-  - ./victoria-logs/ks.yaml # replace loki and promtail
-  - ./victoria-metrics/ks.yaml # replace kube-prometheus-stack
-  - ./victoria-traces/ks.yaml # replace tempo
+  - ./victoria-logs
+  - ./victoria-metrics
+  - ./victoria-traces
   # others
-  - ./headlamp/ks.yaml
-  - ./krr/ks.yaml
-  - ./robusta/ks.yaml
-  - ./webhook-relay/ks.yaml
+  - ./headlamp
+  - ./krr
+  - ./robusta
+  - ./webhook-relay
