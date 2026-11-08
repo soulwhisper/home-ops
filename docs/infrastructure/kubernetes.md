@@ -4,7 +4,7 @@
 
 The home-ops Kubernetes cluster runs on Talos Linux, managed entirely through GitOps with Flux CD. Every resource — from cluster-wide operators to individual applications — is declared in this repository and reconciled automatically. The architecture is built around four design principles:
 
-1. **Git as the single source of truth** — No `kubectl apply` or manual Helm installs. Everything flows through Flux.
+1. **Git as the single source of truth** — Permanent application changes flow through Flux; Helmfile installs the initial bootstrap releases.
 2. **Composability through Kustomize** — Eight reusable Kustomize Components encode cross-cutting concerns so individual applications stay lean.
 3. **OCI-first chart sourcing** — All Helm charts are pulled from OCI registries; legacy `HelmRepository` resources are eliminated entirely.
 4. **Layered patching** — Three strategic patch layers inject defaults at the cluster level, eliminating boilerplate from every application definition.
@@ -32,14 +32,17 @@ flowchart TB
 
     subgraph FluxTopo["Flux Reconciliation Topology"]
         GR["GitRepository
-        gitops-system"] --> FR["flux-repositories
+        gitops-system"] --> ROOT["Operator-created root
+        gitops-system Kustomization"]
+        ROOT --> FR["flux-repositories
         Kustomization"]
-        FR --> CA["cluster-apps
+        ROOT --> CA["cluster-apps
         Kustomization"]
-        CA --> NS["12 Namespace
-        Kustomizations"]
-        NS --> APPS["93 Application
-        Kustomizations"]
+        FR --> CA
+        CA --> NS["12 namespace
+        Kustomize indexes"]
+        NS --> APPS["96 ks.yaml files
+        129 child Flux Kustomizations"]
     end
 
     subgraph Components["Kustomize Components"]
@@ -48,34 +51,30 @@ flowchart TB
         KOPIUR_SECRET["kopiur/shared
         5 consumers"]
         KOPIUR_BACKUP["kopiur/backup
-        22 consumers"]
+        21 consumers"]
         CACHE["cache
-        4 consumers"]
+        7 consumers"]
         AUTHENTIK["authentik
         15 consumers"]
         CNPG["cnpg
-        9 consumers"]
+        8 consumers"]
         DRAGONFLY["dragonfly
         7 consumers"]
         CEPH["ceph-bucket
-        3 consumers"]
+        2 consumers"]
     end
 
     subgraph Charts["Chart Sources"]
-        OCI_OWN["53 Own
+        OCI_OWN["52 local
         OCIRepositories"]
-        OCI_TPL["1 app-template
+        OCI_TPL["1 shared app-template
         OCIRepository"]
-        CROSS["36 Cross-namespace
-        chartRef References"]
+        CROSS["41 cross-namespace
+        chartRef references"]
     end
 
     GIT --> Bootstrap
     Bootstrap --> GR
-    GR --> FR
-    FR --> CA
-    CA -.-> NS
-    NS -.-> APPS
     APPS -.-> Components
     APPS --> OCI_OWN
     APPS --> OCI_TPL
@@ -84,11 +83,11 @@ flowchart TB
 
 ## Flux Topology
 
-The reconciliation chain follows a strict hierarchy: one `GitRepository` feeds two cluster-level `Kustomization` resources, which recursively discover and reconcile every application in the tree.
+The Flux Operator creates a root `gitops-system` Kustomization from the FluxInstance sync configuration. It reads two cluster-level Flux `Kustomization` resources, which in turn register shared chart sources and build the application indexes.
 
 ### GitRepository → Cluster Kustomizations
 
-A single `GitRepository` named `gitops-system` watches the `main` branch of `github.com/soulwhisper/home-ops`. It is declared by the `flux-instance` HelmRelease at bootstrap time (`kubernetes/apps/gitops-system/flux-instance/app/helmrelease.yaml`):
+A single `GitRepository` named `gitops-system` watches the `main` branch of `github.com/soulwhisper/home-ops`. The sync configuration is declared by the [`flux-instance` HelmRelease](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/app/helmrelease.yaml):
 
 ```yaml
 sync:
@@ -98,41 +97,51 @@ sync:
   path: kubernetes/flux/cluster
 ```
 
-The cluster-level `Kustomization` resources live in `kubernetes/flux/cluster/cluster.yaml` and form a two-stage pipeline:
+The two cluster-level `Kustomization` resources live in [`kubernetes/flux/cluster/cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml):
 
 | Kustomization       | Path                             | Depends On          | Purpose                                                |
 | ------------------- | -------------------------------- | ------------------- | ------------------------------------------------------ |
 | `flux-repositories` | `./kubernetes/flux/repositories` | _(none)_            | Registers shared OCI chart sources                     |
-| `cluster-apps`      | `./kubernetes/apps`              | `flux-repositories` | Recursively reconciles all namespaces and applications |
+| `cluster-apps`      | `./kubernetes/apps`              | `flux-repositories` | Builds namespace indexes, shared resources, and child Flux Kustomizations |
 
 ### Recursive Discovery
 
-`cluster-apps` scans `kubernetes/apps/` recursively. Flux discovers each namespace's top-level `kustomization.yaml`, which references individual application `ks.yaml` files. This yields **12 namespace Kustomizations** and **93 application Kustomizations** (`ks.yaml` leaves).
+Neither [`kubernetes/apps/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) nor [`kubernetes/flux/cluster/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/flux/cluster) has a root `kustomization.yaml`. Flux autogenerates these build entrypoints by discovering manifests and explicit Kustomize indexes. Adding resources under an auto-discovered root can therefore affect deployment; `apps/` is not an inactive definition library.
 
-Each application `ks.yaml` is a leaf `Kustomization` that points to its `app/` subdirectory containing the `HelmRelease`, `OCIRepository`, and any supplementary resources (ConfigMaps, Secrets, etc.).
+The 12 namespace directories each have an explicit **Kustomize index**, not a separate namespace-level Flux Kustomization. For example, the [`media-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/kustomization.yaml) selects application `ks.yaml` files and shared namespace/Kopiur components. Its `namespace: media-apps` injects `metadata.namespace` into the selected namespaced objects. All **129 child Flux Kustomizations** omit `metadata.namespace` in their source and rely on this index; `spec.targetNamespace` controls their rendered resources, not the namespace of the Flux Kustomization itself.
+
+There are **96 `ks.yaml` definition units**, containing one or more Flux Kustomizations each, and **93 HelmReleases**. A `ks.yaml` selects resource build paths such as `app/`, `cluster/`, `drivers/`, or `config/`; it is not interchangeable with an `app/kustomization.yaml`, which builds workload resources. For example, [`rook-ceph/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/rook-ceph/ks.yaml) defines three child Kustomizations. The [`servitor-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml) also includes a nested `mcp/` index.
+
+The source/static count is **131 Flux Kustomizations** (129 children plus the two in `cluster.yaml`). The operator-created root adds one, giving **132 in the deployed topology**. See the [Application Catalog](../application/catalog.md) for definition paths and counts, and [Storage](storage.md) for data ownership and lifecycle boundaries.
+
+To inspect an application's composed output from the repository root:
+
+```shell
+just k8s render-ks media-apps moviepilot
+```
+
+This runs `flate build ks --namespace media-apps moviepilot` without applying resources. A plain `kustomize build .../app` does not include the parent namespace index, cluster patches, or Flux `spec.components` and substitution. In contrast, `just k8s apply-ks <namespace> <name>` applies rendered resources, and `just reconcile` requests root reconciliation; both mutate the cluster and are not validation commands.
 
 ### Flux Controller Tuning
 
-The Flux controllers are tuned for a 3-node cluster (`kubernetes/apps/gitops-system/flux-instance/app/helmrelease.yaml`):
+The [FluxInstance configuration](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/app/helmrelease.yaml) sets:
 
-- **Concurrency**: `--concurrent=10` on kustomize, helm, and source controllers
-- **Dependency requeue**: `--requeue-dependency=5s` for fast dependency resolution
-- **Memory limits**: 2 GiB per controller
-- **In-memory builds**: Kustomize builds use `emptyDir` backed by `Memory` medium
-- **Helm caching**: 10-max cache with 60m TTL and 5m purge interval
-- **OOM watch**: 95% threshold with 500ms check interval
-- **Cancel health checks**: `CancelHealthCheckOnNewRevision=true` prevents stale health checks from blocking new revisions
-- **Chart digest tracking**: Disabled via `DisableChartDigestTracking=true`
+- **Concurrency**: kustomize `4`, helm `2`, source `4`
+- **Interval jitter**: 20% for those three controllers
+- **Resources**: each requests `100m` CPU and `256Mi` memory; source has a `1Gi` memory limit, kustomize and helm each have `2Gi`
+- **In-memory builds**: Kustomize temporary workspace uses a memory-backed `emptyDir` capped at `512Mi`
+- **Helm caching**: source-controller caches up to 10 charts with a 60m TTL and 5m purge interval
+- **Feature gates**: kustomize enables `CancelHealthCheckOnNewRevision`; helm enables `OOMWatch` and `DisableChartDigestTracking`
 
 ## Strategic Patching System
 
-The `cluster-apps` Kustomization applies three strategic patches to every child `Kustomization` in the tree. These are defined in `kubernetes/flux/cluster/cluster.yaml` and eliminate boilerplate from all 93 application definitions.
+The `cluster-apps` Kustomization applies three strategic patches to its 129 child Flux Kustomizations. They are defined in [`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml); the effective configuration includes these patches, not just the local `ks.yaml`.
 
 ### Layer 1: Kustomization Defaults (managed annotation)
 
 **Target**: Any `Kustomization` with annotation `config.home-ops.io/managed=true`
 
-Every application `ks.yaml` carries this annotation. The patch injects:
+All 129 child Flux Kustomizations carry this annotation. The patch sets:
 
 ```yaml
 spec:
@@ -150,13 +159,13 @@ spec:
 `wait: true` in its own `ks.yaml` — an injected default would silently
 override it.
 
-This means individual `ks.yaml` files never need to declare their `sourceRef`, `prune` behavior, or reconciliation interval — they only specify what varies: `targetNamespace`, `path`, `dependsOn`, `components`, and `postBuild`.
+These scalar values override local declarations. In particular, [`flux-operator`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-operator/ks.yaml), [`flux-instance`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/ks.yaml), and [`coredns`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/coredns/ks.yaml) declare `prune: false` locally, but all three have effective `prune: true`, as do all 129 children. The local value is not deletion protection; changes that remove a core Kustomization or alter its ownership must account for its effective prune behavior.
 
 ### Layer 2: Baseline Infrastructure Dependencies (deps label)
 
 **Target**: Any `Kustomization` with label `config.home-ops.io/deps=infra`
 
-Applications that require the foundational infrastructure layer (most user-facing workloads) carry this label. The patch injects a `dependsOn` block ensuring these four components are healthy before reconciliation begins:
+The 65 child Kustomizations carrying this label use a uniform four-item infrastructure gate:
 
 ```yaml
 spec:
@@ -171,7 +180,7 @@ spec:
       namespace: storage-system
 ```
 
-Applications can append additional app-specific dependencies in their own `ks.yaml` — Flux merges the lists. For example, `moviepilot` adds `cnpg-cluster`, `dragonfly-operator`, and `media-nfs` on top of the baseline (`kubernetes/apps/media-apps/moviepilot/ks.yaml:L17-L23`).
+This patch intentionally **replaces** the local `dependsOn` list; it does not append or merge entries. For example, [`moviepilot/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/moviepilot/ks.yaml) declares `cnpg-cluster`, `dragonfly-operator`, and `media-nfs`, but its effective list is exactly the four entries above. Children without this label retain their local dependencies. A `sourceRef` to `gitops-system` identifies the Git source; it is not a `dependsOn` edge.
 
 ### Layer 3: HelmRelease Defaults (all child Kustomizations)
 
@@ -187,7 +196,7 @@ spec:
     strategy:
       name: RetryOnFailure
     remediation:
-      retries: -1 # retry indefinitely until success
+      retries: -1
   rollback:
     cleanupOnFail: true
   upgrade:
@@ -204,9 +213,9 @@ spec:
 
 Key behaviors this enforces cluster-wide:
 
-- **CRD lifecycle**: CRDs are created and upgraded automatically (`CreateReplace`), eliminating manual CRD management.
-- **Install resilience**: `RetryOnFailure` with unlimited retries (`-1`) ensures initial installs survive transient errors.
-- **Upgrade safety**: `RemediateOnFailure` with 3 retries and automatic rollback (`cleanupOnFail`, `recreate`) contains bad upgrades.
+- **CRD lifecycle**: Helm creates/replaces CRDs included by the selected chart (`CreateReplace`).
+- **Install strategy**: `RetryOnFailure` retries failed installs; the patch also sets `install.remediation.retries: -1`.
+- **Upgrade strategy**: `RemediateOnFailure` with 3 remediation retries and cleanup on failure.
 - **History hygiene**: `maxHistory: 1` and `keepHistory: false` prevent Helm release history accumulation.
 
 ## OCI-First Strategy
@@ -215,7 +224,7 @@ All Helm charts are sourced from OCI registries. The legacy `HelmRepository` CRD
 
 ### Own OCIRepositories (52)
 
-Each non-trivial application defines its own `OCIRepository` resource in its `app/` subdirectory alongside its `HelmRelease`. These 52 repositories pull charts directly from their publishers' OCI registries:
+The application tree declares 52 local `OCIRepository` resources alongside their HelmReleases in resource build directories (`app/`, `cluster/`, `drivers/`, and others). They pull charts directly from their publishers' OCI registries; the shared app-template source brings the total to 53:
 
 | Namespace         | Count | Example Charts                                                                                                                                                                                                                                        |
 | ----------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -230,9 +239,9 @@ Each non-trivial application defines its own `OCIRepository` resource in its `ap
 
 The `OCIRepository` fetches only the chart layer via `layerSelector` with `operation: copy`, which extracts the Helm chart tarball from the OCI manifest without pulling unrelated layers.
 
-### App-Template Pattern (36 Cross-Namespace References)
+### App-Template Pattern (41 Cross-Namespace References)
 
-For applications that don't need a custom Helm chart, the **app-template** pattern is used. A single `OCIRepository` is defined in `kubernetes/flux/repositories/app-template.yaml`:
+For applications that don't need a custom Helm chart, the **app-template** pattern is used. A single `OCIRepository` is defined in [`kubernetes/flux/repositories/app-template.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/repositories/app-template.yaml):
 
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1
@@ -260,20 +269,20 @@ spec:
     namespace: gitops-system
 ```
 
-This cross-namespace reference is used by 36 HelmReleases across 8 namespaces:
+This cross-namespace reference is used by 41 HelmReleases across 8 namespaces:
 
 | Namespace         | Count | Example Apps |
 | ----------------- | ----- | ------------ |
 | media-apps        | 8     | jellyfin, kavita, navidrome, qbittorrent, immich, moviepilot, metube, qbittorrent-ui |
-| selfhosted-apps   | 10    | searxng, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, trendradar, hindsight, firecrawl (app + database) |
+| selfhosted-apps   | 12    | searxng, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, trendradar, hindsight, firecrawl |
 | smarthome-apps    | 7     | home-assistant (app + sgcc), frigate, frigate-vision, zigbee2mqtt, mosquitto, scrypted |
-| servitor-apps     | 4     | hermes-agent, dsh-web, dsh-tavern, open-webui |
+| servitor-apps     | 6     | hermes-agent, dsh-web, dsh-tavern, open-webui, playwright |
 | gaming-apps       | 2     | crafty-controller, foundryvtt |
-| monitoring-system | 3     | langfuse, webhook-relay, vmware-exporter |
+| monitoring-system | 4     | langfuse, webhook-relay, vmware-exporter, krr |
 | networking-system | 1     | agentgateway MCP config |
-| database-system   | 1     | cnpg maintenance (dr-test cronjob) |
+| database-system   | 1     | postgres-backup-verify (CNPG maintenance) |
 
-The `flux-repositories` Kustomization is reconciled before `cluster-apps` (via `dependsOn`), ensuring the `app-template` `OCIRepository` is always available before any application HelmRelease references it.
+The `flux-repositories` Kustomization is a dependency of `cluster-apps` and registers the shared source. It sets `wait: false`, so this edge does not itself wait for the OCI artifact to become ready; helm-controller resolves chart source readiness.
 
 ## Kustomize Component System
 
@@ -281,11 +290,11 @@ Eight Kustomize Components encode cross-cutting concerns as reusable building bl
 
 ### Component: namespace (12 consumers)
 
-**Path**: `kubernetes/components/namespace/`
+**Path**: [`kubernetes/components/namespace/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/namespace)
 
-Every top-level namespace Kustomization includes this component. It provides:
+Every namespace Kustomize index includes this component. It provides:
 
-1. **Namespace resource** with label `kustomize.toolkit.fluxcd.io/prune: disabled` — prevents Flux from ever deleting the namespace, even when `prune: true` is set.
+1. **Namespace resource** with label `kustomize.toolkit.fluxcd.io/prune: disabled` — excludes the Namespace itself from Flux pruning, not the objects inside it.
 2. **Alert resources** — Flux `Alert` and `Provider` definitions that send notifications to the notification-controller for all Flux resources in the namespace.
 
 ```yaml
@@ -298,17 +307,17 @@ metadata:
     kustomize.toolkit.fluxcd.io/prune: disabled
 ```
 
-The `name: _` is a Kustomize placeholder — postBuild substitution in each namespace's `kustomization.yaml` fills in the actual namespace name.
+The `name: _` is a Kustomize placeholder. The namespace index's `namespace:` transformer sets the actual Namespace name and namespaces the Alert and Provider; this is not Flux `postBuild` substitution.
 
 ### Component: kopiur/shared (5 consumers)
 
-**Path**: `kubernetes/components/kopiur/shared/`
+**Path**: [`kubernetes/components/kopiur/shared/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/shared)
 
 Combines the shared kopiur namespace resources. It patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"` for uid-0/DAC_OVERRIDE backup movers, and injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
 
-### Component: kopiur/backup (22 consumers)
+### Component: kopiur/backup (21 consumers)
 
-**Path**: `kubernetes/components/kopiur/backup/`
+**Path**: [`kubernetes/components/kopiur/backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
 
 The most heavily used component. It provisions the backup-and-recovery pipeline for a stateful application:
 
@@ -317,19 +326,19 @@ The most heavily used component. It provisions the backup-and-recovery pipeline 
 | `PersistentVolumeClaim` | Creates the application's data PVC (claims the `Restore` populator via `dataSourceRef`) |
 | `SnapshotPolicy`        | The backup recipe: CSI snapshot copy method, zstd-fastest, keep-daily 14                |
 | `SnapshotSchedule`      | Cron invocation of the policy (every 6h, `KOPIUR_SCHEDULE` overridable)                 |
-| `Restore`               | Passive volume populator: first boot restores the latest snapshot                       |
+| `Restore`               | Volume populator: attempts the latest snapshot, continuing without one when none exists |
 
-Applications that need persistent data backed up to S3 include this component. The PVC template is parameterized through `postBuild` substitution with the `APP` variable.
+Applications using this component store snapshots in the NAS VersityGW repository, independently of their live Ceph PVCs. The templates use `postBuild` substitution with `APP`. See [Storage](storage.md) for the repository, restore behavior, and the distinction between rebuildable application configuration and important NAS files.
 
-### Component: cache (4 consumers)
+### Component: cache (7 consumers)
 
-**Path**: `kubernetes/components/cache/`
+**Path**: [`kubernetes/components/cache/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/cache)
 
 Injects a rewarmable cache/scratch `PersistentVolumeClaim` on a two-replica `ceph-cache` NVMe pool. Replicas are placed on separate hosts so an OSD drain cannot make every copy unavailable during RBD teardown and the node reboot. Data loss on OSD failure is acceptable. Consumers mount it via `existingClaim`. Never use for durable data.
 
 ### Component: authentik (15 consumers)
 
-**Path**: `kubernetes/components/authentik/`
+**Path**: [`kubernetes/components/authentik/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/authentik)
 
 Injects a `TrafficPolicy` resource that configures kgateway to require Authentik SSO authentication for the application's route. Applications behind the single sign-on gateway include this component.
 
@@ -339,17 +348,20 @@ The policy enforces:
 - Unauthenticated requests redirected to the Authentik login flow
 - Session validation on every request
 
-### Component: cnpg (9 consumers)
+### Component: cnpg (8 consumers)
 
-**Path**: `kubernetes/components/cnpg/`
+**Path**: [`kubernetes/components/cnpg/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/cnpg)
 
-Injects an `ExternalSecret` that provisions a CloudNativePG database user secret from 1Password. Applications that need a PostgreSQL database (managed by the CloudNativePG operator) include this component.
-
-The `ExternalSecret` references the 1Password item containing the database connection URI, username, and password, making them available as Kubernetes secrets for the application's pods.
+Injects an ESO `Password` generator and an `ExternalSecret` for an application
+using the shared PostgreSQL cluster. The application password is generated;
+the username, database name, host and connection strings are templated from
+`APP` and `CNPG_NAME`. The `app-user` item in 1Password supplies the administrator
+password used by the application's initialization job. This component does not
+create a separate PostgreSQL cluster per application.
 
 ### Component: dragonfly (7 consumers)
 
-**Path**: `kubernetes/components/dragonfly/`
+**Path**: [`kubernetes/components/dragonfly/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/dragonfly)
 
 Injects Dragonfly database resources for applications using Dragonfly (a Redis-compatible drop-in):
 
@@ -362,13 +374,14 @@ Applications with caching or session storage requirements include this component
 
 Optional Flux substitution variables:
 
-- `REDIS_MEM` — memory request/limit (default `1024Mi`)
+- `REDIS_MEM_REQUEST` — scheduler memory request (default `96Mi`)
+- `REDIS_MEM` — memory limit (default `1024Mi`)
 - `DRAGONFLY_LUA_FLAGS` — value for `--default_lua_flags` (default empty). Set
   `allow-undeclared-keys,disable-atomicity` for BullMQ-based apps (e.g. `langfuse`).
 
-### Component: ceph-bucket (3 consumers)
+### Component: ceph-bucket (2 consumers)
 
-**Path**: `kubernetes/components/ceph-bucket/`
+**Path**: [`kubernetes/components/ceph-bucket/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/ceph-bucket)
 
 Injects an `ObjectBucketClaim` that provisions an S3-compatible bucket from the Rook-Ceph object store. Used by `langfuse` and `open-webui`.
 
@@ -387,39 +400,30 @@ The only five-component stack is `open-webui` (`cache`, `authentik`, `cnpg`, `dr
 
 ## Namespace Inventory
 
-The cluster uses 12 namespaces, ordered by dependency from foundational infrastructure to end-user applications:
+Application definitions are grouped into 12 namespace directories. The numbering below is an inventory, not a namespace-level reconciliation DAG:
 
 | #   | Namespace           | Purpose                              | Key Resources                                                                                                                                                                                                                              |
 | --- | ------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | `kube-system`       | Cluster networking and node services | Cilium CNI, CoreDNS, Spegel mirror, FRR-K8s BGP, Intel GPU plugins, Reloader, Descheduler, Gateway API CRDs, Metrics Server                                                                                                |
-| 2   | `security-system`   | Identity, certificates, secrets      | Authentik SSO, cert-manager, External Secrets Operator, 1Password Connect, Kyverno (6 ClusterPolicies)                                                                                                                                                                  |
+| 2   | `security-system`   | Identity, certificates, secrets      | Authentik SSO, cert-manager, External Secrets Operator, 1Password Connect, Kyverno (7 ValidatingPolicies) |
 | 3   | `storage-system`    | Persistent storage and backups       | Rook-Ceph (block + object), CSI NFS driver, kopiur, Snapshot Controller                                                                                                                                                   |
 | 4   | `database-system`   | Database operators                   | CloudNativePG, Dragonfly Operator, ClickHouse Operator                                                                                                                                                                                     |
-| 5   | `networking-system` | Ingress, DNS, API gateway            | kgateway (Envoy Gateway), Agent Gateway (AI agent routing), ExternalDNS                                                                                                                                                                    |
-| 6   | `monitoring-system` | Observability                        | Victoria Metrics (operator + cluster), Victoria Logs, Victoria Traces, Grafana, Prometheus CRDs, kube-state-metrics, node-exporter, blackbox-exporter, Smartctl exporter, OTel Collector, Silence Operator, Langfuse, Robusta, webhook-relay, Headlamp |
-| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, DSH Web, DSH Tavern, Toolhive, MCP server fleet (14 servers)                                                                                                                                                                                                 |
+| 5   | `networking-system` | Ingress, DNS, API gateway            | kgateway (Envoy), Agent Gateway (AI agent routing), ExternalDNS, forgejo-proxy |
+| 6   | `monitoring-system` | Observability                        | Victoria Metrics (operator + cluster), Victoria Logs, Victoria Traces, Grafana, Prometheus CRDs, kube-state-metrics, node-exporter, blackbox-exporter, Smartctl exporter, OTel Collector, Silence Operator, Langfuse, Robusta, webhook-relay, Headlamp, KRR, VMware exporter |
+| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, DSH Web, DSH Tavern, Open WebUI, Playwright, Toolhive, MCP definitions (14 units) |
 | 8   | `smarthome-apps`    | Home automation                      | Home Assistant (app + SGCC), Frigate NVR (+ frigate-vision), Zigbee2MQTT, Mosquitto MQTT, Scrypted, smarthome-nfs                                                                                                                                                            |
 | 9   | `media-apps`        | Media serving and management         | Jellyfin, Kavita, Navidrome, qBittorrent (+ qbittorrent-ui), Immich, MoviePilot, MeTube, media-nfs                                                                                                                                                                       |
-| 10  | `selfhosted-apps`   | Self-hosted web services             | SearXNG, NetBox, Stirling PDF, SillyTavern, Karakeep, Homepage, Hindsight, Dispatcharr, BambuBuddy, trendradar, Firecrawl                                                                                                 |
+| 10  | `selfhosted-apps`   | Self-hosted web services             | SearXNG, NetBox, Stirling PDF, Karakeep, Homepage, Hindsight, Dispatcharr, BambuBuddy, trendradar, Firecrawl |
 | 11  | `gaming-apps`       | Game servers                         | Crafty Controller (Minecraft), Foundry VTT                                                                                                                                                                                                 |
 | 12  | `gitops-system`     | Flux itself                          | Flux Operator, Flux Instance, System Upgrade Controller                                                                                                                                                                                    |
 
 ### Dependency Order
 
-The namespace numbering reflects the reconciliation dependency chain:
-
-1. **kube-system** must be ready first — networking, DNS, and node services are prerequisites for everything else.
-2. **security-system** provides TLS certificates and secret management that all upper layers consume.
-3. **storage-system** provisions PVCs, snapshots, and S3 buckets that stateful applications depend on.
-4. **database-system** runs the operators that create databases for applications.
-5. **networking-system** configures ingress routes and DNS records for externally accessible services.
-6. **monitoring-system** scrapes metrics and collects logs from all other namespaces.
-   7-11. **Application namespaces** depend on layers 1-6 being operational.
-12. **gitops-system** runs Flux itself — bootstrapped externally, then self-managed.
+Reconciliation order comes from the Helmfile bootstrap `needs` graph and the effective child Flux `dependsOn` lists, not this namespace table. The `deps=infra` label selects the uniform four-dependency policy described above; unlabelled children retain their explicit dependencies. Namespace indexes select resources but do not act as Flux readiness gates.
 
 ## Bootstrap Chain
 
-Before Flux can manage the cluster, the foundational components must be installed. This is handled by a **helmfile** in `kubernetes/bootstrap/helmfile.yaml` — 11 releases wired into a dependency DAG via `needs:`:
+Before Flux can manage the cluster, Helmfile installs the foundational components. [`kubernetes/bootstrap/helmfile.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/helmfile.yaml) declares 11 releases wired into a dependency DAG via `needs:`:
 
 ```
 prometheus-crds → coredns → cilium → spegel → gateway-api-crds
@@ -458,17 +462,17 @@ Flux cannot install itself. The bootstrap chain uses helmfile for the initial pr
 
 ### Values Templating
 
-The `values.yaml.gotmpl` file uses a clever pattern: it reads the Flux-managed `helmrelease.yaml` from the corresponding app directory and extracts the `spec.values` block:
+The bootstrap templates read the original application files rather than duplicating chart pins or values:
 
-```gotmpl
-{{ (fromYaml (readFile (printf "../apps/%s/%s/app/helmrelease.yaml" .Release.Namespace .Release.Name))).spec.values | toYaml }}
-```
+- [`templates/release.yaml.gotmpl`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/templates/release.yaml.gotmpl) reads `kubernetes/apps/<namespace>/<release>/app/ocirepository.yaml` for `spec.url` and `spec.ref.tag`.
+- [`templates/values.yaml.gotmpl`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/templates/values.yaml.gotmpl) reads `kubernetes/apps/<namespace>/<release>/app/helmrelease.yaml` for `spec.values`.
+- [`default.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/default.yaml) connects these templates to each release.
 
-This means the helmfile bootstrap and the Flux HelmRelease use the **exact same values** — the helmfile just reads them from the same file that Flux will later reconcile. No duplication, no drift.
+These paths and namespace/name identities are part of the bootstrap contract. Helmfile and Flux share the source values, while Flux also applies the reconciliation defaults described above. See [Bootstrap](../deployment/bootstrap.md) for the operational sequence.
 
 ### Bootstrap Secret
 
-Before running the helmfile, a `1Password Connect` secret must be created manually in the `security-system` namespace. The template is in `kubernetes/bootstrap/resources.yaml.j2`:
+Before Helmfile runs, `just _bootstrap_apps` renders [`kubernetes/bootstrap/resources.yaml.j2`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/resources.yaml.j2), injects the 1Password values, decodes the credentials field, and applies the Namespace and Secret:
 
 ```yaml
 apiVersion: v1
@@ -491,7 +495,7 @@ Two custom labels and an annotation drive the strategic patching and component i
 
 **Type**: Annotation
 **Purpose**: Opts a `Kustomization` into Layer 1 strategic patching (Kustomization defaults).
-**Scope**: Every application `ks.yaml` (93 files).
+**Scope**: All 129 child Flux Kustomizations in 96 `ks.yaml` files.
 
 Without this annotation, a Kustomization would not receive the automatic `sourceRef`, `prune`, `interval`, and `timeout` defaults. Infrastructure-only Kustomizations (like `flux-repositories`) omit it intentionally.
 
@@ -499,7 +503,7 @@ Without this annotation, a Kustomization would not receive the automatic `source
 
 **Type**: Label
 **Purpose**: Opts a `Kustomization` into Layer 2 strategic patching (baseline infrastructure dependencies).
-**Scope**: Applications that need TLS certificates, secrets, storage, and backups before starting (51 `ks.yaml` files).
+**Scope**: 65 child Flux Kustomizations.
 
 This label signals "I'm a workload that needs the core infra layer." Infrastructure components themselves (e.g., cert-manager, rook-ceph, cnpg-operator) omit this label — they _are_ the infra, so they only carry `managed: "true"`.
 
@@ -508,24 +512,25 @@ This label signals "I'm a workload that needs the core infra layer." Infrastruct
 A typical application `ks.yaml` with both markers receives:
 
 1. **From Layer 1** (`managed` annotation): `sourceRef`, `prune: true`, `interval: 1h`, `timeout: 5m`
-2. **From Layer 2** (`deps=infra` label): baseline `dependsOn` (cert-manager, onepassword-connect, rook-ceph-cluster, kopiur)
+2. **From Layer 2** (`deps=infra` label): replacement `dependsOn` list (cert-manager, onepassword-connect, rook-ceph-cluster, kopiur)
 3. **From Layer 3** (automatic): HelmRelease defaults (CRD management, retry, remediation, rollback)
 
-The application's own `ks.yaml` only specifies what's unique: `targetNamespace`, `path`, app-specific `dependsOn`, `components`, and `postBuild` substitution.
+The local `ks.yaml` declares the path, target namespace, labels, dependencies, components, and substitution inputs. Its effective behavior includes the namespace index and root patches; for labelled children, local dependencies are replaced rather than preserved.
 
 ## Directory Structure
 
 ```
 kubernetes/
-├── apps/                          # All application definitions
-│   ├── kube-system/               #  1. Cluster networking and node services
-│   │   ├── kustomization.yaml     #     Namespace Kustomization
-│   │   └── <app>/                 #     Per-application directory
-│   │       ├── ks.yaml            #       Flux Kustomization entrypoint
-│   │       └── app/               #       HelmRelease + OCIRepository + resources
-│   │           ├── helmrelease.yaml
-│   │           ├── ocirepository.yaml
-│   │           └── kustomization.yaml
+├── apps/                          # Auto-discovered root; no kustomization.yaml
+│   ├── kube-system/
+│   │   ├── kustomization.yaml     # Namespace index + shared components
+│   │   └── <app>/                 # Definition unit
+│   │       ├── ks.yaml            # One or more Flux Kustomizations
+│   │       ├── app/               # Resource build entrypoint
+│   │       │   ├── helmrelease.yaml
+│   │       │   ├── ocirepository.yaml
+│   │       │   └── kustomization.yaml
+│   │       └── <other-build>/     # Optional cluster/, drivers/, config/, etc.
 │   ├── security-system/           #  2. Identity, certificates, secrets
 │   ├── storage-system/            #  3. Persistent storage and backups
 │   ├── database-system/           #  4. Database operators
@@ -538,20 +543,21 @@ kubernetes/
 │   ├── gaming-apps/               # 11. Game servers
 │   └── gitops-system/             # 12. Flux itself
 ├── bootstrap/                     # Pre-Flux cluster provisioning
-│   ├── helmfile.yaml              #   12-release bootstrap DAG
+│   ├── helmfile.yaml              #   11-release bootstrap DAG
+│   ├── default.yaml               #   Release template inheritance
 │   ├── resources.yaml.j2          #   1Password Connect secret template
-│   └── values.yaml.gotmpl         #   Values bridge to Flux HelmReleases
+│   └── templates/                 #   Chart/tag and values bridges to app sources
 ├── components/                    # Reusable Kustomize Components
 │   ├── namespace/                 #   Namespace + alerts (12 consumers)
 │   ├── kopiur/shared/             #   Namespace-level kopia repo credentials (5 consumers)
-│   ├── kopiur/backup/             #   PVC backup pipeline (20 consumers)
-│   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (4 consumers)
-│   ├── authentik/                 #   SSO traffic policy (14 consumers)
+│   ├── kopiur/backup/             #   PVC backup pipeline (21 consumers)
+│   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (7 consumers)
+│   ├── authentik/                 #   SSO traffic policy (15 consumers)
 │   ├── cnpg/                      #   PostgreSQL secret (8 consumers)
 │   ├── dragonfly/                 #   Redis-compatible cache (7 consumers)
 │   └── ceph-bucket/               #   S3 object bucket (2 consumers)
 └── flux/                          # Flux cluster configuration
-    ├── cluster/
+    ├── cluster/                   # No root kustomization.yaml; Flux autogenerates
     │   └── cluster.yaml           #   flux-repositories + cluster-apps Kustomizations
     └── repositories/
         ├── kustomization.yaml     #   Shared OCI source registration
@@ -566,7 +572,7 @@ Talos provides:
 
 - **Immutable root filesystem** — no package manager, no SSH, no shell access on nodes
 - **API-driven management** — all configuration changes flow through the Talos API
-- **Automatic upgrades** — System Upgrade Controller (managed by Flux in `gitops-system`) handles Talos version upgrades via `talosctl upgrade-k8s` plans
+- **Automatic upgrades** — tuppr runs under the `system-upgrade-controller` release in `gitops-system`, using [`TalosUpgrade` and `KubernetesUpgrade` resources](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps/gitops-system/system-upgrade-controller/plans)
 - **NVMe storage** — M.2 NVMe SSDs across all nodes provide high-performance local storage for Rook-Ceph
 - **Image pulls capped** — kubelet `maxParallelImagePulls: 2`; EPHEMERAL and etcd share the system NVMe, and unbounded pull waves stalled etcd fsync into leader-election restarts. Containerd layer downloads are additionally capped at `max_concurrent_downloads = 1` (`CRICustomizationConfig/base` in `infrastructure/talos/prod/`) as a canary mitigation: the 2026-10-18T22:39Z controller exits coincided with a single ~592 MB Firecrawl pull and nvme1n1 latency. The cap bounds download parallelism only, not unpack I/O. Real-rollout verification: applying the config regenerates the CRI config and restarts CRI without a node reboot — confirm `talosctl -n <node> read /etc/cri/containerd.toml` shows `max_concurrent_downloads = 1`, then watch the next large image pull for serialized layer downloads and absence of nvme1n1 latency spikes
 
@@ -576,10 +582,15 @@ The cluster uses Cilium as the CNI in native routing mode (no overlay), leveragi
 
 [Renovate](https://github.com/renovatebot/renovate) monitors the repository for dependency updates across all layers:
 
-- **Helm chart versions** in `helmrelease.yaml` files
 - **OCIRepository tags** in `ocirepository.yaml` files
 - **Container image tags** in HelmRelease values
-- **Bootstrap chart versions** in `helmfile.yaml`
-- **Talos version** in System Upgrade Controller plans
+- **Bootstrap chart versions and values** reuse the application sources through Helmfile templates; there are no separate chart pins in `helmfile.yaml`
+- **Talos and Kubernetes versions** in tuppr upgrade resources
 
-When updates are detected, Renovate opens pull requests. Merging triggers Flux reconciliation, which applies the new versions automatically. This keeps the entire cluster — from the OS to individual application containers — continuously updated without manual intervention. Automerge is Renovate-side (`platformAutomerge: false`): at most one PR merges per run, so rollouts and image pulls don't land as one wave.
+Renovate opens pull requests when updates are detected. The local
+[`autoMerge.json5` rules](https://github.com/soulwhisper/home-ops/blob/main/.renovate/autoMerge.json5)
+use `platformAutomerge: true` and `ignoreTests: false` for eligible updates;
+major updates and infrastructure minor updates require manual merge, except
+for explicitly listed package exceptions. Merged application changes are
+picked up by Flux on its normal source and reconciliation intervals. These
+rules do not guarantee serialized rollouts or immediate convergence.

@@ -11,7 +11,7 @@ injection, configuration patching, node provisioning, and application delivery.
 | Tool | Purpose | Managed by |
 |------|---------|------------|
 | [`op`](https://1password.com/downloads/command-line/) | 1Password CLI — injects secrets into Talos and K8s configs | manual |
-| [`mise`](https://mise.jdx.dev/) | Runtime version manager — ensures correct tool versions | `mise.toml` (repo root) |
+| [`mise`](https://mise.jdx.dev/) | Runtime version manager — ensures correct tool versions | `.mise.toml` (repo root) |
 | [`talosctl`](https://www.talos.dev/docs/latest/talos-guides/install/talosctl/) | Talos node interaction | mise |
 | [`kubectl`](https://kubernetes.io/docs/tasks/tools/) | Kubernetes cluster interaction | mise |
 | [`just`](https://github.com/casey/just) | Task runner — orchestrates all bootstrap phases | mise |
@@ -203,15 +203,16 @@ just _bootstrap_apps
 
 Two steps, run sequentially:
 
-1. **Bootstrap resources**: `kubernetes/bootstrap/resources.yaml.j2` is
+1. **Bootstrap resources**: [`kubernetes/bootstrap/resources.yaml.j2`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/resources.yaml.j2) is
    templated with [minijinja](https://github.com/mitsuhiko/minijinja), then
    piped through `op inject` to resolve 1Password references
-   (`op://DevOps/1password-api/*`). The resulting manifest — a `Namespace`
-   and Secret for 1Password Connect — is applied with `kubectl apply
-   --server-side`.
+   (`op://DevOps/1password-api/*`). The recipe decodes the stored credentials
+   field before applying the `security-system` Namespace and 1Password Connect
+   Secret with `kubectl apply --server-side`.
 
-2. **Helmfile sync**: `kubernetes/bootstrap/helmfile.yaml` installs the
-   cluster's foundation as a `needs`-DAG with 5 retries (10s interval):
+2. **Helmfile sync**: [`kubernetes/bootstrap/helmfile.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/helmfile.yaml) installs
+   11 foundation releases as a `needs` DAG. The recipe allows up to five sync
+   attempts, waiting 10 seconds between failed attempts:
 
    | Release | Namespace | Needs | Purpose |
    |---------|-----------|-------|---------|
@@ -225,9 +226,21 @@ Two steps, run sequentially:
    | `cert-manager` | `security-system` | `gateway-api-crds` | Certificate management |
    | `onepassword-connect` | `security-system` | `external-secrets` | 1Password Connect API |
    | `flux-operator` | `gitops-system` | `external-secrets` | Flux controller manager |
-   | `flux-instance` | `gitops-system` | `flux-operator` | Flux Kustomization controllers |
+   | `flux-instance` | `gitops-system` | `flux-operator` | FluxInstance declaring controllers and Git sync |
 
-   Each release waits to become healthy before its dependents proceed, except `coredns`, which uses `wait: false` so Cilium can render Hubble Relay before CoreDNS is ready. Total timeout per release: 600s.
+   Helmfile uses `wait: true` and `waitForJobs: true`, except `coredns`,
+   which uses `wait: false` so Cilium can render Hubble Relay before CoreDNS
+   is ready. The configured Helm timeout is 600s per release.
+
+The bootstrap templates read chart URLs and tags from
+`kubernetes/apps/<namespace>/<release>/app/ocirepository.yaml` and values from
+the corresponding `app/helmrelease.yaml`. These are the original Flux app
+sources, not separate bootstrap copies:
+[`release.yaml.gotmpl`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/templates/release.yaml.gotmpl),
+[`values.yaml.gotmpl`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/templates/values.yaml.gotmpl),
+and [`default.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/default.yaml).
+Their paths, HelmRelease namespace/name identities, and release names are
+part of the bootstrap contract.
 
 ---
 
@@ -237,21 +250,55 @@ Two steps, run sequentially:
 just reconcile
 ```
 
-Forces Flux to pull the latest commit from the Git repository and apply all
-Kustomizations defined under `kubernetes/`:
+Requests reconciliation of the operator-created root Flux Kustomization and
+its Git source:
 
 ```shell
 flux --namespace gitops-system reconcile kustomization gitops-system --with-source
 ```
 
-The `--with-source` flag ensures Flux re-fetches the Git source before
-reconciling, which is critical on first bootstrap when no prior source
-artifact exists.
+The `--with-source` flag requests a fresh Git source reconciliation before
+the root Kustomization is reconciled. The root uses the FluxInstance sync
+path `kubernetes/flux/cluster`; it applies `flux-repositories` and
+`cluster-apps` from
+[`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml).
 
-At this point Flux takes over: it reconciles all Kustomizations recursively,
-installing the full application stack defined in the repository. This
-includes Cilium networking policies, Authentik, monitoring, storage
-provisioning, and every other workload.
+This command does **not** recursively force or wait for every child release.
+Children reconcile through their own intervals and effective `dependsOn`
+order. `cluster-apps` depends on `flux-repositories` and builds
+`./kubernetes/apps`. Neither the apps root nor `flux/cluster` has a root
+`kustomization.yaml`; Flux autogenerates their build entrypoints.
+
+The 12 namespace `kustomization.yaml` files are Kustomize indexes, not
+additional Flux Kustomizations. They select applications and shared namespace
+components and inject `metadata.namespace` into all 129 child Flux
+Kustomizations, whose source declarations omit it. The 96 selected `ks.yaml`
+files can each define multiple children pointing to `app/`, `cluster/`,
+`drivers/`, or other resource build directories. The deployed topology has
+132 Flux Kustomizations: the operator-created root, two cluster-level
+resources, and 129 children. Source/static tooling counts 131 because the
+operator creates the root.
+
+Root patches set child reconciliation defaults and HelmRelease policies.
+For the 65 children labelled `config.home-ops.io/deps=infra`, they intentionally
+replace local dependency lists with cert-manager, onepassword-connect,
+rook-ceph-cluster, and kopiur; the lists are not merged. The managed-annotation
+patch also makes all children effectively `prune: true`, including
+flux-operator, flux-instance, and coredns despite their local `prune: false`.
+See [Cluster Architecture](../infrastructure/kubernetes.md) for effective
+patching and deletion boundaries, the [Application Catalog](../application/catalog.md)
+for selected definitions, and [Storage](../infrastructure/storage.md) for
+data ownership.
+
+For a read-only render from the repository root:
+
+```shell
+just k8s render-ks media-apps moviepilot
+```
+
+This runs `flate build ks` and does not apply resources. In contrast,
+`just k8s apply-ks <namespace> <name>`, `just _bootstrap_apps`, and
+`just reconcile` mutate cluster state; they are not validation commands.
 
 ---
 
@@ -276,8 +323,12 @@ provisioning, and every other workload.
    kubectl get hr -A    # all HelmReleases should be deployed
    ```
 
-   Expect all Kustomizations to reach `True` within 5–10 minutes as Flux
-   works through the dependency tree of ~50+ Kustomizations.
+   Check the expected Git revision and each affected Kustomization's
+   `Ready` condition; HelmReleases should be `Ready` with
+   `status.observedGeneration` matching `metadata.generation`. Root command
+   completion is not proof that every child has converged. Chart downloads,
+   dependencies, and workload readiness determine the duration; there is no
+   fixed full-stack completion time.
 
 ---
 
