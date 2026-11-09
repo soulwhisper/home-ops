@@ -19,7 +19,7 @@ spec:
     image:
       repository: docker.io/clickhouse/clickhouse-keeper
       # renovate: datasource=docker depName=clickhouse/clickhouse-keeper
-      tag: 26.9.10.4
+      tag: 26.10.3.7
     resources:
       requests: # default = 2C4G
         cpu: 100m
