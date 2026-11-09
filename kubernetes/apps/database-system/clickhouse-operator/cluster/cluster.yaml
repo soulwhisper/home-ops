@@ -86,6 +86,10 @@ spec:
             - key: langfuse.yaml
               path: langfuse.yaml
   containerTemplate:
+    image:
+      repository: docker.io/clickhouse/clickhouse-server
+      # renovate: datasource=docker depName=clickhouse/clickhouse-server
+      tag: 26.9.10.4
     resources:
       requests:
         cpu: 500m

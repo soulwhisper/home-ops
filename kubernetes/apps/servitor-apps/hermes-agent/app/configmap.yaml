@@ -124,6 +124,18 @@ data:
         base_url: $${OPENAI_BASE_URL}
         key_env: OPENAI_AUX_API_KEY
         reasoning_effort: low
+    # Feishu is the ops chat surface: return only the final answer. Tool
+    # progress, interim narration, and reasoning stay out of chat.
+    display:
+      busy_ack_enabled: false
+      platforms:
+        feishu:
+          show_reasoning: false
+          tool_progress: "off"
+          interim_assistant_messages: false
+          long_running_notifications: false
+          busy_ack_detail: false
+          streaming: false
   ops-profile.yaml: |
     description: "Batching brain: cron, WeChat, automation"
     display_name: "Ops"
