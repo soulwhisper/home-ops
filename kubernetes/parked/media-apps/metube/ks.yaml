@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: media-apps
-  path: "./kubernetes/parked/media-apps/metube/app"
+  path: "./kubernetes/apps/media-apps/metube/app"
   dependsOn:
     - name: media-nfs
       namespace: media-apps

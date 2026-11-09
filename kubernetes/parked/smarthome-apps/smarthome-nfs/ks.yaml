@@ -11,7 +11,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: smarthome-apps
-  path: "./kubernetes/parked/smarthome-apps/smarthome-nfs/app"
+  path: "./kubernetes/apps/smarthome-apps/smarthome-nfs/app"
   wait: true
   dependsOn:
     - name: csi-driver-nfs

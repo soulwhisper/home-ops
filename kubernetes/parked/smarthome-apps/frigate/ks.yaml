@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: smarthome-apps
-  path: "./kubernetes/parked/smarthome-apps/frigate/app"
+  path: "./kubernetes/apps/smarthome-apps/frigate/app"
   dependsOn:
     - name: smarthome-nfs
       namespace: smarthome-apps

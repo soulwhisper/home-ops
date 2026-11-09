@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: smarthome-apps
-  path: "./kubernetes/parked/smarthome-apps/zigbee2mqtt/app"
+  path: "./kubernetes/apps/smarthome-apps/zigbee2mqtt/app"
   dependsOn:
     - name: mosquitto
       namespace: smarthome-apps

@@ -11,7 +11,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: media-apps
-  path: "./kubernetes/parked/media-apps/media-nfs/app"
+  path: "./kubernetes/apps/media-apps/media-nfs/app"
   wait: true
   dependsOn:
     - name: csi-driver-nfs

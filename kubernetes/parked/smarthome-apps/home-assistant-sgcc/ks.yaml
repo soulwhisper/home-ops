@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: smarthome-apps
-  path: "./kubernetes/parked/smarthome-apps/home-assistant-sgcc/app"
+  path: "./kubernetes/apps/smarthome-apps/home-assistant-sgcc/app"
   dependsOn:
     - name: mosquitto
       namespace: smarthome-apps

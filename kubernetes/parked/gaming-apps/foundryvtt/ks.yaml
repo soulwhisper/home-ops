@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: gaming-apps
-  path: "./kubernetes/parked/gaming-apps/foundryvtt/app"
+  path: "./kubernetes/apps/gaming-apps/foundryvtt/app"
   dependsOn:
     - name: gaming-nfs
       namespace: gaming-apps

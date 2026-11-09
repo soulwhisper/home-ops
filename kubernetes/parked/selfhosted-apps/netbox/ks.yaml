@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: selfhosted-apps
-  path: "./kubernetes/parked/selfhosted-apps/netbox/app"
+  path: "./kubernetes/apps/selfhosted-apps/netbox/app"
   dependsOn:
     - name: cnpg-cluster
       namespace: database-system

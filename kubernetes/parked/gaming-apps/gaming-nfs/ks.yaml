@@ -11,7 +11,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: gaming-apps
-  path: "./kubernetes/parked/gaming-apps/gaming-nfs/app"
+  path: "./kubernetes/apps/gaming-apps/gaming-nfs/app"
   wait: true
   dependsOn:
     - name: csi-driver-nfs

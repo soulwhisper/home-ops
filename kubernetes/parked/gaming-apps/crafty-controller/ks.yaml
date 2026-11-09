@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: gaming-apps
-  path: "./kubernetes/parked/gaming-apps/crafty-controller/app"
+  path: "./kubernetes/apps/gaming-apps/crafty-controller/app"
   dependsOn:
     - name: gaming-nfs
       namespace: gaming-apps

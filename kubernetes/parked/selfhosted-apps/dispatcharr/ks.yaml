@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: selfhosted-apps
-  path: "./kubernetes/parked/selfhosted-apps/dispatcharr/app"
+  path: "./kubernetes/apps/selfhosted-apps/dispatcharr/app"
   components:
     - ../../../../components/kopiur/backup
   postBuild:

@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: selfhosted-apps
-  path: "./kubernetes/parked/selfhosted-apps/stirling-pdf/app"
+  path: "./kubernetes/apps/selfhosted-apps/stirling-pdf/app"
   components:
     - ../../../../components/cache
     - ../../../../components/kopiur/backup

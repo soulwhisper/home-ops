@@ -22,3 +22,8 @@ cluster-side deletion, but their PV/PVC bindings are gone.
 Each parked application keeps its `ks.yaml` and, where applicable, its
 Authentik blueprints under `blueprints/` so the definition remains readable
 and recoverable.
+
+`spec.path` values in parked `ks.yaml` files are intentionally left at their
+canonical `kubernetes/apps/...` location. Flux never renders this tree, so
+those paths are inert; parking and resuming stay pure directory moves with no
+path edits.

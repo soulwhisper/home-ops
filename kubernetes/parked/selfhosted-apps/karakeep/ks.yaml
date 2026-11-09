@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: selfhosted-apps
-  path: "./kubernetes/parked/selfhosted-apps/karakeep/app"
+  path: "./kubernetes/apps/selfhosted-apps/karakeep/app"
   dependsOn:
     - name: agentgateway
       namespace: networking-system

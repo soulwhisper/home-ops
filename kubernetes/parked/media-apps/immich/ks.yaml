@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: media-apps
-  path: "./kubernetes/parked/media-apps/immich/app"
+  path: "./kubernetes/apps/media-apps/immich/app"
   dependsOn:
     - name: cnpg-cluster
       namespace: database-system
