@@ -9,7 +9,7 @@ spec:
     name: browser
   # The browser runs in the separate playwright workload. CDP avoids coupling
   # this MCP release to a Playwright Server protocol version.
-  image: mcr.microsoft.com/playwright/mcp:v0.0.83
+  image: mcr.microsoft.com/playwright/mcp:v0.0.85
   args:
     - --port=8931
     - --host=0.0.0.0
