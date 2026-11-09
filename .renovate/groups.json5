@@ -86,5 +86,53 @@
       },
       minimumGroupSize: 1,
     },
+    {
+      description: "Toolhive Group (operator and CRDs share a release)",
+      groupName: "Toolhive",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["/toolhive/"],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+      minimumGroupSize: 1,
+    },
+    {
+      description: "ClickHouse Group (server, keeper, and operator)",
+      groupName: "ClickHouse",
+      matchPackageNames: ["/clickhouse/"],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+      minimumGroupSize: 1,
+    },
+    {
+      description: "Firecrawl Group (core image and MCP server)",
+      groupName: "Firecrawl",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["/firecrawl/"],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+      minimumGroupSize: 1,
+    },
+    {
+      description: "Dragonfly Group (image, operator chart, and vendir source)",
+      groupName: "Dragonfly",
+      matchPackageNames: ["/dragonfly/"],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+      minimumGroupSize: 1,
+    },
+    {
+      description: "Victoria Logs and Traces Group",
+      groupName: "Victoria Logs/Traces",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["/victoria-logs/", "/victoria-traces/"],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+      minimumGroupSize: 1,
+    },
   ],
 }
