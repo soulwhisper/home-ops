@@ -11,6 +11,10 @@ unexpected evictions; apply changes separately with a rollout plan.
 - Chart values: `helm show values` at the pinned `OCIRepository` tag
 - Usage: CPU P95 and max working-set memory per pod owner/container
 
+> **Pre-#4564 snapshot.** This document records the values used for the
+> measurement. PR #4564 applies a subset of these requests (and no limits);
+> for current scheduling, use Git HEAD or `kubectl get ... -o yaml`.
+
 ## Why this exists
 
 The first request-tuning pass intentionally skipped `*-system` namespaces.
@@ -32,7 +36,7 @@ chart default applies even when Git shows `none`.
 
 ### database-system
 
-| App | Chart | Resource key(s) | Chart default / example | Current Git |
+| App | Chart | Resource key(s) | Chart default / example | Git at measurement (2026-11-09) |
 | --- | --- | --- | --- | --- |
 | `clickhouse-operator` | `clickhouse-operator@0.0.8` | `manager.resources` | requests `10m/64Mi`, limits `500m/128Mi` | requests `10m/64Mi`, limits `500m/256Mi` |
 | `cnpg-operator` | `cloudnative-pg@0.29.1` | `resources` | empty; commented `100m/200Mi` | none |
@@ -41,7 +45,7 @@ chart default applies even when Git shows `none`.
 
 ### gitops-system
 
-| App | Chart | Resource key(s) | Chart default / example | Current Git |
+| App | Chart | Resource key(s) | Chart default / example | Git at measurement (2026-11-09) |
 | --- | --- | --- | --- | --- |
 | `flux-instance` | `flux-instance@0.62.1` | `healthcheck.resources`; controller resources via `instance.kustomize.patches` | healthcheck requests `100m/64Mi`, limits `1/1Gi` | patches set source-controller `100m/256Mi` + `1Gi`, kustomize-controller `100m/256Mi` + `2Gi`, helm-controller `100m/256Mi` + `2Gi`; notification-controller none |
 | `flux-operator` | `flux-operator@0.62.1` | `resources` | requests `100m/64Mi`, limits `2/1Gi` | none |
@@ -49,7 +53,7 @@ chart default applies even when Git shows `none`.
 
 ### kube-system
 
-| App | Chart | Resource key(s) | Chart default / example | Current Git |
+| App | Chart | Resource key(s) | Chart default / example | Git at measurement (2026-11-09) |
 | --- | --- | --- | --- | --- |
 | `cilium` | `cilium@1.20.4` | `resources` (agent), `cni.resources`, `nodeinit.resources`, `encryption.ztunnel.resources`, plus hubble/certgen paths | agent empty; commented requests `100m/512Mi`, limits `4/4Gi` (unsafe here: measured ~9Gi) | none |
 | `coredns` | `coredns@1.50.2` | `resources` | requests/limits `100m/128Mi` | requests `100m/128Mi`, memory limit `256Mi` |
@@ -64,7 +68,7 @@ chart default applies even when Git shows `none`.
 
 ### monitoring-system
 
-| App | Chart | Resource key(s) | Chart default / example | Current Git |
+| App | Chart | Resource key(s) | Chart default / example | Git at measurement (2026-11-09) |
 | --- | --- | --- | --- | --- |
 | `blackbox-exporter` | `prometheus-blackbox-exporter@11.21.1` | `resources`, `configReloader.resources` | configReloader `10m/20Mi` + `50Mi` limit; main empty | none |
 | `grafana-operator` | `grafana-operator@5.25.0` | `resources` | empty | none |
@@ -88,7 +92,7 @@ chart default applies even when Git shows `none`.
 
 ### networking-system
 
-| App | Chart | Resource key(s) | Chart default / example | Current Git |
+| App | Chart | Resource key(s) | Chart default / example | Git at measurement (2026-11-09) |
 | --- | --- | --- | --- | --- |
 | `agentgateway` | `agentgateway@1.7.0` | `resources` | requests `100m/128Mi` | none (chart default applies) |
 | `mcp-guardrails` | `app-template@5.3.0` | `controllers.*.containers.*.resources` | no chart defaults | `2/512Mi` + `6/4Gi` |
@@ -98,7 +102,7 @@ chart default applies even when Git shows `none`.
 
 ### security-system
 
-| App | Chart | Resource key(s) | Chart default / example | Current Git |
+| App | Chart | Resource key(s) | Chart default / example | Git at measurement (2026-11-09) |
 | --- | --- | --- | --- | --- |
 | `authentik` | `authentik@2026.8.5` | `server.resources`, `worker.resources` | empty | none |
 | `cert-manager` | `cert-manager@v1.21.3` | `resources`, `webhook.resources`, `cainjector.resources` | empty; commented examples per component | none |
@@ -108,7 +112,7 @@ chart default applies even when Git shows `none`.
 
 ### storage-system
 
-| App | Chart | Resource key(s) | Chart default / example | Current Git |
+| App | Chart | Resource key(s) | Chart default / example | Git at measurement (2026-11-09) |
 | --- | --- | --- | --- | --- |
 | `csi-driver-nfs` | `csi-driver-nfs@4.13.6` | `controller.resources`, `node.resources`, `externalSnapshotter.resources` | non-empty per-sidecar defaults | none |
 | `kopiur` | `kopiur@0.10.18` | `resources`, `webhook.resources`, `ui.resources` | non-empty per-component defaults | `100m`; memory limit `2Gi` |
@@ -132,7 +136,7 @@ Existing values are kept; suggestions only fill missing fields. CPU request = P9
 10m). Memory request = peak × 1.2 rounded up to 16Mi. Memory limit = 2× peak,
 rounded up to 64Mi with a 64Mi floor, and is optional.
 
-| Owner | Container | Current requests / limit | P95 CPU | Peak memory | Suggested requests / limit |
+| Owner | Container | Requests / limit at measurement | P95 CPU | Peak memory | Suggested requests / limit |
 | --- | --- | --- | --- | --- | --- |
 | `kube-system/cilium` | `cilium-agent` | 0m / 0Mi / — | 313m | 9101Mi | 380m / 10928Mi / no limit |
 | `monitoring-system/victoria-logs-server` | `vlsingle` | 0m / 0Mi / — | 124m | 1915Mi | 150m / 2304Mi / 3840Mi |
