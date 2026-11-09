@@ -75,5 +75,20 @@
       automerge: false,
       addLabels: ["review/required"],
     },
+    {
+      description: "Kubernetes, Talos, and sensitive app updates require human review",
+      matchPackageNames: [
+        "ghcr.io/siderolabs/kubelet",
+        "siderolabs/talos",
+        "ghcr.io/soulwhisper/covel",
+        "ghcr.io/diceframe/diceframe",
+        "ghcr.io/soulwhisper/hermes-agent",
+        "ghcr.io/open-webui/open-webui",
+      ],
+      automerge: false,
+      platformAutomerge: false,
+      reviewers: ["soulwhisper"],
+      addLabels: ["review/required"],
+    },
   ],
 }
