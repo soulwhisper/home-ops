@@ -165,7 +165,7 @@ These scalar values override local declarations. In particular, [`flux-operator`
 
 **Target**: Any `Kustomization` with label `config.home-ops.io/deps=infra`
 
-The 60 child Kustomizations carrying this label use a uniform four-item infrastructure gate:
+The 36 child Kustomizations carrying this label use a uniform four-item infrastructure gate:
 
 ```yaml
 spec:
@@ -408,9 +408,9 @@ Applications frequently stack multiple components. For example, `langfuse` uses 
 
 ```yaml
 components:
+  - ../../../../components/ceph-bucket # Object bucket for uploads
   - ../../../../components/cnpg # PostgreSQL database
   - ../../../../components/dragonfly # Redis cache
-  - ../../../../components/kopiur/backup # PVC backup to S3
 ```
 
 The only five-component stack is `open-webui` (`cache`, `authentik`, `cnpg`, `dragonfly`, `ceph-bucket`). `langfuse` uses `cnpg`, `dragonfly`, and `ceph-bucket`.
@@ -517,7 +517,7 @@ Without this annotation, a Kustomization would not receive the automatic `source
 
 **Type**: Label
 **Purpose**: Opts a `Kustomization` into Layer 2 strategic patching (baseline infrastructure dependencies).
-**Scope**: 60 child Flux Kustomizations.
+**Scope**: 36 child Flux Kustomizations.
 
 This label signals "I'm a workload that needs the core infra layer." Infrastructure components themselves (e.g., cert-manager, rook-ceph, cnpg-operator) omit this label — they _are_ the infra, so they only carry `managed: "true"`.
 
