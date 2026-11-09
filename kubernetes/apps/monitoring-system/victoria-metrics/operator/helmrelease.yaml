@@ -15,7 +15,7 @@ spec:
     resources:
       requests:
         cpu: 240m
-        memory: 208Mi
+        memory: 192Mi
     global:
       image:
         registry: quay.io
