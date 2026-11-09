@@ -89,7 +89,8 @@ data:
       base_url: $${OPENAI_BASE_URL}
       api_key: $${OPENAI_API_KEY}
     # ops profile is the automation brain: cluster read-only, agent (forgejo
-    # ticket RW + hindsight-ops memory), and search (web/docs retrieval).
+    # ticket RW + hindsight-ops memory), search (web/docs retrieval), and
+    # github-ro (read-only GitHub code retrieval; issued alongside cluster).
     # agent/search ride the FailClosed mcp-guardrails sidecar: if the sidecar
     # is down, those two tiers are suspended for ops.
     mcp_servers:
@@ -97,6 +98,10 @@ data:
         url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/cluster
         headers:
           Authorization: "Bearer $${MCP_CLUSTER_KEY}"
+      github-ro:
+        url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/github-ro
+        headers:
+          Authorization: "Bearer $${MCP_GITHUB_RO_KEY}"
       agent:
         url: http://agentgateway-proxy.networking-system.svc.cluster.local:80/mcp/agent
         headers:
@@ -184,6 +189,7 @@ data:
     MCP_CLUSTER_KEY=$${MCP_CLUSTER_KEY}
     MCP_AGENT_KEY=$${MCP_AGENT_KEY}
     MCP_SEARCH_KEY=$${MCP_SEARCH_KEY}
+    MCP_GITHUB_RO_KEY=$${MCP_GITHUB_RO_KEY}
     FEISHU_APP_ID=$${FEISHU_APP_ID}
     FEISHU_APP_SECRET=$${FEISHU_APP_SECRET}
     FEISHU_ENCRYPT_KEY=$${FEISHU_ENCRYPT_KEY}

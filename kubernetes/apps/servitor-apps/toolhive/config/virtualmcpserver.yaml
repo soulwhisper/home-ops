@@ -15,12 +15,6 @@ spec:
     type: anonymous
   outgoingAuth:
     source: inline
-    backends:
-      # github-mcp-server http mode requires a per-request bearer token
-      mcp-github:
-        type: externalAuthConfigRef
-        externalAuthConfigRef:
-          name: mcp-github
   # Operator default cpu limit is 500m; persistent tools/list and rerank
   # bursts throttled ~52% of CFS periods. Memory: the runner leaks ~9Mi/h
   # under streamable-http sessions (same ToolHive leak class as
@@ -230,6 +224,53 @@ spec:
         type: externalAuthConfigRef
         externalAuthConfigRef:
           name: mcp-github-pr
+  podTemplateSpec:
+    spec:
+      containers:
+        - name: vmcp
+          resources:
+            requests: { cpu: 10m, memory: 256Mi }
+            limits: { cpu: "1", memory: 1Gi }
+  groupRef:
+    name: *name
+  telemetryConfigRef:
+    name: shared-otel
+    serviceName: *name
+  config:
+    aggregation:
+      conflictResolution: prefix
+      conflictResolutionConfig:
+        prefixFormat: "{workload}_"
+    operational:
+      failureHandling:
+        partialFailureMode: best_effort
+        healthCheckInterval: 30s
+        healthCheckTimeout: 15s
+        unhealthyThreshold: 2
+        circuitBreaker:
+          enabled: true
+          failureThreshold: 3
+          timeout: 30s
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
+# Read-only GitHub tier: previously embedded in the search tier. Separate
+# group, route and key so read-only code retrieval can be issued to the
+# cluster-tier consumers without widening the web-retrieval tier.
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: VirtualMCPServer
+metadata:
+  name: &name github-ro
+spec:
+  incomingAuth:
+    type: anonymous
+  outgoingAuth:
+    source: inline
+    backends:
+      # github-mcp-server http mode requires a per-request bearer token
+      mcp-github-ro:
+        type: externalAuthConfigRef
+        externalAuthConfigRef:
+          name: mcp-github-ro
   podTemplateSpec:
     spec:
       containers:

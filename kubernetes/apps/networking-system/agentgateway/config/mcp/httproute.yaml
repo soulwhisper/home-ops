@@ -194,3 +194,33 @@ spec:
         - group: agentgateway.dev
           kind: AgentgatewayBackend
           name: mcp-backend-github-pr
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
+# Read-only GitHub retrieval. Split out of the search tier so cluster-tier
+# consumers can hold code search without the web-retrieval toolsets.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: agentgateway-mcp-github-ro-route
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-proxy
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /mcp/github-ro
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /mcp
+      timeouts:
+        request: 120s
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: mcp-backend-github-ro
