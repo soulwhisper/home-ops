@@ -347,9 +347,12 @@ provider ServiceAccount.
 
 The source token's Role and RoleBinding belong only to `grafana-cluster`.
 The External Secrets integration owns the provider ServiceAccount and
-ClusterSecretStore, and depends only on the ESO controller. The MCP consumer
-depends on that store, Grafana, and ToolHive configuration; infrastructure
-does not depend on the monitoring workload.
+ClusterSecretStore. `security-system/external-secrets-cluster` declares only
+`security-system/external-secrets` in its Flux `dependsOn`. At runtime, the
+store also requires the Grafana-owned Role and RoleBinding in
+`monitoring-system` to read source Secrets. The MCP consumer depends on
+that store, Grafana, and ToolHive configuration; this does not add an
+infrastructure-to-monitoring Flux dependency.
 
 For an RBAC ownership handoff, apply object-level prune protection to
 `monitoring-system/Role/eso-store-role` and
