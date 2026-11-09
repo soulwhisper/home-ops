@@ -336,7 +336,7 @@ Combines the shared kopiur namespace resources. It patches the namespace with `k
 
 **Path**: [`kubernetes/components/kopiur/backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
 
-The most heavily used component. It provisions the backup-and-recovery pipeline for a stateful application:
+It provisions the backup-and-recovery pipeline for a stateful application:
 
 | Resource                | Purpose                                                                                 |
 | ----------------------- | --------------------------------------------------------------------------------------- |
