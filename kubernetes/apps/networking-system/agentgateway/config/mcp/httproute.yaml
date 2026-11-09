@@ -197,7 +197,9 @@ spec:
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/httproute_v1.json
 # Read-only GitHub retrieval. Split out of the search tier so cluster-tier
-# consumers can hold code search without the web-retrieval toolsets.
+# consumers can hold code search without the web-retrieval toolsets. Issue and
+# PR content is untrusted, so this backend keeps the same mcp-guardrails
+# FailClosed scan the search tier had.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:

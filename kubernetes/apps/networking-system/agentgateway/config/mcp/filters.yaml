@@ -9,9 +9,11 @@
 # no token/SA boundary (firecrawl, trendradar, grafana, victoria-*), and schema
 # size control on fat APIs (forgejo to the ticket workflow, grafana to
 # dashboard lookup + deeplinks) so tool lists fit 64K-context consumers.
-# Token-bounded servers (k8s/fluxcd read-only SAs, and the github-ro tier
-# whose RO PAT + lockdown mode is the boundary) stay unfiltered — the token
-# is their permission boundary; hindsight banks are bounded by the tier key.
+# Token-bounded servers stay unfiltered: the k8s read-only SA, and the
+# github-ro tier (read-only server mode plus lockdown, with injection scans
+# at the guardrail layer). fluxcd is the exception inside cluster: its generic
+# get_kubernetes_* tools are excluded by mcp-cluster-filter. Hindsight banks
+# are bounded by the tier key.
 #
 # Tool allowlists are version-sensitive: re-enumerate tools/list and re-check
 # these expressions on every image bump. The filtered servers' mcpserver.yaml

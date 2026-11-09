@@ -122,7 +122,7 @@ The gateway API surface is exposed to the intranet via `kgateway-internal` (10.1
 - `/v1/chat/completions` — LLM lanes (strict API key; promptGuard on all but `uncensored` and `persona`)
 - `/v1/models/<model>` — per-model direct-response discovery on the model's own route, authorized by that route's credential
 - `/v1/embeddings`, `/v1/rerank`, `/v1/audio/speech`, `/v1/audio/transcriptions` — media lanes via LLM-pipeline backends (strict API key)
-- `/mcp/search`, `/mcp/cluster`, `/mcp/persona`, `/mcp/agent`, `/mcp/browser`, `/mcp/github-ro`, `/mcp/github-pr` — tiered MCP routing (per-tier API key; mcp-guardrails ExtMCP on the search + agent + browser + github-pr tiers, FailClosed)
+- `/mcp/search`, `/mcp/cluster`, `/mcp/persona`, `/mcp/agent`, `/mcp/browser`, `/mcp/github-ro`, `/mcp/github-pr` — tiered MCP routing (per-tier API key; mcp-guardrails ExtMCP on the search + github-ro + agent + browser + github-pr tiers, FailClosed)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)
 
 TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirprime.com`); external-dns auto-creates the AdGuardHome record. Machine clients authenticate with agentgateway API keys — no SSO extAuth on API paths. Reachable from trusted VLANs (10/100/200); IoT VLAN 210 is ACL-blocked from RFC1918.
@@ -159,7 +159,7 @@ the canonical `/mcp` upstream):
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
 | `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar                               | `mcp_search`                   | hermes, open-webui     |
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes                      |
-| `/mcp/github-ro` | `vmcp-github-ro` | github-ro (read-only PAT + lockdown; repos/issues/pull_requests) | `mcp_github_ro`            | every cluster-tier consumer (hermes) |
+| `/mcp/github-ro` | `vmcp-github-ro` | github-ro (read-only mode + lockdown; repos/issues/pull_requests) | `mcp_github_ro`            | hermes |
 | `/mcp/persona` | `vmcp-persona`| hindsight persona bank                                        | `mcp_persona`                  | none (reserved)                      |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | hermes, external operator agents |
 | `/mcp/browser` | `vmcp-browser`| playwright (Chromium via pod-local CDP proxy)                 | `mcp_browser`                  | none (reserved)                    |
@@ -331,7 +331,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 
 | Server    | Transport     | Notes                                                                 |
 | --------- | ------------- | --------------------------------------------------------------------- |
-| github-ro | HTTP :8082    | Read-only PAT + lockdown, toolsets repos/issues/pull_requests; the token is the boundary (no CEL). Split from `search` so cluster-tier consumers can hold it without the web-retrieval toolsets. |
+| github-ro | HTTP :8082    | `GITHUB_READ_ONLY=1` + lockdown, toolsets repos/issues/pull_requests; uses the shared GitHub PAT from `github-keys` (same credential as github-pr) and keeps the FailClosed injection scan. Split from `search` so cluster-tier consumers can hold it without the web-retrieval toolsets. |
 
 #### cluster (read-only, no egress — hermes)
 
@@ -591,7 +591,7 @@ items:
 /v1/embeddings /v1/rerank /v1/audio/speech /v1/audio/transcriptions  (media: alias ─► override ─► folder id; audio: direct)
 /v1/models/<model>  (alias or folder id; single-object direct response)
 
-/mcp/search /mcp/cluster /mcp/github-ro /mcp/persona /mcp/agent /mcp/browser /mcp/github-pr  (per-tier key; guardrails ExtMCP on search+agent+browser+github-pr, FailClosed) ── every MCP client
+/mcp/search /mcp/cluster /mcp/github-ro /mcp/persona /mcp/agent /mcp/browser /mcp/github-pr  (per-tier key; guardrails ExtMCP on search+github-ro+agent+browser+github-pr, FailClosed) ── every MCP client
 ```
 
 Agentgateway-managed routing remains internal and centralized for auth, routing, guardrails, and observability. The UI-selected external DeepSeek provider is an explicit exception for its direct LLM calls; MCP still goes through the gateway.
