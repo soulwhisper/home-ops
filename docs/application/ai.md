@@ -338,6 +338,22 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | victoria-metrics | Streamable HTTP :8081 | VictoriaMetrics; gateway-filtered to the query surface |
 | victoria-traces | Streamable HTTP :8081 | VictoriaTraces                |
 
+Grafana MCP receives a Grafana `Viewer` token through the
+`mcp-grafana-sa` ExternalSecret. The source Secret lives in
+`monitoring-system`; the Kubernetes SecretStore reads it as
+`security-system/eso-kubernetes` and ESO writes the copy in `servitor-apps`.
+The CA ConfigMap is read using the ESO controller's identity, not that
+provider ServiceAccount.
+
+For an RBAC ownership handoff, apply object-level prune protection to
+`Role/eso-store-role` and `RoleBinding/eso-kubernetes-store-role` in both
+declaring Kustomizations before removing either declaration. Verify both
+Kustomizations have applied that protection revision and both live objects
+carry it. Remove the protection only after the ownership-change revision is
+Ready on both Kustomizations, only the intended inventory retains the
+objects, and their UIDs and token synchronization remain unchanged. Keep
+Kustomization pruning enabled throughout.
+
 #### persona (read-write, no egress — dsh-web)
 
 | Server            | Transport            | Connects To            |
