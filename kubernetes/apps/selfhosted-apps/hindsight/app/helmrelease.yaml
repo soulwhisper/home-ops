@@ -49,8 +49,8 @@ spec:
                   name: *name
             resources:
               requests:
-                cpu: "200m"
-                memory: 512Mi
+                cpu: "150m"
+                memory: 768Mi
               limits:
                 cpu: "2"
                 memory: 2Gi

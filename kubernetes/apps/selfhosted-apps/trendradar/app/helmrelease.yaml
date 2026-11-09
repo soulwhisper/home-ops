@@ -64,8 +64,8 @@ spec:
               readiness: *probe
             resources:
               requests:
-                cpu: 70m
-                memory: 640Mi
+                cpu: 20m
+                memory: 320Mi
               limits:
                 memory: 1Gi
             securityContext:
@@ -82,7 +82,7 @@ spec:
             resources:
               requests:
                 cpu: 20m
-                memory: 208Mi
+                memory: 576Mi
               limits:
                 # MCP query serving over /app/output grows past 512Mi within
                 # ~39h; 1Gi matches the app container. Growth is a linear

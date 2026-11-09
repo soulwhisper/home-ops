@@ -53,8 +53,8 @@ spec:
                   name: *name
             resources:
               requests:
-                cpu: 100m
-                memory: 512Mi
+                cpu: 30m
+                memory: 384Mi
               limits:
                 memory: 2Gi
             securityContext:
