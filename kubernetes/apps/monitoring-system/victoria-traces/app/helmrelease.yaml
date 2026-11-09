@@ -17,6 +17,10 @@ spec:
     server:
       fullnameOverride: *name
       retentionPeriod: 14d
+      resources:
+        requests:
+          cpu: 25m
+          memory: 320Mi
       # Same Talos SELinux fix as victoria-logs (see its helmrelease for the
       # full story): idempotent chcon to ephemeral_t at pod start.
       initContainers:

@@ -17,6 +17,10 @@ spec:
     server:
       fullnameOverride: *name
       retentionPeriod: 90d
+      resources:
+        requests:
+          cpu: 150m
+          memory: 2304Mi
       # Talos pins pods to pod_t and has no container_file_t, so kubelet's
       # seLinuxOptions relabel is a no-op. Talos blesses ephemeral_t for CSI
       # volumes; relabel idempotently at pod start. Root required because

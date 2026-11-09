@@ -75,7 +75,8 @@ spec:
                   name: langfuse
             resources:
               requests:
-                cpu: "1"
+                cpu: 50m
+                memory: 1152Mi
               limits:
                 memory: 2Gi
             securityContext: &securityContext
@@ -90,7 +91,8 @@ spec:
             envFrom: *envFrom
             resources:
               requests:
-                cpu: "1"
+                cpu: 350m
+                memory: 736Mi
               limits:
                 memory: 4Gi
             securityContext: *securityContext

@@ -79,11 +79,33 @@ spec:
           requireMsgr2: true
       resources:
         mgr:
+          requests:
+            cpu: 100m
+            memory: 1Gi
+          limits:
+            memory: 2Gi
+        mon:
+          requests:
+            cpu: 150m
+            memory: 768Mi
           limits:
             memory: 2Gi
         osd:
+          requests:
+            cpu: 600m
+            memory: 3Gi
           limits:
             memory: 4Gi
+        # Sidecars have negligible CPU but the chart default reserves 100m
+        # each; lower the reservation without touching their memory limits.
+        crashcollector:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        logcollector:
+          requests:
+            cpu: 10m
+            memory: 32Mi
         # Rook applies prepareosd resources to all prepare-job containers. Keep
         # memory unlimited per Rook guidance, but cap the CPU burst the audit
         # policy still requires.
@@ -218,8 +240,8 @@ spec:
                       app.kubernetes.io/part-of: *cephFileSystemName
             resources:
               requests:
-                cpu: 100m
-                memory: 1Gi
+                cpu: 50m
+                memory: 512Mi
               limits:
                 memory: 4Gi
         storageClass:
@@ -256,7 +278,8 @@ spec:
             port: 80
             resources:
               requests:
-                cpu: 100m
+                cpu: 30m
+                memory: 320Mi
               limits:
                 memory: 1Gi
             instances: 1

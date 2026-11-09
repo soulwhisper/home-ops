@@ -12,6 +12,10 @@ spec:
 
   values:
     fullnameOverride: *name
+    resources:
+      requests:
+        cpu: 25m
+        memory: 352Mi
     prometheus:
       monitor:
         enabled: true

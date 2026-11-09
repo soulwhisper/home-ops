@@ -13,6 +13,10 @@ spec:
   values:
     replicas: 1
     kind: Deployment
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
     deschedulerPolicyAPIVersion: descheduler/v1alpha2
     deschedulerPolicy:
       metricsProviders:

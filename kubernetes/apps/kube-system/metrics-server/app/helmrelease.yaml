@@ -15,6 +15,10 @@ spec:
       enabled: true
     serviceMonitor:
       enabled: true
+    resources:
+      requests:
+        cpu: 30m
+        memory: 128Mi
     args:
       # Accepted risk: required because Talos serves kubelet API with self-signed certs.
       - --kubelet-insecure-tls

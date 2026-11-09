@@ -9,3 +9,9 @@ spec:
   chartRef:
     kind: OCIRepository
     name: kgateway
+
+  values:
+    resources:
+      requests:
+        cpu: 55m
+        memory: 288Mi
