@@ -346,13 +346,27 @@ The CA ConfigMap is read using the ESO controller's identity, not that
 provider ServiceAccount.
 
 For an RBAC ownership handoff, apply object-level prune protection to
-`Role/eso-store-role` and `RoleBinding/eso-kubernetes-store-role` in both
-declaring Kustomizations before removing either declaration. Verify both
-Kustomizations have applied that protection revision and both live objects
-carry it. Remove the protection only after the ownership-change revision is
-Ready on both Kustomizations, only the intended inventory retains the
-objects, and their UIDs and token synchronization remain unchanged. Keep
-Kustomization pruning enabled throughout.
+`monitoring-system/Role/eso-store-role` and
+`monitoring-system/RoleBinding/eso-kubernetes-store-role` in both declaring
+Kustomizations: `monitoring-system/grafana-cluster` and
+`security-system/external-secrets-cluster`.
+
+For each stage, record its actual merge commit SHA, not the PR branch head.
+Before advancing, require both Kustomizations to report that exact Git SHA
+in `status.lastAppliedRevision`, `Ready=True`, and
+`status.observedGeneration == metadata.generation`. A stale Ready condition
+or an applied revision without current readiness does not pass this gate.
+
+Remove the duplicate declaration only after the protection-stage gate
+passes and both live RBAC objects carry the prune protection. Remove the
+protection only after the ownership-change-stage gate passes, only
+`monitoring-system/grafana-cluster` inventories both objects, and neither
+appears in `security-system/external-secrets-cluster`'s inventory. Verify
+both objects retain their pre-handoff UIDs and token synchronization stays
+healthy. After restoring pruning, use the same gate for that stage's merge
+SHA and verify the protection is absent, ownership remains unique, and
+UIDs and token synchronization are unchanged. Keep Kustomization pruning
+enabled throughout.
 
 #### persona (read-write, no egress — dsh-web)
 
