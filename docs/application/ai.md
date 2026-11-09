@@ -245,7 +245,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 | Gateway   | 8642 | Internal; probes require `/health` plus a current cron heartbeat |
 
 - **Runtime**: user namespaces (`hostUsers: false`) + RuntimeDefault seccomp + egress CNP (ADR-03; Kata removed)
-- **Resources**: req: 200m CPU / 1Gi RAM, lim: 4Gi RAM
+- **Resources**: req: 750m CPU / 1Gi RAM, lim: 4Gi RAM
 - **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP (`search`+`cluster`+`agent` tiers in the ops profile; the default profile has no MCP access), Agent Gateway LLM
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, world-except-private :443 restricted to TLS SNI `open.feishu.cn` (Feishu WebSocket). No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
 - **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 + webhook ingest :8644 via kgateway-internal (shared rule), webhook ingest :8644 also from frigate + LAN, profile API :8642 same-namespace only; `fromEntities: host` keeps kubelet probes working
@@ -479,7 +479,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 - LLM: `omni` lane → **MiniCPM-O-4.5 on the MacStudio** (via agentgateway `/v1/chat/completions`)
 - Embeddings: **Qwen3-Embedding-0.6B on the MacStudio** (oMLX id `qwen3-embedding-0.6b`, 1024d) via gateway `/v1/embeddings`; store rebuilt from scratch for the 0.6B space
 - Reranker: **Qwen3-Reranker-0.6B on the MacStudio** (Cohere-compatible, id `qwen3-reranker-0.6b`) via gateway `/v1/rerank`
-- Resources: req: 200m CPU / 512Mi, lim: 2 CPU / 2Gi
+- Resources: req: 150m CPU / 768Mi, lim: 2 CPU / 2Gi
 - Storage: CloudNativePG (vchord vector + pgroonga text search), OTEL enabled
 - Exposed as MCP server for agent context retrieval
 
