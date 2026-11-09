@@ -127,6 +127,7 @@ data:
     # Feishu is the ops chat surface: return only the final answer. Tool
     # progress, interim narration, and reasoning stay out of chat.
     display:
+      busy_ack_enabled: false
       platforms:
         feishu:
           show_reasoning: false
