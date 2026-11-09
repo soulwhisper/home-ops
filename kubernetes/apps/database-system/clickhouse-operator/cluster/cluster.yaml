@@ -89,7 +89,7 @@ spec:
     image:
       repository: docker.io/clickhouse/clickhouse-server
       # renovate: datasource=docker depName=clickhouse/clickhouse-server
-      tag: 26.9.10.4
+      tag: 26.10.3.7
     resources:
       requests:
         cpu: 500m
