@@ -7,5 +7,4 @@ resources:
   - ./helmrelease.yaml
   # utils
   - ./ciliumnetworkpolicy.yaml
-  - ./configmap.yaml
   - ./externalsecret.yaml

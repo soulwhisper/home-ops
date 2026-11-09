@@ -28,7 +28,7 @@ flowchart TB
     subgraph MCP["MCP Gateway (ToolHive)"]
         VMCP-SEARCH["search<br/>(4 servers: web/news/code)"]
         VMCP-CLUSTER["cluster<br/>(6 servers: monitoring/k8s)"]
-        VMCP-HOME["persona<br/>(5 servers: smart home/home/persona/work/others)"]
+        VMCP-HOME["persona<br/>(2 servers: smart home/persona)"]
         VMCP-AGENT["agent<br/>(2 servers: forgejo + incident memory)"]
         VMCP-BROWSER["browser<br/>(1 server: Playwright)"]
         VMCP-GITHUBPR["github-pr<br/>(1 server: branch/commit/PR)"]
@@ -141,7 +141,7 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); queryable via the `search` MCP tier |
 | home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
 | dsh-tavern           | `persona`         | Orion-26B-A4B-v1.1 | RP portal (dsh-tavern image); provider/key GitOps-managed via `llm_persona` |
-| dsh-web              | `persona`/`deepseek` | Orion-26B-A4B / DeepSeek | Agent workbench (servitor-apps); LLM providers + search/cluster/persona/browser/github-pr MCP tiers |
+| dsh-web              | `uncensored`/`deepseek` | Qwen3.8-27B / DeepSeek | Agent workbench (servitor-apps); shared provider + search/cluster MCP tiers |
 | open-webui           | `uncensored`      | Qwen3.8-27B        | Human chat portal; search-tier MCP and OTEL traces |
 
 Both DSH apps also expose DeepSeek through `DEEPSEEK_API_KEY`. It is a direct external provider, not an agentgateway lane, and does not override the default model.
@@ -163,17 +163,19 @@ the canonical `/mcp` upstream):
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
 | `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar, github (read-only)           | `mcp_search`                   | hermes, open-webui, dsh-web     |
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
-| `/mcp/persona` | `vmcp-persona`| home-assistant, hindsight home/persona/work/others banks     | `mcp_persona`                  | dsh-web                              |
+| `/mcp/persona` | `vmcp-persona`| home-assistant, hindsight persona bank                        | `mcp_persona`                  | none (reserved)                      |
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | hermes, external operator agents |
-| `/mcp/browser` | `vmcp-browser`| playwright (Chromium via pod-local CDP proxy)                 | `mcp_browser`                  | dsh-web                            |
-| `/mcp/github-pr` | `vmcp-github-pr` | github-pr (branch/commit/create PR, no merge)              | `mcp_github_pr`                | dsh-web                            |
+| `/mcp/browser` | `vmcp-browser`| playwright (Chromium via pod-local CDP proxy)                 | `mcp_browser`                  | none (reserved)                    |
+| `/mcp/github-pr` | `vmcp-github-pr` | github-pr (branch/commit/create PR, no merge)              | `mcp_github_pr`                | none (reserved)                    |
 
 A key minted for one group is invalid on every other route — this is what
 scopes the search consumer to search and keeps chat-tier consumers out of incident
-memory and the tickets repo.
-The persona group uses the `mcp_persona` credential; `mcp_home` is no longer
-issued. It aggregates the existing `home` bank with `persona`/`work`/`others`;
-Hindsight creates the new banks on first retain, so reads return 404 until then. `mcp_agent` is never distributed to in-cluster
+memory and the tickets repo. After the DSH Web cleanup, only search and cluster
+have active dsh-web consumers; persona, browser, and github-pr remain defined but
+are unused.
+The persona group uses the `mcp_persona` credential. It now aggregates only
+Home Assistant and the Hindsight `persona` bank; the `home`/`work`/`others`
+proxies were removed. No dsh-web consumer remains. `mcp_agent` is never distributed to in-cluster
 chat apps. **Grouping rule:** create a group only for a new consumer or a
 new permission class; a new server joins the matching existing group.
 
@@ -204,12 +206,11 @@ the tier where untrusted web content reaches an unguarded lane (dsh-tavern /
 any `uncensored`- or `persona`-lane consumer). Hermes rides the guarded
 `agent` LLM lane, and the ExtMCP sidecar additionally scans MCP tool content
 because forgejo ticket bodies carry alert/log-derived (untrusted) strings.
-DSH Web can select the unguarded `persona`/`uncensored` lanes or direct
-DeepSeek; those LLM calls are not covered by the agent promptGuard. Browser
-adds untrusted page snapshots and navigation results, while github-pr adds
-untrusted repository content to the same request+response scanning posture.
-The cluster tier (hermes) adds CEL allowlists and token/SA boundaries; the
-persona tier (dsh-web) is RW-by-design behind the HA token. Neither carries
+DSH Web now uses only the unguarded `uncensored` lane or direct DeepSeek and
+the search/cluster tiers; those LLM calls are not covered by the agent
+promptGuard. The browser and github-pr tiers have no current consumer. The
+cluster tier (hermes) adds CEL allowlists and token/SA boundaries; the
+persona tier is RW-by-design behind the HA token. Neither carries
 the ExtMCP sidecar; both still require per-route API keys and retain their
 CEL/RBAC/token boundaries. No MCP route is unauthenticated.
 Response scanning uses four balanced windows (11KiB
@@ -270,10 +271,10 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
 - **Ingress**: `dsh.noirprime.com` via kgateway-internal
 - **State**: kopiur-backed PVC `dsh-web` at `/data`; `/workspace` is a subPath on the same claim. `/cache`, `/logs` and `/backups` share the `dsh-web-cache` `ceph-cache` PVC; `/tmp` remains emptyDir
-- **MCP/Skills**: the `dsh-web` ExternalSecret carries a host `cordis.patch.yml` (shared `llm-pi-ai` providers only) and a profile seed `cordis.profile.patch.yml` for the guarded search, cluster, persona, browser and github-pr tiers (`/mcp/search`, `/mcp/cluster`, `/mcp/persona`, `/mcp/browser`, `/mcp/github-pr`). A `profile-patch` init container seeds the writable `/data/dsh/profiles/web/cordis.patch.yml` once; the MCP panel reads and edits that profile patch. MCP bearer keys are `${MCP_*}` environment references, never literal values in Git or the profile patch. MCP startup remains non-fatal, and every MCP tier reconnects from 1s to a 30s ceiling with no practical attempt cap so long backend outages do not require a DSH restart. Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
-- **Mnemon**: runs inside DSH Web, not as a separate Deployment or CRD. The pinned image has no native `mnemon` CLI, so conversational long-term memory uses the Hindsight `persona` bank. The profile seed owns `mnemon` with `bankId=persona`; the host patch no longer defines it. Memory Spaces can select `home`/`persona`/`work`/`others` per-space bankIds, and the incident-only `ops` bank stays isolated. Enable it via **Memory System → Memory Spaces → Providers → Hindsight → Enable/Save** with endpoint `http://hindsight.selfhosted-apps.svc.cluster.local:8888`, `bankId=persona`, and `budget=mid` when the redacted provider catalog reports it disabled. Provider activation is live; only `remoteAccess` changes require a DSH restart. Provider configuration and Memory Space mappings persist on the `dsh-web` PVC, while memory contents persist in Hindsight/CNPG. Provider health and discovery do not create a Memory Space or bank. A fresh installation requires one authenticated **Memory System → Memory Spaces → Create Memory Space** operation with Provider `hindsight`, name `Home`, description `Durable conversational facts, decisions and preferences for DSH Web.`, connection `bankId=home`, `budget=mid`, and `active=true`; remote writes require `writeEnabled=true` and `remoteAccess=trusted-host`. There is no supported declarative Space manifest—do not seed `state/memory-providers.json`. Hindsight creates `home` lazily on the first retain; verify one retain and recall after creation.
-- **LLM/MCP**: UI-selectable agentgateway (persona/uncensored) and DeepSeek providers; MCP uses the guarded tiers. No default model is pinned
-- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (`/v1/*` + `/mcp/*`), hindsight:8888 (health/discovery plus home/persona/work/others stats/entities/graph/list/recall/retain/soft-forget), world-except-private :443 for direct DeepSeek LLM calls and the user-driven plugin market, kube-dns
+- **MCP/Skills**: the `dsh-web` ExternalSecret carries one host `cordis.patch.yml` for the shared `uncensored` provider plus the search and cluster MCP tiers (`/mcp/search`, `/mcp/cluster`). There is no writable profile seed or profile-patch init container; the MCP panel reads the host patch. MCP bearer keys are injected by External Secrets into the host patch, never stored in Git. MCP startup remains non-fatal, and both tiers reconnect from 1s to a 30s ceiling with no practical attempt cap so long backend outages do not require a DSH restart. Native skill roots are `<workspace>/.dsh/skills`, `<workspace>/.agents/skills`, `$DSH_HOME/skills` and `$DSH_AGENTS_HOME/skills`; register `/workspace` as the DSH workspace, not `/data/home`.
+- **Mnemon**: runs inside DSH Web, not as a separate Deployment or CRD. It has no Hindsight persistence provider configured; `writeEnabled` stays on and any memory provider or Memory Space is configured in the UI and persists on the `dsh-web` PVC. No bank is pinned by GitOps.
+- **LLM/MCP**: UI-selectable agentgateway `uncensored` and DeepSeek providers; MCP uses the guarded search/cluster tiers. No default model is pinned
+- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (`/v1/*` + `/mcp/(search|cluster)*`), world-except-private :443 for direct DeepSeek LLM calls and the user-driven plugin market, kube-dns
 
 ### DSH Tavern
 
@@ -305,7 +306,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 ### ToolHive
 
 - **Operator**: namespace-scoped RBAC
-- **Variant layout**: `mcp/hindsight/{app,home,persona,work,others,ops}` and `mcp/github/{app,ro,hr}`; each `app` is a shared Kustomize base, while sibling directories are independently reconciled overlays
+- **Variant layout**: `mcp/hindsight/{app,persona,ops}` and `mcp/github/{app,ro,hr}`; each `app` is a shared Kustomize base, while sibling directories are independently reconciled overlays
 - **6 Virtual MCP Servers** (search / cluster / persona / agent / browser / github-pr) with:
   - Circuit breaker (3 failures → 30s timeout)
   - OTEL telemetry (5% sampling)
@@ -316,7 +317,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
     across all six groups (homelab-tickets#59)
 - **Ingress restricted**: only agentgateway-proxy (MCP protocol, tiered `/mcp/*`) and vmagent (metrics scrape) can connect; chat frontends reach tools through the gateway, never directly
 
-### MCP Servers (19 total)
+### MCP Servers (16 total)
 
 #### search (web/docs/news/codebase retrieval — hermes, open-webui, dsh-web)
 
@@ -327,7 +328,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | trendradar | Streamable HTTP :8080 (proxy→:3333) | TrendRadar news DB; gateway-filtered to query/analysis (no trigger/notify) |
 | github    | HTTP :8082            | Read-only PAT + lockdown, toolsets repos/issues/pull_requests; the token is the boundary (no CEL) |
 
-#### cluster (read-only, no egress — hermes)
+#### cluster (read-only, no egress — hermes, dsh-web)
 
 | Server        | Transport             | Connects To                   |
 | ------------- | --------------------- | ----------------------------- |
@@ -377,15 +378,12 @@ SHA and verify the protection is absent, ownership remains unique, and
 UIDs and token synchronization are unchanged. Keep Kustomization pruning
 enabled throughout.
 
-#### persona (read-write, no egress — dsh-web)
+#### persona (read-write, no egress — no current consumer)
 
 | Server            | Transport            | Connects To            |
 | ----------------- | -------------------- | ---------------------- |
 | home-assistant    | HTTP (FastMCP) :8086 | Home Assistant         |
-| hindsight-home    | HTTP proxy :8080     | Hindsight `home` bank (existing; single-bank MCPToolConfig) |
 | hindsight-persona | HTTP proxy :8080     | Hindsight `persona` bank (single-bank MCPToolConfig) |
-| hindsight-work    | HTTP proxy :8080     | Hindsight `work` bank (project/work memory) |
-| hindsight-others  | HTTP proxy :8080     | Hindsight `others` bank (catch-all) |
 
 #### agent (operator agents only)
 
@@ -405,7 +403,7 @@ the gateway where needed (see filters.yaml); toolhive `MCPToolConfig` is
 kept ONLY for the hindsight banks' description overrides. No draftbox or
 broad user PAT was provisioned.
 
-#### browser (dsh-web only)
+#### browser (no current consumer)
 
 | Server     | Transport             | Notes                                       |
 | ---------- | --------------------- | ------------------------------------------- |
@@ -414,7 +412,7 @@ broad user PAT was provisioned.
 The browser vmcp also mounts an `emptyDir` at `/tmp`: it runs with
 `HOME`/`XDG_CONFIG_HOME=/tmp` and a read-only root filesystem.
 
-#### github-pr (dsh-web only)
+#### github-pr (no current consumer)
 
 | Server    | Transport     | Notes                                                                  |
 | --------- | ------------- | ---------------------------------------------------------------------- |

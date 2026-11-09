@@ -25,31 +25,6 @@ spec:
             runAsGroup: 1000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
-        initContainers:
-          profile-patch:
-            image:
-              repository: ghcr.io/soulwhisper/dsh-web
-              tag: "0.2.2-rc.1-r1"
-            command: ["/bin/sh", "-c"]
-            args:
-              - |
-                set -eu
-                export DSH_HOME=/data/dsh
-                export HOME=/data/home
-                export DSH_AGENTS_HOME=/data/home/.agents
-                export DSH_BACKUP_ROOT=/backups
-                export XDG_CACHE_HOME=/cache
-                export DSH_PROFILE=web
-                mkdir -p "$DSH_HOME" "$HOME" "$DSH_AGENTS_HOME" "$XDG_CACHE_HOME" "$DSH_BACKUP_ROOT"
-                node /opt/dsh/scripts/materialize-state.mjs
-                node /config/merge-profile.mjs /seed/cordis.profile.patch.yml /data/dsh/profiles/web/cordis.patch.yml
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-              readOnlyRootFilesystem: true
-              runAsNonRoot: true
-              runAsUser: 1000
-              runAsGroup: 1000
         containers:
           app:
             image:
@@ -139,20 +114,6 @@ spec:
         globalMounts:
           - path: /data/dsh/cordis.patch.yml
             subPath: cordis.patch.yml
-            readOnly: true
-      profile-seed:
-        type: secret
-        name: *name
-        globalMounts:
-          - path: /seed/cordis.profile.patch.yml
-            subPath: cordis.profile.patch.yml
-            readOnly: true
-      profile-patch-script:
-        type: configMap
-        name: dsh-web-profile-patch
-        globalMounts:
-          - path: /config/merge-profile.mjs
-            subPath: merge-profile.mjs
             readOnly: true
       tmpfs:
         type: emptyDir
