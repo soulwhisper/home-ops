@@ -20,9 +20,11 @@ CNPG databases/roles and leftover kopiur Snapshot objects still require the
 manual post-merge cleanup. NAS-hosted files are left untouched by the
 cluster-side deletion, but their PV/PVC bindings are gone.
 
-Each parked application keeps its `ks.yaml` and, where applicable, its
-Authentik blueprints under `blueprints/` so the definition remains readable
-and recoverable.
+Each parked application keeps its `ks.yaml`. Parked Authentik blueprints
+mirror the active tree under
+`kubernetes/parked/security-system/authentik/blueprints/{forward,oidc}/`, so
+they can be copied back with the rest of the configuration. The parked tree
+has no Kustomization index of its own.
 
 `spec.path` values in parked `ks.yaml` files are intentionally left at their
 canonical `kubernetes/apps/...` location. Flux never renders this tree, so
