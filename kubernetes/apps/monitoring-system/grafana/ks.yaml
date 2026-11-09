@@ -35,12 +35,6 @@ spec:
       namespace: monitoring-system
     - name: cnpg-cluster
       namespace: database-system
-    - name: cert-manager
-      namespace: security-system
-    - name: onepassword-connect
-      namespace: security-system
-    - name: rook-ceph-cluster
-      namespace: storage-system
     - name: kopiur
       namespace: storage-system
   components:
