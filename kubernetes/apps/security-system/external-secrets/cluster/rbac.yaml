@@ -12,6 +12,8 @@ kind: Role
 metadata:
   name: eso-store-role
   namespace: monitoring-system
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
 rules:
   - apiGroups: [""]
     resources:
@@ -40,6 +42,8 @@ kind: RoleBinding
 metadata:
   name: eso-kubernetes-store-role
   namespace: monitoring-system
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
 subjects:
   - kind: ServiceAccount
     name: eso-kubernetes

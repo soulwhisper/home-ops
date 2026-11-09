@@ -338,6 +338,36 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | victoria-metrics | Streamable HTTP :8081 | VictoriaMetrics; gateway-filtered to the query surface |
 | victoria-traces | Streamable HTTP :8081 | VictoriaTraces                |
 
+Grafana MCP receives a Grafana `Viewer` token through the
+`mcp-grafana-sa` ExternalSecret. The source Secret lives in
+`monitoring-system`; the Kubernetes SecretStore reads it as
+`security-system/eso-kubernetes` and ESO writes the copy in `servitor-apps`.
+The CA ConfigMap is read using the ESO controller's identity, not that
+provider ServiceAccount.
+
+For an RBAC ownership handoff, apply object-level prune protection to
+`monitoring-system/Role/eso-store-role` and
+`monitoring-system/RoleBinding/eso-kubernetes-store-role` in both declaring
+Kustomizations: `monitoring-system/grafana-cluster` and
+`security-system/external-secrets-cluster`.
+
+For each stage, record its actual merge commit SHA, not the PR branch head.
+Before advancing, require both Kustomizations to report that exact Git SHA
+in `status.lastAppliedRevision`, `Ready=True`, and
+`status.observedGeneration == metadata.generation`. A stale Ready condition
+or an applied revision without current readiness does not pass this gate.
+
+Remove the duplicate declaration only after the protection-stage gate
+passes and both live RBAC objects carry the prune protection. Remove the
+protection only after the ownership-change-stage gate passes, only
+`monitoring-system/grafana-cluster` inventories both objects, and neither
+appears in `security-system/external-secrets-cluster`'s inventory. Verify
+both objects retain their pre-handoff UIDs and token synchronization stays
+healthy. After restoring pruning, use the same gate for that stage's merge
+SHA and verify the protection is absent, ownership remains unique, and
+UIDs and token synchronization are unchanged. Keep Kustomization pruning
+enabled throughout.
+
 #### persona (read-write, no egress — dsh-web)
 
 | Server            | Transport            | Connects To            |
