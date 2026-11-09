@@ -192,12 +192,12 @@ This requires the vmcp **optimizer to stay off**: it masks real tool names
 behind `find_tool`/`call_tool` meta-tools that gateway authorization cannot
 see through (removed 2026-10; also dropped the vmcp embeddings dependency).
 
-The **search, agent, browser and github-pr backends** carry the mcp-guardrails ExtMCP sidecar
+The **search, github-ro, agent, browser and github-pr backends** carry the mcp-guardrails ExtMCP sidecar
 (agentgateway `mcp.guardrails`): `tools/call` is scanned request+response,
-`tools/list` skips the response scan on all four tiers (the catalog is
+`tools/list` skips the response scan on all five tiers (the catalog is
 operator-authored config, not untrusted content), while `prompts/get` /
 `resources/read` stay response-only;
-`failureMode: FailClosed` (the sidecar being down disables those four tiers
+`failureMode: FailClosed` (the sidecar being down disables those five tiers
 rather than passing them unguarded). The 1.4.0 LoopRule evaluates only the
 newest call fingerprint: historical retry triads cannot deny new tools or
 arguments, while identical retries still block. This prevents denied attempts
