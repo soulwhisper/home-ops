@@ -176,12 +176,12 @@ scopes the search consumer to search and keeps chat-tier consumers out of incide
 memory and the tickets repo. The read-only GitHub server was split out of
 `search` into its own `github-ro` tier so cluster-tier consumers can hold code
 retrieval without the web-retrieval toolsets; `search` no longer exposes GitHub.
-After the DSH Web cleanup, only search, cluster, and github-ro have active
-dsh-web consumers; persona, browser, and github-pr remain defined but are
-unused.
+`search` is held by hermes, open-webui, and dsh-web; `cluster` by hermes and
+dsh-web; `github-ro` by hermes only. Persona, browser, and github-pr remain
+defined but are unused.
 The persona group uses the `mcp_persona` credential. It now aggregates only
 Home Assistant and the Hindsight `persona` bank; the `home`/`work`/`others`
-proxies were removed. No dsh-web consumer remains. `mcp_agent` is never distributed to in-cluster
+proxies were removed. `mcp_agent` is never distributed to in-cluster
 chat apps. **Grouping rule:** create a group only for a new consumer or a
 new permission class; a new server joins the matching existing group.
 
@@ -198,12 +198,12 @@ This requires the vmcp **optimizer to stay off**: it masks real tool names
 behind `find_tool`/`call_tool` meta-tools that gateway authorization cannot
 see through (removed 2026-10; also dropped the vmcp embeddings dependency).
 
-The **search, agent, browser and github-pr backends** carry the mcp-guardrails ExtMCP sidecar
+The **search, github-ro, agent, browser and github-pr backends** carry the mcp-guardrails ExtMCP sidecar
 (agentgateway `mcp.guardrails`): `tools/call` is scanned request+response,
-`tools/list` skips the response scan on all four tiers (the catalog is
+`tools/list` skips the response scan on all five tiers (the catalog is
 operator-authored config, not untrusted content), while `prompts/get` /
 `resources/read` stay response-only;
-`failureMode: FailClosed` (the sidecar being down disables those four tiers
+`failureMode: FailClosed` (the sidecar being down disables those five tiers
 rather than passing them unguarded). The 1.4.0 LoopRule evaluates only the
 newest call fingerprint: historical retry triads cannot deny new tools or
 arguments, while identical retries still block. This prevents denied attempts
@@ -333,7 +333,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | context7  | stdio :3000           | Context7 API (2 read tools) |
 | trendradar | Streamable HTTP :8080 (proxy→:3333) | TrendRadar news DB; gateway-filtered to query/analysis (no trigger/notify) |
 
-#### github-ro (read-only code retrieval — hermes, dsh-web)
+#### github-ro (read-only code retrieval — hermes)
 
 | Server    | Transport     | Notes                                                                 |
 | --------- | ------------- | --------------------------------------------------------------------- |

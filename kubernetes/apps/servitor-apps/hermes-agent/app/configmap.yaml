@@ -196,9 +196,9 @@ data:
     FEISHU_ALLOWED_USERS=$${FEISHU_ALLOWED_USERS}
     FEISHU_HOME_CHANNEL=$${FEISHU_HOME_CHANNEL}
     EOF
-    # optional vars live on plain env (not the secret) — write only when set,
-    # so an empty line can never shadow the pod env (dotenv override=True) and
-    # a missing key cannot abort the seed under `set -eu`.
+    # write optional vars only when set: an empty line would shadow the pod
+    # env (dotenv override=True), and an unset expansion would abort the seed
+    # under `set -eu`. MCP_GITHUB_RO_KEY arrives via the Secret envFrom.
     # no $( ) command substitution: flux postBuild misparses it
     for v in MCP_GITHUB_RO_KEY FEISHU_DOMAIN FEISHU_CONNECTION_MODE FEISHU_ALLOW_BOTS FEISHU_GROUP_POLICY; do
       if printenv "$v" >/dev/null 2>&1; then
