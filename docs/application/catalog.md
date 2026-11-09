@@ -6,7 +6,7 @@ The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/
 
 Definitions that are intentionally not deployed live under [`kubernetes/parked`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/parked); see its README for the parked-versus-archived contract.
 
-This catalog is documentation, not a deployment selector. Each namespace's linked `kustomization.yaml` is the current application selection and shared-resource entry point. Definitions remain in their existing directories. See [Cluster Architecture](../infrastructure/kubernetes.md) and [Storage](../infrastructure/storage.md) for reconciliation and data boundaries.
+This catalog is documentation, not a deployment selector. Each namespace's linked `kustomization.yaml` is the current application selection and shared-resource entry point. Active definitions stay under `kubernetes/apps`; parked definitions live under `kubernetes/parked`. See [Cluster Architecture](../infrastructure/kubernetes.md) and [Storage](../infrastructure/storage.md) for reconciliation and data boundaries.
 
 [`.archived`](https://github.com/soulwhisper/home-ops/tree/main/.archived) contains historical implementations with old paths; it does not guarantee that an application can be redeployed or its data restored.
 
@@ -118,11 +118,11 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Firecrawl](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/firecrawl/ks.yaml) | Web scraping pipeline |
 | [Bambuddy](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/bambuddy/ks.yaml) | Bambu Lab 3D printer monitor |
 
-## servitor-apps — AI Infrastructure (21)
+## servitor-apps — AI Infrastructure (19)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml)
 
-Eight direct application definitions and 13 nested MCP definitions. ToolHive configures seven VirtualMCP groups: `search`, `cluster`, `github-ro`, `persona`, `agent`, `browser`, and `github-pr`.
+Six direct application definitions and 13 nested MCP definitions. ToolHive configures seven VirtualMCP groups: `search`, `cluster`, `github-ro`, `persona`, `agent`, `browser`, and `github-pr`.
 
 | App | Purpose |
 | --- | --- |
@@ -135,7 +135,7 @@ Eight direct application definitions and 13 nested MCP definitions. ToolHive con
 
 ### MCP Definitions (13)
 
-The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/kustomization.yaml) selects 13 definition files declaring 15 child Flux Kustomizations: GitHub has two identities, Hindsight has two, and each other definition has one. These are not 14 individual backend server instances.
+The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/kustomization.yaml) selects 13 definition files declaring 15 child Flux Kustomizations: GitHub has two identities, Hindsight has two, and each other definition has one. These are not 13 individual backend server instances.
 
 | Definition | Purpose |
 | --- | --- |
@@ -145,7 +145,7 @@ The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/app
 | [Forgejo](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/forgejo/ks.yaml) | Operator ticket tools |
 | [GitHub](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/github/ks.yaml) | Read-only search and separate branch/commit/pull-request tools |
 | [Grafana](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/grafana/ks.yaml) | Grafana observability tools |
-| [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/hindsight/ks.yaml) | Memory proxies for home, persona, work, others, and ops banks |
+| [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/hindsight/ks.yaml) | Memory proxies for the persona and ops banks |
 | [Kubernetes](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/kubernetes/ks.yaml) | Kubernetes inspection tools |
 | [Playwright MCP](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/playwright/ks.yaml) | Browser automation tools using the standalone browser runtime |
 | [TrendRadar](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/trendradar/ks.yaml) | News retrieval tools |

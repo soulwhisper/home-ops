@@ -14,9 +14,10 @@ The only lifecycle difference from `.archived/` is intent:
 - **`.archived/`** — historical reference only. Definitions are not guaranteed
   to be deployable and are not maintained.
 
-Both methods discard workload data; parked is not a backup mechanism. PVCs,
-CNPG databases and kopiur policies are removed as part of parking (see each
-application's removal commit). NAS-hosted files are left untouched by the
+Both methods discard workload data; parked is not a backup mechanism. Removing
+a parked application from the active indexes deletes its workloads and PVCs;
+CNPG databases/roles and leftover kopiur Snapshot objects still require the
+manual post-merge cleanup. NAS-hosted files are left untouched by the
 cluster-side deletion, but their PV/PVC bindings are gone.
 
 Each parked application keeps its `ks.yaml` and, where applicable, its

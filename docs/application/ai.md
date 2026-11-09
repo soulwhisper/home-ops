@@ -205,8 +205,7 @@ rather than passing them unguarded). The 1.4.0 LoopRule evaluates only the
 newest call fingerprint: historical retry triads cannot deny new tools or
 arguments, while identical retries still block. This prevents denied attempts
 from permanently locking a trace. Scope decision (2026-10-20): search is
-the tier where untrusted web content reaches an unguarded lane (/
-any `uncensored`- or `persona`-lane consumer). Hermes rides the guarded
+the tier where untrusted web content reaches an unguarded lane (any `uncensored`- or `persona`-lane consumer). Hermes rides the guarded
 `agent` LLM lane, and the ExtMCP sidecar additionally scans MCP tool content
 because forgejo ticket bodies carry alert/log-derived (untrusted) strings.
 DSH Web now uses only the unguarded `uncensored` lane or direct DeepSeek and
@@ -322,7 +321,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 
 ### MCP Servers (15 total)
 
-#### search (web/docs/news/codebase retrieval — hermes, open-webui)
+#### search (web/docs/news retrieval — hermes, open-webui)
 
 | Server    | Transport             | Notes                    |
 | --------- | --------------------- | ------------------------ |
@@ -335,7 +334,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 
 | Server    | Transport     | Notes                                                                 |
 | --------- | ------------- | --------------------------------------------------------------------- |
-| github-ro | HTTP :8082    | `GITHUB_READ_ONLY=1` + lockdown, toolsets repos/issues/pull_requests; uses the shared GitHub PAT from `github-keys` (same credential as github-pr) and keeps the FailClosed injection scan. Split from `search` so cluster-tier consumers can hold it without the web-retrieval toolsets. |
+| github-ro | HTTP :8082    | `GITHUB_READ_ONLY=1` + lockdown, toolsets repos/issues/pull_requests; uses the shared write-capable GitHub PAT from `github-keys` (same credential as github-pr); read-only is enforced by `GITHUB_READ_ONLY=1` plus lockdown, not by token scope. Keeps the FailClosed injection scan. Split from `search` so cluster-tier consumers can hold it without the web-retrieval toolsets. |
 
 #### cluster (read-only, no egress — hermes)
 

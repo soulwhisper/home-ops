@@ -169,7 +169,6 @@ data:
     API_SERVER_ENABLED=true
     API_SERVER_HOST=0.0.0.0
     API_SERVER_KEY=$${API_SERVER_KEY}
-    FRIGATE_WEBHOOK_SECRET=$${FRIGATE_WEBHOOK_SECRET}
     EOF
 
     # remove leftover profiles on upgrade — multiplex_profiles=true keeps any

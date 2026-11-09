@@ -131,8 +131,9 @@ snapshot or explicitly disposable application state is not the same as losing
 the NAS library files.
 
 Media, gaming and smart-home namespaces, plus four self-hosted applications,
-are parked: their PVCs, CNPG database objects and kopiur policies are removed,
-while NAS-hosted files are untouched by the cluster-side deletion.
+are parked: removing them from the active indexes deletes their workloads and
+PVCs, while NAS-hosted files are untouched. CNPG databases/roles and leftover
+kopiur Snapshot objects still require the manual post-merge cleanup.
 
 This is a data-value boundary, not an instruction to delete resources. Any
 service retirement still needs an explicit application or batch decision;

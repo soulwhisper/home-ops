@@ -117,10 +117,10 @@ The source/static count is **103 Flux Kustomizations** (101 children plus the tw
 To inspect an application's composed output from the repository root:
 
 ```shell
-just k8s render-ks media-apps moviepilot
+just k8s render-ks monitoring-system langfuse
 ```
 
-This runs `flate build ks --namespace media-apps moviepilot` without applying resources. A plain `kustomize build .../app` does not include the parent namespace index, cluster patches, or Flux `spec.components` and substitution. In contrast, `just k8s apply-ks <namespace> <name>` applies rendered resources, and `just reconcile` requests root reconciliation; both mutate the cluster and are not validation commands.
+This runs `flate build ks --namespace monitoring-system langfuse` without applying resources. A plain `kustomize build .../app` does not include the parent namespace index, cluster patches, or Flux `spec.components` and substitution. In contrast, `just k8s apply-ks <namespace> <name>` applies rendered resources, and `just reconcile` requests root reconciliation; both mutate the cluster and are not validation commands.
 
 ### Flux Controller Tuning
 
@@ -135,13 +135,13 @@ The [FluxInstance configuration](https://github.com/soulwhisper/home-ops/blob/ma
 
 ## Strategic Patching System
 
-The `cluster-apps` Kustomization applies three strategic patches to its 128 child Flux Kustomizations. They are defined in [`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml); the effective configuration includes these patches, not just the local `ks.yaml`.
+The `cluster-apps` Kustomization applies three strategic patches to its 101 child Flux Kustomizations. They are defined in [`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml); the effective configuration includes these patches, not just the local `ks.yaml`.
 
 ### Layer 1: Kustomization Defaults (managed annotation)
 
 **Target**: Any `Kustomization` with annotation `config.home-ops.io/managed=true`
 
-All 128 child Flux Kustomizations carry this annotation. The patch sets:
+All 101 child Flux Kustomizations carry this annotation. The patch sets:
 
 ```yaml
 spec:
@@ -159,7 +159,7 @@ spec:
 `wait: true` in its own `ks.yaml` — an injected default would silently
 override it.
 
-These scalar values override local declarations. In particular, [`flux-operator`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-operator/ks.yaml), [`flux-instance`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/ks.yaml), and [`coredns`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/coredns/ks.yaml) declare `prune: false` locally, but all three have effective `prune: true`, as do all 128 children. The local value is not deletion protection; changes that remove a core Kustomization or alter its ownership must account for its effective prune behavior.
+These scalar values override local declarations. In particular, [`flux-operator`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-operator/ks.yaml), [`flux-instance`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/ks.yaml), and [`coredns`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/coredns/ks.yaml) declare `prune: false` locally, but all three have effective `prune: true`, as do all 101 children. The local value is not deletion protection; changes that remove a core Kustomization or alter its ownership must account for its effective prune behavior.
 
 ### Layer 2: Baseline Infrastructure Dependencies (deps label)
 
@@ -180,7 +180,7 @@ spec:
       namespace: storage-system
 ```
 
-This patch intentionally **replaces** the local `dependsOn` list; it does not append or merge entries. For example, [`moviepilot/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/moviepilot/ks.yaml) declares `cnpg-cluster`, `dragonfly-operator`, and `media-nfs`, but its effective list is exactly the four entries above. Children without this label retain their local dependencies. A `sourceRef` to `gitops-system` identifies the Git source; it is not a `dependsOn` edge.
+This patch intentionally **replaces** the local `dependsOn` list; it does not append or merge entries. For example, a `ks.yaml` that declares `cnpg-cluster`, `dragonfly-operator`, and a shared NFS claim still resolves to exactly the four entries above. Children without this label retain their local dependencies. A `sourceRef` to `gitops-system` identifies the Git source; it is not a `dependsOn` edge.
 
 Keep `deps=infra` when the uniform four-item gate is sufficient. Omit it
 only for producer-specific prerequisites that the replacing patch would
@@ -290,18 +290,14 @@ spec:
     namespace: gitops-system
 ```
 
-This cross-namespace reference is used by 43 HelmReleases across 8 namespaces:
+This cross-namespace reference is used by 16 HelmReleases across 4 namespaces:
 
-| Namespace         | Count | Example Apps |
-| ----------------- | ----- | ------------ |
-| media-apps        | 8     | jellyfin, kavita, navidrome, qbittorrent, immich, moviepilot, metube, qbittorrent-ui |
-| selfhosted-apps   | 12    | searxng, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, trendradar, hindsight, firecrawl |
-| smarthome-apps    | 7     | home-assistant (app + sgcc), frigate, frigate-vision, zigbee2mqtt, mosquitto, scrypted |
-| servitor-apps     | 8     | hermes-agent, dsh-web, dsh-tavern, covel, diceframe, open-webui, playwright |
-| gaming-apps       | 2     | crafty-controller, foundryvtt |
-| monitoring-system | 4     | langfuse, webhook-relay, vmware-exporter, krr |
-| networking-system | 1     | agentgateway MCP config |
-| database-system   | 1     | postgres-backup-verify (CNPG maintenance) |
+| Namespace         | Count | Apps |
+| ----------------- | ----- | ---- |
+| monitoring-system | 3     | langfuse, vmware-exporter, webhook-relay |
+| networking-system | 1     | mcp-guardrails |
+| selfhosted-apps   | 7     | bambuddy, firecrawl (+database), hindsight, homepage, searxng, trendradar |
+| servitor-apps     | 5     | covel, diceframe, hermes-agent, open-webui, playwright |
 
 The `flux-repositories` Kustomization is a dependency of `cluster-apps` and registers the shared source. It sets `wait: false`, so this edge does not itself wait for the OCI artifact to become ready; helm-controller resolves chart source readiness.
 
@@ -408,7 +404,7 @@ Injects an `ObjectBucketClaim` that provisions an S3-compatible bucket from the 
 
 ### Component Composition
 
-Applications frequently stack multiple components. For example, `moviepilot` (`kubernetes/apps/media-apps/moviepilot/ks.yaml`) uses three:
+Applications frequently stack multiple components. For example, `langfuse` uses three:
 
 ```yaml
 components:
@@ -555,11 +551,8 @@ kubernetes/
 │   ├── networking-system/         #  5. Ingress, DNS, API gateway
 │   ├── monitoring-system/         #  6. Observability stack
 │   ├── servitor-apps/             #  7. AI and development tooling
-│   ├── smarthome-apps/            #  8. Home automation
-│   ├── media-apps/                #  9. Media serving
-│   ├── selfhosted-apps/           # 10. Self-hosted web services
-│   ├── gaming-apps/               # 11. Game servers
-│   └── gitops-system/             # 12. Flux itself
+│   ├── selfhosted-apps/           #  8. Self-hosted web services
+│   └── gitops-system/             #  9. Flux itself
 ├── bootstrap/                     # Pre-Flux cluster provisioning
 │   ├── helmfile.yaml              #   11-release bootstrap DAG
 │   ├── default.yaml               #   Release template inheritance
