@@ -1,54 +1,6 @@
 ---
-# SA for the kubernetes ClusterSecretStore: stays with the operator in
-# security-system; authZ (Role/RoleBinding) lives in the consumer namespace.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: eso-kubernetes
   namespace: security-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: eso-store-role
-  namespace: monitoring-system
-  annotations:
-    kustomize.toolkit.fluxcd.io/prune: disabled
-rules:
-  - apiGroups: [""]
-    resources:
-      - secrets
-    verbs:
-      - get
-      - list
-      - watch
-  # caProvider reads kube-root-ca.crt here
-  - apiGroups: [""]
-    resources:
-      - configmaps
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - authorization.k8s.io
-    resources:
-      - selfsubjectrulesreviews
-    verbs:
-      - create
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: eso-kubernetes-store-role
-  namespace: monitoring-system
-  annotations:
-    kustomize.toolkit.fluxcd.io/prune: disabled
-subjects:
-  - kind: ServiceAccount
-    name: eso-kubernetes
-    namespace: security-system
-roleRef:
-  kind: Role
-  name: eso-store-role
-  apiGroup: rbac.authorization.k8s.io

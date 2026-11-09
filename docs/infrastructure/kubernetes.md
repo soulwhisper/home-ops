@@ -165,7 +165,7 @@ These scalar values override local declarations. In particular, [`flux-operator`
 
 **Target**: Any `Kustomization` with label `config.home-ops.io/deps=infra`
 
-The 65 child Kustomizations carrying this label use a uniform four-item infrastructure gate:
+The 61 child Kustomizations carrying this label use a uniform four-item infrastructure gate:
 
 ```yaml
 spec:
@@ -181,6 +181,27 @@ spec:
 ```
 
 This patch intentionally **replaces** the local `dependsOn` list; it does not append or merge entries. For example, [`moviepilot/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/moviepilot/ks.yaml) declares `cnpg-cluster`, `dragonfly-operator`, and `media-nfs`, but its effective list is exactly the four entries above. Children without this label retain their local dependencies. A `sourceRef` to `gitops-system` identifies the Git source; it is not a `dependsOn` edge.
+
+Keep `deps=infra` when the uniform four-item gate is sufficient. Omit it
+only for producer-specific prerequisites that the replacing patch would
+otherwise erase. The Grafana MCP chain has these explicit exceptions:
+
+| Kustomization | Dependency policy | Required direct prerequisites |
+| --- | --- | --- |
+| `grafana-cluster` | Explicit | `grafana-operator`, `cnpg-cluster`, `kopiur` |
+| `mcp-grafana` | Explicit | `toolhive-config`, `grafana-cluster`, `external-secrets-cluster` |
+| `toolhive` | Explicit | `toolhive-crds` |
+| `toolhive-config` | Explicit | `toolhive` |
+| `toolhive-crds` | Keep `deps=infra` | Uniform infrastructure gate; no producer-specific exception |
+
+Do not copy infrastructure dependencies already guaranteed by these
+producer chains. CNPG supplies `cert-manager`, `onepassword-connect`, and
+`rook-ceph-cluster` transitively; Grafana retains `kopiur` directly because
+neither its operator nor CNPG supplies that existing gate. ToolHive and
+its configuration inherit the infrastructure gate through `toolhive-crds`,
+and the MCP consumer inherits it through its providers. Infrastructure
+does not depend on the monitoring application. The root patch and the
+policies of unrelated Kustomizations remain unchanged.
 
 ### Layer 3: HelmRelease Defaults (all child Kustomizations)
 
@@ -503,7 +524,7 @@ Without this annotation, a Kustomization would not receive the automatic `source
 
 **Type**: Label
 **Purpose**: Opts a `Kustomization` into Layer 2 strategic patching (baseline infrastructure dependencies).
-**Scope**: 65 child Flux Kustomizations.
+**Scope**: 61 child Flux Kustomizations.
 
 This label signals "I'm a workload that needs the core infra layer." Infrastructure components themselves (e.g., cert-manager, rook-ceph, cnpg-operator) omit this label — they _are_ the infra, so they only carry `managed: "true"`.
 

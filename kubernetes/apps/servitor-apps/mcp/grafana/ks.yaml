@@ -6,8 +6,6 @@ metadata:
   name: &name mcp-grafana
   annotations:
     config.home-ops.io/managed: "true"
-  labels:
-    config.home-ops.io/deps: "infra"
 spec:
   commonMetadata:
     labels:
@@ -19,3 +17,5 @@ spec:
       namespace: servitor-apps
     - name: grafana-cluster
       namespace: monitoring-system
+    - name: external-secrets-cluster
+      namespace: security-system

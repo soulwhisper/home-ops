@@ -24,8 +24,6 @@ metadata:
   name: &name grafana-cluster
   annotations:
     config.home-ops.io/managed: "true"
-  labels:
-    config.home-ops.io/deps: "infra"
 spec:
   commonMetadata:
     labels:
@@ -37,6 +35,8 @@ spec:
       namespace: monitoring-system
     - name: cnpg-cluster
       namespace: database-system
+    - name: kopiur
+      namespace: storage-system
   components:
     - ../../../../components/cnpg
   postBuild:
