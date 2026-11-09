@@ -82,3 +82,17 @@ spec:
     - action: replace
       targetLabel: job
       replacement: *name
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/operator.victoriametrics.com/scrapeconfig_v1beta1.json
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: ScrapeConfig
+metadata:
+  name: &name vmcp-github-ro
+spec:
+  staticConfigs:
+    - targets: ["vmcp-github-ro.servitor-apps.svc.cluster.local:4483"]
+  metricsPath: /metrics
+  relabelings:
+    - action: replace
+      targetLabel: job
+      replacement: *name
