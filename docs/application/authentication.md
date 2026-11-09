@@ -26,6 +26,7 @@ These apps use their own authentication — no OIDC needed:
 | App                 | Auth Method                                             |
 | ------------------- | ------------------------------------------------------- |
 | Crafty Controller   | Default admin credentials (retrieve via `kubectl exec`) |
+| DiceFrame           | 1Password-backed access password                       |
 | Dispatcharr         | Built-in user system                                    |
 | FoundryVTT          | Built-in user system                                    |
 | MoviePilot          | Built-in user system                                    |
@@ -33,9 +34,11 @@ These apps use their own authentication — no OIDC needed:
 | Rook-Ceph Dashboard | Built-in auth (or SAML2 via manual setup)               |
 | Scrypted            | Sign up as `admin`, ForwardAuth compatible              |
 
+DiceFrame has one shared owner access password and no named user accounts. Guests join games through per-game invite/share links. The password comes from the `diceframe` 1Password item (`TRPG_ACCESS_TOKEN`), so changing it in the UI is overridden on restart.
+
 ## Forward Auth (embedded outpost)
 
-Apps without built-in auth sit behind the authentik embedded outpost via `components/authentik` (ext-authz TrafficPolicy + `/outpost.goauthentik.io` route). This covers MeTube (single-user download tool) and Bambuddy (Bambu Lab account auth only). Adding one takes **two** blueprint changes — both are required:
+Apps without built-in auth sit behind the authentik embedded outpost via `components/authentik` (ext-authz TrafficPolicy + `/outpost.goauthentik.io` route). This covers Covel (personal AI RPG), MeTube (single-user download tool) and Bambuddy (Bambu Lab account auth only). Adding one takes **two** blueprint changes — both are required:
 
 1. `blueprints/forward/<app>.yaml` — creates the app's `forward_domain` proxy provider (`external_host` = app URL, `cookie_domain: noirprime.com`).
 2. `blueprints/core/outpost-proxy.yaml` — bind the new provider to the Embedded Outpost's `providers` list. The outpost maps host → provider via `x-forwarded-host`; an unbound provider makes the outpost fall back to an arbitrary bound provider, so logins redirect to a *different* app's domain.

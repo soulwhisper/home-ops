@@ -16,4 +16,6 @@ resources:
   - ./hermes-agent/ks.yaml
   - ./dsh-web/ks.yaml
   - ./dsh-tavern/ks.yaml
+  - ./covel/ks.yaml
+  - ./diceframe/ks.yaml
   - ./open-webui/ks.yaml

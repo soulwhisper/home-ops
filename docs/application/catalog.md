@@ -1,8 +1,8 @@
 # Application Catalog
 
-96 application definition units across 12 namespaces, managed via Flux GitOps. Each table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload.
+98 application definition units across 12 namespaces, managed via Flux GitOps. Each table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload.
 
-The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 12 first-level namespace directories. Together, those namespaces have 83 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 96 definition files declare 129 child Flux Kustomizations and lead to 93 HelmReleases. There are 53 OCIRepositories across the source tree: 52 application-local and one shared app-template source. These are source counts, not counts of running applications.
+The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 12 first-level namespace directories. Together, those namespaces have 85 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 98 definition files declare 131 child Flux Kustomizations and lead to 95 HelmReleases. There are 53 OCIRepositories across the source tree: 52 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
 This catalog is documentation, not a deployment selector. Each namespace's linked `kustomization.yaml` is the current application selection and shared-resource entry point. Definitions remain in their existing directories. See [Cluster Architecture](../infrastructure/kubernetes.md) and [Storage](../infrastructure/storage.md) for reconciliation and data boundaries.
 
@@ -151,17 +151,19 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Bambuddy](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/bambuddy/ks.yaml) | Bambu Lab 3D printer monitor |
 | [Dispatcharr](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/dispatcharr/ks.yaml) | IPTV dispatch with iGPU transcoding |
 
-## servitor-apps — AI Infrastructure (20)
+## servitor-apps — AI Infrastructure (22)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml)
 
-Six direct application definitions and 14 nested MCP definitions. ToolHive configures six VirtualMCP groups: `search`, `cluster`, `persona`, `agent`, `browser`, and `github-pr`.
+Eight direct application definitions and 14 nested MCP definitions. ToolHive configures six VirtualMCP groups: `search`, `cluster`, `persona`, `agent`, `browser`, and `github-pr`.
 
 | App | Purpose |
 | --- | --- |
 | [Hermes Agent](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/hermes-agent/ks.yaml) | AI agent suite with Feishu and scheduled automation |
 | [DSH Web](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/dsh-web/ks.yaml) | Agent workbench |
 | [DSH Tavern](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/dsh-tavern/ks.yaml) | Roleplay chat portal |
+| [Covel](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/covel/ks.yaml) | Agentic AI role-playing framework |
+| [DiceFrame](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/diceframe/ks.yaml) | Self-hosted AI tabletop RPG engine |
 | [Open WebUI](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/open-webui/ks.yaml) | Human chat portal with search-group MCP |
 | [ToolHive](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/toolhive/ks.yaml) | MCP operator, CRDs, and VirtualMCP configuration |
 | [Playwright](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/playwright/ks.yaml) | Standalone Chromium browser runtime for MCP automation |
