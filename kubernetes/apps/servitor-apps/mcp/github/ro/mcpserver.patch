@@ -1,14 +1,17 @@
 ---
+- op: replace
+  path: /metadata/name
+  value: mcp-github-ro
 - op: add
   path: /spec/groupRef
   value:
-    name: search
+    name: github-ro
 - op: add
   path: /spec/env
   value:
     - name: GITHUB_READ_ONLY
       value: "1"
-    # only the toolsets needed by the search tier
+    # only the toolsets needed by read-only repository retrieval
     - name: GITHUB_TOOLSETS
       value: "repos,issues,pull_requests"
     # only serve content from repos the token owns/collaborates on

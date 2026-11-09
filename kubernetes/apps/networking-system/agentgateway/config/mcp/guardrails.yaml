@@ -133,3 +133,30 @@ spec:
               tools/list: "Off"
               prompts/get: Response
               resources/read: Response
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
+# GitHub issue/PR content is untrusted and previously passed through the
+# guarded search tier. Keep the scan after splitting the RO server out.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-guardrails-github-ro
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: mcp-backend-github-ro
+  backend:
+    mcp:
+      guardrails:
+        processors:
+          - remote:
+              backendRef:
+                name: mcp-guardrails
+                port: 9001
+              failureMode: FailClosed
+            methods:
+              tools/call: Full
+              tools/list: "Off"
+              prompts/get: Response
+              resources/read: Response

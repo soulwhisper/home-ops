@@ -101,7 +101,7 @@ spec:
                   return 1
                 }
 
-                for g in search cluster persona agent browser github-pr; do
+                for g in search cluster github-ro persona agent browser github-pr; do
                   pod=$(find_pod "$g") || {
                     echo "no runner pod for $g after 120s"; exit 1; }
                   echo "restarting $g/$pod"

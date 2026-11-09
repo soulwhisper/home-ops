@@ -11,3 +11,15 @@ patches:
       version: v1beta1
       kind: MCPServer
       name: mcp-github
+  - path: externalsecret.patch
+    target:
+      group: external-secrets.io
+      version: v1
+      kind: ExternalSecret
+      name: mcp-github
+  - path: mcpexternalauthconfig.patch
+    target:
+      group: toolhive.stacklok.dev
+      version: v1beta1
+      kind: MCPExternalAuthConfig
+      name: mcp-github

@@ -1,0 +1,7 @@
+---
+- op: replace
+  path: /metadata/name
+  value: mcp-github-ro
+- op: replace
+  path: /spec/headerInjection/valueSecretRef/name
+  value: mcp-github-ro
