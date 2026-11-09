@@ -28,6 +28,7 @@ flowchart TB
         VMCP-CLUSTER["cluster<br/>(6 servers: monitoring/k8s)"]
         VMCP-GITHUBRO["github-ro<br/>(1 server: read-only code)"]
         VMCP-HOME["persona<br/>(1 server: hindsight persona)"]
+
         VMCP-AGENT["agent<br/>(2 servers: forgejo + incident memory)"]
         VMCP-BROWSER["browser<br/>(1 server: Playwright)"]
         VMCP-GITHUBPR["github-pr<br/>(1 server: branch/commit/PR)"]
@@ -161,6 +162,7 @@ the canonical `/mcp` upstream):
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes                      |
 | `/mcp/github-ro` | `vmcp-github-ro` | github-ro (read-only mode + lockdown; repos/issues/pull_requests) | `mcp_github_ro`            | hermes |
 | `/mcp/persona` | `vmcp-persona`| hindsight persona bank                                        | `mcp_persona`                  | none (reserved)                      |
+
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | hermes, external operator agents |
 | `/mcp/browser` | `vmcp-browser`| playwright (Chromium via pod-local CDP proxy)                 | `mcp_browser`                  | none (reserved)                    |
 | `/mcp/github-pr` | `vmcp-github-pr` | github-pr (branch/commit/create PR, no merge)              | `mcp_github_pr`                | none (reserved)                    |
@@ -176,6 +178,7 @@ defined but are unused.
 The persona group uses the `mcp_persona` credential and aggregates only the
 Hindsight `persona` bank; Home Assistant moved to the parked `smarthome`
 group together with its application. `mcp_agent` is never distributed to in-cluster
+
 chat apps. **Grouping rule:** create a group only for a new consumer or a
 new permission class; a new server joins the matching existing group.
 
@@ -326,6 +329,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | firecrawl | Streamable HTTP :8080 | Local Firecrawl instance; gateway-filtered to retrieval tools |
 | context7  | stdio :3000           | Context7 API (2 read tools) |
 | trendradar | Streamable HTTP :8080 (proxy→:3333) | TrendRadar news DB; gateway-filtered to query/analysis (no trigger/notify) |
+
 
 #### github-ro (read-only code retrieval — hermes)
 
