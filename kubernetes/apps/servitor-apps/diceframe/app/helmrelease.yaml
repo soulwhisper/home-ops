@@ -14,7 +14,6 @@ spec:
   values:
     defaultPodOptions:
       automountServiceAccountToken: false
-      hostUsers: false
     controllers:
       *name :
         annotations:
@@ -26,16 +25,12 @@ spec:
             runAsGroup: 1000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
-            seccompProfile:
-              type: RuntimeDefault
         containers:
           app:
             image:
               repository: ghcr.io/diceframe/diceframe
               tag: 3.1.2
             env:
-              # SQLite lives under /app/data; bundled worlds/plugins and the
-              # managed updater seed stay in the image.
               TRPG_WEB_HOST: 0.0.0.0
               TRPG_WEB_PORT: "9876"
               TRPG_DATA_DIR: /app/data
