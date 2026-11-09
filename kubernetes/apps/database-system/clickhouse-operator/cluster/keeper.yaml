@@ -16,6 +16,9 @@ spec:
     topologyZoneKey: topology.kubernetes.io/zone
     nodeHostnameKey: kubernetes.io/hostname
   containerTemplate:
+    image:
+      repository: docker.io/clickhouse/clickhouse-keeper
+      tag: 26.9.10.4
     resources:
       requests: # default = 2C4G
         cpu: 100m
