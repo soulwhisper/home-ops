@@ -47,19 +47,19 @@ flowchart TB
 
     subgraph Components["Kustomize Components"]
         NS_COMP["namespace
-        12 consumers"]
+        9 consumers"]
         KOPIUR_SECRET["kopiur/shared
-        5 consumers"]
+        2 consumers"]
         KOPIUR_BACKUP["kopiur/backup
-        23 consumers"]
+        4 consumers"]
         CACHE["cache
-        7 consumers"]
+        1 consumer"]
         AUTHENTIK["authentik
-        16 consumers"]
+        10 consumers"]
         CNPG["cnpg
-        8 consumers"]
+        5 consumers"]
         DRAGONFLY["dragonfly
-        7 consumers"]
+        4 consumers"]
         CEPH["ceph-bucket
         2 consumers"]
     end
@@ -305,7 +305,7 @@ The `flux-repositories` Kustomization is a dependency of `cluster-apps` and regi
 
 Eight Kustomize Components encode cross-cutting concerns as reusable building blocks. Applications declare which components they need in their `ks.yaml` — the component injects all required resources automatically.
 
-### Component: namespace (12 consumers)
+### Component: namespace (9 consumers)
 
 **Path**: [`kubernetes/components/namespace/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/namespace)
 
@@ -326,13 +326,13 @@ metadata:
 
 The `name: _` is a Kustomize placeholder. The namespace index's `namespace:` transformer sets the actual Namespace name and namespaces the Alert and Provider; this is not Flux `postBuild` substitution.
 
-### Component: kopiur/shared (5 consumers)
+### Component: kopiur/shared (2 consumers)
 
 **Path**: [`kubernetes/components/kopiur/shared/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/shared)
 
 Combines the shared kopiur namespace resources. It patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"` for uid-0/DAC_OVERRIDE backup movers, and injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
 
-### Component: kopiur/backup (23 consumers)
+### Component: kopiur/backup (4 consumers)
 
 **Path**: [`kubernetes/components/kopiur/backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
 
@@ -347,13 +347,13 @@ The most heavily used component. It provisions the backup-and-recovery pipeline 
 
 Applications using this component store snapshots in the NAS VersityGW repository, independently of their live Ceph PVCs. The templates use `postBuild` substitution with `APP`. See [Storage](storage.md) for the repository, restore behavior, and the distinction between rebuildable application configuration and important NAS files.
 
-### Component: cache (7 consumers)
+### Component: cache (1 consumer)
 
 **Path**: [`kubernetes/components/cache/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/cache)
 
 Injects a rewarmable cache/scratch `PersistentVolumeClaim` on a two-replica `ceph-cache` NVMe pool. Replicas are placed on separate hosts so an OSD drain cannot make every copy unavailable during RBD teardown and the node reboot. Data loss on OSD failure is acceptable. Consumers mount it via `existingClaim`. Never use for durable data.
 
-### Component: authentik (16 consumers)
+### Component: authentik (10 consumers)
 
 **Path**: [`kubernetes/components/authentik/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/authentik)
 
@@ -365,7 +365,7 @@ The policy enforces:
 - Unauthenticated requests redirected to the Authentik login flow
 - Session validation on every request
 
-### Component: cnpg (8 consumers)
+### Component: cnpg (5 consumers)
 
 **Path**: [`kubernetes/components/cnpg/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/cnpg)
 
@@ -376,7 +376,7 @@ the username, database name, host and connection strings are templated from
 password used by the application's initialization job. This component does not
 create a separate PostgreSQL cluster per application.
 
-### Component: dragonfly (7 consumers)
+### Component: dragonfly (4 consumers)
 
 **Path**: [`kubernetes/components/dragonfly/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/dragonfly)
 
@@ -559,13 +559,13 @@ kubernetes/
 │   ├── resources.yaml.j2          #   1Password Connect secret template
 │   └── templates/                 #   Chart/tag and values bridges to app sources
 ├── components/                    # Reusable Kustomize Components
-│   ├── namespace/                 #   Namespace + alerts (12 consumers)
-│   ├── kopiur/shared/             #   Namespace-level kopia repo credentials (5 consumers)
-│   ├── kopiur/backup/             #   PVC backup pipeline (23 consumers)
-│   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (7 consumers)
-│   ├── authentik/                 #   SSO traffic policy (16 consumers)
-│   ├── cnpg/                      #   PostgreSQL secret (8 consumers)
-│   ├── dragonfly/                 #   Redis-compatible cache (7 consumers)
+│   ├── namespace/                 #   Namespace + alerts (9 consumers)
+│   ├── kopiur/shared/             #   Namespace-level kopia repo credentials (2 consumers)
+│   ├── kopiur/backup/             #   PVC backup pipeline (4 consumers)
+│   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (1 consumer)
+│   ├── authentik/                 #   SSO traffic policy (10 consumers)
+│   ├── cnpg/                      #   PostgreSQL secret (5 consumers)
+│   ├── dragonfly/                 #   Redis-compatible cache (4 consumers)
 │   └── ceph-bucket/               #   S3 object bucket (2 consumers)
 └── flux/                          # Flux cluster configuration
     ├── cluster/                   # No root kustomization.yaml; Flux autogenerates
