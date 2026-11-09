@@ -35,12 +35,12 @@ directories:
       tags:
       - cluster-v0.0.5
     path: cnpg
-  - configDigest: df6820c535929c4c71877a8bd11276dcd8aed20d6ea6f468586ab1b33d723fd6
+  - configDigest: 348af930e04c7486ded9c761a19758208d8c079eb31e230b8a850753f5df83db
     git:
-      commitTitle: 'chore(operator): release version v1.7.1 (#606)...'
-      sha: 7303238002e1afc06f11ca4ae5072da331efa03d
+      commitTitle: 'feat(operator): release version v1.8.0 (#626)...'
+      sha: 097189ef2149d01edab647fb646e0d75695bdb12
       tags:
-      - v1.7.1
+      - v1.8.0
     path: dragonfly
   path: _sources/database
 - contents:
