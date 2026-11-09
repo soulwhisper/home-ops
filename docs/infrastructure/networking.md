@@ -225,8 +225,8 @@ The two kgateway gateways use the `kgateway` GatewayClass with TLS termination v
 | Path          | Tier                                   |
 | ------------- | -------------------------------------- |
 | `/mcp/search` | search (hermes, open-webui, dsh-web: web/news/code) |
-| `/mcp/cluster`| cluster read-only (hermes)             |
-| `/mcp/persona`| persona read-write (dsh-web)           |
+| `/mcp/cluster`| cluster read-only (hermes, dsh-web)    |
+| `/mcp/persona`| persona read-write (no current consumer) |
 | `/mcp/agent`  | operator agents (hermes and external operators; Forgejo RW + ops memory) |
 
 The search + agent tiers carry the mcp-guardrails ExtMCP sidecar (FailClosed) — untrusted web content feeding an unguarded LLM lane, and operator agents (including hermes) reading alert-derived ticket content; hermes also uses the guarded `agent` LLM lane, while the ExtMCP sidecar adds tool-content scanning; cluster relies on guarded lanes + CEL allowlists + token/SA boundaries; persona is RW-by-design behind the guarded lane and the HA token. Tool allowlists are enforced per tier via `backend.mcp.authorization` CEL (`config/mcp/filters.yaml`).

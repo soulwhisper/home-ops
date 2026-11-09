@@ -19,7 +19,7 @@ spec:
     - fromEntities:
         - host # kubelet probes
   egress:
-    # LLM and tiered MCP endpoints through the guarded agent gateway.
+    # LLM and the two MCP tiers used by the workbench.
     - toServices:
         - k8sService:
             serviceName: agentgateway-proxy
@@ -31,38 +31,7 @@ spec:
             http:
               - method: "POST"
                 path: "/v1/.*"
-              - path: "/mcp(/.*)?"
-    # Mnemon's Hindsight Provider: health, discovery, stats, graph, recall,
-    # retain and forget for persona/work/others (home is the legacy alias).
-    # No UI/API admin access.
-    - toServices:
-        - k8sService:
-            serviceName: hindsight
-            namespace: selfhosted-apps
-      toPorts:
-        - ports:
-            - { port: "8888", protocol: TCP }
-          rules:
-            http:
-              - method: "GET"
-                path: "/health/live"
-              - method: "GET"
-                path: "/v1/default/banks"
-              - method: "GET"
-                path: "/v1/default/banks/(persona|home|work|others)/stats"
-              - method: "GET"
-                path: "/v1/default/banks/(persona|home|work|others)/entities"
-              - method: "GET"
-                path: "/v1/default/banks/(persona|home|work|others)/graph"
-              - method: "GET"
-                path: "/v1/default/banks/(persona|home|work|others)/memories/list"
-              - method: "POST"
-                path: "/v1/default/banks/(persona|home|work|others)/memories/recall"
-              - method: "POST"
-                path: "/v1/default/banks/(persona|home|work|others)/memories"
-              # Soft-forget one memory; no bank config or deletion methods.
-              - method: "PATCH"
-                path: "/v1/default/banks/(persona|home|work|others)/memories/[^/]+"
+              - path: "/mcp/(search|cluster)(/.*)?"
     # Plugin market and runtime plugin downloads. Keep this explicit: the
     - toCIDRSet:
         - cidr: 0.0.0.0/0

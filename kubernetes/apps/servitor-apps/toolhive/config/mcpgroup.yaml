@@ -25,7 +25,7 @@ kind: MCPGroup
 metadata:
   name: persona
 spec:
-  description: "In-cluster, read-write. No egress; Home Assistant control + Hindsight home/persona/work/others banks. Side-effecting tools on a separate endpoint. For dsh-web only."
+  description: "In-cluster, read-write. No egress; Home Assistant control + Hindsight persona bank. Side-effecting tools on a separate endpoint."
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
 apiVersion: toolhive.stacklok.dev/v1beta1
@@ -41,7 +41,7 @@ kind: MCPGroup
 metadata:
   name: browser
 spec:
-  description: "Isolated Chromium automation through Playwright. Public web egress only; CDP is restricted to its MCP workload. Issued to dsh-web."
+  description: "Isolated Chromium automation through Playwright. Public web egress only; CDP is restricted to its MCP workload. No current consumer."
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
 apiVersion: toolhive.stacklok.dev/v1beta1
@@ -49,4 +49,4 @@ kind: MCPGroup
 metadata:
   name: github-pr
 spec:
-  description: "GitHub branch, file commit and pull-request creation without merge. Uses a dedicated repository-scoped credential. Issued to dsh-web."
+  description: "GitHub branch, file commit and pull-request creation without merge. Uses a dedicated repository-scoped credential. No current consumer."
