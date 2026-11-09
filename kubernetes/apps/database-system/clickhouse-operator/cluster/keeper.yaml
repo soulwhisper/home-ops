@@ -18,8 +18,8 @@ spec:
   containerTemplate:
     resources:
       requests: # default = 2C4G
-        cpu: "250m"
-        memory: "256Mi"
+        cpu: 100m
+        memory: 384Mi
       limits: # default = 4C8G
         cpu: "500m"
         memory: "512Mi"

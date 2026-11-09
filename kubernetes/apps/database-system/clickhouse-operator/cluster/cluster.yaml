@@ -88,8 +88,8 @@ spec:
   containerTemplate:
     resources:
       requests:
-        cpu: "2"
-        memory: "4Gi"
+        cpu: 500m
+        memory: "3Gi"
       limits:
         cpu: "2"
         memory: "4Gi"

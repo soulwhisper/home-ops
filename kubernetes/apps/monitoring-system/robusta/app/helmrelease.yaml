@@ -180,7 +180,7 @@ spec:
             value: UTC
       resources:
         requests:
-          cpu: 100m
-          memory: 1Gi
+          cpu: 450m
+          memory: 1280Mi
         limits:
           memory: 2Gi

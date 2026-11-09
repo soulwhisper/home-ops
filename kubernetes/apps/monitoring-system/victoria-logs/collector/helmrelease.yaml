@@ -12,6 +12,10 @@ spec:
 
   values:
     fullnameOverride: *name
+    resources:
+      requests:
+        cpu: 60m
+        memory: 464Mi
     global:
       image:
         registry: quay.io

@@ -11,6 +11,10 @@ spec:
     name: rook-ceph
 
   values:
+    resources:
+      requests:
+        cpu: 600m
+        memory: 384Mi
     crds:
       enabled: true
     csi:
