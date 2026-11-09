@@ -139,6 +139,7 @@ jobs:
             | grep --invert-match --regexp='ks\.yaml$' \
             | grep --invert-match --regexp='kubernetes/bootstrap/' \
             | grep --invert-match --regexp='kubernetes/components/' \
+            | grep --invert-match --regexp='kubernetes/parked/' \
             | grep --invert-match --regexp='authentik/app/blueprints/' || true)
           MANIFESTS=()
           for FILE in "${FILES[@]}"; do

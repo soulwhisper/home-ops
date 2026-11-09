@@ -66,8 +66,7 @@ spec:
 # Ingress lockdown (issue #3934): the API server (8642) runs with a local
 # terminal backend — network access to it must be caller-scoped.
 # 9119 dashboard: kgateway-internal only. 8644 webhook ingest: LAN only
-# (NAS scripts, tailnet-forwarded; frigate ingress was parked with smarthome-apps).
-# 8642: same-namespace consumers.
+# (NAS scripts, tailnet-forwarded). 8642: same-namespace consumers.
 # kubelet probes arrive from the node host — fromEntities host is mandatory.
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
 apiVersion: cilium.io/v2
@@ -90,8 +89,6 @@ spec:
             - { port: "9119", protocol: TCP }
             - { port: "8644", protocol: TCP }
     # (Cilium rejects mixed fromEndpoints+fromCIDR in one rule — keep split)
-    # frigate ingress removed with the parked smarthome-apps namespace; restore
-    # the smarthome-apps selector when that application returns.
     - fromCIDR:
         - 10.10.0.0/24
       toPorts:
