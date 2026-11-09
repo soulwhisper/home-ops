@@ -8,7 +8,7 @@ spec:
   # Search: tool calls, prompts and resources are guarded; tools/list skips
   # the response scan. Agent: full pipeline in mcp-guardrails-agent.
   # - search is the untrusted-content tier (arbitrary web/RSS/git content)
-  #   feeding an unguarded lane (dsh-tavern / uncensored or persona consumers);
+  #   feeding an unguarded lane (uncensored or persona consumers);
   # - agent consumers include external operators and hermes; Hermes uses the
   #   guarded cluster `agent` LLM lane, while the ExtMCP sidecar additionally
   #   scans MCP tool calls/results because Forgejo tickets can carry

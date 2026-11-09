@@ -27,9 +27,6 @@ spec:
       namespace: kube-system
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      namespace: media-apps
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
       namespace: monitoring-system
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
@@ -40,9 +37,6 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       namespace: servitor-apps
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      namespace: smarthome-apps
   to:
     - group: ""
       kind: Service

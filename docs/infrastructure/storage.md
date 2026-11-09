@@ -130,6 +130,12 @@ MeTube writes to subdirectories of `downloads`. Losing a cache, optional
 snapshot or explicitly disposable application state is not the same as losing
 the NAS library files.
 
+Media, gaming and smart-home namespaces, plus four self-hosted applications,
+are parked: removing them from the active indexes is expected to prune their
+workloads and PVCs (verify the prune result), while NAS-hosted files are
+untouched. CNPG databases/roles and leftover kopiur Snapshot objects still
+require the manual post-merge cleanup.
+
 This is a data-value boundary, not an instruction to delete resources. Any
 service retirement still needs an explicit application or batch decision;
 stopping an application must not silently remove `media-nfs`, its namespace,
@@ -139,7 +145,7 @@ are outside the Kubernetes PVC backup mechanism.
 ### kopiur — PVC Backup
 
 [kopiur](https://github.com/home-operations/kopiur) (Kopia-native Rust operator)
-provides automated PVC backup and restore for **21 application definitions**.
+provides automated PVC backup and restore for **4 application definitions**; media, gaming, smart-home and parked self-hosted applications no longer carry policies.
 The reusable components are
 [`backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
 (referenced by each consumer's `ks.yaml`) and

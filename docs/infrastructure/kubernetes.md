@@ -39,27 +39,27 @@ flowchart TB
         ROOT --> CA["cluster-apps
         Kustomization"]
         FR --> CA
-        CA --> NS["12 namespace
+        CA --> NS["9 namespace
         Kustomize indexes"]
-        NS --> APPS["98 ks.yaml files
-        128 child Flux Kustomizations"]
+        NS --> APPS["71 ks.yaml files
+        101 child Flux Kustomizations"]
     end
 
     subgraph Components["Kustomize Components"]
         NS_COMP["namespace
-        12 consumers"]
+        9 consumers"]
         KOPIUR_SECRET["kopiur/shared
-        5 consumers"]
+        2 consumers"]
         KOPIUR_BACKUP["kopiur/backup
-        23 consumers"]
+        4 consumers"]
         CACHE["cache
-        7 consumers"]
+        1 consumer"]
         AUTHENTIK["authentik
-        16 consumers"]
+        10 consumers"]
         CNPG["cnpg
-        8 consumers"]
+        5 consumers"]
         DRAGONFLY["dragonfly
-        7 consumers"]
+        4 consumers"]
         CEPH["ceph-bucket
         2 consumers"]
     end
@@ -108,19 +108,19 @@ The two cluster-level `Kustomization` resources live in [`kubernetes/flux/cluste
 
 Neither [`kubernetes/apps/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) nor [`kubernetes/flux/cluster/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/flux/cluster) has a root `kustomization.yaml`. Flux autogenerates these build entrypoints by discovering manifests and explicit Kustomize indexes. Adding resources under an auto-discovered root can therefore affect deployment; `apps/` is not an inactive definition library.
 
-The 12 namespace directories each have an explicit **Kustomize index**, not a separate namespace-level Flux Kustomization. For example, the [`media-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/kustomization.yaml) selects application `ks.yaml` files and shared namespace/Kopiur components. Its `namespace: media-apps` injects `metadata.namespace` into the selected namespaced objects. All **128 child Flux Kustomizations** omit `metadata.namespace` in their source and rely on this index; `spec.targetNamespace` controls their rendered resources, not the namespace of the Flux Kustomization itself.
+The 9 namespace directories each have an explicit **Kustomize index**, not a separate namespace-level Flux Kustomization. For example, the [`monitoring-system` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/kustomization.yaml) selects application `ks.yaml` files and shared namespace components. Its `namespace: monitoring-system` injects `metadata.namespace` into the selected namespaced objects. All **101 child Flux Kustomizations** omit `metadata.namespace` in their source and rely on this index; `spec.targetNamespace` controls their rendered resources, not the namespace of the Flux Kustomization itself.
 
-There are **98 `ks.yaml` definition units**, containing one or more Flux Kustomizations each, and **95 HelmReleases**. A `ks.yaml` selects resource build paths such as `app/`, `cluster/`, `drivers/`, or `config/`; it is not interchangeable with an `app/kustomization.yaml`, which builds workload resources. For example, [`rook-ceph/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/rook-ceph/ks.yaml) defines three child Kustomizations. The [`servitor-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml) also includes a nested `mcp/` index.
+There are **71 `ks.yaml` definition units**, containing one or more Flux Kustomizations each, and **72 HelmReleases**. A `ks.yaml` selects resource build paths such as `app/`, `cluster/`, `drivers/`, or `config/`; it is not interchangeable with an `app/kustomization.yaml`, which builds workload resources. For example, [`rook-ceph/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/rook-ceph/ks.yaml) defines three child Kustomizations. The [`servitor-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml) also includes a nested `mcp/` index.
 
-The source/static count is **130 Flux Kustomizations** (128 children plus the two in `cluster.yaml`). The operator-created root adds one, giving **131 in the deployed topology**. See the [Application Catalog](../application/catalog.md) for definition paths and counts, and [Storage](storage.md) for data ownership and lifecycle boundaries.
+The source/static count is **103 Flux Kustomizations** (101 children plus the two in `cluster.yaml`). The operator-created root adds one, giving **104 in the deployed topology**. See the [Application Catalog](../application/catalog.md) for definition paths and counts, and [Storage](storage.md) for data ownership and lifecycle boundaries.
 
 To inspect an application's composed output from the repository root:
 
 ```shell
-just k8s render-ks media-apps moviepilot
+just k8s render-ks monitoring-system langfuse
 ```
 
-This runs `flate build ks --namespace media-apps moviepilot` without applying resources. A plain `kustomize build .../app` does not include the parent namespace index, cluster patches, or Flux `spec.components` and substitution. In contrast, `just k8s apply-ks <namespace> <name>` applies rendered resources, and `just reconcile` requests root reconciliation; both mutate the cluster and are not validation commands.
+This runs `flate build ks --namespace monitoring-system langfuse` without applying resources. A plain `kustomize build .../app` does not include the parent namespace index, cluster patches, or Flux `spec.components` and substitution. In contrast, `just k8s apply-ks <namespace> <name>` applies rendered resources, and `just reconcile` requests root reconciliation; both mutate the cluster and are not validation commands.
 
 ### Flux Controller Tuning
 
@@ -135,13 +135,13 @@ The [FluxInstance configuration](https://github.com/soulwhisper/home-ops/blob/ma
 
 ## Strategic Patching System
 
-The `cluster-apps` Kustomization applies three strategic patches to its 128 child Flux Kustomizations. They are defined in [`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml); the effective configuration includes these patches, not just the local `ks.yaml`.
+The `cluster-apps` Kustomization applies three strategic patches to its 101 child Flux Kustomizations. They are defined in [`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml); the effective configuration includes these patches, not just the local `ks.yaml`.
 
 ### Layer 1: Kustomization Defaults (managed annotation)
 
 **Target**: Any `Kustomization` with annotation `config.home-ops.io/managed=true`
 
-All 128 child Flux Kustomizations carry this annotation. The patch sets:
+All 101 child Flux Kustomizations carry this annotation. The patch sets:
 
 ```yaml
 spec:
@@ -159,13 +159,13 @@ spec:
 `wait: true` in its own `ks.yaml` — an injected default would silently
 override it.
 
-These scalar values override local declarations. In particular, [`flux-operator`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-operator/ks.yaml), [`flux-instance`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/ks.yaml), and [`coredns`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/coredns/ks.yaml) declare `prune: false` locally, but all three have effective `prune: true`, as do all 128 children. The local value is not deletion protection; changes that remove a core Kustomization or alter its ownership must account for its effective prune behavior.
+These scalar values override local declarations. In particular, [`flux-operator`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-operator/ks.yaml), [`flux-instance`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/ks.yaml), and [`coredns`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/coredns/ks.yaml) declare `prune: false` locally, but all three have effective `prune: true`, as do all 101 children. The local value is not deletion protection; changes that remove a core Kustomization or alter its ownership must account for its effective prune behavior.
 
 ### Layer 2: Baseline Infrastructure Dependencies (deps label)
 
 **Target**: Any `Kustomization` with label `config.home-ops.io/deps=infra`
 
-The 60 child Kustomizations carrying this label use a uniform four-item infrastructure gate:
+The 36 child Kustomizations carrying this label use a uniform four-item infrastructure gate:
 
 ```yaml
 spec:
@@ -180,7 +180,7 @@ spec:
       namespace: storage-system
 ```
 
-This patch intentionally **replaces** the local `dependsOn` list; it does not append or merge entries. For example, [`moviepilot/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/moviepilot/ks.yaml) declares `cnpg-cluster`, `dragonfly-operator`, and `media-nfs`, but its effective list is exactly the four entries above. Children without this label retain their local dependencies. A `sourceRef` to `gitops-system` identifies the Git source; it is not a `dependsOn` edge.
+This patch intentionally **replaces** the local `dependsOn` list; it does not append or merge entries. For example, a `ks.yaml` that declares `cnpg-cluster`, `dragonfly-operator`, and a shared NFS claim still resolves to exactly the four entries above. Children without this label retain their local dependencies. A `sourceRef` to `gitops-system` identifies the Git source; it is not a `dependsOn` edge.
 
 Keep `deps=infra` when the uniform four-item gate is sufficient. Omit it
 only for producer-specific prerequisites that the replacing patch would
@@ -290,18 +290,14 @@ spec:
     namespace: gitops-system
 ```
 
-This cross-namespace reference is used by 43 HelmReleases across 8 namespaces:
+This cross-namespace reference is used by 16 HelmReleases across 4 namespaces:
 
-| Namespace         | Count | Example Apps |
-| ----------------- | ----- | ------------ |
-| media-apps        | 8     | jellyfin, kavita, navidrome, qbittorrent, immich, moviepilot, metube, qbittorrent-ui |
-| selfhosted-apps   | 12    | searxng, stirling-pdf, bambuddy, dispatcharr, karakeep, homepage, trendradar, hindsight, firecrawl |
-| smarthome-apps    | 7     | home-assistant (app + sgcc), frigate, frigate-vision, zigbee2mqtt, mosquitto, scrypted |
-| servitor-apps     | 8     | hermes-agent, dsh-web, dsh-tavern, covel, diceframe, open-webui, playwright |
-| gaming-apps       | 2     | crafty-controller, foundryvtt |
-| monitoring-system | 4     | langfuse, webhook-relay, vmware-exporter, krr |
-| networking-system | 1     | agentgateway MCP config |
-| database-system   | 1     | postgres-backup-verify (CNPG maintenance) |
+| Namespace         | Count | Apps |
+| ----------------- | ----- | ---- |
+| monitoring-system | 3     | langfuse, vmware-exporter, webhook-relay |
+| networking-system | 1     | mcp-guardrails |
+| selfhosted-apps   | 7     | bambuddy, firecrawl (+database), hindsight, homepage, searxng, trendradar |
+| servitor-apps     | 5     | covel, diceframe, hermes-agent, open-webui, playwright |
 
 The `flux-repositories` Kustomization is a dependency of `cluster-apps` and registers the shared source. It sets `wait: false`, so this edge does not itself wait for the OCI artifact to become ready; helm-controller resolves chart source readiness.
 
@@ -309,7 +305,7 @@ The `flux-repositories` Kustomization is a dependency of `cluster-apps` and regi
 
 Eight Kustomize Components encode cross-cutting concerns as reusable building blocks. Applications declare which components they need in their `ks.yaml` — the component injects all required resources automatically.
 
-### Component: namespace (12 consumers)
+### Component: namespace (9 consumers)
 
 **Path**: [`kubernetes/components/namespace/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/namespace)
 
@@ -330,17 +326,17 @@ metadata:
 
 The `name: _` is a Kustomize placeholder. The namespace index's `namespace:` transformer sets the actual Namespace name and namespaces the Alert and Provider; this is not Flux `postBuild` substitution.
 
-### Component: kopiur/shared (5 consumers)
+### Component: kopiur/shared (2 consumers)
 
 **Path**: [`kubernetes/components/kopiur/shared/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/shared)
 
 Combines the shared kopiur namespace resources. It patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"` for uid-0/DAC_OVERRIDE backup movers, and injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
 
-### Component: kopiur/backup (23 consumers)
+### Component: kopiur/backup (4 consumers)
 
 **Path**: [`kubernetes/components/kopiur/backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
 
-The most heavily used component. It provisions the backup-and-recovery pipeline for a stateful application:
+It provisions the backup-and-recovery pipeline for a stateful application:
 
 | Resource                | Purpose                                                                                 |
 | ----------------------- | --------------------------------------------------------------------------------------- |
@@ -351,13 +347,13 @@ The most heavily used component. It provisions the backup-and-recovery pipeline 
 
 Applications using this component store snapshots in the NAS VersityGW repository, independently of their live Ceph PVCs. The templates use `postBuild` substitution with `APP`. See [Storage](storage.md) for the repository, restore behavior, and the distinction between rebuildable application configuration and important NAS files.
 
-### Component: cache (7 consumers)
+### Component: cache (1 consumer)
 
 **Path**: [`kubernetes/components/cache/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/cache)
 
 Injects a rewarmable cache/scratch `PersistentVolumeClaim` on a two-replica `ceph-cache` NVMe pool. Replicas are placed on separate hosts so an OSD drain cannot make every copy unavailable during RBD teardown and the node reboot. Data loss on OSD failure is acceptable. Consumers mount it via `existingClaim`. Never use for durable data.
 
-### Component: authentik (16 consumers)
+### Component: authentik (10 consumers)
 
 **Path**: [`kubernetes/components/authentik/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/authentik)
 
@@ -369,7 +365,7 @@ The policy enforces:
 - Unauthenticated requests redirected to the Authentik login flow
 - Session validation on every request
 
-### Component: cnpg (8 consumers)
+### Component: cnpg (5 consumers)
 
 **Path**: [`kubernetes/components/cnpg/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/cnpg)
 
@@ -380,7 +376,7 @@ the username, database name, host and connection strings are templated from
 password used by the application's initialization job. This component does not
 create a separate PostgreSQL cluster per application.
 
-### Component: dragonfly (7 consumers)
+### Component: dragonfly (4 consumers)
 
 **Path**: [`kubernetes/components/dragonfly/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/dragonfly)
 
@@ -408,20 +404,20 @@ Injects an `ObjectBucketClaim` that provisions an S3-compatible bucket from the 
 
 ### Component Composition
 
-Applications frequently stack multiple components. For example, `moviepilot` (`kubernetes/apps/media-apps/moviepilot/ks.yaml`) uses three:
+Applications frequently stack multiple components. For example, `langfuse` uses three:
 
 ```yaml
 components:
+  - ../../../../components/ceph-bucket # Object bucket for uploads
   - ../../../../components/cnpg # PostgreSQL database
   - ../../../../components/dragonfly # Redis cache
-  - ../../../../components/kopiur/backup # PVC backup to S3
 ```
 
-The only five-component stack is `open-webui` (`cache`, `authentik`, `cnpg`, `dragonfly`, `ceph-bucket`). `netbox` uses `cnpg`, `dragonfly`, and `kopiur/backup`; `langfuse` uses `cnpg`, `dragonfly`, and `ceph-bucket`.
+The only five-component stack is `open-webui` (`cache`, `authentik`, `cnpg`, `dragonfly`, `ceph-bucket`). `langfuse` uses `cnpg`, `dragonfly`, and `ceph-bucket`.
 
 ## Namespace Inventory
 
-Application definitions are grouped into 12 namespace directories. The numbering below is an inventory, not a namespace-level reconciliation DAG:
+Application definitions are grouped into 9 namespace directories. The numbering below is an inventory, not a namespace-level reconciliation DAG:
 
 | #   | Namespace           | Purpose                              | Key Resources                                                                                                                                                                                                                              |
 | --- | ------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -431,12 +427,9 @@ Application definitions are grouped into 12 namespace directories. The numbering
 | 4   | `database-system`   | Database operators                   | CloudNativePG, Dragonfly Operator, ClickHouse Operator                                                                                                                                                                                     |
 | 5   | `networking-system` | Ingress, DNS, API gateway            | kgateway (Envoy), Agent Gateway (AI agent routing), ExternalDNS, forgejo-proxy |
 | 6   | `monitoring-system` | Observability                        | Victoria Metrics (operator + cluster), Victoria Logs, Victoria Traces, Grafana, Prometheus CRDs, kube-state-metrics, node-exporter, blackbox-exporter, Smartctl exporter, OTel Collector, Silence Operator, Langfuse, Robusta, webhook-relay, Headlamp, KRR, VMware exporter |
-| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, DSH Web, DSH Tavern, Covel, DiceFrame, Open WebUI, Playwright, Toolhive, MCP definitions (14 units) |
-| 8   | `smarthome-apps`    | Home automation                      | Home Assistant (app + SGCC), Frigate NVR (+ frigate-vision), Zigbee2MQTT, Mosquitto MQTT, Scrypted, smarthome-nfs                                                                                                                                                            |
-| 9   | `media-apps`        | Media serving and management         | Jellyfin, Kavita, Navidrome, qBittorrent (+ qbittorrent-ui), Immich, MoviePilot, MeTube, media-nfs                                                                                                                                                                       |
-| 10  | `selfhosted-apps`   | Self-hosted web services             | SearXNG, NetBox, Stirling PDF, Karakeep, Homepage, Hindsight, Dispatcharr, BambuBuddy, trendradar, Firecrawl |
-| 11  | `gaming-apps`       | Game servers                         | Crafty Controller (Minecraft), Foundry VTT                                                                                                                                                                                                 |
-| 12  | `gitops-system`     | Flux itself                          | Flux Operator, Flux Instance, System Upgrade Controller                                                                                                                                                                                    |
+| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, Covel, DiceFrame, Open WebUI, Playwright, Toolhive, MCP definitions (13 units) |
+| 8   | `selfhosted-apps`   | Self-hosted web services             | SearXNG, Homepage, Hindsight, BambuBuddy, trendradar, Firecrawl |
+| 9   | `gitops-system`     | Flux itself                          | Flux Operator, Flux Instance, System Upgrade Controller                                                                                                                                                                                    |
 
 ### Dependency Order
 
@@ -516,7 +509,7 @@ Two custom labels and an annotation drive the strategic patching and component i
 
 **Type**: Annotation
 **Purpose**: Opts a `Kustomization` into Layer 1 strategic patching (Kustomization defaults).
-**Scope**: All 128 child Flux Kustomizations in 98 `ks.yaml` files.
+**Scope**: All 101 child Flux Kustomizations in 71 `ks.yaml` files.
 
 Without this annotation, a Kustomization would not receive the automatic `sourceRef`, `prune`, `interval`, and `timeout` defaults. Infrastructure-only Kustomizations (like `flux-repositories`) omit it intentionally.
 
@@ -524,7 +517,7 @@ Without this annotation, a Kustomization would not receive the automatic `source
 
 **Type**: Label
 **Purpose**: Opts a `Kustomization` into Layer 2 strategic patching (baseline infrastructure dependencies).
-**Scope**: 60 child Flux Kustomizations.
+**Scope**: 36 child Flux Kustomizations.
 
 This label signals "I'm a workload that needs the core infra layer." Infrastructure components themselves (e.g., cert-manager, rook-ceph, cnpg-operator) omit this label — they _are_ the infra, so they only carry `managed: "true"`.
 
@@ -558,24 +551,21 @@ kubernetes/
 │   ├── networking-system/         #  5. Ingress, DNS, API gateway
 │   ├── monitoring-system/         #  6. Observability stack
 │   ├── servitor-apps/             #  7. AI and development tooling
-│   ├── smarthome-apps/            #  8. Home automation
-│   ├── media-apps/                #  9. Media serving
-│   ├── selfhosted-apps/           # 10. Self-hosted web services
-│   ├── gaming-apps/               # 11. Game servers
-│   └── gitops-system/             # 12. Flux itself
+│   ├── selfhosted-apps/           #  8. Self-hosted web services
+│   └── gitops-system/             #  9. Flux itself
 ├── bootstrap/                     # Pre-Flux cluster provisioning
 │   ├── helmfile.yaml              #   11-release bootstrap DAG
 │   ├── default.yaml               #   Release template inheritance
 │   ├── resources.yaml.j2          #   1Password Connect secret template
 │   └── templates/                 #   Chart/tag and values bridges to app sources
 ├── components/                    # Reusable Kustomize Components
-│   ├── namespace/                 #   Namespace + alerts (12 consumers)
-│   ├── kopiur/shared/             #   Namespace-level kopia repo credentials (5 consumers)
-│   ├── kopiur/backup/             #   PVC backup pipeline (23 consumers)
-│   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (7 consumers)
-│   ├── authentik/                 #   SSO traffic policy (16 consumers)
-│   ├── cnpg/                      #   PostgreSQL secret (8 consumers)
-│   ├── dragonfly/                 #   Redis-compatible cache (7 consumers)
+│   ├── namespace/                 #   Namespace + alerts (9 consumers)
+│   ├── kopiur/shared/             #   Namespace-level kopia repo credentials (2 consumers)
+│   ├── kopiur/backup/             #   PVC backup pipeline (4 consumers)
+│   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (1 consumer)
+│   ├── authentik/                 #   SSO traffic policy (10 consumers)
+│   ├── cnpg/                      #   PostgreSQL secret (5 consumers)
+│   ├── dragonfly/                 #   Redis-compatible cache (4 consumers)
 │   └── ceph-bucket/               #   S3 object bucket (2 consumers)
 └── flux/                          # Flux cluster configuration
     ├── cluster/                   # No root kustomization.yaml; Flux autogenerates

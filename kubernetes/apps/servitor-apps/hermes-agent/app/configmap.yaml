@@ -36,14 +36,6 @@ data:
         enabled: true
         extra:
           port: 8644
-          routes:
-            frigate-alert:
-              secret: $${FRIGATE_WEBHOOK_SECRET}
-              profile: ops
-              prompt: |
-                [Frigate alert] camera={camera} severity={severity}: {description}
-                (label={label}, zones={zones}, event={event_id}, ts={timestamp})
-              deliver: log
     # Side tasks pinned to the cheap omni lane (body model -> x-model header).
     # Each task carries the omni lane key; the main agent lane key never
     # reaches the omni route.
@@ -166,7 +158,6 @@ data:
     API_SERVER_ENABLED=true
     API_SERVER_HOST=0.0.0.0
     API_SERVER_KEY=$${API_SERVER_KEY}
-    FRIGATE_WEBHOOK_SECRET=$${FRIGATE_WEBHOOK_SECRET}
     EOF
 
     # remove leftover profiles on upgrade — multiplex_profiles=true keeps any

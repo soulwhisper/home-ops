@@ -9,8 +9,6 @@ Source: Flux manifests in `kubernetes/apps/`.
 flowchart TB
     subgraph Clients["AI Clients"]
         Hermes["Hermes Agent"]
-        Tavern["DSH Tavern"]
-        DSHW["dsh-web (cluster)"]
         OWUI["Open WebUI"]
         HS["Hindsight"]
     end
@@ -29,7 +27,8 @@ flowchart TB
         VMCP-SEARCH["search<br/>(3 servers: web/news/docs)"]
         VMCP-CLUSTER["cluster<br/>(6 servers: monitoring/k8s)"]
         VMCP-GITHUBRO["github-ro<br/>(1 server: read-only code)"]
-        VMCP-HOME["persona<br/>(2 servers: smart home/persona)"]
+        VMCP-HOME["persona<br/>(1 server: hindsight persona)"]
+
         VMCP-AGENT["agent<br/>(2 servers: forgejo + incident memory)"]
         VMCP-BROWSER["browser<br/>(1 server: Playwright)"]
         VMCP-GITHUBPR["github-pr<br/>(1 server: branch/commit/PR)"]
@@ -49,8 +48,6 @@ flowchart TB
     AG-MCP --> VMCP-AGENT
     AG-MCP --> VMCP-BROWSER
     AG-MCP --> VMCP-GITHUBPR
-    Tavern --> External
-    DSHW --> External
     Clients --> Obs
 ```
 
@@ -87,7 +84,7 @@ inject the oMLX server key via `policies.auth.secretRef`
 (`studio-api-auth`). Consumers authenticate with **per-lane** API keys
 (ExternalSecret-managed from the 1Password `agentgateway` item; format
 `llm-<lane>-<hex16>`): `llm_uncensored` (open chat / open-webui),
-`llm_persona` (dsh-tavern RP), `llm_agent` (hermes, robusta), `llm_omni`
+`llm_persona` (archived dsh-tavern RP), `llm_agent` (hermes, robusta), `llm_omni`
 (extractors, hermes aux). Each model route carries its own
 apiKeyAuthentication policy covering both inference and discovery, so a chat
 key cannot call the automation lane. Each route accepts only its own lane key;
@@ -139,14 +136,12 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | robusta (holmes)     | `agent`           | Ornith-1.5-35B      | Alert RCA + ScheduledHealthChecks; 32K client context cap bounds oMLX prefill memory; temperature 0.6 per model tuning |
 | hindsight            | `omni`            | MiniCPM-o 4.5      | Extraction-dominant (single-model constraint); embeddings + reranker via gateway media routes |
 | firecrawl            | `omni`            | MiniCPM-o 4.5      | Batch page extraction/summarization                          |
-| karakeep             | `omni`            | MiniCPM-o 4.5      | Text + image tagging (unified); embeddings via `/v1/embeddings` (model `embedding`, 1024d) |
 | trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); queryable via the `search` MCP tier |
-| home-assistant-sgcc  | `omni`            | MiniCPM-o 4.5      | Meter/bill photo OCR                                         |
-| dsh-tavern           | `persona`         | Orion-26B-A4B-v1.1 | RP portal (dsh-tavern image); provider/key GitOps-managed via `llm_persona` |
-| dsh-web              | `uncensored`/`deepseek` | Qwen3.8-27B / DeepSeek | Agent workbench (servitor-apps); shared provider + search/cluster MCP tiers |
 | open-webui           | `uncensored`      | Qwen3.8-27B        | Human chat portal; search-tier MCP and OTEL traces |
 
-Both DSH apps also expose DeepSeek through `DEEPSEEK_API_KEY`. It is a direct external provider, not an agentgateway lane, and does not override the default model.
+Parked applications (media, gaming, smart-home and four self-hosted apps) no
+longer consume these lanes, and the two DSH apps are archived; their lane
+assignments above are historical.
 
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
 `/v1` route for that model; their prompts carry scraped web content, so a low rate of
@@ -163,10 +158,11 @@ the canonical `/mcp` upstream):
 
 | Route          | vmcp          | Servers (aggregated)                                          | Key (1Password `agentgateway`) | Issued to                    |
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
-| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar                               | `mcp_search`                   | hermes, open-webui, dsh-web     |
-| `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes, dsh-web                      |
+| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar                               | `mcp_search`                   | hermes, open-webui     |
+| `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes                      |
 | `/mcp/github-ro` | `vmcp-github-ro` | github-ro (read-only mode + lockdown; repos/issues/pull_requests) | `mcp_github_ro`            | hermes |
-| `/mcp/persona` | `vmcp-persona`| home-assistant, hindsight persona bank                        | `mcp_persona`                  | none (reserved)                      |
+| `/mcp/persona` | `vmcp-persona`| hindsight persona bank                                        | `mcp_persona`                  | none (reserved)                      |
+
 | `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | hermes, external operator agents |
 | `/mcp/browser` | `vmcp-browser`| playwright (Chromium via pod-local CDP proxy)                 | `mcp_browser`                  | none (reserved)                    |
 | `/mcp/github-pr` | `vmcp-github-pr` | github-pr (branch/commit/create PR, no merge)              | `mcp_github_pr`                | none (reserved)                    |
@@ -176,12 +172,13 @@ scopes the search consumer to search and keeps chat-tier consumers out of incide
 memory and the tickets repo. The read-only GitHub server was split out of
 `search` into its own `github-ro` tier so cluster-tier consumers can hold code
 retrieval without the web-retrieval toolsets; `search` no longer exposes GitHub.
-`search` is held by hermes, open-webui, and dsh-web; `cluster` by hermes and
-dsh-web; `github-ro` by hermes only. Persona, browser, and github-pr remain
+With the DSH apps archived, search is consumed by hermes and open-webui;
+cluster and github-ro by hermes. Persona, browser, and github-pr remain
 defined but are unused.
-The persona group uses the `mcp_persona` credential. It now aggregates only
-Home Assistant and the Hindsight `persona` bank; the `home`/`work`/`others`
-proxies were removed. `mcp_agent` is never distributed to in-cluster
+The persona group uses the `mcp_persona` credential and aggregates only the
+Hindsight `persona` bank; Home Assistant moved to the parked `smarthome`
+group together with its application. `mcp_agent` is never distributed to in-cluster
+
 chat apps. **Grouping rule:** create a group only for a new consumer or a
 new permission class; a new server joins the matching existing group.
 
@@ -208,8 +205,7 @@ rather than passing them unguarded). The 1.4.0 LoopRule evaluates only the
 newest call fingerprint: historical retry triads cannot deny new tools or
 arguments, while identical retries still block. This prevents denied attempts
 from permanently locking a trace. Scope decision (2026-10-20): search is
-the tier where untrusted web content reaches an unguarded lane (dsh-tavern /
-any `uncensored`- or `persona`-lane consumer). Hermes rides the guarded
+the tier where untrusted web content reaches an unguarded lane (any `uncensored`- or `persona`-lane consumer). Hermes rides the guarded
 `agent` LLM lane, and the ExtMCP sidecar additionally scans MCP tool content
 because forgejo ticket bodies carry alert/log-derived (untrusted) strings.
 DSH Web now uses only the unguarded `uncensored` lane or direct DeepSeek and
@@ -271,7 +267,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **State**: shared CNPG for app data and pgvector, app Dragonfly for session/rate-limit state, and the `open-webui` Ceph bucket for uploads and KB files; the entire data directory is rewarmable cache on the `open-webui-cache` ceph-cache PVC
 - **Egress**: agentgateway, CNPG, Dragonfly, Ceph RGW, OTLP collector, kube-dns, and world-except-private for RAG fetching
 
-### DSH Web
+### DSH Web (archived)
 
 - Agent workbench, image `ghcr.io/soulwhisper/dsh-web` (DSH Web + `dshmarket` + required forward-auth). Lives in **servitor-apps**
 - **Auth**: Authentik forward-auth at the gateway; the blueprint owns group authorization. The app consumes the stable owner subject from the `app-user` ExternalSecret and no longer references Authentik groups. No startup-token or local-password fallback
@@ -282,7 +278,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **LLM/MCP**: UI-selectable agentgateway `uncensored` and DeepSeek providers; MCP uses the guarded search/cluster tiers. No default model is pinned
 - **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (`/v1/*` + `/mcp/(search|cluster)*`), world-except-private :443 for direct DeepSeek LLM calls and the user-driven plugin market, kube-dns
 
-### DSH Tavern
+### DSH Tavern (archived)
 
 - RP chat portal, image `ghcr.io/soulwhisper/dsh-tavern` (dsh-tavern profile + eco plugins baked). Lives in **servitor-apps**
 - **LLM**: GitOps-managed `persona` gateway lane (`llm_persona`, Orion-26B-A4B-v1.1 4-bit) plus DeepSeek via `DEEPSEEK_API_KEY`; no default model is pinned
@@ -323,9 +319,9 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
     across all seven groups (homelab-tickets#59)
 - **Ingress restricted**: only agentgateway-proxy (MCP protocol, tiered `/mcp/*`) and vmagent (metrics scrape) can connect; chat frontends reach tools through the gateway, never directly
 
-### MCP Servers (16 total)
+### MCP Servers (15 total)
 
-#### search (web/docs/news/codebase retrieval — hermes, open-webui, dsh-web)
+#### search (web/docs/news retrieval — hermes, open-webui)
 
 | Server    | Transport             | Notes                    |
 | --------- | --------------------- | ------------------------ |
@@ -333,13 +329,14 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | context7  | stdio :3000           | Context7 API (2 read tools) |
 | trendradar | Streamable HTTP :8080 (proxy→:3333) | TrendRadar news DB; gateway-filtered to query/analysis (no trigger/notify) |
 
+
 #### github-ro (read-only code retrieval — hermes)
 
 | Server    | Transport     | Notes                                                                 |
 | --------- | ------------- | --------------------------------------------------------------------- |
-| github-ro | HTTP :8082    | `GITHUB_READ_ONLY=1` + lockdown, toolsets repos/issues/pull_requests; uses the shared GitHub PAT from `github-keys` (same credential as github-pr) and keeps the FailClosed injection scan. Split from `search` so cluster-tier consumers can hold it without the web-retrieval toolsets. |
+| github-ro | HTTP :8082    | `GITHUB_READ_ONLY=1` + lockdown, toolsets repos/issues/pull_requests; uses the shared write-capable GitHub PAT from `github-keys` (same credential as github-pr); read-only is enforced by `GITHUB_READ_ONLY=1` plus lockdown, not by token scope. Keeps the FailClosed injection scan. Split from `search` so cluster-tier consumers can hold it without the web-retrieval toolsets. |
 
-#### cluster (read-only, no egress — hermes, dsh-web)
+#### cluster (read-only, no egress — hermes)
 
 | Server        | Transport             | Connects To                   |
 | ------------- | --------------------- | ----------------------------- |
@@ -393,8 +390,10 @@ enabled throughout.
 
 | Server            | Transport            | Connects To            |
 | ----------------- | -------------------- | ---------------------- |
-| home-assistant    | HTTP (FastMCP) :8086 | Home Assistant         |
 | hindsight-persona | HTTP proxy :8080     | Hindsight `persona` bank (single-bank MCPToolConfig) |
+
+The smart-home control server is parked with `smarthome-apps` under the
+`smarthome` group (`kubernetes/parked/servitor-apps/mcp/smarthome`).
 
 #### agent (operator agents only)
 
@@ -455,12 +454,12 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 - AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`)
 - Delivery: Feishu custom group robot (`FEISHU_WEBHOOK_URL` from 1Password `feishu.newsbot_webhook`); HTML report at `news.noirprime.com` (SSO)
-- MCP server (:3333) registered as `trendradar` in the `search` group (gateway-filtered to query/analysis tools; consumed by hermes, open-webui, and dsh-web)
+- MCP server (:3333) registered as `trendradar` in the `search` group (gateway-filtered to query/analysis tools; consumed by hermes and open-webui)
 - Config fully in ConfigMap (`config.yaml` + `frequency_words.txt` + `ai_interests.txt`); output on 1Gi ceph-block PVC
 
 ## AI-Adjacent Services
 
-### Vision alerting (frigate-vision)
+### Vision alerting (frigate-vision — parked)
 
 Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`objects.genai`, multi-frame, per-camera/object prompts) runs on an openai-compatible provider pointed at the `omni` lane (MiniCPM-o 4.5, `descriptions` role). The caption prompt instructs the model to start with a `[low|medium|high]` severity prefix. Frigate config (provider + per-camera GenAI toggle) lives in the Frigate UI/DB — it is not GitOps-managed. `smarthome-apps/frigate-vision` is a slim forwarder only (python, ConfigMap-mounted): MQTT `frigate/tracked_object_update` (`type: description`) → parse severity prefix → gate on `MIN_SEVERITY` (default medium) → enrich via frigate `GET /api/events/{id}` → hermes webhook `POST :8644/p/ops/webhooks/frigate-alert` (V2 HMAC) — the `ops` profile ingests it as a user message, so the batching brain sees camera events in context with everything else it knows. Webhook route is declared in the GitOps-managed default `config.yaml` (`platforms.webhook.extra.routes`, HMAC secret via `FRIGATE_WEBHOOK_SECRET` in 1Password). The HA `persistent_notification` leg is an HA-side MQTT automation on the same description messages (UI-managed, not GitOps). 1Password additions: `hermes-agent.webhook_secret_frigate`.
 
@@ -543,7 +542,7 @@ Alignment table (keep in sync with the bootstrap downloads):
 oMLX aliases: `uncensored`, `persona`, `agent`, `omni`, `embedding`,
 `reranker`, `voice` (`voxcpm2`), and `image` (`qwen-image-2.1`, not
 discovered by oMLX 0.7). `persona` is the renamed 4-bit Orion conversion and
-is consumed by dsh-tavern through `llm-persona-auth` / `llm_persona`.
+is no longer consumed (dsh-tavern archived); it was consumed through `llm-persona-auth` / `llm_persona`.
 
 oMLX reports context windows via `/v1/models`: `uncensored`/`persona`/`agent`
 65536, `omni`/`reranker` 40960, `embedding`/`voice` 32768. DSH provider

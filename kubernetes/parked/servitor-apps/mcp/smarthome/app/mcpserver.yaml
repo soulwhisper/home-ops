@@ -6,7 +6,7 @@ metadata:
   name: &name mcp-home-assistant
 spec:
   groupRef:
-    name: persona
+    name: smarthome
   image: ghcr.io/homeassistant-ai/ha-mcp:9.1.2
   podTemplateSpec:
     spec:

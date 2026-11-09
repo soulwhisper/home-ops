@@ -1,10 +1,12 @@
 # Application Catalog
 
-98 application definition units across 12 namespaces, managed via Flux GitOps. Each table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload.
+71 application definition units across 9 namespaces, managed via Flux GitOps. Each table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload.
 
-The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 12 first-level namespace directories. Together, those namespaces have 85 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 98 definition files declare 128 child Flux Kustomizations and lead to 95 HelmReleases. There are 53 OCIRepositories across the source tree: 52 application-local and one shared app-template source. These are source counts, not counts of running applications.
+The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 9 first-level namespace directories. Together, those namespaces have 59 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 71 definition files declare 101 child Flux Kustomizations and lead to 72 HelmReleases. There are 51 OCIRepositories across the source tree: 50 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
-This catalog is documentation, not a deployment selector. Each namespace's linked `kustomization.yaml` is the current application selection and shared-resource entry point. Definitions remain in their existing directories. See [Cluster Architecture](../infrastructure/kubernetes.md) and [Storage](../infrastructure/storage.md) for reconciliation and data boundaries.
+Definitions that are intentionally not deployed live under [`kubernetes/parked`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/parked); see its README for the parked-versus-archived contract.
+
+This catalog is documentation, not a deployment selector. Each namespace's linked `kustomization.yaml` is the current application selection and shared-resource entry point. Active definitions stay under `kubernetes/apps`; parked definitions live under `kubernetes/parked`. See [Cluster Architecture](../infrastructure/kubernetes.md) and [Storage](../infrastructure/storage.md) for reconciliation and data boundaries.
 
 [`.archived`](https://github.com/soulwhisper/home-ops/tree/main/.archived) contains historical implementations with old paths; it does not guarantee that an application can be redeployed or its data restored.
 
@@ -103,74 +105,37 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [KRR](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/krr/ks.yaml) | Scheduled Kubernetes resource recommendations |
 | [Webhook Relay](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/webhook-relay/ks.yaml) | Inbound webhook collection and Feishu fan-out |
 
-## smarthome-apps — Smart Home (8)
-
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/kustomization.yaml)
-
-| App | Purpose |
-| --- | --- |
-| [Home Assistant](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/home-assistant/ks.yaml) | Home automation hub |
-| [Home Assistant SGCC](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/home-assistant-sgcc/ks.yaml) | State Grid power integration |
-| [Mosquitto](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/mosquitto/ks.yaml) | MQTT broker |
-| [Zigbee2MQTT](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/zigbee2mqtt/ks.yaml) | Zigbee to MQTT bridge |
-| [Frigate](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/frigate/ks.yaml) | AI NVR with Coral TPU |
-| [Frigate Vision](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/frigate-vision/ks.yaml) | Event-driven vision analysis and home alerts |
-| [Scrypted](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/scrypted/ks.yaml) | Video streaming with iGPU acceleration |
-| [Smarthome-NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/smarthome-nfs/ks.yaml) | Shared smart-home NFS storage |
-
-## media-apps — Media (9)
-
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/kustomization.yaml)
-
-| App | Purpose |
-| --- | --- |
-| [Jellyfin](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/jellyfin/ks.yaml) | Media streaming with iGPU transcoding |
-| [Immich](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/immich/ks.yaml) | Photo management and machine learning |
-| [Navidrome](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/navidrome/ks.yaml) | Subsonic-compatible music streaming |
-| [Kavita](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/kavita/ks.yaml) | Comic/eBook reader |
-| [qBittorrent](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/qbittorrent/ks.yaml) | Torrent client with QUI |
-| [qBittorrentUI](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/qbittorrent-ui/ks.yaml) | Alternate torrent web UI |
-| [MeTube](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/metube/ks.yaml) | Video downloader using yt-dlp |
-| [MoviePilot](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/moviepilot/ks.yaml) | Media automation |
-| [Media-NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/media-nfs/ks.yaml) | Shared media NFS storage |
-
-## selfhosted-apps — Self-Hosted Services (10)
+## selfhosted-apps — Self-Hosted Services (6)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
-| [Stirling-PDF](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/stirling-pdf/ks.yaml) | PDF toolkit |
 | [TrendRadar](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/trendradar/ks.yaml) | Scheduled AI news digest |
-| [NetBox](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/netbox/ks.yaml) | DCIM/IPAM |
 | [SearXNG](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/searxng/ks.yaml) | Privacy-focused metasearch |
 | [Homepage](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/homepage/ks.yaml) | Application dashboard |
-| [Karakeep](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/karakeep/ks.yaml) | Bookmark manager with browser capture and search |
 | [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/hindsight/ks.yaml) | AI memory service |
 | [Firecrawl](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/firecrawl/ks.yaml) | Web scraping pipeline |
 | [Bambuddy](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/bambuddy/ks.yaml) | Bambu Lab 3D printer monitor |
-| [Dispatcharr](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/dispatcharr/ks.yaml) | IPTV dispatch with iGPU transcoding |
 
-## servitor-apps — AI Infrastructure (22)
+## servitor-apps — AI Infrastructure (19)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml)
 
-Eight direct application definitions and 14 nested MCP definitions. ToolHive configures six VirtualMCP groups: `search`, `cluster`, `persona`, `agent`, `browser`, and `github-pr`.
+Six direct application definitions and 13 nested MCP definitions. ToolHive configures seven VirtualMCP groups: `search`, `cluster`, `github-ro`, `persona`, `agent`, `browser`, and `github-pr`.
 
 | App | Purpose |
 | --- | --- |
 | [Hermes Agent](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/hermes-agent/ks.yaml) | AI agent suite with Feishu and scheduled automation |
-| [DSH Web](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/dsh-web/ks.yaml) | Agent workbench |
-| [DSH Tavern](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/dsh-tavern/ks.yaml) | Roleplay chat portal |
 | [Covel](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/covel/ks.yaml) | Agentic AI role-playing framework |
 | [DiceFrame](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/diceframe/ks.yaml) | Self-hosted AI tabletop RPG engine |
 | [Open WebUI](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/open-webui/ks.yaml) | Human chat portal with search-group MCP |
 | [ToolHive](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/toolhive/ks.yaml) | MCP operator, CRDs, and VirtualMCP configuration |
 | [Playwright](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/playwright/ks.yaml) | Standalone Chromium browser runtime for MCP automation |
 
-### MCP Definitions (14)
+### MCP Definitions (13)
 
-The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/kustomization.yaml) selects 14 definition files declaring 19 child Flux Kustomizations: GitHub has two identities, Hindsight has five, and each other definition has one. These are not 14 individual backend server instances.
+The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/kustomization.yaml) selects 13 definition files declaring 15 child Flux Kustomizations: GitHub has two identities, Hindsight has two, and each other definition has one. These are not 13 individual backend server instances.
 
 | Definition | Purpose |
 | --- | --- |
@@ -180,21 +145,10 @@ The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/app
 | [Forgejo](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/forgejo/ks.yaml) | Operator ticket tools |
 | [GitHub](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/github/ks.yaml) | Read-only search and separate branch/commit/pull-request tools |
 | [Grafana](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/grafana/ks.yaml) | Grafana observability tools |
-| [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/hindsight/ks.yaml) | Memory proxies for home, persona, work, others, and ops banks |
-| [Home Assistant](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/home-assistant/ks.yaml) | Home automation tools |
+| [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/hindsight/ks.yaml) | Memory proxies for the persona and ops banks |
 | [Kubernetes](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/kubernetes/ks.yaml) | Kubernetes inspection tools |
 | [Playwright MCP](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/playwright/ks.yaml) | Browser automation tools using the standalone browser runtime |
 | [TrendRadar](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/trendradar/ks.yaml) | News retrieval tools |
 | [VictoriaLogs](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/victoria-logs/ks.yaml) | Log query tools |
 | [VictoriaMetrics](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/victoria-metrics/ks.yaml) | Metrics query tools |
 | [VictoriaTraces](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/victoria-traces/ks.yaml) | Trace query tools |
-
-## gaming-apps — Gaming (3)
-
-[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gaming-apps/kustomization.yaml)
-
-| App | Purpose |
-| --- | --- |
-| [Crafty Controller](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gaming-apps/crafty-controller/ks.yaml) | Minecraft server control panel |
-| [FoundryVTT](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gaming-apps/foundryvtt/ks.yaml) | Virtual tabletop RPG |
-| [Gaming-NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gaming-apps/gaming-nfs/ks.yaml) | Shared game NFS storage |
