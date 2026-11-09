@@ -1,0 +1,28 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &name jellyfin
+  annotations:
+    config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *name
+  targetNamespace: media-apps
+  path: "./kubernetes/parked/media-apps/jellyfin/app"
+  dependsOn:
+    - name: media-nfs
+      namespace: media-apps
+  components:
+    - ../../../../components/cache
+    - ../../../../components/kopiur/backup
+  postBuild:
+    substitute:
+      APP: *name
+      # transcode scratch: sequential bursts, rewarmable; sized for several
+      # concurrent 4K transcodes with headroom
+      CACHE_CAPACITY: 32Gi

@@ -54,36 +54,6 @@ spec:
             - identifier: krr
 
     rawResources:
-      rbac-gaming-apps:
-        manifest:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: RoleBinding
-          metadata:
-            name: krr-read
-            namespace: gaming-apps
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: krr-apps-read
-          subjects:
-            - kind: ServiceAccount
-              name: krr
-              namespace: monitoring-system
-      rbac-media-apps:
-        manifest:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: RoleBinding
-          metadata:
-            name: krr-read
-            namespace: media-apps
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: krr-apps-read
-          subjects:
-            - kind: ServiceAccount
-              name: krr
-              namespace: monitoring-system
       rbac-selfhosted-apps:
         manifest:
           apiVersion: rbac.authorization.k8s.io/v1
@@ -106,21 +76,6 @@ spec:
           metadata:
             name: krr-read
             namespace: servitor-apps
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: krr-apps-read
-          subjects:
-            - kind: ServiceAccount
-              name: krr
-              namespace: monitoring-system
-      rbac-smarthome-apps:
-        manifest:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: RoleBinding
-          metadata:
-            name: krr-read
-            namespace: smarthome-apps
           roleRef:
             apiGroup: rbac.authorization.k8s.io
             kind: ClusterRole

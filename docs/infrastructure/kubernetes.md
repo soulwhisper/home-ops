@@ -39,10 +39,10 @@ flowchart TB
         ROOT --> CA["cluster-apps
         Kustomization"]
         FR --> CA
-        CA --> NS["12 namespace
+        CA --> NS["9 namespace
         Kustomize indexes"]
-        NS --> APPS["98 ks.yaml files
-        128 child Flux Kustomizations"]
+        NS --> APPS["71 ks.yaml files
+        101 child Flux Kustomizations"]
     end
 
     subgraph Components["Kustomize Components"]
@@ -108,11 +108,11 @@ The two cluster-level `Kustomization` resources live in [`kubernetes/flux/cluste
 
 Neither [`kubernetes/apps/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) nor [`kubernetes/flux/cluster/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/flux/cluster) has a root `kustomization.yaml`. Flux autogenerates these build entrypoints by discovering manifests and explicit Kustomize indexes. Adding resources under an auto-discovered root can therefore affect deployment; `apps/` is not an inactive definition library.
 
-The 12 namespace directories each have an explicit **Kustomize index**, not a separate namespace-level Flux Kustomization. For example, the [`media-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/kustomization.yaml) selects application `ks.yaml` files and shared namespace/Kopiur components. Its `namespace: media-apps` injects `metadata.namespace` into the selected namespaced objects. All **128 child Flux Kustomizations** omit `metadata.namespace` in their source and rely on this index; `spec.targetNamespace` controls their rendered resources, not the namespace of the Flux Kustomization itself.
+The 9 namespace directories each have an explicit **Kustomize index**, not a separate namespace-level Flux Kustomization. For example, the [`monitoring-system` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/kustomization.yaml) selects application `ks.yaml` files and shared namespace components. Its `namespace: monitoring-system` injects `metadata.namespace` into the selected namespaced objects. All **101 child Flux Kustomizations** omit `metadata.namespace` in their source and rely on this index; `spec.targetNamespace` controls their rendered resources, not the namespace of the Flux Kustomization itself.
 
-There are **98 `ks.yaml` definition units**, containing one or more Flux Kustomizations each, and **95 HelmReleases**. A `ks.yaml` selects resource build paths such as `app/`, `cluster/`, `drivers/`, or `config/`; it is not interchangeable with an `app/kustomization.yaml`, which builds workload resources. For example, [`rook-ceph/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/rook-ceph/ks.yaml) defines three child Kustomizations. The [`servitor-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml) also includes a nested `mcp/` index.
+There are **71 `ks.yaml` definition units**, containing one or more Flux Kustomizations each, and **72 HelmReleases**. A `ks.yaml` selects resource build paths such as `app/`, `cluster/`, `drivers/`, or `config/`; it is not interchangeable with an `app/kustomization.yaml`, which builds workload resources. For example, [`rook-ceph/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/rook-ceph/ks.yaml) defines three child Kustomizations. The [`servitor-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml) also includes a nested `mcp/` index.
 
-The source/static count is **130 Flux Kustomizations** (128 children plus the two in `cluster.yaml`). The operator-created root adds one, giving **131 in the deployed topology**. See the [Application Catalog](../application/catalog.md) for definition paths and counts, and [Storage](storage.md) for data ownership and lifecycle boundaries.
+The source/static count is **103 Flux Kustomizations** (101 children plus the two in `cluster.yaml`). The operator-created root adds one, giving **104 in the deployed topology**. See the [Application Catalog](../application/catalog.md) for definition paths and counts, and [Storage](storage.md) for data ownership and lifecycle boundaries.
 
 To inspect an application's composed output from the repository root:
 
@@ -417,11 +417,11 @@ components:
   - ../../../../components/kopiur/backup # PVC backup to S3
 ```
 
-The only five-component stack is `open-webui` (`cache`, `authentik`, `cnpg`, `dragonfly`, `ceph-bucket`). `netbox` uses `cnpg`, `dragonfly`, and `kopiur/backup`; `langfuse` uses `cnpg`, `dragonfly`, and `ceph-bucket`.
+The only five-component stack is `open-webui` (`cache`, `authentik`, `cnpg`, `dragonfly`, `ceph-bucket`). `langfuse` uses `cnpg`, `dragonfly`, and `ceph-bucket`.
 
 ## Namespace Inventory
 
-Application definitions are grouped into 12 namespace directories. The numbering below is an inventory, not a namespace-level reconciliation DAG:
+Application definitions are grouped into 9 namespace directories. The numbering below is an inventory, not a namespace-level reconciliation DAG:
 
 | #   | Namespace           | Purpose                              | Key Resources                                                                                                                                                                                                                              |
 | --- | ------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -431,12 +431,9 @@ Application definitions are grouped into 12 namespace directories. The numbering
 | 4   | `database-system`   | Database operators                   | CloudNativePG, Dragonfly Operator, ClickHouse Operator                                                                                                                                                                                     |
 | 5   | `networking-system` | Ingress, DNS, API gateway            | kgateway (Envoy), Agent Gateway (AI agent routing), ExternalDNS, forgejo-proxy |
 | 6   | `monitoring-system` | Observability                        | Victoria Metrics (operator + cluster), Victoria Logs, Victoria Traces, Grafana, Prometheus CRDs, kube-state-metrics, node-exporter, blackbox-exporter, Smartctl exporter, OTel Collector, Silence Operator, Langfuse, Robusta, webhook-relay, Headlamp, KRR, VMware exporter |
-| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, DSH Web, DSH Tavern, Covel, DiceFrame, Open WebUI, Playwright, Toolhive, MCP definitions (14 units) |
-| 8   | `smarthome-apps`    | Home automation                      | Home Assistant (app + SGCC), Frigate NVR (+ frigate-vision), Zigbee2MQTT, Mosquitto MQTT, Scrypted, smarthome-nfs                                                                                                                                                            |
-| 9   | `media-apps`        | Media serving and management         | Jellyfin, Kavita, Navidrome, qBittorrent (+ qbittorrent-ui), Immich, MoviePilot, MeTube, media-nfs                                                                                                                                                                       |
-| 10  | `selfhosted-apps`   | Self-hosted web services             | SearXNG, NetBox, Stirling PDF, Karakeep, Homepage, Hindsight, Dispatcharr, BambuBuddy, trendradar, Firecrawl |
-| 11  | `gaming-apps`       | Game servers                         | Crafty Controller (Minecraft), Foundry VTT                                                                                                                                                                                                 |
-| 12  | `gitops-system`     | Flux itself                          | Flux Operator, Flux Instance, System Upgrade Controller                                                                                                                                                                                    |
+| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, Covel, DiceFrame, Open WebUI, Playwright, Toolhive, MCP definitions (13 units) |
+| 8   | `selfhosted-apps`   | Self-hosted web services             | SearXNG, Homepage, Hindsight, BambuBuddy, trendradar, Firecrawl |
+| 9   | `gitops-system`     | Flux itself                          | Flux Operator, Flux Instance, System Upgrade Controller                                                                                                                                                                                    |
 
 ### Dependency Order
 
@@ -516,7 +513,7 @@ Two custom labels and an annotation drive the strategic patching and component i
 
 **Type**: Annotation
 **Purpose**: Opts a `Kustomization` into Layer 1 strategic patching (Kustomization defaults).
-**Scope**: All 128 child Flux Kustomizations in 98 `ks.yaml` files.
+**Scope**: All 101 child Flux Kustomizations in 71 `ks.yaml` files.
 
 Without this annotation, a Kustomization would not receive the automatic `sourceRef`, `prune`, `interval`, and `timeout` defaults. Infrastructure-only Kustomizations (like `flux-repositories`) omit it intentionally.
 

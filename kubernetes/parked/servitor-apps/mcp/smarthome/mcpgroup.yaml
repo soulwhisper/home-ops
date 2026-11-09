@@ -1,0 +1,8 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPGroup
+metadata:
+  name: smarthome
+spec:
+  description: "Parked smart-home control tier. Home Assistant MCP only; parked with the smarthome-apps namespace and not served by agentgateway."

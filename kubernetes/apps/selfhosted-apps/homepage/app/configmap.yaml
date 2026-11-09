@@ -28,8 +28,8 @@ data:
     layout:
       Status:                 # ALL widget apps + ESXi; 2 internal columns like
         style: row            # Service/Observability (weights pair the rows:
-        columns: 2            # jellyfin+immich / qbit+crafty / nas+openwrt /
-                              # unifi+esxi)
+        columns: 2            # nas+openwrt / unifi+esxi (media/gaming widgets
+                              # disappeared with the parked namespaces)
       Media:
         style: column
       SmartHome:
@@ -74,8 +74,8 @@ data:
     #             - type: ical
     #               name: Ticktick
     #               url: {{HOMEPAGE_VAR_TICKTICK_ICAL}}
-    # Status sidebar also holds the discovered widget apps (jellyfin/immich/
-    # qbittorrent/crafty via their route annotations, weights 10-40)
+    # Status sidebar also holds route-discovered widget apps; the media and
+    # gaming services were removed with their parked namespaces.
     - Status:
         - NAS:
             href: https://10.10.0.100:5001

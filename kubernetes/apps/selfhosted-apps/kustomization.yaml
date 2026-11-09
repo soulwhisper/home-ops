@@ -8,12 +8,8 @@ components:
   - ../../components/kopiur/shared
 resources:
   - ./bambuddy/ks.yaml
-  - ./dispatcharr/ks.yaml
   - ./firecrawl/ks.yaml
   - ./hindsight/ks.yaml
   - ./homepage/ks.yaml
-  - ./karakeep/ks.yaml
-  - ./netbox/ks.yaml
   - ./searxng/ks.yaml
-  - ./stirling-pdf/ks.yaml
   - ./trendradar/ks.yaml

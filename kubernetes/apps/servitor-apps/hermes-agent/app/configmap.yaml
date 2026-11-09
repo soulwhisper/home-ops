@@ -36,14 +36,17 @@ data:
         enabled: true
         extra:
           port: 8644
-          routes:
-            frigate-alert:
-              secret: $${FRIGATE_WEBHOOK_SECRET}
-              profile: ops
-              prompt: |
-                [Frigate alert] camera={camera} severity={severity}: {description}
-                (label={label}, zones={zones}, event={event_id}, ts={timestamp})
-              deliver: log
+          # frigate-alert disabled: frigate lives in the parked smarthome-apps
+          # namespace. Re-enable together with that application and its
+          # FRIGATE_WEBHOOK_SECRET.
+          # routes:
+          #   frigate-alert:
+          #     secret: $${FRIGATE_WEBHOOK_SECRET}
+          #     profile: ops
+          #     prompt: |
+          #       [Frigate alert] camera={camera} severity={severity}: {description}
+          #       (label={label}, zones={zones}, event={event_id}, ts={timestamp})
+          #     deliver: log
     # Side tasks pinned to the cheap omni lane (body model -> x-model header).
     # Each task carries the omni lane key; the main agent lane key never
     # reaches the omni route.
