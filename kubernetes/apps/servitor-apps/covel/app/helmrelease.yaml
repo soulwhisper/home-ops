@@ -1,0 +1,131 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &name covel
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: gitops-system
+
+  values:
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      hostUsers: false
+    controllers:
+      *name :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 2000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+        containers:
+          app:
+            image:
+              # soulwhisper build: upstream Covel image. Tag tracks upstream
+              # semver releases.
+              repository: ghcr.io/soulwhisper/covel
+              tag: 0.0.54
+            env:
+              NODE_ENV: production
+              STORE_BACKEND: sqlite
+              SQLITE_PATH: /home/node/.covel/data/covel.db
+              MEDIA_ROOT: /home/node/.covel/data/media
+              SERVER_PORT: "3001"
+              COVEL_BIND_HOST: 0.0.0.0
+              SERVE_STATIC: "true"
+              STATIC_DIR: ./web-dist
+              DEPLOYMENT_TIER: self
+              # Authentik gates the route; the host guard still needs the
+              # public name the browser and probes use.
+              COVEL_ALLOWED_HOSTS: covel.noirprime.com
+              COVEL_HOME: /home/node/.covel
+              # Keep the operator-editable model slot file on the PVC; the
+              # image root is read-only.
+              COVEL_LLM_TOML: /home/node/.covel/llm.toml
+              COVEL_WORLDS_DIR: /app/worlds
+              COVEL_PLUGINS_DIR: /app/plugins
+              COVEL_USER_WORLDS_DIR: /home/node/.covel/worlds
+              COVEL_USER_PLUGINS_DIR: /home/node/.covel/plugins
+              # Authenticated operators may install worlds/plugins from the UI.
+              COVEL_INSTALL_API_ENABLED: "1"
+            envFrom:
+              - secretRef:
+                  name: *name
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              readOnlyRootFilesystem: true
+            probes:
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: 3001
+                    # Probe the pod IP, not the gateway; the self tier's host
+                    # guard still needs to see the public name.
+                    httpHeaders:
+                      - name: Host
+                        value: covel.noirprime.com
+                  failureThreshold: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+              liveness: &probe
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: 3001
+                    httpHeaders:
+                      - name: Host
+                        value: covel.noirprime.com
+                  periodSeconds: 30
+                  failureThreshold: 3
+                  timeoutSeconds: 5
+              readiness: *probe
+
+    service:
+      app:
+        ports:
+          http:
+            port: 3001
+    route:
+      app:
+        hostnames: ["covel.noirprime.com"]
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/icon: /icons/covel.svg
+          gethomepage.dev/name: Covel
+          gethomepage.dev/group: Service
+        parentRefs:
+          - name: kgateway-internal
+            namespace: networking-system
+
+    persistence:
+      app:
+        existingClaim: *name
+        globalMounts:
+          - path: /home/node/.covel
+      tmpfs:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+            subPath: tmp

@@ -1,0 +1,53 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/cilium.io/ciliumnetworkpolicy_v2.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: diceframe
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/name": diceframe
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            "gateway.networking.k8s.io/gateway-name": kgateway-internal
+            "k8s:io.kubernetes.pod.namespace": networking-system
+      toPorts:
+        - ports:
+            - { port: "9876", protocol: TCP }
+    - fromEntities:
+        - host # kubelet probes
+  egress:
+    # AI providers. Model routing is configured in the Web UI; the guarded
+    # agent gateway is the local OpenAI-compatible endpoint.
+    - toServices:
+        - k8sService:
+            serviceName: agentgateway-proxy
+            namespace: networking-system
+      toPorts:
+        - ports:
+            - { port: "80", protocol: TCP }
+    # Provider APIs and content/update downloads.
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+            - 169.254.0.0/16
+            - 100.64.0.0/10
+      toPorts:
+        - ports:
+            - { port: "443", protocol: TCP }
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+            - { port: "53", protocol: TCP }
+            - { port: "53", protocol: UDP }
+          rules:
+            dns:
+              - matchPattern: "*"

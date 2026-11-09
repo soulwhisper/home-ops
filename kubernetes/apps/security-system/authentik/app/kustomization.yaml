@@ -43,6 +43,7 @@ configMapGenerator:
     files:
       - ./blueprints/forward/agentgateway.yaml
       - ./blueprints/forward/bambuddy.yaml
+      - ./blueprints/forward/covel.yaml
       - ./blueprints/forward/frigate.yaml
       - ./blueprints/forward/frigate-go2rtc.yaml
       - ./blueprints/forward/hermes-agent.yaml
