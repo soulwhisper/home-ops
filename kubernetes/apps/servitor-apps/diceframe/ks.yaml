@@ -22,4 +22,3 @@ spec:
   postBuild:
     substitute:
       APP: *name
-      KOPIUR_CAPACITY: 10Gi
