@@ -19,7 +19,7 @@ data:
     TOKEN = os.environ["FORGEJO_TOKEN"]
     PROM_URL = os.environ["PROMETHEUS_URL"]
     CLUSTER = os.environ.get("CLUSTER_NAME", "main")
-    NAMESPACES = os.environ.get("KRR_NAMESPACES", "(gaming|media|selfhosted|servitor|smarthome)-apps")
+    NAMESPACES = os.environ.get("KRR_NAMESPACES", "(selfhosted|servitor)-apps")
     TITLE = "[INFO] Weekly KRR resource recommendations"
     MARKER = "<!-- aiops-krr-report -->"
     MAX_TABLE_ROWS = 80

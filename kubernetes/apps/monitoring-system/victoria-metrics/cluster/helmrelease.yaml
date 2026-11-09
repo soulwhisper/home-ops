@@ -175,6 +175,13 @@ spec:
               matchers:
                 - alertname =~ "CephNodeDiskspaceWarning|CephOSDDownHigh|PrometheusJobExporterMissing|CephNodeNetworkPacketDrops|CephNodeNetworkPacketErrors"
                 - type = "ceph_default"
+            # Dashboard-tier alerts stay out of Feishu. Warnings such as
+            # TooManyLogs/VictoriaLogsFutureLogTimestamps/KubeCPUOvercommit
+            # stay on the default receiver: they are actionable capacity or
+            # upstream signals, and demoting them needs a digest receiver.
+            - receiver: "blackhole"
+              matchers:
+                - severity =~ "info|none"
             # unacknowledged critical alerts re-page every 2h instead of 12h
             - receiver: "default"
               matchers:

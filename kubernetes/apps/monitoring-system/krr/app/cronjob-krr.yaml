@@ -116,7 +116,7 @@ spec:
               - name: PROMETHEUS_URL
                 value: "http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428"
               - name: KRR_NAMESPACES
-                value: "(gaming|media|selfhosted|servitor|smarthome)-apps"
+                value: "(selfhosted|servitor)-apps"
               - name: CLUSTER_NAME
                 value: "main"
               - name: TZ
