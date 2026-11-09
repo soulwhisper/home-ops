@@ -52,7 +52,7 @@ jobs:
         run: python3 -m unittest discover -s .github/scripts -p 'test_health*.py'
 
       - name: Install flate
-        uses: home-operations/flate/action@v0.7.0
+        uses: home-operations/flate/action@v0.7.1
         with:
           cache: true
           token: ""
