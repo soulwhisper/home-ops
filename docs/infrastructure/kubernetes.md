@@ -165,7 +165,7 @@ These scalar values override local declarations. In particular, [`flux-operator`
 
 **Target**: Any `Kustomization` with label `config.home-ops.io/deps=infra`
 
-The 65 child Kustomizations carrying this label use a uniform four-item infrastructure gate:
+The 61 child Kustomizations carrying this label use a uniform four-item infrastructure gate:
 
 ```yaml
 spec:
@@ -181,6 +181,15 @@ spec:
 ```
 
 This patch intentionally **replaces** the local `dependsOn` list; it does not append or merge entries. For example, [`moviepilot/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/media-apps/moviepilot/ks.yaml) declares `cnpg-cluster`, `dragonfly-operator`, and `media-nfs`, but its effective list is exactly the four entries above. Children without this label retain their local dependencies. A `sourceRef` to `gitops-system` identifies the Git source; it is not a `dependsOn` edge.
+
+The Grafana MCP chain uses explicit dependencies instead: ToolHive's
+controller waits for its CRDs, its configuration waits for the controller,
+and `grafana-cluster` waits for its operator and CNPG while retaining the
+four infrastructure gates above. The MCP consumer waits for ToolHive
+configuration, Grafana, and the External Secrets Kubernetes store.
+Infrastructure does not depend on the monitoring application. These four
+Kustomizations omit `deps=infra` so the root patch cannot replace their
+producer-specific dependencies.
 
 ### Layer 3: HelmRelease Defaults (all child Kustomizations)
 
@@ -503,7 +512,7 @@ Without this annotation, a Kustomization would not receive the automatic `source
 
 **Type**: Label
 **Purpose**: Opts a `Kustomization` into Layer 2 strategic patching (baseline infrastructure dependencies).
-**Scope**: 65 child Flux Kustomizations.
+**Scope**: 61 child Flux Kustomizations.
 
 This label signals "I'm a workload that needs the core infra layer." Infrastructure components themselves (e.g., cert-manager, rook-ceph, cnpg-operator) omit this label — they _are_ the infra, so they only carry `managed: "true"`.
 

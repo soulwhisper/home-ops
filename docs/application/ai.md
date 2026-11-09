@@ -345,6 +345,12 @@ Grafana MCP receives a Grafana `Viewer` token through the
 The CA ConfigMap is read using the ESO controller's identity, not that
 provider ServiceAccount.
 
+The source token's Role and RoleBinding belong only to `grafana-cluster`.
+The External Secrets integration owns the provider ServiceAccount and
+ClusterSecretStore, and depends only on the ESO controller. The MCP consumer
+depends on that store, Grafana, and ToolHive configuration; infrastructure
+does not depend on the monitoring workload.
+
 For an RBAC ownership handoff, apply object-level prune protection to
 `Role/eso-store-role` and `RoleBinding/eso-kubernetes-store-role` in both
 declaring Kustomizations before removing either declaration. Verify both
