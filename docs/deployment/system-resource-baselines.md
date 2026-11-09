@@ -141,12 +141,12 @@ rounded up to 64Mi with a 64Mi floor, and is optional.
 | `monitoring-system/langfuse` | `worker` | 1000m / 0Mi / 4096Mi | 286m | 613Mi | 1000m / 736Mi / 4096Mi |
 | `security-system/authentik-worker` | `worker` | 0m / 0Mi / — | 62m | 423Mi | 75m / 512Mi / 896Mi |
 | `monitoring-system/victoria-logs-collector` | `vlagent` | 0m / 0Mi / — | 47m | 375Mi | 60m / 464Mi / 768Mi |
-| `monitoring-system/kube-state-metrics` | `kube-state-metrics` | 0m / 0Mi / — | 17m | 286Mi | 20m / 352Mi / 576Mi |
+| `monitoring-system/kube-state-metrics` | `kube-state-metrics` | 0m / 0Mi / — | 17m | 286Mi | 25m / 352Mi / 576Mi |
 | `storage-system/rook-ceph-rgw-ceph-objectstore-a` | `rgw` | 100m / 0Mi / 1024Mi | 14m | 259Mi | 100m / 320Mi / 1024Mi |
 | `monitoring-system/victoria-traces` | `vtsingle` | 0m / 0Mi / — | 18m | 257Mi | 25m / 320Mi / 576Mi |
 | `kube-system/cilium-operator` | `cilium-operator` | 0m / 0Mi / — | 13m | 234Mi | 20m / 288Mi / no limit |
 | `networking-system/kgateway` | `controller` | 0m / 0Mi / — | 43m | 232Mi | 55m / 288Mi / 512Mi |
-| `monitoring-system/victoria-metrics-operator` | `operator` | 0m / 0Mi / — | 198m | 160Mi | 240m / 208Mi / 384Mi |
+| `monitoring-system/victoria-metrics-operator` | `operator` | 0m / 0Mi / — | 198m | 160Mi | 240m / 192Mi / 320Mi |
 | `networking-system/agentgateway` | `controller` | 100m / 128Mi / — | 14m | 155Mi | 100m / 128Mi / 320Mi |
 | `security-system/cert-manager-cainjector` | `cert-manager-cainjector` | 0m / 0Mi / — | 4m | 148Mi | 10m / 192Mi / 320Mi |
 | `kube-system/reloader` | `reloader` | 0m / 0Mi / — | 25m | 141Mi | 30m / 176Mi / 320Mi |
@@ -158,7 +158,7 @@ rounded up to 64Mi with a 64Mi floor, and is optional.
 | `monitoring-system/grafana-operator` | `grafana-operator` | 0m / 0Mi / — | 8m | 87Mi | 10m / 112Mi / 192Mi |
 | `networking-system/externaldns-adguard` | `external-dns` | 16m / 0Mi / 86Mi | 2m | 83Mi | 16m / 112Mi / 86Mi |
 | `storage-system/snapshot-controller` | `snapshot-controller` | 0m / 0Mi / — | 6m | 83Mi | 10m / 112Mi / 192Mi |
-| `database-system/dragonfly-operator` | `manager` | 0m / 0Mi / — | 4m | 80Mi | 10m / 112Mi / 192Mi |
+| `database-system/dragonfly-operator` | `manager` | 0m / 0Mi / — | 4m | 80Mi | 10m / 96Mi / 192Mi |
 | `storage-system/storage-system.rbd.csi.ceph.com-ctrlplugin` | `csi-rbdplugin` | 0m / 512Mi / 1024Mi | 9m | 79Mi | 15m / 512Mi / 1024Mi |
 | `kube-system/frr-k8s` | `controller` | 0m / 0Mi / — | 2m | 73Mi | 10m / 96Mi / 192Mi |
 | `storage-system/storage-system.cephfs.csi.ceph.com-ctrlplugin` | `csi-cephfsplugin` | 0m / 512Mi / 1024Mi | 0m | 69Mi | 10m / 512Mi / 1024Mi |
@@ -176,14 +176,14 @@ rounded up to 64Mi with a 64Mi floor, and is optional.
 | `kube-system/frr-k8s` | `frr-metrics` | 0m / 0Mi / — | 5m | 36Mi | 10m / 48Mi / 128Mi |
 | `monitoring-system/node-exporter` | `node-exporter` | 23m / 0Mi / 61Mi | 6m | 34Mi | 23m / 48Mi / 61Mi |
 | `monitoring-system/blackbox-exporter` | `blackbox-exporter` | 0m / 0Mi / — | 3m | 34Mi | 10m / 48Mi / 128Mi |
-| `monitoring-system/smartctl-exporter-0` | `main` | 0m / 0Mi / — | 2m | 32Mi | 10m / 48Mi / 128Mi |
+| `monitoring-system/smartctl-exporter-0` | `main` | 0m / 0Mi / — | 2m | 32Mi | 10m / 48Mi / 64Mi |
 | `kube-system/frr-k8s` | `frr-status` | 0m / 0Mi / — | 2m | 24Mi | 10m / 32Mi / 64Mi |
 | `kube-system/hubble-ui` | `frontend` | 0m / 0Mi / — | 0m | 22Mi | 10m / 32Mi / 64Mi |
 | `monitoring-system/vmauth-victoria-metrics-cluster` | `config-reloader` | 10m / 25Mi / — | 2m | 21Mi | 10m / 25Mi / 64Mi |
 | `monitoring-system/vmalertmanager-victoria-metrics-cluster` | `config-reloader` | 10m / 25Mi / — | 1m | 21Mi | 10m / 25Mi / 64Mi |
 | `monitoring-system/vmagent-victoria-metrics-cluster` | `config-reloader` | 10m / 25Mi / — | 2m | 21Mi | 10m / 25Mi / 64Mi |
 | `monitoring-system/vmalert-victoria-metrics-cluster` | `config-reloader` | 10m / 25Mi / — | 1m | 18Mi | 10m / 25Mi / 64Mi |
-| `kube-system/frr-k8s` | `reloader` | 0m / 0Mi / — | 0m | 7Mi | 10m / 32Mi / 64Mi |
+| `kube-system/frr-k8s` | `reloader` | 0m / 0Mi / — | 0m | 7Mi | 10m / 16Mi / 64Mi |
 
 ### Notes on the suggestions
 
