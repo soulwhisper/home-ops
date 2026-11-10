@@ -20,24 +20,31 @@ Perform a read-only diagnosis of the live cluster. Do not edit cluster resources
    - Nodes, Ready/scheduling state, non-ready/pending/restarting pods, Flux Kustomizations, Talos/Tuppr phase and versions, Ceph health, storage/CSI state, backup repository and queues.
    - Include recent upgrades, maintenance activity, and known incident context.
 
-2. **Metrics**
+2. **Change and rollout history (PR merge history)**
+   - Read the applied Flux revision with `kubectl -n "$FLUX_SYSTEM_NAMESPACE" get kustomizations` and compare it with recent GitHub merges before interpreting any restart, stall, or storage flap: `gh api "repos/{owner}/{repo}/commits?sha=main&since=$(date -u -d '7 days ago' +%FT%TZ)&per_page=100" --paginate --jq '.[] | [.sha[0:8], .commit.committer.date, .commit.message] | @tsv'` and `gh pr list --state merged --search "merged:>=$(date -u -d '7 days ago' +%F)" --limit 1000 --json number,title,mergedAt,mergeCommit`. Use `git log origin/main --first-parent` only as corroboration on an already-current checkout; never run `git fetch` in this read-only diagnosis.
+   - Build a merge-to-rollout timeline over the retained window, preserving timestamps and node/workload grouping: `kubectl get pods -A -o custom-columns=NS:.metadata.namespace,POD:.metadata.name,START:.status.startTime,RESTARTS:.status.containerStatuses[*].restartCount,LAST_TERMINATED:.status.containerStatuses[*].lastState.terminated.finishedAt` for live pods, plus a bounded `/api/v1/query_range` of `increase(kube_pod_container_status_restarts_total[5m])` and `increase(kubelet_image_pull_duration_seconds_count[5m])` over the same window, and Kubernetes events for deleted instances.
+   - When a `PodRestartStorm`, etcd proposal-failure/leader-change window, apiserver 5xx burst, Ceph OSD/mon down, or controller lease loss falls inside the same 30-minute window as a merge wave or mass pod start, record the PR numbers, merge times, and exact rollout window as candidate triggers. The rollout itself is expected; a control-plane or storage stall that coincides with it is the finding.
+   - Do not attribute a stall to an application bug or an operator defect while the same window carries an upgrade/image-pull wave. Establish the pre-wave baseline and repeat the correlation across the retained alert window before assigning a root cause.
+   - A merged PR is not converged until the exact merge SHA is applied by each affected Flux Kustomization and it is `Ready=True`; each affected HelmRelease must be `Ready=True` with `status.observedGeneration >= metadata.generation`. Record those states and never assume local `main`.
+
+3. **Metrics**
    - Node/pod CPU and memory, Ceph PG/OSD state, etcd quorum and latency, PostgreSQL replication lag, Kopiur freshness and backlog, VictoriaMetrics scrape/rule errors, and ticket-delivery failure rates.
    - Prefer raw PromQL and exact timestamps over dashboard impressions.
    - When capacity or resource optimization is in scope, derive effective requests/limits from the admitted Pod spec, including LimitRange/admission defaults; a limit without a request is copied to the request only when no admission default applies. Aggregate all containers per workload, state whether totals are per-Pod or cluster-wide, and multiply by desired replicas for cluster-wide totals. Use 5m rate/working-set samples with no-data workloads marked unverified: CPU request = max(10m, ceil(1.2 × max(7d P95, 24h P95) / 10m) × 10m), capped at the current CPU limit when set; memory request = max(32Mi, ceil(max(1.15 × 7d P95, 1.05 × 7d P99) / 16Mi) × 16Mi), capped at the current memory limit when set. Also report a conservative variant (CPU 1.5 × P95; memory max(1.2 × P95, 1.5 × P99), both capped at their current limits when set). Report net CPU/memory deltas, top over/under-provisioned workloads, and the 7-day-window caveat. Do not edit resources during diagnosis.
 
-3. **Logs and traces**
+4. **Logs and traces**
    - Recent Warning events, previous/current logs for failing workloads, Flux reconcile errors, controller/CSI/Talos errors, VolumeAttachment and other condition timelines.
    - When a tracing backend is available, query relevant error/latency traces by service and operation. Otherwise use events, conditions, and state transitions as the trace evidence and state that no trace backend was verified.
 
-4. **Recent alerts**
+5. **Recent alerts**
    - Query Alertmanager for active, silenced, and inhibited alerts. Use vmsingle's retained `ALERTS` history for recently resolved/firing transitions and corroborate them with Forgejo ticket timelines; do not use Alertmanager as the historical source.
    - Never treat silence, inhibition, or an empty Alertmanager result as proof of healing.
 
-5. **Forgejo tickets**
+6. **Forgejo tickets**
    - List open issues and inspect relevant comments/timelines. Use the public read-only API when possible; when authentication is required, load the token with `tr -d '[:space:]' < "${FORGEJO_TOKEN_FILE:-$HOME/forgejo_tickets.key}"` without printing it, using the skill's 1Password fallback only when no key file is readable.
    - Correlate related tickets and likely duplicate root causes. Do not create, modify, assign, or close tickets during diagnosis.
 
-6. **AI-ops control plane and recovery evidence**
+7. **AI-ops control plane and recovery evidence**
    - **Holmes**: compare the current `ScheduledHealthCheck.spec.query` with the executing child's query and result. An old child using an old prompt is stale evidence, not proof that a new fixed collector failed. Check the operator and worker patch revisions separately from target health.
    - **MCP tiers**: distinguish connection/authentication, `tools/list`, and an actual read-only `tools/call`. Inspect backend tool registration and gateway CEL allowlists independently. Do not repeat denied calls merely to see whether they recover.
    - **Guardrails**: record image version and the exact audit reason. A `denied-tool-retry-loop` for different tools/arguments is stale-history evidence only on versions with the old behavior; on the current 1.4.0 contract, treat it as a guardrail regression or configuration/version mismatch rather than dismissing it as content. Do not recommend disabling the invariant or `FailClosed`.
@@ -59,5 +66,6 @@ Perform a read-only diagnosis of the live cluster. Do not edit cluster resources
   - for an active finding with no conservative runbook and no corresponding open or merged PR, return `next_action: NEEDS_HUMAN` with `resume_stage: DIAGNOSED` and the evidence/options required for the master decision. The master routes a recorded human-selected direction to `cluster-remediation`; do not turn this route into `HUMAN_MANAGED` or create a post-merge handoff without a merged PR. Healthy/outdated findings always use the terminal route above, even when no runbook applies.
   - do not call `ask` or invoke another subcommand. The master invokes remediation/verification and owns every human question; heavy-impact execution always requires separate approval through `cluster-aiops` under `NEEDS_HUMAN`.
 - Separate active failures, imminent risks, stale/noise/expected conditions, and already healthy evidence.
+- For restart storms, control-plane stalls, and storage flaps, report the merge/rollout correlation window, the applied Flux revision, and the candidate PR numbers; distinguish expected upgrade restarts from the control-plane or storage stall they exposed.
 - When capacity or resource optimization is in scope, include a resource estimate section: scope/method, current vs recommended totals, top over/under-provisioned workloads, confidence, and the 7-day-window limitation.
 - Reproduce signals from raw data instead of trusting ticket text or model hypotheses. Do not default to disabling alerts, health checks, or LLM guardrails.
