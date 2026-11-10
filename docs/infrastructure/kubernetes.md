@@ -243,9 +243,9 @@ Key behaviors this enforces cluster-wide:
 
 All Helm charts are sourced from OCI registries. The legacy `HelmRepository` CRD is eliminated — every chart reference uses `OCIRepository` exclusively.
 
-### Own OCIRepositories (51)
+### Own OCIRepositories (50)
 
-The application tree declares 51 local `OCIRepository` resources alongside their HelmReleases in resource build directories (`app/`, `cluster/`, `drivers/`, and others). They pull charts directly from their publishers' OCI registries; the shared app-template source brings the total to 52:
+The application tree declares 50 local `OCIRepository` resources alongside their HelmReleases in resource build directories (`app/`, `cluster/`, `drivers/`, and others). They pull charts directly from their publishers' OCI registries; the shared app-template source brings the total to 51:
 
 | Namespace         | Count | Example Charts                                                                                                                                                                                                                                        |
 | ----------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -256,7 +256,7 @@ The application tree declares 51 local `OCIRepository` resources alongside their
 | networking-system | 5     | kgateway (app + CRDs), agentgateway (app + CRDs), externaldns                                                                                                                                                                                         |
 | monitoring-system | 16    | victoria-metrics (operator + cluster + app), victoria-logs (app + collector), victoria-traces, grafana, kube-state-metrics, node-exporter, prometheus-crds, blackbox-exporter, smartctl-exporter, opentelemetry-collector, silence-operator, headlamp, robusta |
 | gitops-system     | 3     | flux-operator, flux-instance, tuppr (system-upgrade-controller)                                                                                                                                                                                       |
-| others            | 3     | toolhive (app + CRDs), netbox                                                                                                                                                                                                            |
+| others            | 2     | toolhive (app + CRDs)                                                                                                                                                                                                            |
 
 The `OCIRepository` fetches only the chart layer via `layerSelector` with `operation: copy`, which extracts the Helm chart tarball from the OCI manifest without pulling unrelated layers.
 
