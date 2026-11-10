@@ -28,8 +28,10 @@ spec:
                 namespace: monitoring-system
                 port: 4317
         spawnUpstreamSpan: true
-        clientSampling: 100
-        randomSampling: 100
+        # Normal ingress uses the metrics for totals; keep a small trace sample
+        # and do not let a client trace header force 100% of requests.
+        clientSampling: 0
+        randomSampling: 5
         overallSampling: 100
         attributes:
           - name: enduser.id

@@ -17,6 +17,9 @@ spec:
       enabled: false
     tracing:
       enabled: true
-      samplingRate: "0.05"
+      # One sampling decision: emit from vMCP and let the collector filter
+      # connection noise and retain model/tool traces. A 5% source rate
+      # combined with the collector's baseline sampled only ~0.5% of calls.
+      samplingRate: "1.0"
   prometheus:
     enabled: true
