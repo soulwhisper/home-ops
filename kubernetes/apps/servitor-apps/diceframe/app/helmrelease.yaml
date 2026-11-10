@@ -29,7 +29,7 @@ spec:
           app:
             image:
               repository: ghcr.io/diceframe/diceframe
-              tag: 3.1.2
+              tag: 3.2.0
             env:
               TRPG_WEB_HOST: 0.0.0.0
               TRPG_WEB_PORT: "9876"
