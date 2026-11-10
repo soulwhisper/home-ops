@@ -27,7 +27,7 @@ spec:
       # volume files have mixed uids (lost+found is root).
       initContainers:
         - name: selinux-relabel
-          image: ubuntu:24.04
+          image: docker.io/library/busybox:1.38
           command:
             - sh
             - -eu
@@ -35,9 +35,11 @@ spec:
             - |
               # Marker-file proof of a completed full walk; deleted before
               # each redo so a failed walk cannot leave a stale marker.
-              if [ "$(stat -c %C /storage)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /storage/.selinux-relabelled ]; then
+              # busybox lacks chcon and SELinux-aware stat; use the xattr tools.
+              label() { getfattr -n security.selinux "$1" 2>/dev/null | sed -n 's/^security\.selinux="\(.*\)"$/\1/p'; }
+              if [ "$(label /storage)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /storage/.selinux-relabelled ]; then
                 rm -f /storage/.selinux-relabelled
-                chcon -R system_u:object_r:ephemeral_t:s0 /storage
+                find /storage -exec setfattr -n security.selinux -v system_u:object_r:ephemeral_t:s0 {} +
                 touch /storage/.selinux-relabelled
                 echo "relabelled /storage"
               fi

@@ -31,10 +31,10 @@ spec:
         initContainers:
           # Same Talos SELinux relabel as victoria-logs: hermes writes to an
           # unlabeled RBD PVC, and seLinuxOptions is a no-op on Talos —
-          # relabel via initContainer instead. Root required (chcon needs
+          # relabel via initContainer instead. Root required (relabel needs
           # ownership); overrides the pod-level runAsNonRoot.
           selinux-relabel:
-            image: { repository: ubuntu, tag: "24.04" }
+            image: { repository: docker.io/library/busybox, tag: "1.38" }
             command:
               - sh
               - -eu
@@ -43,9 +43,11 @@ spec:
                   # Marker-file proof of a COMPLETED full walk; deleted
                   # BEFORE each redo so a mid-walk failure can't leave a
                   # stale marker (see victoria-logs helmrelease).
-                  if [ "$(stat -c %C /vol)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /vol/.selinux-relabelled ]; then
+                  # busybox lacks chcon and SELinux-aware stat; use the xattr tools.
+                  label() { getfattr -n security.selinux "$1" 2>/dev/null | sed -n 's/^security\.selinux="\(.*\)"$/\1/p'; }
+                  if [ "$(label /vol)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /vol/.selinux-relabelled ]; then
                     rm -f /vol/.selinux-relabelled
-                    chcon -R system_u:object_r:ephemeral_t:s0 /vol
+                    find /vol -exec setfattr -n security.selinux -v system_u:object_r:ephemeral_t:s0 {} +
                     touch /vol/.selinux-relabelled
                     echo "relabelled /vol"
                   fi
@@ -176,7 +178,7 @@ spec:
             subPath: workspace
         # app-template schema: initContainer mounts come from advancedMounts,
         # not per-entry volumeMounts. Mounts the whole RBD volume root (no
-        # subPath) so chcon -R covers every subdir.
+        # subPath) so the relabel walk covers every subdir.
         advancedMounts:
           *name :
             selinux-relabel:

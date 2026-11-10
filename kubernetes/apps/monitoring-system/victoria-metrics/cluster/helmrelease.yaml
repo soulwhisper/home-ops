@@ -84,12 +84,12 @@ spec:
           storage.maxHourlySeries: "1000000"
           storage.maxDailySeries: "2000000"
         # Same Talos SELinux fix as victoria-logs (full story there):
-        # idempotent chcon to ephemeral_t at pod start. set -eu so a failed
-        # chcon fails the init (and the pod) loudly; FOWNER because volume
+        # idempotent relabel to ephemeral_t at pod start. set -eu so a failed
+        # relabel fails the init (and the pod) loudly; FOWNER because volume
         # files have mixed ownership (lost+found is root).
         initContainers:
           - name: selinux-relabel
-            image: ubuntu:24.04
+            image: docker.io/library/busybox:1.38
             command:
               - sh
               - -eu
@@ -97,9 +97,11 @@ spec:
               - |
                 # Marker-file proof of a completed full walk; deleted before
                 # each redo so a failed walk cannot leave a stale marker.
-                if [ "$(stat -c %C /victoria-metrics-data)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /victoria-metrics-data/.selinux-relabelled ]; then
+                # busybox lacks chcon and SELinux-aware stat; use the xattr tools.
+                label() { getfattr -n security.selinux "$1" 2>/dev/null | sed -n 's/^security\.selinux="\(.*\)"$/\1/p'; }
+                if [ "$(label /victoria-metrics-data)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /victoria-metrics-data/.selinux-relabelled ]; then
                   rm -f /victoria-metrics-data/.selinux-relabelled
-                  chcon -R system_u:object_r:ephemeral_t:s0 /victoria-metrics-data
+                  find /victoria-metrics-data -exec setfattr -n security.selinux -v system_u:object_r:ephemeral_t:s0 {} +
                   touch /victoria-metrics-data/.selinux-relabelled
                   echo "relabelled data"
                 fi

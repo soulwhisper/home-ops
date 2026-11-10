@@ -34,18 +34,20 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
-        # Idempotent chcon to ephemeral_t; the marker proves a completed walk.
+        # Idempotent relabel to ephemeral_t; the marker proves a completed walk.
         initContainers:
           selinux-relabel:
-            image: { repository: ubuntu, tag: "24.04" }
+            image: { repository: docker.io/library/busybox, tag: "1.38" }
             command:
               - sh
               - -eu
               - -c
               - |
-                  if [ "$(stat -c %C /vol)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /vol/.selinux-relabelled ]; then
+                  # busybox lacks chcon and SELinux-aware stat; use the xattr tools.
+                  label() { getfattr -n security.selinux "$1" 2>/dev/null | sed -n 's/^security\.selinux="\(.*\)"$/\1/p'; }
+                  if [ "$(label /vol)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /vol/.selinux-relabelled ]; then
                     rm -f /vol/.selinux-relabelled
-                    chcon -R system_u:object_r:ephemeral_t:s0 /vol
+                    find /vol -exec setfattr -n security.selinux -v system_u:object_r:ephemeral_t:s0 {} +
                     touch /vol/.selinux-relabelled
                     echo "relabelled /vol"
                   fi
