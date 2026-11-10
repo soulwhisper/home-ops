@@ -106,15 +106,15 @@ spec:
           error_mode: ignore
           traces:
             span:
-              # Drop successful leaf noise. The ping and discovery chains
-              # carry mcp.method.name on every span, so a normal chain
-              # disappears without orphans; spans with an error status or
-              # error attribute are kept. GET /mcp is a connection parent and
-              # is intentionally not filtered; it is only subject to sampling.
+              # Drop successful connection and health spans only. The ping
+              # chain carries mcp.method.name on every span, so a normal
+              # chain disappears without orphans; spans with an error status
+              # or error attribute are kept. Discovery methods (tools/list,
+              # resources/list, prompts/list) stay unfiltered because
+              # ToolHive can return JSON-RPC errors with HTTP 200 and no error
+              # attribute. GET /mcp is a connection parent and is only
+              # subject to sampling.
               - 'attributes["mcp.method.name"] == "ping" and status.code != STATUS_CODE_ERROR and attributes["error"] != "true"'
-              - 'attributes["mcp.method.name"] == "tools/list" and status.code != STATUS_CODE_ERROR and attributes["error"] != "true"'
-              - 'attributes["mcp.method.name"] == "resources/list" and status.code != STATUS_CODE_ERROR and attributes["error"] != "true"'
-              - 'attributes["mcp.method.name"] == "prompts/list" and status.code != STATUS_CODE_ERROR and attributes["error"] != "true"'
               - 'name == "connect" and status.code != STATUS_CODE_ERROR and attributes["error"] != "true"'
               - 'IsMatch(name, "^GET /(healthz|readyz|livez)$") and status.code != STATUS_CODE_ERROR and attributes["error"] != "true"'
         tail_sampling:

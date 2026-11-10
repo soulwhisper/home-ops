@@ -151,7 +151,7 @@ Jaeger, Zipkin, and legacy receivers disabled.
 |-----------|-------------|---------|
 | `memory_limiter` | All | Soft limit 80%, spike limit 25% |
 | `k8sattributes` | `traces/app` | Kubernetes pod/namespace enrichment |
-| `filter/noise` | `traces/app` | Drops successful ping, connect, tools/resources/prompts discovery, and health-check leaf spans; error spans are kept |
+| `filter/noise` | `traces/app` | Drops successful ping, connect, and health-check spans; discovery methods stay unfiltered because JSON-RPC errors can return HTTP 200; error spans are kept |
 | `tail_sampling` | `traces/app` | Errors, GenAI chat, and `tools/call` retained; 10% baseline; no global latency rule |
 | `redaction/credentials` | `logs` | Blocks GitHub tokens, AWS keys, JWTs, 1Password refs, private keys, Bearer tokens |
 | `batch` | All | 1024 batch, 2048 max, 1s timeout |
