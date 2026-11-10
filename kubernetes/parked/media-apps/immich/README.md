@@ -20,9 +20,10 @@ done
 ### CNPG declarations for unparking
 
 Parking removed the `immich` role and `Database` declarations from
-`cnpg-operator/cluster/postgres.yaml`. Re-add both before unparking; the
-`components/cnpg` ExternalSecret sets `username=immich` and `db=immich`, so the
-app fails to initialize without them.
+`cnpg-operator/cluster/postgres.yaml`. Re-add both before unparking so ownership
+and the required extensions stay declarative. The app's `init-db` container can
+provision the role and database from the superuser secret; the `Database`
+declaration is what ensures `vector`, `vchord`, `cube`, and `earthdistance`.
 
 Role (inside the `postgres` Cluster `spec.managed.roles`):
 
@@ -58,6 +59,7 @@ spec:
 ```
 
 These declarations recreate an empty database and role only. They do not
-restore data: the `immich` database is absent on all three instances, so
-contents must come from a CNPG/Barman point-in-time restore taken before the
-database was dropped.
+recover data: the `immich` database is absent on all three instances, so
+contents must come from a CNPG/Barman base backup and WAL archive predating the
+DROP, restored to a target time before it; finish that restore before starting
+Immich.
