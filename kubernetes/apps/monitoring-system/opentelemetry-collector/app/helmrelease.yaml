@@ -106,7 +106,7 @@ spec:
           error_mode: ignore
           traces:
             span:
-              # Drop successful connection and health spans only. The ping
+              # Drop successful ping, connection, and health spans only. The ping
               # chain carries mcp.method.name on every span, so a normal
               # chain disappears without orphans; spans with an error status
               # or error attribute are kept. Discovery methods (tools/list,
