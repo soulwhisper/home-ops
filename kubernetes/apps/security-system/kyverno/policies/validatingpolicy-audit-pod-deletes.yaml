@@ -56,7 +56,6 @@ spec:
         !(request.userInfo.username in [
           'system:serviceaccount:security-system:kyverno-cleanup-controller',
           'system:serviceaccount:database-system:cnpg-operator',
-          'system:serviceaccount:database-system:clickhouse-operator-controller-manager',
           'system:serviceaccount:database-system:dragonfly-operator-controller-manager',
           'system:serviceaccount:storage-system:rook-ceph-system',
           'system:serviceaccount:monitoring-system:robusta-runner',

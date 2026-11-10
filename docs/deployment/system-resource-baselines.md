@@ -38,7 +38,6 @@ chart default applies even when Git shows `none`.
 
 | App | Chart | Resource key(s) | Chart default / example | Git at measurement (2026-11-09) |
 | --- | --- | --- | --- | --- |
-| `clickhouse-operator` | `clickhouse-operator@0.0.8` | `manager.resources` | requests `10m/64Mi`, limits `500m/128Mi` | requests `10m/64Mi`, limits `500m/256Mi` |
 | `cnpg-operator` | `cloudnative-pg@0.29.1` | `resources` | empty; commented `100m/200Mi` | none |
 | `cnpg-barman` | `plugin-barman-cloud@0.8.1` | `resources` | empty | none |
 | `dragonfly-operator` | `dragonfly-operator@v1.7.1` | `manager.resources` | empty | none |
@@ -74,7 +73,6 @@ chart default applies even when Git shows `none`.
 | `grafana-operator` | `grafana-operator@5.25.0` | `resources` | empty | none |
 | `headlamp` | `headlamp@0.46.0` | `resources` | empty | none |
 | `kube-state-metrics` | `kube-state-metrics@9.0.0` | `resources` | empty | none |
-| `langfuse` | `app-template@5.3.0` | `controllers.{app,worker}.containers.*.resources` | no chart defaults | app `1` CPU + `2Gi` limit; worker `1` CPU + `4Gi` limit |
 | `node-exporter` | `prometheus-node-exporter@5.0.0` | `resources` | empty; commented `100m/64Mi` | requests `23m`; memory limit `64M` |
 | `opentelemetry-collector` | `opentelemetry-collector@0.178.2` | `resources` | empty | requests `10m/512Mi`, memory limit `1Gi` |
 | `prometheus-crds` | `prometheus-operator-crds@33.0.1` | CRD-only | — | — |
@@ -140,9 +138,7 @@ rounded up to 64Mi with a 64Mi floor, and is optional.
 | --- | --- | --- | --- | --- | --- |
 | `kube-system/cilium` | `cilium-agent` | 0m / 0Mi / — | 313m | 9101Mi | 380m / 10928Mi / no limit |
 | `monitoring-system/victoria-logs-server` | `vlsingle` | 0m / 0Mi / — | 124m | 1915Mi | 150m / 2304Mi / 3840Mi |
-| `monitoring-system/langfuse` | `app` | 1000m / 0Mi / 2048Mi | 41m | 959Mi | 1000m / 1152Mi / 2048Mi |
 | `security-system/authentik-server` | `server` | 0m / 0Mi / — | 58m | 889Mi | 70m / 1072Mi / 1792Mi |
-| `monitoring-system/langfuse` | `worker` | 1000m / 0Mi / 4096Mi | 286m | 613Mi | 1000m / 736Mi / 4096Mi |
 | `security-system/authentik-worker` | `worker` | 0m / 0Mi / — | 62m | 423Mi | 75m / 512Mi / 896Mi |
 | `monitoring-system/victoria-logs-collector` | `vlagent` | 0m / 0Mi / — | 47m | 375Mi | 60m / 464Mi / 768Mi |
 | `monitoring-system/kube-state-metrics` | `kube-state-metrics` | 0m / 0Mi / — | 17m | 286Mi | 25m / 352Mi / 576Mi |

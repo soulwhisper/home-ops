@@ -53,16 +53,6 @@
       minimumGroupSize: 1,
     },
     {
-      description: "Langfuse Group",
-      groupName: "Langfuse",
-      matchDatasources: ["docker"],
-      matchPackageNames: ["/langfuse/", "/langfuse-worker/"],
-      group: {
-        commitMessageTopic: "{{{groupName}}} group",
-      },
-      minimumGroupSize: 1,
-    },
-    {
       description: "Rook Ceph Group",
       groupName: "Rook Ceph",
       matchDatasources: ["docker"],
@@ -91,15 +81,6 @@
       groupName: "Toolhive",
       matchDatasources: ["docker"],
       matchPackageNames: ["/toolhive/"],
-      group: {
-        commitMessageTopic: "{{{groupName}}} group",
-      },
-      minimumGroupSize: 1,
-    },
-    {
-      description: "ClickHouse Group (server, keeper, and operator)",
-      groupName: "ClickHouse",
-      matchPackageNames: ["/clickhouse/"],
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },

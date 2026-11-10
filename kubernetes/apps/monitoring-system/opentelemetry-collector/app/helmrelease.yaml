@@ -27,19 +27,6 @@ spec:
     resources:
       requests: { cpu: 10m, memory: 512Mi }
       limits: { memory: 1Gi }
-    # langfuse OTLP project keypair (ExternalSecret langfuse-otel); the
-    # basic_auth/client extension references these, nothing plaintext
-    extraEnvs:
-      - name: LANGFUSE_PUBLIC_KEY
-        valueFrom:
-          secretKeyRef:
-            name: langfuse-otel
-            key: LANGFUSE_PUBLIC_KEY
-      - name: LANGFUSE_SECRET_KEY
-        valueFrom:
-          secretKeyRef:
-            name: langfuse-otel
-            key: LANGFUSE_SECRET_KEY
     serviceMonitor:
       enabled: true
     service:
@@ -80,12 +67,6 @@ spec:
           auth_type: serviceAccount
           lease_name: opentelemetry-policy-events
           lease_namespace: monitoring-system
-        # langfuse /api/public/otel requires project basic auth (pk:sk);
-        # without it every batch 401s and spans drop permanently.
-        basicauth/client:
-          client_auth:
-            username: ${env:LANGFUSE_PUBLIC_KEY}
-            password: ${env:LANGFUSE_SECRET_KEY}
       receivers:
         k8s_objects:
           auth_type: serviceAccount
@@ -137,19 +118,6 @@ spec:
           send_batch_size: 1024
           send_batch_max_size: 2048
           timeout: 1s
-        filter/gen_ai:
-          traces:
-            span:
-              # Drop-condition semantics. Keep gen_ai spans and the
-              # mcp-guardrails spans so guardrail verdicts correlate with the
-              # LLM calls that triggered them. The service name is checked on
-              # both resource and span attributes, plus the span-name prefix,
-              # because the resource attribute can be absent at this stage.
-              - >-
-                  attributes["gen_ai.system"] == nil and
-                  resource.attributes["service.name"] != "mcp-guardrails" and
-                  attributes["service.name"] != "mcp-guardrails" and
-                  not IsMatch(name, "^(guardrail|scanner)\\.")
       exporters:
         otlp_http/policy-events:
           logs_endpoint: http://victoria-logs-server.monitoring-system.svc.cluster.local:9428/insert/opentelemetry/v1/logs
@@ -176,23 +144,8 @@ spec:
             initial_interval: 5s
             max_interval: 30s
             max_elapsed_time: 300s
-        otlp_http/langfuse:
-          endpoint: "http://langfuse.monitoring-system.svc.cluster.local:3000/api/public/otel"
-          auth:
-            authenticator: basicauth/client
-          tls:
-            insecure: true
-          sending_queue:
-            enabled: true
-            num_consumers: 10
-            queue_size: 5000
-          retry_on_failure:
-            enabled: true
-            initial_interval: 5s
-            max_interval: 30s
-            max_elapsed_time: 300s
       service:
-        extensions: [health_check, basicauth/client, k8s_leader_elector/policy-events]
+        extensions: [health_check, k8s_leader_elector/policy-events]
         telemetry:
           metrics:
             readers:
@@ -217,8 +170,3 @@ spec:
               - tail_sampling
               - batch
             exporters: [otlp_http/victoria-traces]
-          traces/servitor:
-            receivers: [otlp]
-            processors:
-              [memory_limiter, redaction/credentials, filter/gen_ai, batch]
-            exporters: [otlp_http/langfuse]

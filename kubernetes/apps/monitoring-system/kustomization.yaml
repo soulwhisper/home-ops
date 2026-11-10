@@ -13,7 +13,6 @@ resources:
   - ./vmware-exporter/ks.yaml
   # monitoring stack
   - ./grafana/ks.yaml
-  - ./langfuse/ks.yaml
   - ./kube-state-metrics/ks.yaml
   - ./opentelemetry-collector/ks.yaml
   - ./prometheus-crds/ks.yaml

@@ -62,12 +62,6 @@ signal path is unaffected.
 
 ## Deferred / rejected
 
-- **ClickHouse log volume** (keeper 5.5M + server 2.8M lines/24h, ~95 lines/s):
-  root cause of the recurring `TooManyLogs`. Fix is `logger.level=warning` on
-  `ClickHouseCluster/default` (database-system) — deferred: needs an
-  operator-driven restart of the shared stateful cluster; not a drive-by.
-  Collector-side `excludeFilter` is metadata-only and would drop ERROR logs
-  too — rejected.
 - **etcd flips SLO / 24h variants**: covered by `etcdHighNumberOfLeaderChanges`;
   the board panel is the trend view of that alert, not a new one. The
   short-spike gap it left (2026-10-08: ~5m fsync stalls cost leadership but

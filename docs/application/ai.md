@@ -34,10 +34,6 @@ flowchart TB
         VMCP-GITHUBPR["github-pr<br/>(1 server: branch/commit/PR)"]
     end
 
-    subgraph Obs["Observability"]
-        Langfuse["Langfuse"]
-    end
-
     Clients --> AG-LLM
     Clients --> AG-MCP
     AG-LLM --> Studio
@@ -48,7 +44,6 @@ flowchart TB
     AG-MCP --> VMCP-AGENT
     AG-MCP --> VMCP-BROWSER
     AG-MCP --> VMCP-GITHUBPR
-    Clients --> Obs
 ```
 
 ## Agent Gateway — Central LLM + MCP Router
@@ -434,23 +429,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 ---
 
-## LLM Observability
-
-### Langfuse
-
-| Component | Image                                      | Resources            |
-| --------- | ------------------------------------------ | -------------------- |
-| web       | `ghcr.io/langfuse/langfuse`        | req: 50m CPU / 1152Mi, lim: 2Gi |
-| worker    | `ghcr.io/langfuse/langfuse-worker` | req: 350m CPU / 736Mi, lim: 4Gi |
-
-- **Deployment**: one Pod with `app` (web) and `worker` containers sharing the `langfuse` application identity
-- **Backends**: ClickHouse (analytics), Dragonfly Redis (cache/queue), Ceph S3 (events/exports), CloudNativePG (metadata)
-- **Features**: Experimental features enabled, telemetry disabled
-
----
-
-
-### TrendRadar
+## TrendRadar
 
 - AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`)
 - Delivery: Feishu custom group robot (`FEISHU_WEBHOOK_URL` from 1Password `feishu.newsbot_webhook`); HTML report at `news.noirprime.com` (SSO)
@@ -497,9 +476,8 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 | Service                     | Namespace           | Purpose                                             |
 | --------------------------- | ------------------- | --------------------------------------------------- |
 | **Agent Gateway**           | `networking-system` | LLM + MCP routing                                   |
-| **CloudNativePG**           | `database-system`   | PostgreSQL + PGVector for Langfuse, Hindsight |
+| **CloudNativePG**           | `database-system`   | PostgreSQL + PGVector for Hindsight |
 | **Dragonfly**               | Various             | Redis-compatible cache/queue                        |
-| **ClickHouse**              | `database-system`   | Langfuse analytics                                  |
 | **Ceph (Rook)**             | `storage-system`    | S3 + block + CephFS for model/data storage          |
 | **Workload sandboxing**      | —                   | user namespaces + egress CNP per ADR-03 (Kata removed)  |
 | **kgateway**                | `networking-system` | API gateway + SSO extAuth                           |
@@ -575,10 +553,10 @@ items:
 | Item | State | Path forward |
 | ---- | ----- | ------------ |
 | open-webui MCP bearer key rollout | Restored with the native search-tier bearer connection | Smoke-verify a native tool call after rollout; check the `tool_server.connections` config row if the persisted shape diverges |
-| promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via langfuse/logs; if painful, expose `omni-raw` (one unguarded rule) as the designed escape hatch |
+| promptGuard FP rate on extractor traffic | Extractors (firecrawl/karakeep/trendradar/hindsight/ha-sgcc) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via logs; if painful, expose `omni-raw` (one unguarded rule) as the designed escape hatch |
 | hermes MCP server endpoints | Done: the ops profile covers search, cluster, and agent tiers; the default profile has no MCP access | Watch ops-profile tool calls |
 | SillyTavern endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
-| mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred, on watch via langfuse decision spans (open-webui and hermes both emit OTEL) | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
+| mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred; monitor gateway logs and sampled guardrail spans | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
 | ASR/TTS model | VoxCPM2-4bit served on the studio via `/v1/audio/speech` and `/v1/audio/transcriptions` (`studio-audio` backend) — lane ready, no in-repo consumer | Point a consumer at the lane when one appears; ASR (`/v1/audio/transcriptions`) wired but unused |
 | backend upstream auth | `policies.auth.secretRef: studio-api-auth` on all chat + media backends (oMLX server key, ES item `omlx`) | Verify at rollout: `/v1/chat/completions` and `/v1/embeddings|rerank|audio` answer 200 through the gateway while oMLX 401s keyless direct calls |
 

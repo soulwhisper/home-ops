@@ -35,7 +35,6 @@ rules:
       - ceph.rook.io
       - objectbucket.io
       - dragonflydb.io
-      - clickhouse.com
       - external-secrets.io # ES/CSS status,secret value not included
       - snapshot.storage.k8s.io
       - frrk8s.metallb.io
