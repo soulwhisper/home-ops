@@ -43,4 +43,4 @@ spec:
       enabled: true
       samplingRate: "0.1"
   prometheus:
-    enabled: true
+    enabled: false

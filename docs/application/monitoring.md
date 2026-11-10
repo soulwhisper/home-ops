@@ -164,7 +164,7 @@ The exporter uses queued retry with 10 consumers, 5000 queue depth, and exponent
 
 ### AgentGateway metrics
 
-`agentgateway_*` metrics are already scraped by the gateway ServiceMonitor/PodMonitor. The `agentgateway.rules` recording group exposes `agentgateway:gen_ai_tokens:rate5m` (model, token type, route), `agentgateway:requests:rate5m` and `agentgateway:mcp_requests:rate5m` (route, status), and `agentgateway:gen_ai_ttft:p95_5m` (model, route). LLM spans carry `client.application` from trusted API-key metadata (`user_id`); unauthenticated routes fall back to `anonymous`.
+`agentgateway_*` metrics are already scraped by the gateway ServiceMonitor/PodMonitor. The `agentgateway.rules` recording group exposes `agentgateway:gen_ai_tokens:rate5m` (model, token type, route), `agentgateway:requests:rate5m` and `agentgateway:mcp_requests:rate5m` (route, status), and `agentgateway:gen_ai_ttft:p95_5m` (model, route).
 
 ## Grafana
 
