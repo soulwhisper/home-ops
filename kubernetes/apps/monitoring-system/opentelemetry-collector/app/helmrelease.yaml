@@ -102,15 +102,41 @@ spec:
             - "-----BEGIN [A-Z ]*PRIVATE KEY-----"
             - "(?i)bearer +[a-z0-9._\\-]{20,}"
           summary: info
+        filter/noise:
+          error_mode: ignore
+          traces:
+            span:
+              # Drop successful ping, connection, and health spans only. The ping
+              # chain carries mcp.method.name on every span, so a normal
+              # chain disappears without orphans; spans with an error status
+              # or error attribute are kept. Discovery methods (tools/list,
+              # resources/list, prompts/list) stay unfiltered because
+              # ToolHive can return JSON-RPC errors with HTTP 200 and no error
+              # attribute. GET /mcp is a connection parent and is only
+              # subject to sampling.
+              - 'attributes["mcp.method.name"] == "ping" and status.code != STATUS_CODE_ERROR and attributes["error"] != "true"'
+              - 'name == "connect" and status.code != STATUS_CODE_ERROR and attributes["error"] != "true"'
+              - 'IsMatch(name, "^GET /(healthz|readyz|livez)$") and status.code != STATUS_CODE_ERROR and attributes["error"] != "true"'
         tail_sampling:
           decision_wait: 10s
           policies:
+            # Keep failures, model calls, and tool execution; sample the rest.
+            # There is no global latency policy: a 300s SSE connection
+            # lifetime is not request latency and must not force-retain every
+            # connection trace.
             - name: errors-policy
               type: status_code
               status_code: { status_codes: [ERROR] }
-            - name: latency-policy
-              type: latency
-              latency: { threshold_ms: 5000 }
+            - name: genai-policy
+              type: string_attribute
+              string_attribute:
+                key: gen_ai.operation.name
+                values: [chat]
+            - name: tools-call-policy
+              type: string_attribute
+              string_attribute:
+                key: mcp.method.name
+                values: [tools/call]
             - name: probability-policy
               type: probabilistic
               probabilistic: { sampling_percentage: 10 }
@@ -167,6 +193,7 @@ spec:
             processors:
               - memory_limiter
               - k8sattributes
+              - filter/noise
               - tail_sampling
               - batch
             exporters: [otlp_http/victoria-traces]

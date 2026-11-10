@@ -7,6 +7,9 @@ metadata:
 spec:
   groupRef:
     name: cluster
+  telemetryConfigRef:
+    name: backend-otel
+    serviceName: mcp-kubernetes
   resourceOverrides:
     proxyDeployment:
       env:

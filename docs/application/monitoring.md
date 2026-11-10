@@ -151,15 +151,20 @@ Jaeger, Zipkin, and legacy receivers disabled.
 |-----------|-------------|---------|
 | `memory_limiter` | All | Soft limit 80%, spike limit 25% |
 | `k8sattributes` | `traces/app` | Kubernetes pod/namespace enrichment |
-| `tail_sampling` | `traces/app` | Error traces always kept; latency >5s kept; 10% probabilistic baseline |
+| `filter/noise` | `traces/app` | Drops successful ping, connect, and health-check spans; discovery methods stay unfiltered because JSON-RPC errors can return HTTP 200; error spans are kept |
+| `tail_sampling` | `traces/app` | Errors, GenAI chat, and `tools/call` retained; 10% baseline; no global latency rule |
 | `redaction/credentials` | `logs` | Blocks GitHub tokens, AWS keys, JWTs, 1Password refs, private keys, Bearer tokens |
 | `batch` | All | 1024 batch, 2048 max, 1s timeout |
 
 ### Trace export
 
-Traces flow through memory limiter → k8s attributes → tail sampling (errors always kept, latency >5s always kept, 10% probabilistic baseline) → batch → **VictoriaTraces** (`/insert/opentelemetry/v1/traces`).
+Traces flow through memory limiter → k8s attributes → noise filter → tail sampling (errors, GenAI chat, and `tools/call` retained; 10% baseline) → batch → **VictoriaTraces** (`/insert/opentelemetry/v1/traces`). SSE/ping connection lifetimes are not request latency and are not force-retained by a global 5s rule.
 
 The exporter uses queued retry with 10 consumers, 5000 queue depth, and exponential backoff (5s initial, 30s max, 300s elapsed).
+
+### AgentGateway metrics
+
+`agentgateway_*` metrics are already scraped by the gateway ServiceMonitor/PodMonitor. The `agentgateway.rules` recording group exposes `agentgateway:gen_ai_tokens:rate5m` (model, token type, route), `agentgateway:requests:rate5m` and `agentgateway:mcp_requests:rate5m` (route, status), and `agentgateway:gen_ai_ttft:p95_5m` (model, route).
 
 ## Grafana
 

@@ -306,7 +306,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 - **Variant layout**: `mcp/hindsight/{app,persona,ops}` and `mcp/github/{app,ro,hr}`; each `app` is a shared Kustomize base, while sibling directories are independently reconciled overlays
 - **7 Virtual MCP Servers** (search / cluster / github-ro / persona / agent / browser / github-pr) with:
   - Circuit breaker (3 failures → 30s timeout)
-  - OTEL telemetry (5% sampling)
+  - OTEL telemetry: vMCP emits all spans; the collector drops connection noise, retains `tools/call`, and samples the rest at 10%. Selected backend servers (`mcp-kubernetes`, `mcp-firecrawl`) use `backend-otel` at 10% source sampling for server-internal latency.
   - **No optimizer** (removed 2026-10): it hid real tool names behind
     `find_tool`/`call_tool` meta-tools, blocking gateway-level tool
     filtering; its removal also dropped the vmcp embeddings dependency

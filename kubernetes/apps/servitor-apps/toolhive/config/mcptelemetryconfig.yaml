@@ -17,6 +17,30 @@ spec:
       enabled: false
     tracing:
       enabled: true
-      samplingRate: "0.05"
+      # One sampling decision: emit from vMCP and let the collector filter
+      # connection noise and retain model/tool traces. A 5% source rate
+      # combined with the collector's baseline sampled only ~0.5% of calls.
+      samplingRate: "1.0"
   prometheus:
     enabled: true
+---
+# Backend servers are a selected pilot, not a second full-coverage tier:
+# vMCP already emits tools/call with tool name and status. Backend spans are
+# kept at 10% to expose server-internal latency without duplicating vMCP
+# volume.
+apiVersion: toolhive.stacklok.dev/v1beta1
+kind: MCPTelemetryConfig
+metadata:
+  name: backend-otel
+spec:
+  openTelemetry:
+    enabled: true
+    endpoint: opentelemetry-collector.monitoring-system.svc.cluster.local:4318
+    insecure: true
+    metrics:
+      enabled: false
+    tracing:
+      enabled: true
+      samplingRate: "0.1"
+  prometheus:
+    enabled: false
