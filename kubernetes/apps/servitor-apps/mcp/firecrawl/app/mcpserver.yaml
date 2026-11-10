@@ -7,6 +7,9 @@ metadata:
 spec:
   groupRef:
     name: search
+  telemetryConfigRef:
+    name: backend-otel
+    serviceName: mcp-firecrawl
   # Gateway tool allowlist: networking-system/agentgateway/config/mcp/filters.yaml
   # (search policy). Tracked against image v3.36.0 (28 tools enumerated)
   # — re-verify the allowlist on every version bump.

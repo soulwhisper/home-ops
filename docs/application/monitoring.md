@@ -162,6 +162,10 @@ Traces flow through memory limiter → k8s attributes → noise filter → tail 
 
 The exporter uses queued retry with 10 consumers, 5000 queue depth, and exponential backoff (5s initial, 30s max, 300s elapsed).
 
+### AgentGateway metrics
+
+`agentgateway_*` metrics are already scraped by the gateway ServiceMonitor/PodMonitor. The `agentgateway.rules` recording group exposes `agentgateway:gen_ai_tokens:rate5m` (model, token type, route), `agentgateway:requests:rate5m` and `agentgateway:mcp_requests:rate5m` (route, status), and `agentgateway:gen_ai_ttft:p95_5m` (model, route). LLM spans carry `client.application` from trusted API-key metadata (`user_id`); unauthenticated routes fall back to `anonymous`.
+
 ## Grafana
 
 Grafana is managed by the **Grafana Operator** (`grafana-operator` Helm chart, 1 replica), not via the Helm chart directly. The `Grafana` CR declares the full deployment spec: 2 replicas with `topologySpreadConstraints` (hostname skew). PostgreSQL-backed (CNPG `postgres-rw.database-system`), `postgres-init` init container with the `grafana-pguser` secret for automatic database provisioning.

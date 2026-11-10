@@ -24,6 +24,11 @@ spec:
             name: request
           - expression: "request.host"
             name: host
+          # API key metadata is trusted (lane secrets carry user_id). The
+          # fallback keeps unauthenticated UI/MCP routes from rejecting the
+          # tracing tag when no API key policy ran.
+          - expression: 'has(apiKey.user_id) ? apiKey.user_id : "anonymous"'
+            name: client.application
   traffic:
     phase: PreRouting
     transformation:
