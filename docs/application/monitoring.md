@@ -43,7 +43,7 @@ flowchart LR
   BB --> VM
   VM --> VMS
   FB --> VL
-  OTEL --> VT & Langfuse
+  OTEL --> VT
   VAUTH --> VMS & VL
   GRAF --> VAUTH & VL & VT
   VMALERT --> VAUTH
@@ -152,18 +152,14 @@ Jaeger, Zipkin, and legacy receivers disabled.
 | `memory_limiter` | All | Soft limit 80%, spike limit 25% |
 | `k8sattributes` | `traces/app` | Kubernetes pod/namespace enrichment |
 | `tail_sampling` | `traces/app` | Error traces always kept; latency >5s kept; 10% probabilistic baseline |
-| `redaction/credentials` | `traces/servitor` | Blocks GitHub tokens, AWS keys, JWTs, 1Password refs, private keys, Bearer tokens |
-| `filter/gen_ai` | `traces/servitor` | Drops spans with `gen_ai.system` attribute set |
+| `redaction/credentials` | `logs` | Blocks GitHub tokens, AWS keys, JWTs, 1Password refs, private keys, Bearer tokens |
 | `batch` | All | 1024 batch, 2048 max, 1s timeout |
 
-### Dual export
+### Trace export
 
-Two independent trace pipelines share the same OTLP receiver input:
+Traces flow through memory limiter → k8s attributes → tail sampling (errors always kept, latency >5s always kept, 10% probabilistic baseline) → batch → **VictoriaTraces** (`/insert/opentelemetry/v1/traces`).
 
-1. **`traces/app`** — application traces flow through memory limiter → k8s attributes → tail sampling (5% effective for normal traces) → batch → **VictoriaTraces** (`/insert/opentelemetry/v1/traces`)
-2. **`traces/servitor`** — servitor (LLM agent) traces flow through memory limiter → credential redaction → gen_ai filter → batch → **Langfuse** (`/api/public/otel`)
-
-Both exporters use queued retry with 10 consumers, 5000 queue depth, and exponential backoff (5s initial, 30s max, 300s elapsed).
+The exporter uses queued retry with 10 consumers, 5000 queue depth, and exponential backoff (5s initial, 30s max, 300s elapsed).
 
 ## Grafana
 
@@ -245,30 +241,6 @@ Per-node DaemonSet exposing S.M.A.R.T. disk health metrics from NVMe and SATA dr
 ## Headlamp
 
 Headlamp K8s web UI deployed with 1 replica at `headlamp.noirprime.com`. Uses a read-only `view` ClusterRole (aggregated, excludes secrets) extended with Flux CRD read access (`headlamp-flux-view` aggregated ClusterRole). Kubeconfig generated at init via SA token. OIDC SSO via Authentik (client credentials from ExternalSecret). Flux plugin (`headlamp-plugin-flux`) copied at init.
-
-## Langfuse
-
-LLM observability platform for tracing servitor (agent) interactions. One `app-template` Deployment runs web and worker containers in the same Pod, sharing the `langfuse` application identity:
-
-| Container | Image | Resources |
-|-----------|-------|-----------|
-| `app` | `ghcr.io/langfuse/langfuse` | 1 CPU request, 2Gi memory limit |
-| `worker` | `ghcr.io/langfuse/langfuse-worker` | 1 CPU request, 4Gi memory limit |
-
-### Storage backends
-
-| Backend | Technology | Purpose |
-|---------|-----------|---------|
-| Metadata DB | CNPG (PostgreSQL) | Langfuse schema via `postgres-init` init container |
-| Analytics DB | ClickHouse `default-clickhouse.database-system:9000` | Trace/token analytics, `langfuse` database |
-| Cache/Queue | Dragonfly `langfuse-dragonfly.monitoring-system:6379` | Redis-compatible, TLS disabled |
-| Object store | Ceph RGW (S3) `langfuse` bucket | Event uploads (`events/`), media uploads (`media/`), batch exports disabled |
-
-Web component exposed at `langfuse.noirprime.com`. Telemetry disabled. Experimental features enabled.
-
-### Traces ingestion
-
-OTel Collector routes servitor traces to Langfuse's OTLP endpoint (`langfuse:3000/api/public/otel`) after credential redaction and gen_ai span filtering. See [OpenTelemetry Collector](#opentelemetry-collector) for pipeline details.
 
 ## Robusta
 

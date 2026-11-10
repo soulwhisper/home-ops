@@ -40,8 +40,8 @@ spec:
       toPorts:
         - ports:
             - { port: "80", protocol: TCP }
-    # telemetry: OTLP/HTTP traces -> opentelemetry-collector (traces/servitor
-    # pipeline -> langfuse); ENABLE_OTEL_TRACES in the helmrelease
+    # telemetry: OTLP/HTTP traces -> opentelemetry-collector (traces/app
+    # pipeline -> VictoriaTraces); ENABLE_OTEL_TRACES in the helmrelease
     - toServices:
         - k8sService:
             serviceName: opentelemetry-collector

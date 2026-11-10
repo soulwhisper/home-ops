@@ -58,8 +58,6 @@
     {
       description: "Frequent quiet-train apps: auto-merge minor updates after CI",
       matchPackageNames: [
-        "ghcr.io/langfuse/langfuse",
-        "ghcr.io/langfuse/langfuse-worker",
         "ghcr.io/kimdre/doco-cd",
         "ghcr.io/starosdev/scrutiny",
       ],

@@ -7,7 +7,7 @@
     "github>soulwhisper/home-ops//.renovate/groups.json5",
     "github>soulwhisper/home-ops//.renovate/packageRules.json5",
   ],
-  ignorePaths: [".archived/**"],
+  ignorePaths: [".archived/**", "kubernetes/parked/**"],
   flux: {
     managerFilePatterns: ["/^kubernetes/.+\\.ya?ml$/"],
   },

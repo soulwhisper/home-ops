@@ -71,7 +71,7 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Snapshot Controller](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/snapshot-controller/ks.yaml) | Volume snapshot management |
 | [CSI Driver NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/csi-driver-nfs/ks.yaml) | Synology NFS mount CSI |
 
-## database-system — Database Operators (3)
+## database-system — Database Operators (2)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/database-system/kustomization.yaml)
 
@@ -79,9 +79,8 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | --- | --- |
 | [CloudNativePG](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/database-system/cnpg-operator/ks.yaml) | PostgreSQL operator and shared database cluster |
 | [Dragonfly Operator](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/database-system/dragonfly-operator/ks.yaml) | Redis-compatible cache operator |
-| [ClickHouse Operator](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/database-system/clickhouse-operator/ks.yaml) | Analytical database operator and cluster for Langfuse |
 
-## monitoring-system — Observability (17)
+## monitoring-system — Observability (16)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/kustomization.yaml)
 
@@ -99,7 +98,6 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Blackbox Exporter](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/blackbox-exporter/ks.yaml) | Endpoint probing |
 | [Silence Operator](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/silence-operator/ks.yaml) | Alert silencing for maintenance |
 | [Headlamp](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/headlamp/ks.yaml) | Kubernetes web UI |
-| [Langfuse](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/langfuse/ks.yaml) | LLM observability |
 | [Prometheus CRDs](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/prometheus-crds/ks.yaml) | Prometheus operator resource definitions |
 | [Robusta](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/robusta/ks.yaml) | Alert enrichment, Holmes analysis, and scheduled health checks |
 | [KRR](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/krr/ks.yaml) | Scheduled Kubernetes resource recommendations |

@@ -39,7 +39,7 @@ spec:
               # App is OTLP/gRPC-only (guardrails/otel.py proto.grpc exporters,
               # insecure derived from the http:// scheme). gRPC must go to :4317;
               # :4318 is the HTTP receiver — plaintext h2c there got HTTP 400
-              # ("Failed parsing HTTP/2") and zero spans ever reached langfuse.
+              # ("Failed parsing HTTP/2") and zero spans ever reached the collector.
               OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring-system.svc.cluster.local:4317"
               # collector runs traces-only pipelines; without this the app
               # pushes metrics every 15s and logs UNIMPLEMENTED forever
@@ -50,8 +50,8 @@ spec:
               # tools/list skips response scanning on both guarded tiers.
               SCANNER_TIMEOUT_MS: "10000"
               SCAN_TAIL_BYTES: "11264"
-              # deterministic service.name for the collector's servitor
-              # pipeline filter (traces -> langfuse)
+              # deterministic service.name for trace attribution in the
+              # collector's traces pipeline
               OTEL_SERVICE_NAME: "mcp-guardrails"
             resources:
               # limits.cpu is what actually buys scan speed (CFS quota);
