@@ -53,7 +53,12 @@ up manually:
 1. **Postgres database and role.** `langfuse` (15 MB) and role `langfuse` were
    created by the `postgres-init` init container, not by a `Database` CR. They
    are not deleted by parking. Drop them only after confirming no consumer:
-   `DROP DATABASE langfuse; DROP ROLE langfuse;`
+
+   ```sql
+   \c postgres
+   DROP DATABASE langfuse WITH (FORCE);
+   DROP ROLE langfuse;
+   ```
 2. **ClickHouse PVCs.** The PV reclaim policy is `Delete`:
    `clickhouse-storage-volume-default-clickhouse-0-0-0` and
    `clickhouse-storage-volume-default-clickhouse-0-1-0` (100Gi each),

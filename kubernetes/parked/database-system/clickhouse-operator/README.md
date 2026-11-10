@@ -19,13 +19,13 @@ back before applying it.
 
 ## Leftovers
 
-- PVCs with `Delete` reclaim:
+- PVCs backed by `ceph-block`; their provisioned PVs use `reclaimPolicy: Delete`:
   `clickhouse-storage-volume-default-clickhouse-0-0-0`,
   `clickhouse-storage-volume-default-clickhouse-0-1-0` (100Gi each),
   `clickhouse-storage-volume-default-keeper-0-0`, `-1-0`, and `-2-0` (10Gi each).
 - CRDs `clickhouseclusters.clickhouse.com` and `keeperclusters.clickhouse.com`
   may remain after the operator chart is removed.
-- `clickhouse-credentials` Secret/ExternalSecret and the 1Password `clickhouse`
-  item.
+- The 1Password `clickhouse` item. The `clickhouse-credentials`
+  ExternalSecret/Secret is pruned with the app.
 - No other app consumes this cluster after Langfuse parking; do not unpark it
   without Langfuse unless a new consumer is added.

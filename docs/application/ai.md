@@ -44,7 +44,6 @@ flowchart TB
     AG-MCP --> VMCP-AGENT
     AG-MCP --> VMCP-BROWSER
     AG-MCP --> VMCP-GITHUBPR
-    Clients --> Obs
 ```
 
 ## Agent Gateway — Central LLM + MCP Router

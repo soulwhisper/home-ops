@@ -1,8 +1,8 @@
 # Application Catalog
 
-71 application definition units across 9 namespaces, managed via Flux GitOps. Each table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload.
+69 application definition units across 9 namespaces, managed via Flux GitOps. Each table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload.
 
-The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 9 first-level namespace directories. Together, those namespaces have 59 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 71 definition files declare 101 child Flux Kustomizations and lead to 72 HelmReleases. There are 51 OCIRepositories across the source tree: 50 application-local and one shared app-template source. These are source counts, not counts of running applications.
+The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 9 first-level namespace directories. Together, those namespaces have 57 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 69 definition files declare 98 child Flux Kustomizations and lead to 70 HelmReleases. There are 51 OCIRepositories across the source tree: 50 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
 Definitions that are intentionally not deployed live under [`kubernetes/parked`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/parked); see its README for the parked-versus-archived contract.
 

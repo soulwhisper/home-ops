@@ -41,8 +41,8 @@ flowchart TB
         FR --> CA
         CA --> NS["9 namespace
         Kustomize indexes"]
-        NS --> APPS["71 ks.yaml files
-        101 child Flux Kustomizations"]
+        NS --> APPS["69 ks.yaml files
+        98 child Flux Kustomizations"]
     end
 
     subgraph Components["Kustomize Components"]
@@ -57,20 +57,20 @@ flowchart TB
         AUTHENTIK["authentik
         10 consumers"]
         CNPG["cnpg
-        5 consumers"]
-        DRAGONFLY["dragonfly
         4 consumers"]
+        DRAGONFLY["dragonfly
+        3 consumers"]
         CEPH["ceph-bucket
-        2 consumers"]
+        1 consumer"]
     end
 
     subgraph Charts["Chart Sources"]
-        OCI_OWN["52 local
+        OCI_OWN["50 local
         OCIRepositories"]
         OCI_TPL["1 shared app-template
         OCIRepository"]
-        CROSS["43 cross-namespace
-        chartRef references"]
+        CROSS["15 cross-namespace
+        HelmReleases"]
     end
 
     GIT --> Bootstrap
@@ -135,13 +135,13 @@ The [FluxInstance configuration](https://github.com/soulwhisper/home-ops/blob/ma
 
 ## Strategic Patching System
 
-The `cluster-apps` Kustomization applies three strategic patches to its 101 child Flux Kustomizations. They are defined in [`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml); the effective configuration includes these patches, not just the local `ks.yaml`.
+The `cluster-apps` Kustomization applies three strategic patches to its 98 child Flux Kustomizations. They are defined in [`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml); the effective configuration includes these patches, not just the local `ks.yaml`.
 
 ### Layer 1: Kustomization Defaults (managed annotation)
 
 **Target**: Any `Kustomization` with annotation `config.home-ops.io/managed=true`
 
-All 101 child Flux Kustomizations carry this annotation. The patch sets:
+All 98 child Flux Kustomizations carry this annotation. The patch sets:
 
 ```yaml
 spec:
@@ -159,7 +159,7 @@ spec:
 `wait: true` in its own `ks.yaml` — an injected default would silently
 override it.
 
-These scalar values override local declarations. In particular, [`flux-operator`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-operator/ks.yaml), [`flux-instance`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/ks.yaml), and [`coredns`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/coredns/ks.yaml) declare `prune: false` locally, but all three have effective `prune: true`, as do all 101 children. The local value is not deletion protection; changes that remove a core Kustomization or alter its ownership must account for its effective prune behavior.
+These scalar values override local declarations. In particular, [`flux-operator`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-operator/ks.yaml), [`flux-instance`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/ks.yaml), and [`coredns`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/coredns/ks.yaml) declare `prune: false` locally, but all three have effective `prune: true`, as do all 98 children. The local value is not deletion protection; changes that remove a core Kustomization or alter its ownership must account for its effective prune behavior.
 
 ### Layer 2: Baseline Infrastructure Dependencies (deps label)
 
@@ -509,7 +509,7 @@ Two custom labels and an annotation drive the strategic patching and component i
 
 **Type**: Annotation
 **Purpose**: Opts a `Kustomization` into Layer 1 strategic patching (Kustomization defaults).
-**Scope**: All 101 child Flux Kustomizations in 71 `ks.yaml` files.
+**Scope**: All 98 child Flux Kustomizations in 69 `ks.yaml` files.
 
 Without this annotation, a Kustomization would not receive the automatic `sourceRef`, `prune`, `interval`, and `timeout` defaults. Infrastructure-only Kustomizations (like `flux-repositories`) omit it intentionally.
 
@@ -564,9 +564,9 @@ kubernetes/
 │   ├── kopiur/backup/             #   PVC backup pipeline (4 consumers)
 │   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (1 consumer)
 │   ├── authentik/                 #   SSO traffic policy (10 consumers)
-│   ├── cnpg/                      #   PostgreSQL secret (5 consumers)
-│   ├── dragonfly/                 #   Redis-compatible cache (4 consumers)
-│   └── ceph-bucket/               #   S3 object bucket (2 consumers)
+│   ├── cnpg/                      #   PostgreSQL secret (4 consumers)
+│   ├── dragonfly/                 #   Redis-compatible cache (3 consumers)
+│   └── ceph-bucket/               #   S3 object bucket (1 consumer)
 └── flux/                          # Flux cluster configuration
     ├── cluster/                   # No root kustomization.yaml; Flux autogenerates
     │   └── cluster.yaml           #   flux-repositories + cluster-apps Kustomizations
