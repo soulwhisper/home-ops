@@ -65,6 +65,7 @@ spec:
                   secretKeyRef:
                     name: *pguser
                     key: port
+              DB_VECTOR_EXTENSION: "pgvector"
               REDIS_PASSWORD:
                 valueFrom:
                   secretKeyRef:

@@ -21,9 +21,15 @@ done
 
 The active `postgres` Cluster does not declare the `immich` role or `Database`.
 Add both before restoring so ownership and the required extensions stay
-declarative. The app's `init-db` container can provision the role and database
-from the superuser secret; the `Database` declaration is what ensures `vector`,
-`vchord`, `cube`, and `earthdistance`.
+declarative. Restore Immich in pgvector mode (`DB_VECTOR_EXTENSION: pgvector`,
+already set in the archived HelmRelease); the CNPG image already provides
+`vector`, `uuid-ossp`, `unaccent`, `cube`, `earthdistance`, and `pg_trgm`, so no
+additional image extension is required. `vchord`, `vchord_bm25`, and
+`pg_tokenizer` are not used by this restore path.
+
+The app's `init-db` container can provision the role and database from the
+superuser secret; the `Database` declaration is what ensures the pgvector-mode
+extensions.
 
 Role (inside the `postgres` Cluster `spec.managed.roles`):
 
@@ -50,11 +56,15 @@ spec:
   extensions:
     - name: vector
       ensure: present
-    - name: vchord
+    - name: uuid-ossp
+      ensure: present
+    - name: unaccent
       ensure: present
     - name: cube
       ensure: present
     - name: earthdistance
+      ensure: present
+    - name: pg_trgm
       ensure: present
 ```
 
