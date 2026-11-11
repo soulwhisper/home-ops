@@ -1,6 +1,7 @@
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/j178/prek/refs/heads/master/prek.schema.json
 minimum_prek_version: "0.3.4"
+exclude: "^.*/.*_sources/"
 repos:
   # Basic file hygiene
   - repo: https://github.com/pre-commit/pre-commit-hooks

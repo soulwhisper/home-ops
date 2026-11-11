@@ -19,16 +19,15 @@ from history.
 | `cluster/dashboards/custom/` | The only retained boards: `basement-health.json`, `kopiur-slo.json`, `ALERTS.md`, design notes |
 | `cluster/dashboards/{databases,default,kubernetes,network,nodes,storage}/` | Grafana folder/dashboard CRs and ConfigMap generators for the vendir delivery |
 | `cluster/dashboards/vendir.yml`, `vendir.lock.yml`, `README.md` | Vendir source list, lock file, and sync strategy |
-| `homepage/icons/grafana.svg` | Homepage icon removed from the active app |
-| `.archived/kubernetes/servitor/mcp/grafana/` | `mcp-grafana` MCPServer, its `mcp-grafana-sa` ExternalSecret, and `ks.yaml` |
+| `.archived/kubernetes/servitor/mcp/grafana/` | `mcp-grafana` MCPServer, its `mcp-grafana-sa` ExternalSecret, and `ks.yaml` (details in that folder's `README.md`) |
 | `.archived/.github/workflows/vendir.yaml` | Retired dashboard-sync workflow, byte-identical to the active copy |
 
-Only `cluster/dashboards/_sources/` was deleted: it is vendir-cached,
-re-fetchable upstream data, not a config. Every related config and doc is
-archived: the vendir files, dashboard CRs/generators, workflow, MCP server,
-OIDC blueprint, and Homepage icon. The archived dashboard kustomizations still
-reference `_sources/`; re-sync it with the archived workflow before restoring
-dashboard delivery.
+Only `cluster/dashboards/_sources/` (vendir-cached, re-fetchable upstream
+data) and the Homepage icon (a rendering asset, not config) were deleted. Every
+related config and doc is archived: the vendir files, dashboard
+CRs/generators, workflow, MCP server, and OIDC blueprint. The archived
+dashboard kustomizations still reference `_sources/`; re-sync it with the
+archived workflow before restoring dashboard delivery.
 
 Active wiring removed (not archived as standalone files): monitoring/MCP index
 entries, the Authentik blueprint mount, the Homepage icon reference, the
@@ -88,6 +87,65 @@ Only the two repo-owned boards are retained. They query vmsingle directly and
 remain readable JSON reference; they are not wired to any active dashboard
 delivery.
 
+### Renovate dashboard sync (removed)
+
+The active `.renovate/custom.json5` dashboard datasource, manager, package
+rules, and the `renovate/grafana-dashboard` label were removed. Re-add these
+exact blocks if vendir dashboard sync returns:
+
+```json5
+customDatasources: {
+  "grafana-dashboards": {
+    defaultRegistryUrlTemplate: "https://grafana.com/api/dashboards/{{packageName}}",
+    format: "json",
+    transformTemplates: [
+      '{"releases":[{"version": $string(revision)}], "sourceDirectory": name}',
+    ],
+  },
+}
+```
+
+```json5
+{
+  customType: "regex",
+  description: "Update Grafana Dashboard IDs",
+  managerFilePatterns: ["(^|/)vendir\\.yml$"],
+  matchStrings: [
+    "dashboards\\/(?<depName>\\d+)\\/revisions\\/(?<currentValue>\\d+)\\/download",
+  ],
+  datasourceTemplate: "custom.grafana-dashboards",
+  versioningTemplate: "regex:^(?<major>\\d+)$",
+  autoReplaceStringTemplate: "dashboards/{{depName}}/revisions/{{newValue}}/download",
+}
+```
+
+```json5
+{
+  matchDatasources: ["custom.grafana-dashboards"],
+  addLabels: ["renovate/grafana-dashboard"],
+  semanticCommitScope: "grafana-dashboards",
+  semanticCommitType: "chore",
+  commitMessageTopic: "dashboard {{sourceDirectory}}",
+  commitMessageExtra: "( {{currentVersion}} → {{newVersion}} )",
+},
+{
+  description: "Vendir Group",
+  groupName: "Vendir",
+  matchManagers: ["vendir"],
+  matchDatasources: ["git-refs", "git-tags", "github-tags"],
+  group: {
+    commitMessageTopic: "{{{groupName}}} group",
+  },
+}
+```
+
+The label definition removed from `.github/labels.yaml`:
+
+```yaml
+- name: renovate/grafana-dashboard
+  color: "027fa0"
+```
+
 ### Grafana MCP
 
 - Image `grafana/mcp-grafana:2.3.0`, streamable HTTP on `:8000`,
@@ -105,6 +163,9 @@ delivery.
 
 - `mcp-fluxcd-extras` included `grafana.integreatly.org`; the group description
   named scoped Grafana/Victoria tokens.
+
+MCP-specific files, token flow, gateway filter, and restore steps are recorded
+in `.archived/kubernetes/servitor/mcp/grafana/README.md`.
 
 ### ESO RBAC note
 
@@ -147,5 +208,5 @@ verify the token sync if that handoff is revisited.
    `.github/workflows/vendir.yaml`, run `vendir sync` to recreate the deleted
    `_sources/` tree, and keep the archived dashboard folders/config with the
    restored app. Wire the retained custom boards to `GrafanaDashboard` CRs.
-6. Move `homepage/icons/grafana.svg` back to the homepage icon set and restore
+6. Re-create the deleted Homepage icon from the upstream artwork and restore
    the HTTPRoute Homepage annotations if Grafana should return to Homepage.
