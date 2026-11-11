@@ -11,6 +11,9 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 - Archived definitions are not a backup. Restoring one starts from its
   manifests only; PVC data, CNPG roles/databases and kopiur snapshots may need
   manual recovery.
+- Homepage integration for archived apps is not retained. The `starrs`
+  1Password item supplied the Jellyfin/Immich widget credentials; those
+  template keys, the item dependency, and the archived app icons were removed.
 
 ## Index
 

@@ -38,7 +38,7 @@ CSI secrets (`rook-csi-rbd-provisioner`, `rook-csi-rbd-node`) are auto-generated
 
 #### CephBlockPool: `ceph-cachepool`
 
-A replicated scratch pool (`size: 2`, `failureDomain: host`, `min_size: 1`, `requireSafeReplicaSize: false`) for **rewarmable** cache/scratch data — jellyfin transcode, stirling-pdf and scrypted caches (via the `components/cache` PVC component), and the kopiur mover cache. The second replica keeps a copy available when one host is drained; a single-replica PG could instead lose all copies and block RBD teardown during the node reboot. It is not for durable data. `enableCrushUpdates: true` is required for these changes to update the CRUSH rule of an existing pool; after changes, verify the actual CRUSH rule and per-PG host placement before maintenance.
+A replicated scratch pool (`size: 2`, `failureDomain: host`, `min_size: 1`, `requireSafeReplicaSize: false`) for **rewarmable** cache/scratch data — open-webui's cache (via the `components/cache` PVC component), Firecrawl's `firecrawl-database-cache` nuq-postgres queue (via the same component), and the kopiur mover cache. The second replica keeps a copy available when one host is drained; a single-replica PG could instead lose all copies and block RBD teardown during the node reboot. It is not for durable data. `enableCrushUpdates: true` is required for these changes to update the CRUSH rule of an existing pool; after changes, verify the actual CRUSH rule and per-PG host placement before maintenance.
 
 Persistent per-policy caches reduce repeated index downloads during frequent mover runs. `continueUpgradeAfterChecksEvenIfNotHealthy: true` bypasses Rook health checks cluster-wide; durable-pool health must be verified independently before Ceph upgrades.
 
@@ -116,19 +116,6 @@ applications; see the [catalog](../application/catalog.md) for definition links.
 | Media application configuration and indexes | Application KS or HelmRelease; usually Ceph PVCs | Git/ESO-managed settings and rebuildable indexes may be recreated. Other application state in the same PVC needs a backup if it must survive; explicitly accepting its loss does not require preserving every old Kopiur snapshot |
 | Transcode, machine-learning and mover caches | Application or kopiur controller; `ceph-cache` | Rewarmable, not a durable-data retention boundary |
 | PostgreSQL and application RGW buckets | Shared CNPG cluster or application OBC | Separate business state; do not infer that it is disposable because media files are on NFS |
-
-Jellyfin's `/config` is on Ceph while `/media` uses the shared NAS `video`
-claim. That config volume also contains application database state; Git,
-ESO/1Password and a library rescan cannot recreate all of it. See
-[Jellyfin's backup guidance](https://jellyfin.org/docs/general/administration/backup-and-restore/).
-Keep a usable Kopiur backup when that state matters, or explicitly accept its
-loss for the application being retired. Rebuilding settings or indexes is not
-a promise to restore application-owned state.
-
-Immich's `/data` uses `photo`, but its PostgreSQL metadata is separate.
-MeTube writes to subdirectories of `downloads`. Losing a cache, optional
-snapshot or explicitly disposable application state is not the same as losing
-the NAS library files.
 
 Media, gaming and smart-home namespaces, plus four self-hosted applications,
 are archived under `.archived/kubernetes`: their workloads and PVCs are expected
