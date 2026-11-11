@@ -17,13 +17,13 @@ done
 
 ```
 
-### CNPG declarations for unparking
+### CNPG declarations for restore
 
-Parking removed the `immich` role and `Database` declarations from
-`cnpg-operator/cluster/postgres.yaml`. Re-add both before unparking so ownership
-and the required extensions stay declarative. The app's `init-db` container can
-provision the role and database from the superuser secret; the `Database`
-declaration is what ensures `vector`, `vchord`, `cube`, and `earthdistance`.
+The active `postgres` Cluster does not declare the `immich` role or `Database`.
+Add both before restoring so ownership and the required extensions stay
+declarative. The app's `init-db` container can provision the role and database
+from the superuser secret; the `Database` declaration is what ensures `vector`,
+`vchord`, `cube`, and `earthdistance`.
 
 Role (inside the `postgres` Cluster `spec.managed.roles`):
 

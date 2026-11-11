@@ -134,8 +134,8 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 | trendradar           | `omni`            | MiniCPM-o 4.5      | News digest (`openai/omni`); queryable via the `search` MCP tier |
 | open-webui           | `uncensored`      | Qwen3.8-27B        | Human chat portal; search-tier MCP and OTEL traces |
 
-Parked applications (media, gaming, smart-home and four self-hosted apps) no
-longer consume these lanes, and the two DSH apps are archived; their lane
+Archived applications (media, gaming, smart-home and four self-hosted apps) do
+not consume these lanes, and the two DSH apps are archived; their lane
 assignments above are historical.
 
 All `omni` consumers (extractors + hermes aux) ride the **guarded**
@@ -171,7 +171,7 @@ With the DSH apps archived, search is consumed by hermes and open-webui;
 cluster and github-ro by hermes. Persona, browser, and github-pr remain
 defined but are unused.
 The persona group uses the `mcp_persona` credential and aggregates only the
-Hindsight `persona` bank; Home Assistant moved to the parked `smarthome`
+Hindsight `persona` bank; Home Assistant sits in the archived `smarthome`
 group together with its application. `mcp_agent` is never distributed to in-cluster
 
 chat apps. **Grouping rule:** create a group only for a new consumer or a
@@ -292,7 +292,7 @@ Non-chat vector modalities run on the same oMLX process as the chat lanes, expos
 | `/v1/rerank`     | `studio-reranker`  | `reranker`   | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
 | `/v1/audio/speech`, `/v1/audio/transcriptions` | `studio-audio` | `voxcpm2` | (passthrough — no override) | VoxCPM2 (TTS) | 300s |
 
-The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download remains parked. `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet. Passthrough applies no LLM parsing — the audio lane has no model override, so clients send the folder id `voxcpm2` (unlike embeddings/rerank aliases).
+The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download remains deferred. `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet. Passthrough applies no LLM parsing — the audio lane has no model override, so clients send the folder id `voxcpm2` (unlike embeddings/rerank aliases).
 
 Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backends + per-model routes on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with their capability key (`llm_embedding` for karakeep/hindsight embeddings, `llm_reranker` for hindsight rerank, `llm_audio` for future audio consumers) — each media backend injects the oMLX server key upstream via `policies.auth.secretRef: studio-api-auth`, identical to the chat lanes (the studio key is held by the backends and a read-only `blackbox-exporter` copy for direct probes; it is not issued to lane consumers). **Consumers**: embeddings — karakeep, hindsight; rerank — **hindsight only**; audio — none yet (TTS lane ready). The direct-to-studio blackbox probe reads the oMLX key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. karakeep and hindsight vector stores were rebuilt for the 0.6B/1024d embedding space (no data was preserved).
 
@@ -387,8 +387,8 @@ enabled throughout.
 | ----------------- | -------------------- | ---------------------- |
 | hindsight-persona | HTTP proxy :8080     | Hindsight `persona` bank (single-bank MCPToolConfig) |
 
-The smart-home control server is parked with `smarthome-apps` under the
-`smarthome` group (`kubernetes/parked/servitor-apps/mcp/smarthome`).
+The smart-home control server is archived with the smart-home stack under the
+`smarthome` group (`.archived/kubernetes/servitor/mcp/smarthome`).
 
 #### agent (operator agents only)
 
@@ -438,9 +438,9 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 ## AI-Adjacent Services
 
-### Vision alerting (frigate-vision — parked)
+### Vision alerting (frigate-vision — archived)
 
-Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`objects.genai`, multi-frame, per-camera/object prompts) runs on an openai-compatible provider pointed at the `omni` lane (MiniCPM-o 4.5, `descriptions` role). The caption prompt instructs the model to start with a `[low|medium|high]` severity prefix. Frigate config (provider + per-camera GenAI toggle) lives in the Frigate UI/DB — it is not GitOps-managed. `smarthome-apps/frigate-vision` is a slim forwarder only (python, ConfigMap-mounted): MQTT `frigate/tracked_object_update` (`type: description`) → parse severity prefix → gate on `MIN_SEVERITY` (default medium) → enrich via frigate `GET /api/events/{id}` → hermes webhook `POST :8644/p/ops/webhooks/frigate-alert` (V2 HMAC) — the `ops` profile ingests it as a user message, so the batching brain sees camera events in context with everything else it knows. Webhook route is declared in the GitOps-managed default `config.yaml` (`platforms.webhook.extra.routes`, HMAC secret via `FRIGATE_WEBHOOK_SECRET` in 1Password). The HA `persistent_notification` leg is an HA-side MQTT automation on the same description messages (UI-managed, not GitOps). 1Password additions: `hermes-agent.webhook_secret_frigate`.
+Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`objects.genai`, multi-frame, per-camera/object prompts) runs on an openai-compatible provider pointed at the `omni` lane (MiniCPM-o 4.5, `descriptions` role). The caption prompt instructs the model to start with a `[low|medium|high]` severity prefix. Frigate config (provider + per-camera GenAI toggle) lives in the Frigate UI/DB — it is not GitOps-managed. `.archived/kubernetes/smarthome/frigate-vision` is a slim forwarder only (python, ConfigMap-mounted): MQTT `frigate/tracked_object_update` (`type: description`) → parse severity prefix → gate on `MIN_SEVERITY` (default medium) → enrich via frigate `GET /api/events/{id}` → hermes webhook `POST :8644/p/ops/webhooks/frigate-alert` (V2 HMAC) — the `ops` profile ingests it as a user message, so the batching brain sees camera events in context with everything else it knows. Webhook route is declared in the GitOps-managed default `config.yaml` (`platforms.webhook.extra.routes`, HMAC secret via `FRIGATE_WEBHOOK_SECRET` in 1Password). The HA `persistent_notification` leg is an HA-side MQTT automation on the same description messages (UI-managed, not GitOps). 1Password additions: `hermes-agent.webhook_secret_frigate`.
 
 ### Firecrawl
 
@@ -533,7 +533,7 @@ preset is selected, use `/compact` or a bounded handoff before a 64K lane.
 Moving a long cloud-model analysis to a 64K lane must use a bounded handoff
 brief, not the same session with raw tool output.
 
-Downloaded but **parked — no lane, no consumers** (re-add deliberately
+Downloaded but **deferred — no lane, no consumers** (re-add deliberately
 when a consumer appears; see Media lanes):
 
 | Studio dir (`~/models/`) | Model            | HF source                                 | Intended role |

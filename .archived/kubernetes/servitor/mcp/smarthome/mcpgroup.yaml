@@ -5,4 +5,4 @@ kind: MCPGroup
 metadata:
   name: smarthome
 spec:
-  description: "Parked smart-home control tier. Home Assistant MCP only; parked with the smarthome-apps namespace and not served by agentgateway."
+  description: "Smart-home control tier. Home Assistant MCP only; archived with the smart-home stack and not served by agentgateway."
