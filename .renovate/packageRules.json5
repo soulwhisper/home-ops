@@ -24,7 +24,6 @@
       matchDatasources: ["docker"],
       matchPackagePatterns: [
         "ghcr.io/home-operations/postgres-init",
-        "ghcr.io/tensorchord/cloudnative-vectorchord",
         "prodrigestivill/postgres-backup-local",
       ],
       allowedVersions: "18",
