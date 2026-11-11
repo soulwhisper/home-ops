@@ -224,8 +224,8 @@ The two kgateway gateways use the `kgateway` GatewayClass with TLS termination v
 
 | Path          | Tier                                   |
 | ------------- | -------------------------------------- |
-| `/mcp/search` | search (hermes, open-webui, dsh-web: web/news/code) |
-| `/mcp/cluster`| cluster read-only (hermes, dsh-web)    |
+| `/mcp/search` | search (hermes, open-webui: web/news/code) |
+| `/mcp/cluster`| cluster read-only (hermes)              |
 | `/mcp/persona`| persona read-write (no current consumer) |
 | `/mcp/agent`  | operator agents (hermes and external operators; Forgejo RW + ops memory) |
 

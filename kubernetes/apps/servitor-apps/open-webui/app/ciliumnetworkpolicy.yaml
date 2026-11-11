@@ -59,7 +59,7 @@ spec:
             - { port: "53", protocol: TCP }
             - { port: "53", protocol: UDP }
     # Internet: RAG web fetching, version checks (world-except-private,
-    # same convention as karakeep/firecrawl)
+    # same convention as firecrawl)
     - toCIDRSet:
         - cidr: 0.0.0.0/0
           except:

@@ -24,16 +24,11 @@ data:
       searchDescriptions: true
       hideInternetSearch: true
     # group order = column order on wide screens (custom.css below):
-    # Status | Media | SmartHome | Service | Observability
+    # Status | Service | Observability
     layout:
       Status:                 # ALL widget apps + ESXi; 2 internal columns like
         style: row            # Service/Observability (weights pair the rows:
         columns: 2            # pairs: nas+openwrt / unifi+forgejo / esxi
-                              # (media/gaming widgets were archived)
-      Media:
-        style: column
-      SmartHome:
-        style: column
       Service:
         style: row
         columns: 2
@@ -44,18 +39,22 @@ data:
       #   header: false
       #   style: column
   custom.css: |
-    /* 3-column page: Status sidebar (internally 2-col since #4056) pinned
-       left spanning both rows; column flow fills Media->SmartHome in col 2,
-       Service->Observability in col 3. Flat one-row grids render as 8 narrow
-       card columns — don't. hooks #layout-groups / .services-group are
-       semantic; re-verify on homepage upgrades. */
+    /* 3-column page: Status sidebar (internally 2-col) pinned left spanning
+       both rows; Service is in col 2, Observability in col 3.
+       Flat one-row grids render as 8 narrow card columns — don't. hooks
+       #layout-groups / .services-group are semantic; re-verify on homepage
+       upgrades. */
     @media (min-width: 1900px) {
-      #layout-groups { display: grid !important; grid-template-columns: minmax(560px, 640px) 1fr 1fr; grid-template-rows: repeat(2, auto); grid-auto-flow: column; align-items: start; }
+      #layout-groups { display: grid !important; grid-template-columns: minmax(560px, 640px) 1fr 1fr; grid-template-rows: auto; grid-auto-flow: row; align-items: start; }
       #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / -1; }
+      #layout-groups > .services-group:nth-child(2) { grid-column: 2; }
+      #layout-groups > .services-group:nth-child(3) { grid-column: 3; }
     }
     @media (min-width: 1280px) and (max-width: 1899px) {
-      #layout-groups { display: grid !important; grid-template-columns: minmax(440px, 560px) 1fr 1fr; grid-template-rows: repeat(2, auto); grid-auto-flow: column; align-items: start; }
+      #layout-groups { display: grid !important; grid-template-columns: minmax(440px, 560px) 1fr 1fr; grid-template-rows: auto; grid-auto-flow: row; align-items: start; }
       #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / -1; }
+      #layout-groups > .services-group:nth-child(2) { grid-column: 2; }
+      #layout-groups > .services-group:nth-child(3) { grid-column: 3; }
     }
   custom.js: ""
   bookmarks.yaml: ""
@@ -74,8 +73,6 @@ data:
     #             - type: ical
     #               name: Ticktick
     #               url: {{HOMEPAGE_VAR_TICKTICK_ICAL}}
-    # Status sidebar is static now: every route-discovered widget app
-    # (jellyfin, immich, qbittorrent, crafty) was archived.
     - Status:
         - NAS:
             href: https://10.10.0.100:5001
@@ -127,9 +124,9 @@ data:
             href: https://10.0.0.10
             icon: /icons/vmware-esxi.svg
             weight: 80              # pinned bottom of the sidebar
-            # one customapi widget (fields render as a single block row like
-            # qbittorrent's): one vmsingle instant query unions all four
-            # metrics via label_replace into a stable operand order
+            # one customapi widget (fields render as a single block row): one
+            # vmsingle instant query unions all four metrics via label_replace
+            # into a stable operand order
             widget:
               type: customapi
               url: http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428/api/v1/query?query=label_replace%28max%28%28time%28%29%20-%20vmware_host_boot_timestamp_seconds%29%20/%203600%29%2C%20%22m%22%2C%20%22a_uptime_h%22%2C%20%22%22%2C%20%22%22%29%20or%20label_replace%28count%28vmware_vm_boot_timestamp_seconds%29%2C%20%22m%22%2C%20%22b_vms%22%2C%20%22%22%2C%20%22%22%29%20or%20label_replace%28max%28vmware_host_cpu_usage%29%20/%20max%28vmware_host_cpu_max%29%2C%20%22m%22%2C%20%22c_cpu%22%2C%20%22%22%2C%20%22%22%29%20or%20label_replace%28max%28vmware_host_memory_usage%29%20/%20max%28vmware_host_memory_max%29%2C%20%22m%22%2C%20%22d_mem%22%2C%20%22%22%2C%20%22%22%29
