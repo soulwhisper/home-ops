@@ -5,8 +5,9 @@ and the Grafana MCP server were retired. The native Victoria UIs
 (`metrics`/`logs`/`traces`/`alert`) plus vmalert cover visualization and
 alerting; the Grafana MCP tool surface duplicated the Victoria query servers.
 
-Vendir sources, `GrafanaDashboard`/`GrafanaFolder` CRs, the dashboard
-ConfigMap generators, and the vendir CI workflow were removed. The only
+Vendir sources, `GrafanaDashboard`/`GrafanaFolder` CRs, and the dashboard
+ConfigMap generators were removed; the vendir CI workflow is archived under
+`.archived/.github/workflows/vendir.yaml`. The only
 retained dashboards are the two repo-owned boards in
 `cluster/dashboards/custom/`:
 

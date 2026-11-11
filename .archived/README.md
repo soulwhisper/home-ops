@@ -66,6 +66,12 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 | --- | --- | --- |
 | `infrastructure/talos/20-mount-hostpath.yaml` | Talos `UserVolumeConfig` for the local-cache disk | Retired from prod; the local-cache volume is unused |
 
+### github
+
+| Path | What | Why archived |
+| --- | --- | --- |
+| `.github/workflows/vendir.yaml` | Vendir dashboard sync workflow | Grafana dashboards were retired; kept as reference if vendir sync returns |
+
 ### pangolin
 
 | Path | What | Why archived |

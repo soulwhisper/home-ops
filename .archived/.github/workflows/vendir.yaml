@@ -1,0 +1,71 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# yamllint disable rule:truthy
+
+name: Vendir
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "**/vendir.yml"
+      - "**/vendir.lock.yml"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Token
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          ref: ${{ github.head_ref || github.ref }}
+      - name: Install vendir
+        run: |
+          # renovate: datasource=github-releases depName=carvel-dev/vendir
+          VENDIR_VERSION="v0.46.0"
+          mkdir -p /tmp/vendir-install && cd /tmp/vendir-install
+          curl -fsSL -O "https://github.com/carvel-dev/vendir/releases/download/${VENDIR_VERSION}/vendir-linux-amd64"
+          curl -fsSL -O "https://github.com/carvel-dev/vendir/releases/download/${VENDIR_VERSION}/checksums.txt"
+          grep "vendir-linux-amd64" checksums.txt | sha256sum --check --ignore-missing
+          sudo install -m 0755 vendir-linux-amd64 /usr/local/bin/vendir
+      - name: Run vendir
+        id: run-vendir
+        run: |
+          BASE_DIR="kubernetes/apps/monitoring-system/grafana/cluster/dashboards"
+          SOURCES_DIR="$BASE_DIR/_sources"
+          vendir sync --chdir "$BASE_DIR"
+          find "$SOURCES_DIR" -type f \( -name "*_rev*.json" -o -name "download" \) | while read -r FILE; do
+            DIR=$(dirname "$FILE")
+            TARGET="$DIR/dashboard.json"
+            mv "$FILE" "$TARGET"
+          done
+      - name: Commit changes to Renovate PR
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore(deps): fix vendir filenames (renovate hook)"
+          branch: ${{ github.head_ref }}
+          file_pattern: .
+      - name: Create Pull Request (Manual)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        id: create-pull-request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          title: "chore(deps): sync resources managed by vendir"
+          commit-message: "chore(deps): sync resources managed by vendir"
+          body: |
+            Automated sync of Resources via Vendir.
+          branch: chore/sync-resources
+          delete-branch: true
+          base: main
