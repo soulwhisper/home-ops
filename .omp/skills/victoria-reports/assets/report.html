@@ -42,14 +42,16 @@
   body {
     margin: 0 auto;
     padding: 1.5rem 1rem 3rem;
-    max-width: 1180px;
+    max-width: 1500px;
     background: var(--bg);
     color: var(--fg);
-    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans SC", sans-serif;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans SC", sans-serif;
+    font-size: clamp(15px, 0.2vw + 14px, 17px);
+    line-height: 1.55;
   }
   h1, h2, h3 { line-height: 1.2; margin: 0; }
-  h1 { font-size: 1.65rem; letter-spacing: -.02em; }
-  h2 { font-size: 1.15rem; }
+  h1 { font-size: clamp(1.8rem, 1.2vw + 1.2rem, 2.4rem); letter-spacing: -.02em; }
+  h2 { font-size: clamp(1.3rem, 0.5vw + 1.1rem, 1.6rem); }
   code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .85em; }
   code { background: var(--chip); border-radius: 4px; padding: .1em .35em; }
   .hero { padding: 1.25rem 1.35rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
@@ -70,23 +72,24 @@
   .page-no { color: var(--muted); font-size: .8rem; letter-spacing: .14em; }
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7rem; }
   .kpi { padding: .75rem .8rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
-  .kpi b { display: block; font-size: 1.55rem; line-height: 1.15; letter-spacing: -.02em; }
-  .kpi span { display: block; color: var(--muted); font-size: .8rem; margin-top: .15rem; }
-  .kpi small { display: block; color: var(--muted); font-size: .74rem; margin-top: .25rem; }
+  .kpi b { display: block; font-size: clamp(1.7rem, 0.4vw + 1.4rem, 2.15rem); line-height: 1.15; letter-spacing: -.02em; }
+  .kpi span { display: block; color: var(--muted); font-size: .92rem; margin-top: .15rem; }
+  .kpi small { display: block; color: var(--muted); font-size: .82rem; margin-top: .25rem; }
   .kpi--ok b { color: var(--ok); }
   .kpi--warn b { color: var(--warn); }
   .kpi--bad b { color: var(--bad); }
-  .gauge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .7rem; margin-top: .8rem; }
-  figure.gauge { margin: 0; padding: .85rem .8rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); text-align: center; }
-  figure.gauge svg { display: block; width: 100%; max-width: 180px; height: auto; margin: 0 auto; }
-  figure.gauge figcaption { margin-top: .25rem; font-size: .82rem; color: var(--muted); }
-  .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: .8rem; margin-top: .8rem; }
+  .gauge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: .8rem; margin-top: .8rem; }
+  figure.gauge { margin: 0; padding: 1rem .9rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); text-align: center; }
+  figure.gauge svg { display: block; width: 100%; max-width: 220px; height: auto; margin: 0 auto; }
+  figure.gauge figcaption { margin-top: .35rem; font-size: .92rem; color: var(--muted); }
+  .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: .9rem; margin-top: .9rem; }
   figure.chart { margin: 0; padding: .9rem .9rem .7rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
   figure.chart svg { display: block; width: 100%; height: auto; }
-  figure.chart .chart-title { margin: 0 0 .45rem; font-weight: 600; font-size: .92rem; }
-  figure.chart .chart-note { margin: .45rem 0 0; color: var(--muted); font-size: .78rem; }
+  figure.chart .chart-title { margin: 0 0 .5rem; font-weight: 600; font-size: 1.02rem; }
+  figure.chart .chart-note { margin: .5rem 0 0; color: var(--muted); font-size: .86rem; }
   .empty { padding: 1.2rem; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); text-align: center; }
-  footer { margin-top: 1.5rem; color: var(--muted); font-size: .8rem; text-align: center; }
+  footer { margin-top: 1.5rem; color: var(--muted); font-size: .86rem; text-align: center; }
+  @media (min-width: 1800px) { body { max-width: 1680px; } }
   @media print {
     :root { --bg: #fff; --surface: #fff; --fg: #000; --muted: #444; --border: #bbb; --chip: #eee; }
     body { max-width: none; padding: 0; }

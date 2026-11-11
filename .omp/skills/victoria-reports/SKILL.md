@@ -277,6 +277,10 @@ Editing rules:
 - Use gauges for percentages, stat cards for single values, inline SVG lines
   for trends, and bars for categories/top-N. Include axes, units, a zero
   baseline, and `<title>`/`<desc>`. Do not draw decorative charts.
+- Typography: body at least 15px (clamp up on wide screens), chart labels at
+  least 14px in a ~650-unit SVG, KPI values at least 1.7rem. Use a 1500px
+  page width (1680px at ≥1800px) so high-resolution screens get larger charts
+  instead of empty margins.
 - Write the dashboard to `temp/<YYYYMMDD-HHMMSS>-<slug>.html` (create `temp/`
   if needed). `temp/` is gitignored; leave the artifact uncommitted and report
   its path.
