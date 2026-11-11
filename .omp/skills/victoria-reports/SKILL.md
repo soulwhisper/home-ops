@@ -31,6 +31,11 @@ self-contained HTML report. The report is the deliverable; raw JSON is not.
   bounded excerpt. Never invent a row, metric, log line, or trace.
 - Do not treat silence, an empty Alertmanager response, or a quiet log stream
   as proof of healing.
+- Write the report in Simplified Chinese (`lang="zh-CN"`): headings, verdicts,
+  findings, prose, table headers, and chart labels. Keep identifiers, label
+  keys, query text, and units verbatim.
+- Write the report to `temp/<YYYYMMDD-HHMMSS>-<slug>.html`. `temp/` is
+  gitignored; never commit a generated report.
 
 ## Access
 
@@ -110,6 +115,33 @@ Aggregation rules:
   lines per finding.
 - State the unit and window for every number (`5m rate`, `30d budget`, `bytes`,
   `µs`).
+
+### Required label coverage and display
+
+Every report must include a `标签覆盖` table and cover the custom-board label
+domains. For each domain list the labels actually used, the query/population,
+the chosen display, and an explicit `无数据`/`未采集` when empty:
+
+| Domain | Labels to cover | Preferred display |
+| --- | --- | --- |
+| 工作负载 | `namespace`, `pod`, `container`, `node`, `service`, `job`, `instance`, `condition` | Table grouped by namespace/pod; top-N horizontal bar when comparing counts |
+| 告警 | `alertname`, `severity`, `alertstate`, `namespace` | Table plus severity count cards |
+| HTTP/探针 | `code`, `envoy_response_code_class`, `probe_success`, `up` | Table; line chart for a time series, bar for per-class counts |
+| 存储 | `persistentvolumeclaim`, `storageclass`, `pool`, `device`, `mountpoint` | Table for current state; bar for top usage only when queried |
+| Kopiur | `policy`, `name`, `kind`, `phase` | Table grouped by `policy`/`namespace` |
+| Flux | `gotk_resource_info`: `exported_namespace`, `name`, `customresource_kind`, `ready`, `revision` | Table of not-Ready resources; count card when zero |
+| 日志 | `_time`, `_msg`, `kubernetes.pod_namespace`, `kubernetes.pod_name`, `kubernetes.container_name`, `kubernetes.pod_node_name`, `kubernetes.pod_labels.app.kubernetes.io/name`, `level` | Top-N horizontal bar; bounded table/excerpts |
+| 链路 | `service.name`, `operationName`, `duration`, `status.code`, `span.kind` | Table; latency/error bar only when spans were queried |
+| 直方图 | `le` | Include in the query table when a histogram quantile is used; otherwise mark `未采集` |
+
+Choose the display by data shape:
+
+- Time series or trend → inline SVG line chart with time axis and units.
+- Counts by category or top-N → horizontal bar chart, sorted, with values.
+- Current state or mixed label dimensions → table.
+- Empty result → an explicit `无数据` row; never render an empty chart.
+- Inline SVG only: include `<title>`, `<desc>`, axis labels, a zero baseline,
+  and no scripts or external chart libraries.
 
 ## Query cookbook
 
@@ -200,38 +232,35 @@ curl -fsS --get "$T/api/traces" --data-urlencode 'service=<service>' \
 
 ## Report contract
 
-Write exactly one HTML file. It must open offline and contain no external
-CSS, JS, fonts, images, or fetches; inline SVG is allowed. Support light/dark
-via `prefers-color-scheme` and print with readable colors.
+Write exactly one HTML file in Simplified Chinese with `lang="zh-CN"`. It must
+open offline and contain no external CSS, JS, fonts, images, or fetches;
+inline SVG is allowed. Support light/dark via `prefers-color-scheme` and print
+with readable colors. Keep technical identifiers and label keys in their
+original form.
 
 Required sections, in order:
 
-1. **Header** — title, question/scope, exact time window (UTC and local),
-   generation timestamp, data sources, and a one-line verdict with confidence.
-2. **Summary** — counts by severity/state and the top entities; numbers must
-   match the tables below.
-3. **Findings** — ordered HIGH → LOW. Each row: entity (human labels),
-   severity, observed value/state, timestamp, and confidence.
-4. **Evidence** — one block per finding with the exact query, window, result
-   count, and a bounded redacted excerpt or series. Put raw query text in a
-   `<details>` block; never paste a full log stream or JSON payload.
-5. **Timeline** — merge/rollout/alert/log transitions with timestamps, only
-   when the question is temporal.
-6. **Method and limits** — retention windows, sampling, missing sources,
-   redactions, and what was not verified. Distinguish pending from failure.
-7. **Appendix** — label glossary actually used and the list of queries.
+1. **标题与结论** — 标题、范围/问题、精确时间窗口（UTC 和本地）、生成时间、数据源、一句话结论与置信度。
+2. **摘要** — 按严重度/状态和主要对象计数；数字必须与下方表格一致。
+3. **图表** — 至少一个与数据形状匹配的图表：时间序列用折线图，Top-N/分类计数用横向条形图；无数据时写“无数据”，不画空图。
+4. **发现** — 按严重度从高到低排列。每行包含对象（使用人类可读标签）、严重度、观测值/状态、时间、置信度。
+5. **证据** — 每个发现一段，包含精确查询、窗口、结果数和有界脱敏摘录；原始查询放在 `<details>` 中，禁止粘贴完整日志流或 JSON。
+6. **标签覆盖** — 必显表格：标签域、实际使用的标签、查询/总体、展示方式，以及“无数据/未采集”。
+7. **方法与限制** — 保留期、采样、缺失数据源、脱敏和未验证内容；区分 pending 与失败。
+8. **附录** — 使用的标签和查询语句。仅在问题涉及时间演化时增加“时间线”。
 
 Editing rules:
 
-- Start from `assets/report.html`; replace every `{{PLACEHOLDER}}` and repeat
-  the marked table/detail blocks. Delete unused sections.
+- Start from `assets/report.html`; replace every `{{PLACEHOLDER}}` (including
+  `{{CHARTS}}` and `{{LABEL_COVERAGE_ROWS}}`) and repeat the marked
+  table/detail blocks. Delete unused sections.
 - HTML-escape all dynamic text (`&`, `<`, `>`, `"`). Do not inject query
   output as raw HTML.
-- Prefer tables for compared numbers. Use inline SVG only for shape (sparkline,
-  histogram) and label axes/units; do not draw decorative charts.
-- Keep raw evidence out of the commit unless the user asks. Write the report
-  to `reports/<YYYYMMDD-HHMMSS>-<slug>.html` (create `reports/` if needed) and
-  report the path.
+- Prefer tables for current state and mixed labels; use inline SVG for shape
+  (line/bar) with axes, units, a zero baseline, and `<title>`/`<desc>`. Do not
+  draw decorative charts.
+- Write the report to `temp/<YYYYMMDD-HHMMSS>-<slug>.html`; `temp/` is
+  gitignored, so leave the generated artifact uncommitted. Report the path.
 - If only one source answered, say so. Never present a metric-only hypothesis
   as confirmed by logs or traces.
 
@@ -245,10 +274,13 @@ Editing rules:
    commands under `$TMP`; keep only bounded, redacted excerpts in the report.
 4. Cross-check: corroborate every high-severity finding with a second signal
    where possible; record the check that failed to corroborate.
-5. Render one HTML file from the template.
+5. Render one Chinese HTML file from the template, choosing a chart or table
+   for each label domain.
 6. Verify: row counts match raw results; timestamps lie inside the window;
    no unresolved placeholders; no external references; HTML parses; secrets
-   absent; units and limits stated. Open it in a browser when available.
+   absent; units and limits stated; every custom-board label domain appears in
+   `标签覆盖` with a display or an explicit `无数据`. Open it in a browser when
+   available.
 7. Let the `EXIT` trap kill the port-forwards and remove `$TMP`; deliver the
    path, verdict, and limits in chat.
 
