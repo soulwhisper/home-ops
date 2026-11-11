@@ -17,10 +17,10 @@ spec:
     enablePodAntiAffinity: true
     topologyKey: kubernetes.io/hostname
     podAntiAffinityType: required
-  # ghcr.io/soulwhisper/postgresql — custom suite (vchord + vchord_bm25 + pg_tokenizer + pgroonga + cnpg baseline)
+  # ghcr.io/soulwhisper/postgresql — custom suite (pgroonga + pgvector + cnpg baseline)
   # Digest-pinned so nodes cannot serve a stale tag with a different postgres
   # UID under IfNotPresent.
-  imageName: ghcr.io/soulwhisper/postgresql:18.6@sha256:9cd922e37569121e115c3dbdb026162dd99b0423ebd553f84dee377526d5eb1d
+  imageName: ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2
   primaryUpdateStrategy: unsupervised
   primaryUpdateMethod: switchover
   plugins:
