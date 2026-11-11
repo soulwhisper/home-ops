@@ -79,7 +79,7 @@ inject the oMLX server key via `policies.auth.secretRef`
 (`studio-api-auth`). Consumers authenticate with **per-lane** API keys
 (ExternalSecret-managed from the 1Password `agentgateway` item; format
 `llm-<lane>-<hex16>`): `llm_uncensored` (open chat / open-webui),
-`llm_persona` (identity-bound RP), `llm_agent` (hermes, robusta), `llm_omni`
+`llm_persona` (reserved; no active consumer), `llm_agent` (hermes, robusta), `llm_omni`
 (extractors, hermes aux). Each model route carries its own
 apiKeyAuthentication policy covering both inference and discovery, so a chat
 key cannot call the automation lane. Each route accepts only its own lane key;

@@ -45,12 +45,16 @@ data:
        #layout-groups / .services-group are semantic; re-verify on homepage
        upgrades. */
     @media (min-width: 1900px) {
-      #layout-groups { display: grid !important; grid-template-columns: minmax(560px, 640px) 1fr 1fr; grid-template-rows: repeat(2, auto); grid-auto-flow: column; align-items: start; }
+      #layout-groups { display: grid !important; grid-template-columns: minmax(560px, 640px) 1fr 1fr; grid-template-rows: auto; grid-auto-flow: row; align-items: start; }
       #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / -1; }
+      #layout-groups > .services-group:nth-child(2) { grid-column: 2; }
+      #layout-groups > .services-group:nth-child(3) { grid-column: 3; }
     }
     @media (min-width: 1280px) and (max-width: 1899px) {
-      #layout-groups { display: grid !important; grid-template-columns: minmax(440px, 560px) 1fr 1fr; grid-template-rows: repeat(2, auto); grid-auto-flow: column; align-items: start; }
+      #layout-groups { display: grid !important; grid-template-columns: minmax(440px, 560px) 1fr 1fr; grid-template-rows: auto; grid-auto-flow: row; align-items: start; }
       #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / -1; }
+      #layout-groups > .services-group:nth-child(2) { grid-column: 2; }
+      #layout-groups > .services-group:nth-child(3) { grid-column: 3; }
     }
   custom.js: ""
   bookmarks.yaml: ""
