@@ -70,7 +70,6 @@ chart default applies even when Git shows `none`.
 | App | Chart | Resource key(s) | Chart default / example | Git at measurement (2026-11-09) |
 | --- | --- | --- | --- | --- |
 | `blackbox-exporter` | `prometheus-blackbox-exporter@11.21.1` | `resources`, `configReloader.resources` | configReloader `10m/20Mi` + `50Mi` limit; main empty | none |
-| `grafana-operator` | `grafana-operator@5.25.0` | `resources` | empty | none |
 | `kube-state-metrics` | `kube-state-metrics@9.0.0` | `resources` | empty | none |
 | `node-exporter` | `prometheus-node-exporter@5.0.0` | `resources` | empty; commented `100m/64Mi` | requests `23m`; memory limit `64M` |
 | `opentelemetry-collector` | `opentelemetry-collector@0.178.2` | `resources` | empty | requests `10m/512Mi`, memory limit `1Gi` |
@@ -153,7 +152,6 @@ rounded up to 64Mi with a 64Mi floor, and is optional.
 | `gitops-system/system-upgrade-controller` | `manager` | 0m / 0Mi / — | 13m | 108Mi | 20m / 144Mi / 256Mi |
 | `security-system/cert-manager` | `cert-manager-controller` | 0m / 0Mi / — | 2m | 102Mi | 10m / 128Mi / 256Mi |
 | `kube-system/metrics-server` | `metrics-server` | 100m / 200Mi / — | 14m | 98Mi | 100m / 200Mi / 256Mi |
-| `monitoring-system/grafana-operator` | `grafana-operator` | 0m / 0Mi / — | 8m | 87Mi | 10m / 112Mi / 192Mi |
 | `networking-system/externaldns-adguard` | `external-dns` | 16m / 0Mi / 86Mi | 2m | 83Mi | 16m / 112Mi / 86Mi |
 | `storage-system/snapshot-controller` | `snapshot-controller` | 0m / 0Mi / — | 6m | 83Mi | 10m / 112Mi / 192Mi |
 | `database-system/dragonfly-operator` | `manager` | 0m / 0Mi / — | 4m | 80Mi | 10m / 96Mi / 192Mi |

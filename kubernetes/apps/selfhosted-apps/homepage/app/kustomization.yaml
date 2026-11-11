@@ -26,7 +26,6 @@ configMapGenerator:
       - icons/diceframe.svg
       - icons/discord.svg
       - icons/forgejo.svg
-      - icons/grafana.svg
       - icons/heimdall.svg
       - icons/metabrainz.svg
       - icons/microsoft-outlook.svg

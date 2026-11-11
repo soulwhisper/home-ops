@@ -6,9 +6,9 @@
 # tool names reach the gateway — see toolhive/config/virtualmcpserver.yaml.
 #
 # CEL filters serve two purposes: security default-deny where the upstream has
-# no token/SA boundary (firecrawl, trendradar, grafana, victoria-*), and schema
-# size control on fat APIs (forgejo to the ticket workflow, grafana to
-# dashboard lookup + deeplinks) so tool lists fit 64K-context consumers.
+# no token/SA boundary (firecrawl, trendradar, victoria-*), and schema
+# size control on fat APIs (forgejo to the ticket workflow) so tool lists fit
+# 64K-context consumers.
 # Token-bounded servers stay unfiltered: the k8s read-only SA, and the
 # github-ro tier (read-only server mode plus lockdown, with injection scans
 # at the guardrail layer). fluxcd is the exception inside cluster: its generic
@@ -62,11 +62,6 @@ spec:
         action: Allow
         policy:
           matchExpressions:
-            # grafana: dashboards exist only to be linked to humans — data is
-            # queried at the sources (victoria-*), alerting is vmalert, loki/
-            # pyroscope are not deployed, incident/oncall unused. Keep the two
-            # real uses: find a dashboard / copy its panel queries, and mint
-            # deeplinks. Everything else is duplicate or dead surface.
             # fluxcd: flux-native only; its generic get_kubernetes_* getters
             # duplicate mcp-kubernetes (which is richer).
             # victoria-logs: query surface only — flags is a server-config read.
@@ -77,7 +72,6 @@ spec:
               mcp.tool.name.startsWith('mcp-kubernetes_')
               || ( mcp.tool.name.startsWith('mcp-fluxcd_')
                    && ! mcp.tool.name.startsWith('mcp-fluxcd_get_kubernetes_') )
-              || mcp.tool.name.matches('^mcp-grafana_(search_dashboards|get_dashboard_by_uid|get_dashboard_panel_queries|generate_deeplink|list_datasources)$')
               || ( mcp.tool.name.startsWith('mcp-victoria-logs_')
                    && mcp.tool.name != 'mcp-victoria-logs_flags' )
               || mcp.tool.name.matches('^mcp-victoria-metrics_(query|query_range|labels|label_values|series|metrics|metrics_metadata|explain_query|prettify_query|alerts|rules)$')

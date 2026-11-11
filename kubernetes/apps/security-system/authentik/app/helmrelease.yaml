@@ -53,7 +53,6 @@ spec:
         # Only blueprints for active apps. Archived apps' OIDC secrets were
         # removed with the apps; mounting the missing secrets blocks worker
         # restarts with FailedMount.
-        - authentik-blueprints-oidc-grafana
         - authentik-blueprints-oidc-forgejo
     server:
       replicas: 2

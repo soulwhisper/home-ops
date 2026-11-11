@@ -17,7 +17,7 @@ kind: MCPGroup
 metadata:
   name: cluster
 spec:
-  description: "In-cluster, read-only. No egress; read-only Kubernetes/Flux SAs and scoped Grafana/Victoria* tokens. For the ops agent (hermes)."
+  description: "In-cluster, read-only. No egress; read-only Kubernetes/Flux SAs and scoped Victoria* tokens. For the ops agent (hermes)."
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
 apiVersion: toolhive.stacklok.dev/v1beta1
