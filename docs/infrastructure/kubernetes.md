@@ -347,13 +347,13 @@ It provisions the backup-and-recovery pipeline for a stateful application:
 
 Applications using this component store snapshots in the NAS VersityGW repository, independently of their live Ceph PVCs. The templates use `postBuild` substitution with `APP`. See [Storage](storage.md) for the repository, restore behavior, and the distinction between rebuildable application configuration and important NAS files.
 
-### Component: cache (1 consumer)
+### Component: cache (2 consumers)
 
 **Path**: [`kubernetes/components/cache/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/cache)
 
 Injects a rewarmable cache/scratch `PersistentVolumeClaim` on a two-replica `ceph-cache` NVMe pool. Replicas are placed on separate hosts so an OSD drain cannot make every copy unavailable during RBD teardown and the node reboot. Data loss on OSD failure is acceptable. Consumers mount it via `existingClaim`. Never use for durable data.
 
-### Component: authentik (10 consumers)
+### Component: authentik (11 consumers)
 
 **Path**: [`kubernetes/components/authentik/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/authentik)
 
@@ -562,8 +562,8 @@ kubernetes/
 │   ├── namespace/                 #   Namespace + alerts (9 consumers)
 │   ├── kopiur/shared/             #   Namespace-level kopia repo credentials (2 consumers)
 │   ├── kopiur/backup/             #   PVC backup pipeline (4 consumers)
-│   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (1 consumer)
-│   ├── authentik/                 #   SSO traffic policy (10 consumers)
+│   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (2 consumers)
+│   ├── authentik/                 #   SSO traffic policy (11 consumers)
 │   ├── cnpg/                      #   PostgreSQL secret (4 consumers)
 │   ├── dragonfly/                 #   Redis-compatible cache (3 consumers)
 │   └── ceph-bucket/               #   S3 object bucket (1 consumer)
