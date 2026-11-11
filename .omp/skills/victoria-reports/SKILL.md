@@ -118,9 +118,13 @@ Aggregation rules:
 
 ### Required label coverage and display
 
-Every report must include a `标签覆盖` table and cover the custom-board label
-domains. For each domain list the labels actually used, the query/population,
-the chosen display, and an explicit `无数据`/`未采集` when empty:
+Use this matrix as an internal pre-delivery check; do not render a coverage
+table in the dashboard. Coverage must either be complete for the
+cluster-diagnosis domains (nodes, pods, Flux, alerts, metrics, logs, traces,
+storage, backups) or deliberately diverse; never ship a single-source
+dashboard. For each domain check the labels actually used, the
+query/population, the chosen display, and an explicit `无数据`/`未采集` when
+empty:
 
 | Domain | Labels to cover | Preferred display |
 | --- | --- | --- |
@@ -136,10 +140,13 @@ the chosen display, and an explicit `无数据`/`未采集` when empty:
 
 Choose the display by data shape:
 
+- Percentage/ratio (availability, freshness, health time) → gauge/donut KPI.
+- Current count or single fact → large stat card with value and unit.
 - Time series or trend → inline SVG line chart with time axis and units.
 - Counts by category or top-N → horizontal bar chart, sorted, with values.
-- Current state or mixed label dimensions → table.
-- Empty result → an explicit `无数据` row; never render an empty chart.
+- Histogram/quantile → bar chart with the unit named; include `le` only when a
+  histogram query is used.
+- Empty result → a grey `无数据` card; never render an empty chart.
 - Inline SVG only: include `<title>`, `<desc>`, axis labels, a zero baseline,
   and no scripts or external chart libraries.
 
@@ -230,39 +237,51 @@ curl -fsS --get "$T/api/traces" --data-urlencode 'service=<service>' \
 - No traces means "not sampled/collected", not "no failures" — tail sampling
   keeps errors, GenAI chat, and `tools/call` spans, plus a 10% baseline.
 
-## Report contract
+## Dashboard contract
 
-Write exactly one HTML file in Simplified Chinese with `lang="zh-CN"`. It must
-open offline and contain no external CSS, JS, fonts, images, or fetches;
-inline SVG is allowed. Support light/dark via `prefers-color-scheme` and print
-with readable colors. Keep technical identifiers and label keys in their
-original form.
+Write exactly one HTML file in Simplified Chinese with `lang="zh-CN"`. It is a
+**paged dashboard**, not a document: large values, gauge/stat cards, and 1–2
+charts per page, with short captions. It must open offline and contain no
+external CSS, JS, fonts, images, or fetches; inline SVG is allowed. Support
+light/dark via `prefers-color-scheme` and print as clean pages.
 
-Required sections, in order:
+Default pages:
 
-1. **标题与结论** — 标题、范围/问题、精确时间窗口（UTC 和本地）、生成时间、数据源、一句话结论与置信度。
-2. **摘要** — 按严重度/状态和主要对象计数；数字必须与下方表格一致。
-3. **图表** — 当数据形状适合时包含匹配图表：时间序列用折线图，Top-N/分类计数用横向条形图；当前状态/混合标签用表格；无数据时写“无数据”，不画空图。
-4. **发现** — 按严重度从高到低排列。每行包含对象（使用人类可读标签）、严重度、观测值/状态、时间、置信度。
-5. **证据** — 每个发现一段，包含精确查询、窗口、结果数和有界脱敏摘录；原始查询放在 `<details>` 中，禁止粘贴完整日志流或 JSON。
-6. **标签覆盖** — 必显表格：标签域、实际使用的标签、查询/总体、展示方式，以及“无数据/未采集”。
-7. **方法与限制** — 保留期、采样、缺失数据源、脱敏和未验证内容；区分 pending 与失败。
-8. **附录** — 使用的标签和查询语句。仅在问题涉及时间演化时增加“时间线”。
+1. **可靠性总览** — gauge cards for API server availability, gateway
+   availability, Ceph healthy time, and backup freshness; stat cards for
+   critical/warning alerts, scrape targets down, failing probes, basement
+   not-ready pods, Flux not-ready resources, and etcd leader flips; one trend
+   chart.
+2. **存储与备份** — Ceph health and bad PGs, Kopiur stale policies, snapshot
+   and repository failures, foreign snapshots, oldest backup age, reconcile
+   p95; bargauge of hours since the last successful backup per `policy`; bar
+   chart of backup size per `policy`; bar chart of Kopiur resources by
+   `kind`/`phase`.
+3. **流量与日志** — HTTP response-class bar chart, top error-pattern log pods
+   bar chart, trace-service count/coverage, and the most important protocol
+   or error facts as stat cards.
+
+Each page has a page number/title, KPI cards first, then charts, then one short
+caption. Do not render an appendix, method/limits, label coverage, findings,
+evidence, raw queries, reference tables, or long lists. Those are internal
+pre-delivery checks in this skill; summarize them in chat only if needed.
+The dashboard is not an evidence dump.
 
 Editing rules:
 
-- Start from `assets/report.html`; replace every `{{PLACEHOLDER}}` (including
-  `{{CHARTS}}` and `{{LABEL_COVERAGE_ROWS}}`) and repeat the marked
-  table/detail blocks. Delete unused sections.
+- Start from `assets/report.html`; replace the header placeholders and
+  `{{PAGES}}` with repeated `<section class="page">` blocks. Delete unused
+  pages and remove the template's instructional HTML comments from the output.
 - HTML-escape all dynamic text (`&`, `<`, `>`, `"`). Do not inject query
   output as raw HTML.
-- Prefer tables for current state and mixed labels; use inline SVG for shape
-  (line/bar) with axes, units, a zero baseline, and `<title>`/`<desc>`. Do not
-  draw decorative charts.
-- Write the report to `temp/<YYYYMMDD-HHMMSS>-<slug>.html`; `temp/` is
-  gitignored, so leave the generated artifact uncommitted. Report the path.
-- If only one source answered, say so. Never present a metric-only hypothesis
-  as confirmed by logs or traces.
+- Use gauges for percentages, stat cards for single values, inline SVG lines
+  for trends, and bars for categories/top-N. Include axes, units, a zero
+  baseline, and `<title>`/`<desc>`. Do not draw decorative charts.
+- Write the dashboard to `temp/<YYYYMMDD-HHMMSS>-<slug>.html` (create `temp/`
+  if needed). `temp/` is gitignored; leave the artifact uncommitted and report
+  its path.
+- If only one source answered, show a `无数据` card for the missing domain.
+  Never present a metric-only hypothesis as confirmed by logs or traces.
 
 ## Workflow
 
@@ -274,13 +293,14 @@ Editing rules:
    commands under `$TMP`; keep only bounded, redacted excerpts in the report.
 4. Cross-check: corroborate every high-severity finding with a second signal
    where possible; record the check that failed to corroborate.
-5. Render one Chinese HTML file from the template, choosing a chart or table
-   for each label domain.
-6. Verify: row counts match raw results; timestamps lie inside the window;
-   no unresolved placeholders; no external references; HTML parses; secrets
-   absent; units and limits stated; every custom-board label domain appears in
-   `标签覆盖` with a display or an explicit `无数据`. Open it in a browser when
-   available.
+5. Render one Chinese paged dashboard: KPI/gauge cards first, then charts,
+   with one short caption per page. Keep coverage/findings/method checks out of
+   the HTML.
+6. Verify: values match raw results; timestamps lie inside the window; no
+   unresolved placeholders; no external references; HTML parses; secrets
+   absent; no appendix/coverage/findings/method sections; the dashboard either
+   covers all cluster-diagnosis domains or is deliberately diverse. Open it in
+   a browser when available.
 7. Let the `EXIT` trap kill the port-forwards and remove `$TMP`; deliver the
    path, verdict, and limits in chat.
 

@@ -7,7 +7,7 @@
 <style>
   :root {
     color-scheme: light dark;
-    --bg: #f6f7f9;
+    --bg: #eef1f5;
     --surface: #ffffff;
     --fg: #18202a;
     --muted: #5b6878;
@@ -23,8 +23,8 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #10151b;
-      --surface: #171d25;
+      --bg: #0b1015;
+      --surface: #151c24;
       --fg: #e6ebf1;
       --muted: #9aa7b5;
       --border: #2b3541;
@@ -41,161 +41,108 @@
   * { box-sizing: border-box; }
   body {
     margin: 0 auto;
-    padding: 2rem 1.25rem 4rem;
-    max-width: 1080px;
+    padding: 1.5rem 1rem 3rem;
+    max-width: 1180px;
     background: var(--bg);
     color: var(--fg);
     font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans SC", sans-serif;
   }
-  h1, h2, h3 { line-height: 1.2; margin: 0 0 .5rem; }
-  h1 { font-size: 1.7rem; letter-spacing: -.02em; }
-  h2 { font-size: 1.15rem; margin-top: 2.2rem; padding-top: .6rem; border-top: 1px solid var(--border); }
-  h3 { font-size: 1rem; }
-  a { color: var(--accent); }
+  h1, h2, h3 { line-height: 1.2; margin: 0; }
+  h1 { font-size: 1.65rem; letter-spacing: -.02em; }
+  h2 { font-size: 1.15rem; }
   code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .85em; }
   code { background: var(--chip); border-radius: 4px; padding: .1em .35em; }
-  pre { overflow-x: auto; padding: .8rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
-  .kicker { margin: 0 0 .35rem; color: var(--muted); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; }
-  .meta { color: var(--muted); font-size: .88rem; margin: .4rem 0 0; }
-  .verdict { display: inline-block; margin-top: 1rem; padding: .4rem .8rem; border-radius: 999px; font-weight: 600; font-size: .9rem; background: var(--chip); }
+  .hero { padding: 1.25rem 1.35rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+  .kicker { margin: 0 0 .35rem; color: var(--muted); font-size: .74rem; letter-spacing: .14em; text-transform: uppercase; }
+  .meta { color: var(--muted); font-size: .86rem; margin: .45rem 0 0; }
+  .verdict { display: inline-block; margin-top: .9rem; padding: .38rem .8rem; border-radius: 999px; font-weight: 600; font-size: .88rem; background: var(--chip); }
   .verdict--ok { color: var(--ok); background: var(--ok-bg); }
   .verdict--warn { color: var(--warn); background: var(--warn-bg); }
   .verdict--bad { color: var(--bad); background: var(--bad-bg); }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; margin: 1rem 0; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: .8rem .9rem; }
-  .card b { display: block; font-size: 1.45rem; line-height: 1.2; }
-  .card span { color: var(--muted); font-size: .82rem; }
-  .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; margin: 1rem 0; }
-  figure.chart { margin: 0; padding: 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .page {
+    margin-top: 1.1rem;
+    padding: 1.2rem 1.35rem 1.35rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .page-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
+  .page-no { color: var(--muted); font-size: .8rem; letter-spacing: .14em; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7rem; }
+  .kpi { padding: .75rem .8rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
+  .kpi b { display: block; font-size: 1.55rem; line-height: 1.15; letter-spacing: -.02em; }
+  .kpi span { display: block; color: var(--muted); font-size: .8rem; margin-top: .15rem; }
+  .kpi small { display: block; color: var(--muted); font-size: .74rem; margin-top: .25rem; }
+  .kpi--ok b { color: var(--ok); }
+  .kpi--warn b { color: var(--warn); }
+  .kpi--bad b { color: var(--bad); }
+  .gauge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .7rem; margin-top: .8rem; }
+  figure.gauge { margin: 0; padding: .85rem .8rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); text-align: center; }
+  figure.gauge svg { display: block; width: 100%; max-width: 180px; height: auto; margin: 0 auto; }
+  figure.gauge figcaption { margin-top: .25rem; font-size: .82rem; color: var(--muted); }
+  .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: .8rem; margin-top: .8rem; }
+  figure.chart { margin: 0; padding: .9rem .9rem .7rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
   figure.chart svg { display: block; width: 100%; height: auto; }
-  figure.chart .chart-title { margin: 0 0 .5rem; font-weight: 600; }
-  figure.chart .chart-note { margin: .5rem 0 0; color: var(--muted); font-size: .8rem; }
-  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
-  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-  th, td { text-align: left; vertical-align: top; padding: .55rem .7rem; border-bottom: 1px solid var(--border); }
-  th { color: var(--muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
-  tbody tr:last-child td { border-bottom: 0; }
-  .sev { display: inline-block; padding: .1rem .45rem; border-radius: 999px; font-size: .75rem; font-weight: 700; }
-  .sev--high { color: var(--bad); background: var(--bad-bg); }
-  .sev--medium { color: var(--warn); background: var(--warn-bg); }
-  .sev--low { color: var(--ok); background: var(--ok-bg); }
-  .finding { margin: 1rem 0; padding: .9rem 1rem; border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 8px; background: var(--surface); }
-  .finding h3 { margin-bottom: .35rem; }
-  .finding p { margin: .3rem 0; }
-  .finding .evidence { color: var(--muted); font-size: .86rem; }
-  details { display: block; margin-top: .5rem; }
-  summary { cursor: pointer; color: var(--muted); font-size: .86rem; }
-  .empty { color: var(--muted); font-style: italic; }
-  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .82rem; }
+  figure.chart .chart-title { margin: 0 0 .45rem; font-weight: 600; font-size: .92rem; }
+  figure.chart .chart-note { margin: .45rem 0 0; color: var(--muted); font-size: .78rem; }
+  .empty { padding: 1.2rem; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); text-align: center; }
+  footer { margin-top: 1.5rem; color: var(--muted); font-size: .8rem; text-align: center; }
   @media print {
     :root { --bg: #fff; --surface: #fff; --fg: #000; --muted: #444; --border: #bbb; --chip: #eee; }
     body { max-width: none; padding: 0; }
-    h2 { break-after: avoid; }
-    .finding, .card, .table-wrap, figure.chart { break-inside: avoid; }
-    details { display: block; }
-    summary { display: none; }
+    .hero { border: 0; padding: 0 0 1rem; }
+    .page { break-after: page; border: 0; border-radius: 0; padding: 0; margin: 0; }
+    .page:last-child { break-after: auto; }
+    .kpi, .gauge, figure.chart { break-inside: avoid; }
   }
 </style>
 </head>
 <body>
-<header>
-  <p class="kicker">Victoria 观测证据报告</p>
+<header class="hero">
+  <p class="kicker">Victoria 观测仪表盘</p>
   <h1>{{TITLE}}</h1>
   <p class="meta">{{SCOPE}}</p>
   <p class="meta">窗口（UTC）：{{WINDOW_UTC}} · 窗口（本地）：{{WINDOW_LOCAL}} · 生成时间：{{GENERATED_AT}} · 数据源：{{SOURCES}}</p>
   <p class="verdict {{VERDICT_CLASS}}">{{VERDICT}} · 置信度 {{CONFIDENCE}}</p>
 </header>
 
-<section aria-labelledby="summary">
-  <h2 id="summary">摘要</h2>
-  <div class="cards">
-    <!-- 每个对比数字一个 .card；替换标签和值。 -->
-    {{SUMMARY_CARDS}}
-  </div>
-</section>
+<main>
+<!--
+  Repeat one .page block per dashboard page. Put KPI cards first, then gauges,
+  then 1–2 charts, then a short caption. Do not add appendix, method, label
+  coverage, findings, evidence, raw queries, reference tables, or long lists.
 
-<section aria-labelledby="charts">
-  <h2 id="charts">图表</h2>
-  <div class="chart-grid">
-    <!-- 每个图表一个 <figure class="chart">，内嵌 SVG；无数据时改用“无数据”说明。 -->
-    {{CHARTS}}
-  </div>
-</section>
-
-<section aria-labelledby="findings">
-  <h2 id="findings">发现</h2>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr><th>严重度</th><th>对象</th><th>观测</th><th>时间（UTC）</th><th>置信度</th></tr>
-      </thead>
-      <tbody>
-        <!-- 按严重度从高到低，每个发现一行。 -->
-        {{FINDINGS_ROWS}}
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section aria-labelledby="evidence">
-  <h2 id="evidence">证据</h2>
-  <!-- 每个发现一个 .finding 块；原始查询放在 <details> 内。 -->
-  {{EVIDENCE_BLOCKS}}
-</section>
-
-<section aria-labelledby="coverage">
-  <h2 id="coverage">标签覆盖</h2>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr><th>标签域</th><th>使用的标签</th><th>查询/总体</th><th>展示</th><th>数据</th></tr>
-      </thead>
-      <tbody>
-        <!-- 覆盖自定义仪表盘的标签域；无数据时明确写“无数据/未采集”。 -->
-        {{LABEL_COVERAGE_ROWS}}
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section aria-labelledby="timeline">
-  <h2 id="timeline">时间线</h2>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr><th>时间（UTC）</th><th>来源</th><th>事件</th><th>证据</th></tr>
-      </thead>
-      <tbody>
-        <!-- 仅在问题涉及时间演化时保留；否则删除整节。 -->
-        {{TIMELINE_ROWS}}
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section aria-labelledby="method">
-  <h2 id="method">方法与限制</h2>
-  <p>{{METHOD}}</p>
-  <ul>
-    {{LIMITS}}
-  </ul>
-</section>
-
-<section aria-labelledby="appendix">
-  <h2 id="appendix">附录</h2>
-  <h3>使用的标签</h3>
-  <ul>
-    {{LABEL_GLOSSARY}}
-  </ul>
-  <h3>查询语句</h3>
-  <details open>
-    <summary>精确查询与窗口</summary>
-    <pre>{{QUERIES}}</pre>
-  </details>
-</section>
+  <section class="page" id="p1">
+    <div class="page-head"><h2>可靠性总览</h2><span class="page-no">01</span></div>
+    <div class="kpi-grid">
+      <div class="kpi kpi--ok"><b>100%</b><span>Gateway 可用性</span><small>30 天</small></div>
+    </div>
+    <div class="gauge-grid">
+      <figure class="gauge">
+        <svg viewBox="0 0 120 120" role="img" aria-labelledby="g1t g1d">
+          <title id="g1t">API server 可用性</title>
+          <desc id="g1d">30 天可用性 99.99%</desc>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border)" stroke-width="10"/>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--accent)" stroke-width="10"
+                  stroke-dasharray="314" stroke-dashoffset="0.03" transform="rotate(-90 60 60)"/>
+          <text x="60" y="66" text-anchor="middle" font-size="16" fill="var(--fg)">99.99%</text>
+        </svg>
+        <figcaption>API server 可用性 · 30 天</figcaption>
+      </figure>
+    </div>
+    <div class="chart-grid">
+      <figure class="chart">
+        <figcaption class="chart-title">抓取目标在线数（1 小时）</figcaption>
+        <!-- inline SVG line/bar; include title, desc, axes, units, zero baseline -->
+      </figure>
+    </div>
+  </section>
+-->
+{{PAGES}}
+</main>
 
 <footer>
-  只读 VictoriaMetrics / VictoriaLogs / VictoriaTraces 证据。未执行任何变更。
+  只读 VictoriaMetrics / VictoriaLogs / VictoriaTraces 快照。未执行任何变更。
   空结果或超出保留期的数据不代表健康。
 </footer>
 </body>
