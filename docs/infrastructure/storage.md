@@ -203,7 +203,7 @@ AWS_SECRET_ACCESS_KEY:<1Password app-user.admin_pass>
 
 #### Monitoring
 
-Backup freshness is metrics-based: `kopiur_policy_last_backup_success_timestamp_seconds` feeds the kopiur-slo and basement-health dashboards (policies stale beyond 25h are flagged). Tuppr upgrade plans gate node upgrades on kopiur Snapshot health: upgrades are paused while any Snapshot is `Running` or `Pending`.
+Backup freshness is metrics-based: `kopiur_policy_last_backup_success_timestamp_seconds` feeds the `KopiurBackupStale` and `KopiurLastBackupFailed` alerts (policies stale beyond 25h are flagged). Tuppr upgrade plans gate node upgrades on kopiur Snapshot health: upgrades are paused while any Snapshot is `Running` or `Pending`.
 
 ### CNPG PostgreSQL Backup
 
