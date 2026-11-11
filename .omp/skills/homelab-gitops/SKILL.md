@@ -237,7 +237,38 @@ its dashboard and do not create a `temp/` HTML file:
 3. Return the discovered labels, values, and aggregates in chat as compact JSON
    or a table. Include the exact query and timestamp.
 
-Minimal discovery probes:
+Set the endpoints, open the forwards, and wait for readiness before any probe:
+
+```bash
+V=http://127.0.0.1:8428
+L=http://127.0.0.1:9428
+T=http://127.0.0.1:10428
+START=$(date -u -d '1 hour ago' +%s)
+END=$(date -u +%s)
+pids=()
+cleanup() { kill "${pids[@]}" 2>/dev/null || true; }
+trap cleanup EXIT
+
+kubectl -n monitoring-system port-forward svc/vmsingle-victoria-metrics-cluster 8428:8428 &
+pids+=($!)
+kubectl -n monitoring-system port-forward svc/victoria-logs-server 9428:9428 &
+pids+=($!)
+kubectl -n monitoring-system port-forward svc/victoria-traces 10428:10428 &
+pids+=($!)
+
+wait_ready() {
+  for _ in $(seq 1 20); do
+    curl -fsS "$1" >/dev/null 2>&1 && return 0
+    sleep 1
+  done
+  return 1
+}
+wait_ready "$V/api/v1/query?query=1" || echo "VMSingle not ready" >&2
+wait_ready "$L/select/logsql/query?query=_time:1m&limit=1" || echo "VictoriaLogs not ready" >&2
+wait_ready "$T/select/jaeger/api/services" || echo "VictoriaTraces not ready" >&2
+```
+
+Minimal discovery probes, after the readiness checks:
 
 ```bash
 # metrics labels and matching series
@@ -266,39 +297,10 @@ chat response, not in an HTML file.
 ### Missing-skill fallback
 
 If `skill://victoria-reports` is absent, do not fail the task and do not invent
-a label vocabulary. Use these bounded, read-only internal probes and report the
-returned label/evidence in chat:
-
-```bash
-V=http://127.0.0.1:8428
-L=http://127.0.0.1:9428
-T=http://127.0.0.1:10428
-START=$(date -u -d '1 hour ago' +%s)
-END=$(date -u +%s)
-pids=()
-cleanup() { kill "${pids[@]}" 2>/dev/null || true; }
-trap cleanup EXIT
-
-kubectl -n monitoring-system port-forward svc/vmsingle-victoria-metrics-cluster 8428:8428 &
-pids+=($!)
-kubectl -n monitoring-system port-forward svc/victoria-logs-server 9428:9428 &
-pids+=($!)
-kubectl -n monitoring-system port-forward svc/victoria-traces 10428:10428 &
-pids+=($!)
-
-curl -fsS --get "$V/api/v1/labels" \
-  --data-urlencode "start=$START" --data-urlencode "end=$END"
-curl -fsS --get "$V/api/v1/series" \
-  --data-urlencode 'match[]=gotk_resource_info' \
-  --data-urlencode "start=$START" --data-urlencode "end=$END" \
-  --data-urlencode 'limit=200'
-curl -fsS --get "$L/select/logsql/field_names" \
-  --data-urlencode 'query=_time:1h' --data-urlencode 'limit=200'
-curl -fsS "$T/select/jaeger/api/services"
-```
-
-State that the dedicated skill was unavailable, keep the queries bounded, and
-return only the observed labels/values with their timestamps.
+a label vocabulary. Reuse the bounded setup and probes above, report
+`查询失败` for any backend that never became ready, and return the observed
+labels/values in chat with their timestamps. State that the dedicated skill was
+unavailable; still do not create an HTML artifact.
 
 ## Mutating safely
 
