@@ -17,6 +17,9 @@ spec:
   dependsOn:
     - name: agentgateway
       namespace: networking-system
+  components:
+    - ../../../../components/authentik
   postBuild:
     substitute:
       APP: *name
+      APP_HOST: "news.noirprime.com"

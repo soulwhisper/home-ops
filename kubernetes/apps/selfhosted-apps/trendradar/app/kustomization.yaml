@@ -9,7 +9,6 @@ resources:
   - ./configmap.yaml
   - ./externalsecret.yaml
   - ./httproute.yaml
-  - ./trafficpolicy.yaml
   - ./ciliumnetworkpolicy.yaml
   # bounded restart for upstream memory leak (see file header)
   - ./cronjob-trendradar-restarter.yaml
