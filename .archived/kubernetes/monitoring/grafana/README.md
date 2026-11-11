@@ -2,25 +2,119 @@
 
 Grafana Operator, the Grafana instance, datasources, vendir-synced dashboards,
 and the Grafana MCP server were retired. The native Victoria UIs
-(`metrics`/`logs`/`traces`/`alert`) plus vmalert cover visualization and
-alerting; the Grafana MCP tool surface duplicated the Victoria query servers.
+(metrics/logs/traces/alert) plus vmalert cover visualization and alerting; the
+Grafana MCP tool surface duplicated the Victoria query servers.
 
-Vendir sources, `GrafanaDashboard`/`GrafanaFolder` CRs, and the dashboard
-ConfigMap generators were removed; the vendir CI workflow is archived under
-`.archived/.github/workflows/vendir.yaml`. The only
-retained dashboards are the two repo-owned boards in
-`cluster/dashboards/custom/`:
+This README keeps the retired configuration and the doc sections that were
+removed from the active tree so a restore does not require reconstructing them
+from history.
 
-| Board | Purpose |
+## Archived inventory
+
+| Path | Contents |
 | --- | --- |
-| `basement-health.json` | Failure-revealing baseline health and SLO view |
-| `kopiur-slo.json` | Backup freshness, failures, size, and duration |
-| `ALERTS.md` | Panel-to-alert coverage map and planned SLO rules |
-| `README.md` | Design notes and known data caveats |
+| `app/` | `grafana-operator` HelmRelease (chart `5.25.0`), OCIRepository, 1Password ExternalSecret |
+| `cluster/` | `Grafana` CR, datasources, ServiceAccount for MCP, ESO Role/RoleBinding, HTTPRoute, ServiceMonitor, PDB |
+| `blueprints/oidc/grafana.yaml` | Authentik OIDC provider, application, and admin-group policy binding |
+| `cluster/dashboards/custom/` | The only retained boards: `basement-health.json`, `kopiur-slo.json`, `ALERTS.md`, design notes |
+| `.archived/kubernetes/servitor/mcp/grafana/` | `mcp-grafana` MCPServer, its `mcp-grafana-sa` ExternalSecret, and `ks.yaml` |
+| `.archived/.github/workflows/vendir.yaml` | Retired dashboard-sync workflow, byte-identical to the active copy |
 
-The remaining `app/` and `cluster/` manifests are kept for reference only.
-They are not reconciled (`Flux` reads `kubernetes/` only) and the dashboard
-generators that referenced `_sources/` no longer exist.
+Deleted, not archived: vendir-sourced dashboard JSON (`_sources/`), `vendir.yml`
+and `vendir.lock.yml`, `GrafanaDashboard`/`GrafanaFolder` CRs and their
+ConfigMap generators, the Homepage icon, the gateway allowlist entry, and the
+Grafana rows/counts in active docs. Re-create vendir sources from upstream if
+dashboard sync returns.
+
+## Retired configuration
+
+### Grafana instance
+
+- Operator chart `grafana-operator@5.25.0`, one operator replica.
+- `Grafana` CR: 2 replicas with hostname `topologySpreadConstraints`, PDB
+  `minAvailable: 1`, ServiceMonitor on `/metrics`.
+- PostgreSQL via the `cnpg` component (`APP: grafana`):
+  `postgres-rw.database-system.svc.cluster.local:5432`, database/user
+  `grafana`, `postgres-init` init container using the `grafana-pguser` secret.
+- Admin and OIDC credentials from the 1Password `grafana` ExternalSecret
+  (`admin-user`, `admin-password`, `oidc_client_id`, `oidc_client_secret`).
+- Endpoint was `grafana.noirprime.com`; HTTPRoute annotations supplied the
+  Homepage entry.
+
+### OIDC
+
+- Authentik provider/application `grafana-oidc-provider` / `grafana`,
+  redirect `https://grafana.noirprime.com/login/generic_oauth`, group
+  `homelab-admin` bound with the implicit-consent flow.
+- Grafana config: `disable_login_form`, `oauth_auto_login`,
+  `signout_redirect_url` to Authentik, scopes `openid profile email`,
+  `allow_sign_up: true`, `merge_existing_account: true`.
+- Role mapping: `contains(groups[*], 'homelab-admin') && 'GrafanaAdmin' || 'Viewer'`.
+
+### Datasources
+
+| Name | Type | Endpoint |
+| --- | --- | --- |
+| `victoria-metrics` (default) | `victoriametrics-metrics-datasource` | `vmsingle-victoria-metrics-cluster:8428` |
+| `victoria-logs` | `victoriametrics-logs-datasource` | `victoria-logs-server:9428` |
+| `victoria-traces` | `jaeger` | `victoria-traces:10428/select/jaeger` with traces→logs (±1m, `service.name`) and traces→metrics (±2m) |
+| `alertmanager` | `alertmanager` | `vmalertmanager-victoria-metrics-cluster:9093` |
+| `prometheus` | `prometheus` | VMSingle:8428, uid `PBFA97CFB590B2093` for grafana.com boards |
+
+Plugins: `grafana-clock-panel`, `victoriametrics-metrics-datasource`,
+`victoriametrics-logs-datasource`.
+
+### Dashboards
+
+Vendir synced upstream JSON into `_sources/`; kustomize rendered ConfigMaps
+and the Grafana Operator applied them through `GrafanaDashboard` CRs. Folder
+set: Default (k8s-system-api-server, blackbox-exporter, envoy-proxy-global,
+kopiur-slo, basement-health), Kubernetes (views global/namespaces/nodes/pods),
+Storage (ceph cluster/osd/pools), Network (kgateway, cilium-agent), Databases
+(cnpg, dragonfly), Nodes (node-exporter-full, smartctl-exporter).
+
+Only the two repo-owned boards are retained. They query vmsingle directly and
+remain readable JSON reference; they are not wired to any active dashboard
+delivery.
+
+### Grafana MCP
+
+- Image `grafana/mcp-grafana:2.3.0`, streamable HTTP on `:8000`,
+  `--disable-write`, host allowlist for the ToolHive headless service.
+- `GRAFANA_URL=http://grafana-service.monitoring-system.svc.cluster.local:3000`.
+- Token: `GrafanaServiceAccount/mcp-grafana-sa` (Viewer) writes a token Secret
+  in `monitoring-system`; the `mcp-grafana-sa` ExternalSecret reads it through
+  the `kubernetes` ClusterSecretStore and projects `token` into the MCP pod.
+- Group `cluster`; gateway allowlist (removed from active
+  `agentgateway/config/mcp/filters.yaml`):
+
+  ```cel
+  mcp.tool.name.matches('^mcp-grafana_(search_dashboards|get_dashboard_by_uid|get_dashboard_panel_queries|generate_deeplink|list_datasources)$')
+  ```
+
+- `mcp-fluxcd-extras` included `grafana.integreatly.org`; the group description
+  named scoped Grafana/Victoria tokens.
+
+### ESO RBAC note
+
+`cluster/eso-rbac.yaml` declares `Role/eso-store-role` and
+`RoleBinding/eso-kubernetes-store-role` in `monitoring-system`, letting the
+`security-system/eso-kubernetes` provider read the MCP token Secret. The
+removed doc chapter described a staged ownership handoff with
+`security-system/external-secrets-cluster`; restore both declarations and
+verify the token sync if that handoff is revisited.
+
+### Documentation moved here
+
+| Removed from | Preserved above |
+| --- | --- |
+| `docs/application/monitoring.md` | Instance, OIDC, datasources, dashboard layout |
+| `docs/application/ai.md` | MCP token flow, gateway allowlist, RBAC handoff |
+| `docs/infrastructure/kubernetes.md` | Explicit dependencies and ESO ownership |
+| `docs/application/authentication.md` | OIDC application row |
+| `docs/application/catalog.md` / `kubernetes.md` | Inventory rows and counts |
+| `docs/decisions/timezone.md` | Grafana did not receive a process timezone |
+| `docs/infrastructure/storage.md` | Kopiur freshness now points at alerts, not dashboards |
 
 ## Restore
 
@@ -32,13 +126,15 @@ generators that referenced `_sources/` no longer exist.
    add it to the authentik app `kustomization.yaml`, and re-add
    `authentik-blueprints-oidc-grafana` to the Authentik HelmRelease
    `blueprints.secrets`.
-3. Restore the MCP server from `.archived/kubernetes/servitor/mcp/grafana`,
-   re-add it to the MCP index, and restore its gateway allowlist and
-   `mcp-fluxcd` RBAC entry.
-4. Re-create dashboard delivery. The vendored JSON and vendir workflow were
-   deleted; re-import upstream boards or wire the retained custom boards to
-   new `GrafanaDashboard` CRs.
-5. Re-add the Homepage icon and HTTPRoute annotations if Grafana should return
+3. Re-create the Grafana PostgreSQL role/database (`grafana-pguser`) and the
+   1Password entries referenced by `app/externalsecret.yaml`.
+4. Restore the MCP server from `.archived/kubernetes/servitor/mcp/grafana`,
+   re-add it to the MCP index, restore the gateway allowlist above, and restore
+   `grafana.integreatly.org` to `mcp-fluxcd-extras` if the MCP server should
+   read Grafana CRs.
+5. Restore dashboard delivery: move the workflow back to
+   `.github/workflows/vendir.yaml`, re-create `vendir.yml`/`_sources` from
+   upstream, and re-add the dashboard folder CRs/generators. Wire the retained
+   custom boards to new `GrafanaDashboard` CRs.
+6. Re-add the Homepage icon and HTTPRoute annotations if Grafana should return
    to Homepage.
-6. Re-create the Grafana PostgreSQL role/database and 1Password OIDC entries if
-   they were removed.
