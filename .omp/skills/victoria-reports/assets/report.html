@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #eef1f5;
+    --surface: #ffffff;
+    --fg: #18202a;
+    --muted: #5b6878;
+    --border: #d7dee8;
+    --accent: #1f5fbf;
+    --ok: #0f7b45;
+    --warn: #8a5a00;
+    --bad: #b42318;
+    --ok-bg: #e7f5ec;
+    --warn-bg: #fdf3dc;
+    --bad-bg: #fdeceb;
+    --chip: #e9eef5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1015;
+      --surface: #151c24;
+      --fg: #e6ebf1;
+      --muted: #9aa7b5;
+      --border: #2b3541;
+      --accent: #74a7ff;
+      --ok: #5fd39a;
+      --warn: #e3b341;
+      --bad: #ff8b82;
+      --ok-bg: #123024;
+      --warn-bg: #332812;
+      --bad-bg: #3a1b19;
+      --chip: #222c37;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+    max-width: 1500px;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans SC", sans-serif;
+    font-size: clamp(15px, 0.2vw + 14px, 17px);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { line-height: 1.2; margin: 0; }
+  h1 { font-size: clamp(1.8rem, 1.2vw + 1.2rem, 2.4rem); letter-spacing: -.02em; }
+  h2 { font-size: clamp(1.3rem, 0.5vw + 1.1rem, 1.6rem); }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .85em; }
+  code { background: var(--chip); border-radius: 4px; padding: .1em .35em; }
+  .hero { padding: 1.25rem 1.35rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+  .kicker { margin: 0 0 .35rem; color: var(--muted); font-size: .74rem; letter-spacing: .14em; text-transform: uppercase; }
+  .meta { color: var(--muted); font-size: .86rem; margin: .45rem 0 0; }
+  .verdict { display: inline-block; margin-top: .9rem; padding: .38rem .8rem; border-radius: 999px; font-weight: 600; font-size: .88rem; background: var(--chip); }
+  .verdict--ok { color: var(--ok); background: var(--ok-bg); }
+  .verdict--warn { color: var(--warn); background: var(--warn-bg); }
+  .verdict--bad { color: var(--bad); background: var(--bad-bg); }
+  .page {
+    margin-top: 1.1rem;
+    padding: 1.2rem 1.35rem 1.35rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .page-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
+  .page-no { color: var(--muted); font-size: .8rem; letter-spacing: .14em; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7rem; }
+  .kpi { padding: .75rem .8rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
+  .kpi b { display: block; font-size: clamp(1.7rem, 0.4vw + 1.4rem, 2.15rem); line-height: 1.15; letter-spacing: -.02em; }
+  .kpi span { display: block; color: var(--muted); font-size: .92rem; margin-top: .15rem; }
+  .kpi small { display: block; color: var(--muted); font-size: .82rem; margin-top: .25rem; }
+  .kpi--ok b { color: var(--ok); }
+  .kpi--warn b { color: var(--warn); }
+  .kpi--bad b { color: var(--bad); }
+  .gauge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: .8rem; margin-top: .8rem; }
+  figure.gauge { margin: 0; padding: 1rem .9rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); text-align: center; }
+  figure.gauge svg { display: block; width: 100%; max-width: 220px; height: auto; margin: 0 auto; }
+  figure.gauge figcaption { margin-top: .35rem; font-size: .92rem; color: var(--muted); }
+  .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(620px, 1fr)); gap: .9rem; margin-top: .9rem; }
+  figure.chart { margin: 0; padding: .9rem .9rem .7rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
+  figure.chart svg { display: block; width: 100%; height: auto; }
+  figure.chart svg text { font-size: 14px; }
+  @media (max-width: 700px) { .chart-grid { grid-template-columns: 1fr; } }
+  figure.chart .chart-title { margin: 0 0 .5rem; font-weight: 600; font-size: 1.02rem; }
+  figure.chart .chart-note { margin: .5rem 0 0; color: var(--muted); font-size: .86rem; }
+  .empty { padding: 1.2rem; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); text-align: center; }
+  footer { margin-top: 1.5rem; color: var(--muted); font-size: .86rem; text-align: center; }
+  @media (min-width: 1800px) { body { max-width: 1680px; } }
+  @media print {
+    :root { --bg: #fff; --surface: #fff; --fg: #000; --muted: #444; --border: #bbb; --chip: #eee; }
+    body { max-width: none; padding: 0; }
+    .hero { border: 0; padding: 0 0 1rem; }
+    .page { break-after: page; border: 0; border-radius: 0; padding: 0; margin: 0; }
+    .page:last-child { break-after: auto; }
+    .kpi, .gauge, figure.chart { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <p class="kicker">Victoria 观测仪表盘</p>
+  <h1>{{TITLE}}</h1>
+  <p class="meta">{{SCOPE}}</p>
+  <p class="meta">窗口（UTC）：{{WINDOW_UTC}} · 窗口（本地）：{{WINDOW_LOCAL}} · 生成时间：{{GENERATED_AT}} · 数据源：{{SOURCES}}</p>
+  <p class="verdict {{VERDICT_CLASS}}">{{VERDICT}} · 置信度 {{CONFIDENCE}}</p>
+</header>
+
+<main>
+<!-- Repeat one .page section per page; see SKILL.md for composition rules. -->
+{{PAGES}}
+</main>
+
+<footer>
+  只读 VictoriaMetrics / VictoriaLogs / VictoriaTraces 快照。未执行任何变更。
+  空结果或超出保留期的数据不代表健康。
+</footer>
+</body>
+</html>

@@ -280,7 +280,7 @@ spec:
               sourceLabels: [__name__]
               regex: (kubelet_runtime_operations|kubelet_pod_worker_duration_seconds|kubelet_pleg_relist_duration_seconds|volume_manager_.+)_bucket
 
-    # disable chart components
+    # disable chart components; the standalone Grafana was archived
     grafana:
       enabled: false
     prometheus-node-exporter:

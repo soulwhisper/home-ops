@@ -1,13 +1,6 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   customDatasources: {
-    "grafana-dashboards": {
-      defaultRegistryUrlTemplate: "https://grafana.com/api/dashboards/{{packageName}}",
-      format: "json",
-      transformTemplates: [
-        '{"releases":[{"version": $string(revision)}], "sourceDirectory": name}',
-      ],
-    },
     "immich-machine-learning": {
       defaultRegistryUrlTemplate: "https://api.github.com/repos/immich-app/immich/releases?per_page=100",
       format: "json",
@@ -40,36 +33,8 @@
       datasourceTemplate: "docker",
       versioningTemplate: "helm",
     },
-    {
-      customType: "regex",
-      description: "Update Grafana Dashboard IDs",
-      managerFilePatterns: ["(^|/)vendir\\.yml$"],
-      matchStrings: [
-        "dashboards\\/(?<depName>\\d+)\\/revisions\\/(?<currentValue>\\d+)\\/download",
-      ],
-      datasourceTemplate: "custom.grafana-dashboards",
-      versioningTemplate: "regex:^(?<major>\\d+)$",
-      autoReplaceStringTemplate: "dashboards/{{depName}}/revisions/{{newValue}}/download",
-    },
   ],
   packageRules: [
-    {
-      matchDatasources: ["custom.grafana-dashboards"],
-      addLabels: ["renovate/grafana-dashboard"],
-      semanticCommitScope: "grafana-dashboards",
-      semanticCommitType: "chore",
-      commitMessageTopic: "dashboard {{sourceDirectory}}",
-      commitMessageExtra: "( {{currentVersion}} → {{newVersion}} )",
-    },
-    {
-      description: "Vendir Group",
-      groupName: "Vendir",
-      matchManagers: ["vendir"],
-      matchDatasources: ["git-refs", "git-tags", "github-tags"],
-      group: {
-        commitMessageTopic: "{{{groupName}}} group",
-      },
-    },
     {
       matchDatasources: ["python-version"],
       enabled: false,

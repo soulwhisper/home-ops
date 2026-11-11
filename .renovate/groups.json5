@@ -97,7 +97,7 @@
       minimumGroupSize: 1,
     },
     {
-      description: "Dragonfly Group (image, operator chart, and vendir source)",
+      description: "Dragonfly Group (image and operator chart)",
       groupName: "Dragonfly",
       matchPackageNames: ["/dragonfly/"],
       group: {

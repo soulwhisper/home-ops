@@ -30,6 +30,7 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 | `kubernetes/database/clickhouse-operator` | ClickHouse operator, cluster and keeper | Langfuse was the only consumer; archived with it |
 | `kubernetes/monitoring/langfuse` | LLM trace backend | Dropped almost every span after the OTel attribute change and saw no UI traffic, so it was retired together with ClickHouse |
 | `kubernetes/monitoring/headlamp` | Kubernetes web UI with the Flux plugin and Authentik OIDC. Its blueprint is `.archived/kubernetes/monitoring/headlamp/blueprints/oidc/headlamp.yaml`; the Talos apiserver OIDC stanza is in `.archived/kubernetes/monitoring/headlamp/config/talos-oidc.yaml`. Restore the blueprint to `kubernetes/apps/security-system/authentik/app/blueprints/oidc/headlamp.yaml`, re-add the secret to the Authentik `blueprints.secrets`, and merge the Talos stanza into `infrastructure/talos/prod/10-general.yaml` | No gateway traffic observed; CLI and desktop clients cover the same view |
+| `kubernetes/monitoring/grafana` | Grafana Operator, instance, datasources, vendir config, dashboard CRs/generators, and OIDC blueprint. Only the vendir-sourced `_sources/` cache and the Homepage icon were deleted; configuration notes and restore steps are in the folder `README.md`. The MCP server has its own row below | Native Victoria UIs and vmalert cover visualization and alerting; Grafana duplicated them and the MCP surface duplicated the Victoria query servers |
 | `kubernetes/gaming/crafty-controller` | Minecraft server manager | Retired with the gaming stack |
 | `kubernetes/gaming/foundryvtt` | Foundry virtual tabletop | Retired with the gaming stack |
 | `kubernetes/gaming/gaming-nfs` | NFS PV/PVC binding for gaming data | Retired with the gaming stack; NAS files remain |
@@ -48,6 +49,7 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 | `kubernetes/selfhosted/karakeep` | Bookmarks and read-later | Retired with the self-hosted stack |
 | `kubernetes/selfhosted/netbox` | DCIM/IPAM | Retired with the self-hosted stack |
 | `kubernetes/selfhosted/stirling-pdf` | PDF toolbox | Retired with the self-hosted stack |
+| `kubernetes/servitor/mcp/grafana` | Grafana MCP server and its service-account token sync | Retired with Grafana; Victoria query MCP servers cover the remaining read-only surface |
 | `kubernetes/servitor/mcp/smarthome` | MCP smart-home control tier | Retired with the smart-home stack |
 | `kubernetes/smarthome/frigate` | Frigate NVR | Retired with the smart-home stack |
 | `kubernetes/smarthome/frigate-vision` | Frigate alert forwarder to hermes-agent | Retired with the smart-home stack |
@@ -63,6 +65,12 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 | Path | What | Why archived |
 | --- | --- | --- |
 | `infrastructure/talos/20-mount-hostpath.yaml` | Talos `UserVolumeConfig` for the local-cache disk | Retired from prod; the local-cache volume is unused |
+
+### github
+
+| Path | What | Why archived |
+| --- | --- | --- |
+| `.github/workflows/vendir.yaml` | Vendir dashboard sync workflow | Grafana dashboards were retired; kept as reference if vendir sync returns |
 
 ### pangolin
 

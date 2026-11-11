@@ -154,7 +154,7 @@ the canonical `/mcp` upstream):
 | Route          | vmcp          | Servers (aggregated)                                          | Key (1Password `agentgateway`) | Issued to                    |
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
 | `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar                               | `mcp_search`                   | hermes, open-webui     |
-| `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, grafana, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes                      |
+| `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes                      |
 | `/mcp/github-ro` | `vmcp-github-ro` | github-ro (read-only mode + lockdown; repos/issues/pull_requests) | `mcp_github_ro`            | hermes |
 | `/mcp/persona` | `vmcp-persona`| hindsight persona bank                                        | `mcp_persona`                  | none (reserved)                      |
 
@@ -181,7 +181,8 @@ new permission class; a new server joins the matching existing group.
 Allow = default-deny; `config/mcp/filters.yaml`), not toolhive — toolhive's
 filter middleware is broken for vmcp Modern backends (SEP-2322 envelope
 loss, 2026-10-10). Only servers without an upstream token boundary are
-CEL-filtered (firecrawl, trendradar, grafana, victoria-metrics); github,
+CEL-filtered (firecrawl, trendradar, victoria-logs, victoria-metrics, and
+prefix-allowed victoria-traces); github,
 forgejo, kubernetes, fluxcd are bounded by their upstream tokens/SAs and
 full-allowed by prefix. Allowlists are version-tracked: each filtered
 server's `mcpserver.yaml` names the image tag the tool names were
@@ -314,7 +315,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
     across all seven groups (homelab-tickets#59)
 - **Ingress restricted**: only agentgateway-proxy (MCP protocol, tiered `/mcp/*`) and vmagent (metrics scrape) can connect; chat frontends reach tools through the gateway, never directly
 
-### MCP Servers (15 total)
+### MCP Servers (14 total)
 
 #### search (web/docs/news retrieval — hermes, open-webui)
 
@@ -337,49 +338,9 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | ------------- | --------------------- | ----------------------------- |
 | kubernetes    | HTTP :8080            | kube-apiserver (read-only SA) |
 | fluxcd        | HTTP :9090            | Flux (read-only SA)           |
-| grafana       | Streamable HTTP :8000 | Grafana (read-only SA + `--disable-write`; gateway-filtered: no `grafana_api_request`/manage/provisioning) |
 | victoria-logs | Streamable HTTP :8081 | VictoriaLogs                  |
 | victoria-metrics | Streamable HTTP :8081 | VictoriaMetrics; gateway-filtered to the query surface |
 | victoria-traces | Streamable HTTP :8081 | VictoriaTraces                |
-
-Grafana MCP receives a Grafana `Viewer` token through the
-`mcp-grafana-sa` ExternalSecret. The source Secret lives in
-`monitoring-system`; the Kubernetes SecretStore reads it as
-`security-system/eso-kubernetes` and ESO writes the copy in `servitor-apps`.
-The CA ConfigMap is read using the ESO controller's identity, not that
-provider ServiceAccount.
-
-The source token's Role and RoleBinding belong only to `grafana-cluster`.
-The External Secrets integration owns the provider ServiceAccount and
-ClusterSecretStore. `security-system/external-secrets-cluster` declares only
-`security-system/external-secrets` in its Flux `dependsOn`. At runtime, the
-store also requires the Grafana-owned Role and RoleBinding in
-`monitoring-system` to read source Secrets. The MCP consumer depends on
-that store, Grafana, and ToolHive configuration; this does not add an
-infrastructure-to-monitoring Flux dependency.
-
-For an RBAC ownership handoff, apply object-level prune protection to
-`monitoring-system/Role/eso-store-role` and
-`monitoring-system/RoleBinding/eso-kubernetes-store-role` in both declaring
-Kustomizations: `monitoring-system/grafana-cluster` and
-`security-system/external-secrets-cluster`.
-
-For each stage, record its actual merge commit SHA, not the PR branch head.
-Before advancing, require both Kustomizations to report that exact Git SHA
-in `status.lastAppliedRevision`, `Ready=True`, and
-`status.observedGeneration == metadata.generation`. A stale Ready condition
-or an applied revision without current readiness does not pass this gate.
-
-Remove the duplicate declaration only after the protection-stage gate
-passes and both live RBAC objects carry the prune protection. Remove the
-protection only after the ownership-change-stage gate passes, only
-`monitoring-system/grafana-cluster` inventories both objects, and neither
-appears in `security-system/external-secrets-cluster`'s inventory. Verify
-both objects retain their pre-handoff UIDs and token synchronization stays
-healthy. After restoring pruning, use the same gate for that stage's merge
-SHA and verify the protection is absent, ownership remains unique, and
-UIDs and token synchronization are unchanged. Keep Kustomization pruning
-enabled throughout.
 
 #### persona (read-write, no egress — no current consumer)
 

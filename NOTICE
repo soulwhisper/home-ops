@@ -44,10 +44,6 @@ Third-Party Components
 This repository vendors or adapts third-party components that remain
 under their own copyrights and licenses:
 
-- kubernetes/apps/monitoring-system/grafana/cluster/dashboards/_sources/**
-  Dashboards vendored from cilium, kgateway, envoy-gateway,
-  cloudnative-pg, dragonfly and others; Apache License 2.0; see the
-  LICENSE file in each directory.
 - kubernetes/apps/monitoring-system/robusta/app/holmes-checks-0.42.0.py
   Modified copy of Holmes (HolmesGPT/holmesgpt), Apache License 2.0;
   modifications are marked "LOCAL PATCH (home-ops)".

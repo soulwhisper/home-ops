@@ -26,7 +26,6 @@ rules:
       - postgresql.cnpg.io # Cluster/Database/Backup status
       - barmancloud.cnpg.io
       - operator.victoriametrics.com # VMRule/VMAgent/VMAlert/VLogs
-      - grafana.integreatly.org
       - cilium.io # CNP/BGP/LBIPPool
       - gateway.networking.k8s.io # Gateway/HTTPRoute
       - gateway.kgateway.dev # TrafficPolicy/GatewayParameters

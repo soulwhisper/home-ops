@@ -28,7 +28,6 @@ flowchart LR
 
   subgraph Query
     VAUTH[VMAuth]
-    GRAF[Grafana]
   end
 
   subgraph Alerting
@@ -44,7 +43,6 @@ flowchart LR
   FB --> VL
   OTEL --> VT
   VAUTH --> VMS & VL
-  GRAF --> VAUTH & VL & VT
   VMALERT --> VAUTH
   VMALERT --> AM
   AM --> RELAY
@@ -53,7 +51,7 @@ flowchart LR
 
 ## VictoriaMetrics cluster
 
-The metrics stack uses VictoriaMetrics deployed as the `victoria-metrics-k8s-stack` chart. Built-in Prometheus Operator, node-exporter, kube-state-metrics, and Grafana are disabled in favor of standalone deployments at controlled versions.
+The metrics stack uses VictoriaMetrics deployed as the `victoria-metrics-k8s-stack` chart. Built-in Prometheus Operator, node-exporter, and kube-state-metrics are disabled in favor of standalone deployments at controlled versions.
 
 ### VMSingle
 
@@ -122,13 +120,13 @@ The `victoria-logs-collector` chart deploys Fluent-bit as a DaemonSet (per-node 
 
 Stream fields preserved: `kubernetes.pod_name`, `kubernetes.pod_namespace`, `kubernetes.container_name`, `kubernetes.pod_labels.app.kubernetes.io/name`. ANSI escape sequences stripped from `_msg` via `kubernetesCollector.decolorizeFields`.
 
-Logs are queried through VMAuth (LogsQL endpoint), Grafana (VictoriaLogs datasource, traces-to-logs correlation), and directly for VMAlert vlogs-type rules.
+Logs are queried through VMAuth (LogsQL endpoint), the VictoriaLogs UI, and directly for VMAlert vlogs-type rules.
 
 ## VictoriaTraces
 
 Single-node trace storage using `victoria-traces-single` chart. 14-day retention with 50Gi Ceph block storage. Server at `victoria-traces.monitoring-system.svc.cluster.local:10428`. UI at `traces.noirprime.com` (root rewritten to `/select/vmui/`). ServiceMonitor enabled.
 
-Grafana datasource configured as Jaeger type (`/select/jaeger`), with traces-to-logs correlation (`victoria-logs` datasource, ±1m window, matched on `service.name`), traces-to-metrics correlation (VictoriaMetrics datasource, ±2m window), node graph, and duration span bars.
+Traces are queried through the Jaeger-compatible API (`/select/jaeger`) or the VictoriaTraces UI. Correlate a trace to logs by `service.name` and the span window (±1m), and to metrics by the same service and window (±2m).
 
 ## OpenTelemetry Collector
 
@@ -164,46 +162,6 @@ The exporter uses queued retry with 10 consumers, 5000 queue depth, and exponent
 ### AgentGateway metrics
 
 `agentgateway_*` metrics are already scraped by the gateway ServiceMonitor/PodMonitor. The `agentgateway.rules` recording group exposes `agentgateway:gen_ai_tokens:rate5m` (model, token type, route), `agentgateway:requests:rate5m` and `agentgateway:mcp_requests:rate5m` (route, status), and `agentgateway:gen_ai_ttft:p95_5m` (model, route).
-
-## Grafana
-
-Grafana is managed by the **Grafana Operator** (`grafana-operator` Helm chart, 1 replica), not via the Helm chart directly. The `Grafana` CR declares the full deployment spec: 2 replicas with `topologySpreadConstraints` (hostname skew). PostgreSQL-backed (CNPG `postgres-rw.database-system`), `postgres-init` init container with the `grafana-pguser` secret for automatic database provisioning.
-
-### Authentication
-
-Authentik OIDC SSO with auto-login and disabled login form. Role mapping via `role_attribute_path`: `homelab-admin` group members get `GrafanaAdmin`; everyone else gets `Viewer`. Admin credentials and OIDC client secret sourced from 1Password via ExternalSecret (`admin-user`, `admin-password`, `oidc_client_id`, `oidc_client_secret`). Endpoint: `grafana.noirprime.com`.
-
-### Datasources
-
-| Datasource | Type | Endpoint | Default |
-|-----------|------|----------|---------|
-| `victoria-metrics` | `victoriametrics-metrics-datasource` | VMSingle:8428 | Yes |
-| `victoria-logs` | `victoriametrics-logs-datasource` | VictoriaLogs server:9428 | No |
-| `victoria-traces` | `jaeger` | VictoriaTraces:10428 | No |
-| `alertmanager` | `alertmanager` | VMAlertmanager:9093 | No |
-
-VictoriaTraces datasource includes traces-to-logs and traces-to-metrics correlation configuration.
-
-### Preinstalled plugins
-
-`grafana-clock-panel`, `victoriametrics-metrics-datasource`, `victoriametrics-logs-datasource`.
-
-### Dashboards
-
-Dashboards are vendir-synced from upstream sources into `_sources/` and converted to ConfigMaps via `configMapGenerator` in kustomize. The Grafana Operator picks them up via `GrafanaDashboard` CRs. Repo-owned custom boards live in `custom/` (not vendored).
-
-The set is **debug-focused** (2026-09 audit): current state belongs to native UIs (ceph-mgr dashboard, hubble-ui, agentgateway `:15000/ui`, VM UIs at metrics/logs/traces/alert.noirprime.com) and failures are pushed by vmalert rules; Grafana keeps only trend/correlation boards nothing else provides. Dropped boards (dead datasources, duplicated by native UIs, or duplicated envoy views) stay commented in `vendir.yml` for re-import.
-
-| Folder | Boards |
-|--------|--------|
-| Default (must-check, alert-silent) | k8s-system-api-server, blackbox-exporter, envoy-proxy-global, **kopiur-slo** (custom), **basement-health** (custom) |
-| Kubernetes | k8s-views global / namespaces / nodes / pods |
-| Storage | ceph-cluster, ceph-osd, ceph-pools |
-| Network | kgateway, cilium-agent |
-| Databases | cnpg, dragonfly |
-| Nodes | node-exporter-full, smartctl-exporter |
-
-`custom/` holds two repo-owned boards. `kopiur-slo.json` replaces the vendored kopiur board, whose queries referenced metric families the operator does not emit; it tracks backup staleness, failures, size/duration, and repository health from the live `kopiur_*` families. `basement-health.json` is the failure-revealing board: SLO budgets first, fires second, weak signals last, with 3-line runbooks per panel (app-plane excluded — alerts cover it).
 
 ## Host, cluster, and disk metrics
 

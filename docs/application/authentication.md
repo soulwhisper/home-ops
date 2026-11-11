@@ -2,12 +2,11 @@
 
 ## OIDC via Authentik
 
-2 applications use Authentik OIDC for SSO, managed declaratively via Blueprints (ConfigMap + Secret).
+1 application uses Authentik OIDC for SSO, managed declaratively via Blueprints (ConfigMap + Secret).
 
 | App     | OIDC Provider | Notes         |
 | ------- | :-----------: | ------------- |
 | Forgejo |   Authentik   | SSO-protected |
-| Grafana |   Authentik   | SSO-protected |
 
 New OIDC apps are added by creating a Blueprint Secret (`authentik-blueprints-oidc-<name>`) and referencing it in the Authentik HelmRelease.
 

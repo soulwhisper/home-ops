@@ -20,8 +20,6 @@ spec:
       fsGroup: 2000
       fsGroupChangePolicy: OnRootMismatch
     monitoring:
-      # dashboards are managed as GrafanaDashboard CRs from
-      # monitoring-system/grafana/cluster/dashboards/_sources, not chart-rendered
       prometheusRule:
         enabled: true
       serviceMonitor:

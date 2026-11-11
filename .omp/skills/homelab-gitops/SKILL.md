@@ -219,6 +219,89 @@ For a workload that's misbehaving, the canonical triage order is:
 `logs -f` (current). Check restarts (`restartCount`, `lastState`) before
 blaming resources — OOMKilled and app-level exits need different fixes.
 
+For VictoriaMetrics/VictoriaLogs/VictoriaTraces label discovery and bounded
+evidence queries, use `skill://victoria-reports` when installed; it carries the
+read-only endpoints, human-facing label vocabulary, PromQL/LogsQL/trace
+recipes, and the dashboard contract.
+
+## Victoria stack evidence extraction
+
+If `skill://victoria-reports` is available, it is the source of truth for
+Victoria labels and query recipes. For label-only extraction, do **not** render
+its dashboard and do not create a `temp/` HTML file:
+
+1. Read the skill's label vocabulary and required-coverage sections. Use the
+   exact label keys from there; do not copy or re-derive them here.
+2. Confirm the context and port-forward the needed backends. Keep every query
+   bounded with `start`/`end`, `_time`, and a `limit`.
+3. Return the discovered labels, values, and aggregates in chat as compact JSON
+   or a table. Include the exact query and timestamp.
+
+Set the endpoints, open the forwards, and wait for readiness before any probe:
+
+```bash
+V=http://127.0.0.1:8428
+L=http://127.0.0.1:9428
+T=http://127.0.0.1:10428
+START=$(date -u -d '1 hour ago' +%s)
+END=$(date -u +%s)
+pids=()
+cleanup() { kill "${pids[@]}" 2>/dev/null || true; }
+trap cleanup EXIT
+
+kubectl -n monitoring-system port-forward svc/vmsingle-victoria-metrics-cluster 8428:8428 &
+pids+=($!)
+kubectl -n monitoring-system port-forward svc/victoria-logs-server 9428:9428 &
+pids+=($!)
+kubectl -n monitoring-system port-forward svc/victoria-traces 10428:10428 &
+pids+=($!)
+
+wait_ready() {
+  for _ in $(seq 1 20); do
+    curl -fsS "$1" >/dev/null 2>&1 && return 0
+    sleep 1
+  done
+  return 1
+}
+wait_ready "$V/api/v1/query?query=1" || echo "VMSingle not ready" >&2
+wait_ready "$L/select/logsql/query?query=_time:1m&limit=1" || echo "VictoriaLogs not ready" >&2
+wait_ready "$T/select/jaeger/api/services" || echo "VictoriaTraces not ready" >&2
+```
+
+Minimal discovery probes, after the readiness checks:
+
+```bash
+# metrics labels and matching series
+curl -fsS --get "$V/api/v1/labels" \
+  --data-urlencode "start=$START" --data-urlencode "end=$END"
+curl -fsS --get "$V/api/v1/series" \
+  --data-urlencode 'match[]=gotk_resource_info' \
+  --data-urlencode "start=$START" --data-urlencode "end=$END" \
+  --data-urlencode 'limit=200'
+
+# log field names/values, bounded
+curl -fsS --get "$L/select/logsql/field_names" \
+  --data-urlencode 'query=_time:1h' --data-urlencode 'limit=200'
+curl -fsS --get "$L/select/logsql/stream_field_values" \
+  --data-urlencode 'query=_time:1h' \
+  --data-urlencode 'field=kubernetes.pod_namespace' --data-urlencode 'limit=50'
+
+# trace services
+curl -fsS "$T/select/jaeger/api/services"
+```
+
+Use the dashboard/template only when the user explicitly asks for a visual
+artifact. Label extraction, incident triage, and evidence gathering end in the
+chat response, not in an HTML file.
+
+### Missing-skill fallback
+
+If `skill://victoria-reports` is absent, do not fail the task and do not invent
+a label vocabulary. Reuse the bounded setup and probes above, report
+`查询失败` for any backend that never became ready, and return the observed
+labels/values in chat with their timestamps. State that the dedicated skill was
+unavailable; still do not create an HTML artifact.
+
 ## Mutating safely
 
 Every mutation must go through diff → confirm → apply → verify, with the
