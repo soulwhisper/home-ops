@@ -219,10 +219,49 @@ For a workload that's misbehaving, the canonical triage order is:
 `logs -f` (current). Check restarts (`restartCount`, `lastState`) before
 blaming resources — OOMKilled and app-level exits need different fixes.
 
-For VictoriaMetrics/VictoriaLogs/VictoriaTraces queries and a single-file
-HTML evidence report, use `skill://victoria-reports`; it carries the
-read-only endpoints, human-facing label vocabulary, PromQL/LogsQL/trace
-recipes, and report contract.
+For VictoriaMetrics/VictoriaLogs/VictoriaTraces label discovery and bounded
+evidence queries, use `skill://victoria-reports`; it carries the read-only
+endpoints, human-facing label vocabulary, PromQL/LogsQL/trace recipes, and the
+dashboard contract.
+
+## Victoria stack evidence extraction
+
+`skill://victoria-reports` is the source of truth for Victoria labels and
+query recipes. For label-only extraction, do **not** render its dashboard and
+do not create a `temp/` HTML file:
+
+1. Read the skill's label vocabulary and required-coverage sections. Use the
+   exact label keys from there; do not copy or re-derive them here.
+2. Confirm the context and port-forward the needed backends. Keep every query
+   bounded with `start`/`end`, `_time`, and a `limit`.
+3. Return the discovered labels, values, and aggregates in chat as compact JSON
+   or a table. Include the exact query and timestamp.
+
+Minimal discovery probes:
+
+```bash
+# metrics labels and matching series
+curl -fsS --get "$V/api/v1/labels" \
+  --data-urlencode "start=$START" --data-urlencode "end=$END"
+curl -fsS --get "$V/api/v1/series" \
+  --data-urlencode 'match[]=gotk_resource_info' \
+  --data-urlencode "start=$START" --data-urlencode "end=$END" \
+  --data-urlencode 'limit=200'
+
+# log field names/values, bounded
+curl -fsS --get "$L/select/logsql/field_names" \
+  --data-urlencode 'query=_time:1h' --data-urlencode 'limit=200'
+curl -fsS --get "$L/select/logsql/stream_field_values" \
+  --data-urlencode 'query=_time:1h' \
+  --data-urlencode 'field=kubernetes.pod_namespace' --data-urlencode 'limit=50'
+
+# trace services
+curl -fsS "$T/select/jaeger/api/services"
+```
+
+Use the dashboard/template only when the user explicitly asks for a visual
+artifact. Label extraction, incident triage, and evidence gathering end in the
+chat response, not in an HTML file.
 
 ## Mutating safely
 
