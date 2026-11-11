@@ -34,8 +34,8 @@ self-contained HTML report. The report is the deliverable; raw JSON is not.
 - Write the report in Simplified Chinese (`lang="zh-CN"`): headings, verdicts,
   findings, prose, table headers, and chart labels. Keep identifiers, label
   keys, query text, and units verbatim.
-- Write the report to `temp/<YYYYMMDD-HHMMSS>-<slug>.html`. `temp/` is
-  gitignored; never commit a generated report.
+- Write the report to `temp/<YYYYMMDD-HHMMSS>-<slug>.html` (create `temp/` if
+  needed). `temp/` is gitignored; never commit a generated report.
 
 ## Access
 
@@ -242,7 +242,7 @@ Required sections, in order:
 
 1. **标题与结论** — 标题、范围/问题、精确时间窗口（UTC 和本地）、生成时间、数据源、一句话结论与置信度。
 2. **摘要** — 按严重度/状态和主要对象计数；数字必须与下方表格一致。
-3. **图表** — 至少一个与数据形状匹配的图表：时间序列用折线图，Top-N/分类计数用横向条形图；无数据时写“无数据”，不画空图。
+3. **图表** — 当数据形状适合时包含匹配图表：时间序列用折线图，Top-N/分类计数用横向条形图；当前状态/混合标签用表格；无数据时写“无数据”，不画空图。
 4. **发现** — 按严重度从高到低排列。每行包含对象（使用人类可读标签）、严重度、观测值/状态、时间、置信度。
 5. **证据** — 每个发现一段，包含精确查询、窗口、结果数和有界脱敏摘录；原始查询放在 `<details>` 中，禁止粘贴完整日志流或 JSON。
 6. **标签覆盖** — 必显表格：标签域、实际使用的标签、查询/总体、展示方式，以及“无数据/未采集”。
