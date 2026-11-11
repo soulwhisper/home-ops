@@ -123,20 +123,20 @@ table in the dashboard. Coverage must either be complete for the
 cluster-diagnosis domains (nodes, pods, Flux, alerts, metrics, logs, traces,
 storage, backups) or deliberately diverse; never ship a single-source
 dashboard. For each domain check the labels actually used, the
-query/population, the chosen display, and an explicit `无数据`/`未采集` when
-empty:
+query/population, the chosen display, and an explicit `无数据`, `未采集`, or
+`查询失败` state:
 
 | Domain | Labels to cover | Preferred display |
 | --- | --- | --- |
-| 工作负载 | `namespace`, `pod`, `container`, `node`, `service`, `job`, `instance`, `condition` | Table grouped by namespace/pod; top-N horizontal bar when comparing counts |
-| 告警 | `alertname`, `severity`, `alertstate`, `namespace` | Table plus severity count cards |
-| HTTP/探针 | `code`, `envoy_response_code_class`, `probe_success`, `up` | Table; line chart for a time series, bar for per-class counts |
-| 存储 | `persistentvolumeclaim`, `storageclass`, `pool`, `device`, `mountpoint` | Table for current state; bar for top usage only when queried |
-| Kopiur | `policy`, `name`, `kind`, `phase` | Table grouped by `policy`/`namespace` |
-| Flux | `gotk_resource_info`: `exported_namespace`, `name`, `customresource_kind`, `ready`, `revision` | Table of not-Ready resources; count card when zero |
-| 日志 | `_time`, `_msg`, `kubernetes.pod_namespace`, `kubernetes.pod_name`, `kubernetes.container_name`, `kubernetes.pod_node_name`, `kubernetes.pod_labels.app.kubernetes.io/name`, `level` | Top-N horizontal bar; bounded table/excerpts |
-| 链路 | `service.name`, `operationName`, `duration`, `status.code`, `span.kind` | Table; latency/error bar only when spans were queried |
-| 直方图 | `le` | Include in the query table when a histogram quantile is used; otherwise mark `未采集` |
+| 工作负载 | `namespace`, `pod`, `container`, `node`, `service`, `job`, `instance`, `condition` | Stat cards; top-N horizontal bar when comparing counts |
+| 告警 | `alertname`, `severity`, `alertstate`, `namespace` | Severity composition bar + stat cards |
+| HTTP/探针 | `code`, `envoy_response_code_class`, `probe_success`, `up` | Gauge/stat cards + response-class bar |
+| 存储 | `persistentvolumeclaim`, `storageclass`, `pool`, `device`, `mountpoint` | Stat cards + bar for top usage |
+| Kopiur | `policy`, `name`, `kind`, `phase` | Bargauge + bar charts |
+| Flux | `gotk_resource_info`: `exported_namespace`, `name`, `customresource_kind`, `ready`, `revision` | Stat card; bar only when non-zero |
+| 日志 | `_time`, `_msg`, `kubernetes.pod_namespace`, `kubernetes.pod_name`, `kubernetes.container_name`, `kubernetes.pod_node_name`, `kubernetes.pod_labels.app.kubernetes.io/name`, `level` | Top-N horizontal bar + stat cards |
+| 链路 | `service.name`, `operationName`, `duration`, `status.code`, `span.kind` | Stat card; latency/error bar when span counts are queried |
+| 直方图 | `le` | Bar with the unit when a histogram quantile is used; otherwise mark `未采集` |
 
 Choose the display by data shape:
 
@@ -256,13 +256,13 @@ Default pages:
    and repository failures, foreign snapshots, oldest backup age, reconcile
    p95; bargauge of hours since the last successful backup per `policy`; bar
    chart of backup size per `policy`; bar chart of Kopiur resources by
-   `kind`/`phase`.
+   `kind`/`phase`; bar chart of snapshots per repository `name`.
 3. **流量与日志** — HTTP response-class bar chart, top error-pattern log pods
    bar chart, trace-service count/coverage, and the most important protocol
    or error facts as stat cards.
 
-Each page has a page number/title, KPI cards first, then charts, then one short
-caption. Do not render an appendix, method/limits, label coverage, findings,
+Each page has a page number/title, KPI cards first, then the charts that fit
+the page (usually 1–4), then one short caption. Do not render an appendix, method/limits, label coverage, findings,
 evidence, raw queries, reference tables, or long lists. Those are internal
 pre-delivery checks in this skill; summarize them in chat only if needed.
 The dashboard is not an evidence dump.
@@ -284,7 +284,9 @@ Editing rules:
 - Write the dashboard to `temp/<YYYYMMDD-HHMMSS>-<slug>.html` (create `temp/`
   if needed). `temp/` is gitignored; leave the artifact uncommitted and report
   its path.
-- If only one source answered, show a `无数据` card for the missing domain.
+- If a source failed or was not queried, mark the dashboard `不完整` and use
+  `查询失败` or `未采集` cards; reserve `无数据` for a successful empty result.
+  A single-source dashboard must not be presented as complete.
   Never present a metric-only hypothesis as confirmed by logs or traces.
 
 ## Workflow
