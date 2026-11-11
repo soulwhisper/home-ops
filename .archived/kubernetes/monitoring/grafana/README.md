@@ -23,11 +23,12 @@ from history.
 | `.archived/kubernetes/servitor/mcp/grafana/` | `mcp-grafana` MCPServer, its `mcp-grafana-sa` ExternalSecret, and `ks.yaml` |
 | `.archived/.github/workflows/vendir.yaml` | Retired dashboard-sync workflow, byte-identical to the active copy |
 
-Only `cluster/dashboards/_sources/` was deleted. Every related config that
-referenced it is archived: the vendir files, dashboard CRs/generators, workflow,
-MCP server, OIDC blueprint, and Homepage icon. The archived dashboard
-kustomizations still reference `_sources/`; re-sync it with the archived workflow
-before restoring dashboard delivery.
+Only `cluster/dashboards/_sources/` was deleted: it is vendir-cached,
+re-fetchable upstream data, not a config. Every related config and doc is
+archived: the vendir files, dashboard CRs/generators, workflow, MCP server,
+OIDC blueprint, and Homepage icon. The archived dashboard kustomizations still
+reference `_sources/`; re-sync it with the archived workflow before restoring
+dashboard delivery.
 
 Active wiring removed (not archived as standalone files): monitoring/MCP index
 entries, the Authentik blueprint mount, the Homepage icon reference, the
