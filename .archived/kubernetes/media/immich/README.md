@@ -22,14 +22,12 @@ done
 The active `postgres` Cluster does not declare the `immich` role or `Database`.
 Add both before restoring so ownership and the required extensions stay
 declarative. Restore Immich in pgvector mode (`DB_VECTOR_EXTENSION: pgvector`,
-already set in the archived HelmRelease). The image must contain the extension
-files: `vector`, `uuid-ossp`, `unaccent`, `cube`, `earthdistance`, and
-`pg_trgm`. `CREATE EXTENSION ... CASCADE` and CNPG `ensure: present` only
-register an extension and resolve its dependencies; they do not install a
-missing package. The current CNPG image contains this set, and the containers
-image test checks it; the documented set lives in
-`soulwhisper/containers/apps/postgresql/README.md`. `vchord`, `vchord_bm25`, and
-`pg_tokenizer` are not used by this restore path and are not in the image.
+already set in the archived HelmRelease). The image must provide `pgvector` and
+`earthdistance`; `earthdistance` depends on `cube`, which is declared
+separately because the CNPG `Database` controller issues a plain
+`CREATE EXTENSION` (no `CASCADE`). Neither the image nor CNPG installs a missing
+extension package. The image no longer ships `vchord`, so VectorChord mode is
+not an option for this restore.
 
 The app's `init-db` container can provision the role and database from the
 superuser secret; the `Database` declaration is what ensures the pgvector-mode
@@ -60,15 +58,9 @@ spec:
   extensions:
     - name: vector
       ensure: present
-    - name: uuid-ossp
-      ensure: present
-    - name: unaccent
-      ensure: present
     - name: cube
       ensure: present
     - name: earthdistance
-      ensure: present
-    - name: pg_trgm
       ensure: present
 ```
 
