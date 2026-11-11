@@ -36,10 +36,15 @@ spec:
     name: cloudnative-pg
   enableSuperuserAccess: true
   postgresql:
+    # pgroonga_wal_resource_manager propagates pgroonga index changes to replicas.
+    # Do not preload pgroonga itself: its initdb bootstrap hook breaks per-database grn init.
+    shared_preload_libraries:
+      - pgroonga_wal_resource_manager
     parameters:
       effective_io_concurrency: "200"
       max_connections: "400"
       shared_buffers: "2GB"
+      pgroonga.enable_wal_resource_manager: "on"
   resources:
     requests:
       cpu: 500m
