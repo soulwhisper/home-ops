@@ -43,11 +43,11 @@ spec:
               - -eu
               - -c
               - |
-                  # busybox lacks chcon and SELinux-aware stat; use the xattr tools.
+                  # busybox lacks chcon and SELinux-aware stat; use the xattr tools without following symlinks.
                   label() { getfattr -n security.selinux "$1" 2>/dev/null | sed -n 's/^security\.selinux="\(.*\)"$/\1/p'; }
                   if [ "$(label /vol)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /vol/.selinux-relabelled ]; then
                     rm -f /vol/.selinux-relabelled
-                    find /vol -exec setfattr -n security.selinux -v system_u:object_r:ephemeral_t:s0 {} +
+                    find /vol -exec setfattr -h -n security.selinux -v system_u:object_r:ephemeral_t:s0 {} +
                     touch /vol/.selinux-relabelled
                     echo "relabelled /vol"
                   fi
