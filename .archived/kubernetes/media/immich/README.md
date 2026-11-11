@@ -27,8 +27,9 @@ files: `vector`, `uuid-ossp`, `unaccent`, `cube`, `earthdistance`, and
 `pg_trgm`. `CREATE EXTENSION ... CASCADE` and CNPG `ensure: present` only
 register an extension and resolve its dependencies; they do not install a
 missing package. The current CNPG image contains this set, and the containers
-image test checks it. `vchord`, `vchord_bm25`, and `pg_tokenizer` are not used by
-this restore path and are not in the image.
+image test checks it; the documented set lives in
+`soulwhisper/containers/apps/postgresql/README.md`. `vchord`, `vchord_bm25`, and
+`pg_tokenizer` are not used by this restore path and are not in the image.
 
 The app's `init-db` container can provision the role and database from the
 superuser secret; the `Database` declaration is what ensures the pgvector-mode
