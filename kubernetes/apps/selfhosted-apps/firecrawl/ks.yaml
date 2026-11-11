@@ -20,6 +20,7 @@ spec:
     substitute:
       APP: *name
       KOPIUR_CLAIM: firecrawl-database-cache
+      KOPIUR_CAPACITY: 5Gi
       KOPIUR_STORAGECLASS: ceph-cache
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/kustomize.toolkit.fluxcd.io/kustomization_v1.json
