@@ -22,12 +22,13 @@ done
 The active `postgres` Cluster does not declare the `immich` role or `Database`.
 Add both before restoring so ownership and the required extensions stay
 declarative. Restore Immich in pgvector mode (`DB_VECTOR_EXTENSION: pgvector`,
-already set in the archived HelmRelease). The image must provide `pgvector` and
-`earthdistance`; `earthdistance` depends on `cube`, which is declared
-separately because the CNPG `Database` controller issues a plain
-`CREATE EXTENSION` (no `CASCADE`). Neither the image nor CNPG installs a missing
-extension package. The image no longer ships `vchord`, so VectorChord mode is
-not an option for this restore.
+already set in the archived HelmRelease). The image must provide `pgvector`;
+Immich's own migrations create the remaining extensions they require when run
+with the documented superuser/owner setup. Verify `pg_available_extensions` in
+the target database before restore. Do not add the standard contrib extensions
+to the pig install list or reinstall them to match this note; re-installing can
+drift the shipped versions. The image no longer ships `vchord`, so VectorChord
+mode is not an option for this restore.
 
 The app's `init-db` container can provision the role and database from the
 superuser secret; the `Database` declaration is what ensures the pgvector-mode
