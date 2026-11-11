@@ -420,7 +420,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 - Embeddings: **Qwen3-Embedding-0.6B on the MacStudio** (oMLX id `qwen3-embedding-0.6b`, 1024d) via gateway `/v1/embeddings`; store rebuilt from scratch for the 0.6B space
 - Reranker: **Qwen3-Reranker-0.6B on the MacStudio** (Cohere-compatible, id `qwen3-reranker-0.6b`) via gateway `/v1/rerank`
 - Resources: req: 150m CPU / 768Mi, lim: 2 CPU / 2Gi
-- Storage: CloudNativePG (vchord vector + pgroonga text search), OTEL enabled
+- Storage: CloudNativePG (pgvector + pgroonga text search), OTEL enabled
 - Exposed as MCP server for agent context retrieval
 
 ### Archived
