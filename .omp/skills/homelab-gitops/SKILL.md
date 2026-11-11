@@ -219,6 +219,11 @@ For a workload that's misbehaving, the canonical triage order is:
 `logs -f` (current). Check restarts (`restartCount`, `lastState`) before
 blaming resources — OOMKilled and app-level exits need different fixes.
 
+For VictoriaMetrics/VictoriaLogs/VictoriaTraces queries and a single-file
+HTML evidence report, use `skill://victoria-reports`; it carries the
+read-only endpoints, human-facing label vocabulary, PromQL/LogsQL/trace
+recipes, and report contract.
+
 ## Mutating safely
 
 Every mutation must go through diff → confirm → apply → verify, with the

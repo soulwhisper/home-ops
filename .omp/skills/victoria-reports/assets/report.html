@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --fg: #18202a;
+    --muted: #5b6878;
+    --border: #d7dee8;
+    --accent: #1f5fbf;
+    --ok: #0f7b45;
+    --warn: #8a5a00;
+    --bad: #b42318;
+    --ok-bg: #e7f5ec;
+    --warn-bg: #fdf3dc;
+    --bad-bg: #fdeceb;
+    --chip: #e9eef5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10151b;
+      --surface: #171d25;
+      --fg: #e6ebf1;
+      --muted: #9aa7b5;
+      --border: #2b3541;
+      --accent: #74a7ff;
+      --ok: #5fd39a;
+      --warn: #e3b341;
+      --bad: #ff8b82;
+      --ok-bg: #123024;
+      --warn-bg: #332812;
+      --bad-bg: #3a1b19;
+      --chip: #222c37;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+    max-width: 1080px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1, h2, h3 { line-height: 1.2; margin: 0 0 .5rem; }
+  h1 { font-size: 1.7rem; letter-spacing: -.02em; }
+  h2 { font-size: 1.15rem; margin-top: 2.2rem; padding-top: .6rem; border-top: 1px solid var(--border); }
+  h3 { font-size: 1rem; }
+  a { color: var(--accent); }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .85em; }
+  code { background: var(--chip); border-radius: 4px; padding: .1em .35em; }
+  pre { overflow-x: auto; padding: .8rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  .kicker { margin: 0 0 .35rem; color: var(--muted); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; }
+  .meta { color: var(--muted); font-size: .88rem; margin: .4rem 0 0; }
+  .verdict { display: inline-block; margin-top: 1rem; padding: .4rem .8rem; border-radius: 999px; font-weight: 600; font-size: .9rem; background: var(--chip); }
+  .verdict--ok { color: var(--ok); background: var(--ok-bg); }
+  .verdict--warn { color: var(--warn); background: var(--warn-bg); }
+  .verdict--bad { color: var(--bad); background: var(--bad-bg); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; margin: 1rem 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: .8rem .9rem; }
+  .card b { display: block; font-size: 1.45rem; line-height: 1.2; }
+  .card span { color: var(--muted); font-size: .82rem; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; vertical-align: top; padding: .55rem .7rem; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .sev { display: inline-block; padding: .1rem .45rem; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+  .sev--high { color: var(--bad); background: var(--bad-bg); }
+  .sev--medium { color: var(--warn); background: var(--warn-bg); }
+  .sev--low { color: var(--ok); background: var(--ok-bg); }
+  .finding { margin: 1rem 0; padding: .9rem 1rem; border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 8px; background: var(--surface); }
+  .finding h3 { margin-bottom: .35rem; }
+  .finding p { margin: .3rem 0; }
+  .finding .evidence { color: var(--muted); font-size: .86rem; }
+  detail, details { display: block; margin-top: .5rem; }
+  summary { cursor: pointer; color: var(--muted); font-size: .86rem; }
+  .empty { color: var(--muted); font-style: italic; }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .82rem; }
+  @media print {
+    :root { --bg: #fff; --surface: #fff; --fg: #000; --muted: #444; --border: #bbb; --chip: #eee; }
+    body { max-width: none; padding: 0; }
+    h2 { break-after: avoid; }
+    .finding, .card, .table-wrap { break-inside: avoid; }
+    details { display: block; }
+    summary { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <p class="kicker">Victoria stack evidence report</p>
+  <h1>{{TITLE}}</h1>
+  <p class="meta">{{SCOPE}}</p>
+  <p class="meta">Window: {{WINDOW_UTC}} · Generated: {{GENERATED_AT}} · Sources: {{SOURCES}}</p>
+  <p class="verdict {{VERDICT_CLASS}}">{{VERDICT}} · confidence {{CONFIDENCE}}</p>
+</header>
+
+<section aria-labelledby="summary">
+  <h2 id="summary">Summary</h2>
+  <div class="cards">
+    <!-- Repeat one .card per compared number. Replace labels and values. -->
+    {{SUMMARY_CARDS}}
+  </div>
+</section>
+
+<section aria-labelledby="findings">
+  <h2 id="findings">Findings</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Severity</th><th>Entity</th><th>Observed</th><th>When (UTC)</th><th>Confidence</th></tr>
+      </thead>
+      <tbody>
+        <!-- Repeat one row per finding, HIGH to LOW. -->
+        {{FINDINGS_ROWS}}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="evidence">
+  <h2 id="evidence">Evidence</h2>
+  <!-- Repeat one .finding block per finding. Keep raw queries in <details>. -->
+  {{EVIDENCE_BLOCKS}}
+</section>
+
+<section aria-labelledby="timeline">
+  <h2 id="timeline">Timeline</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Time (UTC)</th><th>Source</th><th>Event</th><th>Evidence</th></tr>
+      </thead>
+      <tbody>
+        <!-- Repeat one row per transition; delete the section if not temporal. -->
+        {{TIMELINE_ROWS}}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="method">
+  <h2 id="method">Method and limits</h2>
+  <p>{{METHOD}}</p>
+  <ul>
+    {{LIMITS}}
+  </ul>
+</section>
+
+<section aria-labelledby="appendix">
+  <h2 id="appendix">Appendix</h2>
+  <h3>Labels used</h3>
+  <ul>
+    {{LABEL_GLOSSARY}}
+  </ul>
+  <h3>Queries</h3>
+  <details>
+    <summary>Exact queries and windows</summary>
+    <pre>{{QUERIES}}</pre>
+  </details>
+</section>
+
+<footer>
+  Read-only VictoriaMetrics / VictoriaLogs / VictoriaTraces evidence. No
+  mutations were performed. Empty or unretained ranges are not proof of health.
+</footer>
+</body>
+</html>
