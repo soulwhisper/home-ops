@@ -181,7 +181,8 @@ new permission class; a new server joins the matching existing group.
 Allow = default-deny; `config/mcp/filters.yaml`), not toolhive — toolhive's
 filter middleware is broken for vmcp Modern backends (SEP-2322 envelope
 loss, 2026-10-10). Only servers without an upstream token boundary are
-CEL-filtered (firecrawl, trendradar, victoria-metrics); github,
+CEL-filtered (firecrawl, trendradar, victoria-logs, victoria-metrics, and
+prefix-allowed victoria-traces); github,
 forgejo, kubernetes, fluxcd are bounded by their upstream tokens/SAs and
 full-allowed by prefix. Allowlists are version-tracked: each filtered
 server's `mcpserver.yaml` names the image tag the tool names were

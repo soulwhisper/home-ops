@@ -43,23 +43,36 @@ kubectl get nodes -o wide
 kubectl -n monitoring-system get svc,httproute,pods
 ```
 
-Port-forward the three backends in one shell and kill them when done:
+Port-forward the three backends in one shell. Capture each PID and clean both
+the forwards and the private temp directory on exit:
 
 ```bash
+TMP=$(mktemp -d)
+pids=()
+cleanup() { kill "${pids[@]}" 2>/dev/null || true; rm -rf "$TMP"; }
+trap cleanup EXIT
+
 kubectl -n monitoring-system port-forward svc/vmsingle-victoria-metrics-cluster 8428:8428 &
+pids+=($!)
 kubectl -n monitoring-system port-forward svc/victoria-logs-server 9428:9428 &
+pids+=($!)
 kubectl -n monitoring-system port-forward svc/victoria-traces 10428:10428 &
+pids+=($!)
 # optional: vmalert 8080, vmalertmanager 9093
-curl -fsS 'http://127.0.0.1:8428/api/v1/query?query=1' >/dev/null
-curl -fsS 'http://127.0.0.1:9428/select/logsql/query?query=_time:1m&limit=1' >/dev/null
-curl -fsS 'http://127.0.0.1:10428/select/jaeger/api/services' >/dev/null
-kill %1 %2 %3 2>/dev/null
+
+# retry until the local forward binds; do not mistake startup latency for an outage
+curl -fsS --retry 5 --retry-delay 1 --retry-connrefused \
+  'http://127.0.0.1:8428/api/v1/query?query=1' >/dev/null
+curl -fsS --retry 5 --retry-delay 1 --retry-connrefused \
+  'http://127.0.0.1:9428/select/logsql/query?query=_time:1m&limit=1' >/dev/null
+curl -fsS --retry 5 --retry-delay 1 --retry-connrefused \
+  'http://127.0.0.1:10428/select/jaeger/api/services' >/dev/null
 ```
 
 | Backend | Service (namespace `monitoring-system`) | Query surface | UI |
 | --- | --- | --- | --- |
 | Metrics | `vmsingle-victoria-metrics-cluster:8428` | Prometheus API `/api/v1/*` | VM UI through the gateway |
-| Metrics proxy | `vmauth-victoria-metrics-cluster:8427` | `/api/v1/*`; `/select/logsql/*` | — |
+| Metrics proxy | `vmauth-victoria-metrics-cluster:8427` | `/api/v1/query.*`; `/api/v1/label/.*`; `/select/logsql/*` | — |
 | Logs | `victoria-logs-server:9428` | LogsQL `/select/logsql/*` | Logs UI through the gateway |
 | Traces | `victoria-traces:10428` | Jaeger API `/select/jaeger/*` | Traces UI through the gateway |
 | Alerts | `vmalert-victoria-metrics-cluster:8080` | rules/alerts API | — |
@@ -71,8 +84,10 @@ ports; do not use the public UIs for automated scraping.
 ## Label vocabulary humans care about
 
 The archived Grafana boards (`basement-health.json`, `kopiur-slo.json`) are the
-reference for labels worth showing. Use these in headings and `group by`; do
-not dump raw label maps.
+reference for the metric label rows (workload, alerts, HTTP/probes, storage,
+Kopiur). The Flux, log, and trace rows were checked against live
+`gotk_resource_info`, VictoriaLogs field names, and Jaeger process tags. Use
+these in headings and `group by`; do not dump raw label maps.
 
 | Signal | Labels that identify the thing a human cares about |
 | --- | --- |
@@ -102,18 +117,28 @@ Aggregation rules:
 
 ```bash
 V=http://127.0.0.1:8428
-curl -sS --get "$V/api/v1/query" --data-urlencode 'query=sum(up)'
-curl -sS --get "$V/api/v1/query_range" \
+START=$(date -u -d '6 hours ago' +%s)
+END=$(date -u +%s)
+curl -fsS --get "$V/api/v1/query" --data-urlencode 'query=sum(up)'
+curl -fsS --get "$V/api/v1/query_range" \
   --data-urlencode 'query=sum by (namespace) (rate(container_cpu_usage_seconds_total[5m]))' \
-  --data-urlencode "start=$(date -u -d '6 hours ago' +%s)" \
-  --data-urlencode "end=$(date -u +%s)" --data-urlencode 'step=60'
-curl -sS "$V/api/v1/labels"
-curl -sS "$V/api/v1/label/namespace/values"
-curl -sS --get "$V/api/v1/series" --data-urlencode 'match[]=gotk_resource_info'
+  --data-urlencode "start=$START" --data-urlencode "end=$END" \
+  --data-urlencode 'step=300'
+curl -fsS --get "$V/api/v1/labels" \
+  --data-urlencode "start=$START" --data-urlencode "end=$END"
+curl -fsS --get "$V/api/v1/label/namespace/values" \
+  --data-urlencode "start=$START" --data-urlencode "end=$END"
+curl -fsS --get "$V/api/v1/series" \
+  --data-urlencode 'match[]=gotk_resource_info' \
+  --data-urlencode "start=$START" --data-urlencode "end=$END" \
+  --data-urlencode 'limit=200'
 ```
 
-- Use `query` for current verdicts and `query_range` for shape/trend. Keep the
-  response under ~1.5k points: 1m step for ≤24h, 5m for 7d, 1h for 30d.
+- Use `query` for current verdicts and `query_range` for shape/trend. Estimate
+  `series_count × range / step` and choose a step that keeps the response under
+  ~1.5k points: 1m for ≤6h, 5m for ≤5d, 10m for 7d, 1h for 30d.
+- Bound discovery too: pass the same `start`/`end` to labels and series, and
+  cap `/api/v1/series` with `limit`.
 - Use rate windows of at least 4× the scrape interval (scrapes are 30–60s);
   `[1m]` is usually noise.
 - Flux state: `gotk_resource_info{ready="False"}` grouped by
@@ -131,15 +156,16 @@ curl -sS --get "$V/api/v1/series" --data-urlencode 'match[]=gotk_resource_info'
 ```bash
 L=http://127.0.0.1:9428
 Q='_time:1h kubernetes.pod_namespace:"selfhosted-apps" _msg:~"(?i)error|fail|timeout"'
-curl -sS --get "$L/select/logsql/query" --data-urlencode "query=$Q" --data-urlencode 'limit=200'
+curl -fsS --get "$L/select/logsql/query" --data-urlencode "query=$Q" --data-urlencode 'limit=200'
 
-# field discovery
-curl -sS "$L/select/logsql/field_names?query=*&limit=200"
-curl -sS --get "$L/select/logsql/stream_field_values" \
-  --data-urlencode 'query=*' --data-urlencode 'field=kubernetes.pod_namespace' --data-urlencode 'limit=50'
+# field discovery, bounded to the same window
+curl -fsS --get "$L/select/logsql/field_names" \
+  --data-urlencode 'query=_time:1h' --data-urlencode 'limit=200'
+curl -fsS --get "$L/select/logsql/stream_field_values" \
+  --data-urlencode 'query=_time:1h' --data-urlencode 'field=kubernetes.pod_namespace' --data-urlencode 'limit=50'
 
 # counts instead of raw lines
-curl -sS --get "$L/select/logsql/query" --data-urlencode \
+curl -fsS --get "$L/select/logsql/query" --data-urlencode \
   'query=_time:1h | stats by (kubernetes.pod_namespace, kubernetes.pod_name) count() as n | sort by (n desc) | limit 20' \
   --data-urlencode 'limit=20'
 ```
@@ -159,9 +185,9 @@ curl -sS --get "$L/select/logsql/query" --data-urlencode \
 
 ```bash
 T=http://127.0.0.1:10428/select/jaeger
-curl -sS "$T/api/services"
-curl -sS "$T/api/services/<service>/operations"
-curl -sS --get "$T/api/traces" --data-urlencode 'service=<service>' \
+curl -fsS "$T/api/services"
+curl -fsS "$T/api/services/<service>/operations"
+curl -fsS --get "$T/api/traces" --data-urlencode 'service=<service>' \
   --data-urlencode "start=$(date -u -d '2 hours ago' +%s000000)" \
   --data-urlencode "end=$(date -u +%s000000)" --data-urlencode 'limit=20'
 ```
@@ -170,7 +196,7 @@ curl -sS --get "$T/api/traces" --data-urlencode 'service=<service>' \
 - Correlate a slow/error trace to logs by `service.name` and a ±1m span window;
   correlate to metrics with the same service and a ±2m window.
 - No traces means "not sampled/collected", not "no failures" — tail sampling
-  keeps errors and a 10% baseline only.
+  keeps errors, GenAI chat, and `tools/call` spans, plus a 10% baseline.
 
 ## Report contract
 
@@ -215,16 +241,16 @@ Editing rules:
 2. Confirm the context, open the port-forwards, and hit the three health
    probes. If a backend is down, report that first and use the remaining
    sources.
-3. Discover labels/fields, then query narrow. Save raw outputs to a temp
-   directory; keep the exact commands.
+3. Discover labels/fields, then query narrow. Save raw outputs and exact
+   commands under `$TMP`; keep only bounded, redacted excerpts in the report.
 4. Cross-check: corroborate every high-severity finding with a second signal
    where possible; record the check that failed to corroborate.
 5. Render one HTML file from the template.
 6. Verify: row counts match raw results; timestamps lie inside the window;
    no unresolved placeholders; no external references; HTML parses; secrets
    absent; units and limits stated. Open it in a browser when available.
-7. Kill port-forwards and remove temp files. Deliver the path, verdict, and
-   limits in chat.
+7. Let the `EXIT` trap kill the port-forwards and remove `$TMP`; deliver the
+   path, verdict, and limits in chat.
 
 ## Presentation principles
 

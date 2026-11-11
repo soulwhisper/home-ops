@@ -173,8 +173,23 @@ in `.archived/kubernetes/servitor/mcp/grafana/README.md`.
 `RoleBinding/eso-kubernetes-store-role` in `monitoring-system`, letting the
 `security-system/eso-kubernetes` provider read the MCP token Secret. The
 removed doc chapter described a staged ownership handoff with
-`security-system/external-secrets-cluster`; restore both declarations and
-verify the token sync if that handoff is revisited.
+`security-system/external-secrets-cluster`:
+
+- `external-secrets-cluster` declares only `security-system/external-secrets`
+  in its Flux `dependsOn`; the store still needs this monitoring
+  Role/RoleBinding at runtime.
+- Apply object-level prune protection to both objects in both declaring
+  Kustomizations before changing ownership.
+- For each stage, require both Kustomizations to report the exact merge SHA in
+  `status.lastAppliedRevision`, `Ready=True`, and
+  `status.observedGeneration == metadata.generation`.
+- Remove the duplicate declaration only after both live objects carry the
+  protection. Remove the protection only after ownership is unique to
+  `grafana-cluster`, then verify both objects retain their UIDs and the token
+  sync stays healthy.
+- Keep Kustomization pruning enabled throughout.
+
+Restore both declarations and verify the token sync if the handoff is revisited.
 
 ### Documentation moved here
 
@@ -200,13 +215,28 @@ verify the token sync if that handoff is revisited.
    `blueprints.secrets`.
 3. Re-create the Grafana PostgreSQL role/database (`grafana-pguser`) and the
    1Password entries referenced by `app/externalsecret.yaml`.
-4. Restore the MCP server from `.archived/kubernetes/servitor/mcp/grafana`,
-   re-add it to the MCP index, restore the gateway allowlist above, and restore
-   `grafana.integreatly.org` to `mcp-fluxcd-extras` if the MCP server should
-   read Grafana CRs.
+4. Restore the MCP server from `.archived/kubernetes/servitor/mcp/grafana` to
+   `kubernetes/apps/servitor-apps/mcp/grafana`, add `./grafana/ks.yaml` to
+   `kubernetes/apps/servitor-apps/mcp/kustomization.yaml`, rebuild the token
+   Secret, and restore the gateway allowlist and `mcp-fluxcd-extras` RBAC entry
+   described in that folder's `README.md`.
 5. Restore dashboard delivery: move the workflow back to
-   `.github/workflows/vendir.yaml`, run `vendir sync` to recreate the deleted
-   `_sources/` tree, and keep the archived dashboard folders/config with the
-   restored app. Wire the retained custom boards to `GrafanaDashboard` CRs.
+   `.github/workflows/vendir.yaml`, point its `BASE_DIR` at the restored active
+   dashboards path, and run the workflow or its steps. The workflow must also
+   rename fetched `*_rev*.json`/`download` files to `dashboard.json` before the
+   kustomizations can consume them:
+
+   ```bash
+   BASE_DIR=kubernetes/apps/monitoring-system/grafana/cluster/dashboards
+   SOURCES_DIR="$BASE_DIR/_sources"
+   vendir sync --chdir "$BASE_DIR"
+   find "$SOURCES_DIR" -type f \( -name "*_rev*.json" -o -name "download" \) | while read -r FILE; do
+     DIR=$(dirname "$FILE")
+     mv "$FILE" "$DIR/dashboard.json"
+   done
+   ```
+
+   Keep the archived dashboard folders/config with the restored app and wire
+   the retained custom boards to `GrafanaDashboard` CRs.
 6. Re-create the deleted Homepage icon from the upstream artwork and restore
    the HTTPRoute Homepage annotations if Grafana should return to Homepage.

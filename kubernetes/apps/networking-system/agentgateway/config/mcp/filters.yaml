@@ -6,9 +6,9 @@
 # tool names reach the gateway — see toolhive/config/virtualmcpserver.yaml.
 #
 # CEL filters serve two purposes: security default-deny where the upstream has
-# no token/SA boundary (firecrawl, trendradar, victoria-*), and schema
-# size control on fat APIs (forgejo to the ticket workflow) so tool lists fit
-# 64K-context consumers.
+# no token/SA boundary (firecrawl, trendradar, victoria-logs/-metrics), and
+# schema size control on fat APIs (forgejo to the ticket workflow) so tool
+# lists fit 64K-context consumers.
 # Token-bounded servers stay unfiltered: the k8s read-only SA, and the
 # github-ro tier (read-only server mode plus lockdown, with injection scans
 # at the guardrail layer). fluxcd is the exception inside cluster: its generic
