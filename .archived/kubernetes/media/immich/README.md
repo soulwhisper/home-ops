@@ -26,7 +26,7 @@ already set in the archived HelmRelease). The image must provide `pgvector`;
 Immich's own migrations create the remaining extensions they require when run
 with the documented superuser/owner setup. Verify `pg_available_extensions` in
 the target database before restore. Do not add the standard contrib extensions
-to the image's pig-managed extension list or reinstall them to match this note;
+to the `pig ext install` package list or reinstall them to match this note;
 re-installing can drift the shipped versions. The replacement image drops
 `vchord`, while the currently pinned image still contains it;
 `DB_VECTOR_EXTENSION=pgvector` keeps this restore on pgvector either way.
