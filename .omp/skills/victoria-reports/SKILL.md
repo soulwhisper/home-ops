@@ -308,6 +308,19 @@ Editing rules:
 7. Let the `EXIT` trap kill the port-forwards and remove `$TMP`; deliver the
    path, verdict, and limits in chat.
 
+## Cost estimate
+
+Use these planning numbers for one dashboard. They are rough, not billing:
+
+- Generated dashboard: ~21–24k characters (about 800 CJK) ≈ **6–8k output tokens**.
+- Skill + template load: ≈ **5–6k tokens**.
+- Raw Victoria query outputs and tool receipts: ≈ **2–4k tokens**.
+- Composition, SVG/chart building, reasoning, and tool overhead: ≈ **10–20k tokens**.
+- Fresh end-to-end run: ≈ **25–40k tokens**; an iterative run with review/fixes: ≈ **40–60k tokens**.
+
+Heuristic used here: ~3.8 ASCII characters/token plus ~1.4 tokens/CJK
+character. Recalculate if the dashboard grows more than ~30KB or adds charts.
+
 ## Presentation principles
 
 Adapted from the public `archify` skill: standalone HTML, inline SVG, no

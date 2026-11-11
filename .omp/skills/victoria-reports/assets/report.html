@@ -82,9 +82,11 @@
   figure.gauge { margin: 0; padding: 1rem .9rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); text-align: center; }
   figure.gauge svg { display: block; width: 100%; max-width: 220px; height: auto; margin: 0 auto; }
   figure.gauge figcaption { margin-top: .35rem; font-size: .92rem; color: var(--muted); }
-  .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: .9rem; margin-top: .9rem; }
+  .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(620px, 1fr)); gap: .9rem; margin-top: .9rem; }
   figure.chart { margin: 0; padding: .9rem .9rem .7rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
   figure.chart svg { display: block; width: 100%; height: auto; }
+  figure.chart svg text { font-size: 14px; }
+  @media (max-width: 700px) { .chart-grid { grid-template-columns: 1fr; } }
   figure.chart .chart-title { margin: 0 0 .5rem; font-weight: 600; font-size: 1.02rem; }
   figure.chart .chart-note { margin: .5rem 0 0; color: var(--muted); font-size: .86rem; }
   .empty { padding: 1.2rem; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); text-align: center; }
