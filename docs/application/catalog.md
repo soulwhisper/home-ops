@@ -1,8 +1,8 @@
 # Application Catalog
 
-69 application definition units across 9 namespaces, managed via Flux GitOps. Each table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload.
+68 application definition units across 9 namespaces, managed via Flux GitOps. Each table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload.
 
-The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 9 first-level namespace directories. Together, those namespaces have 57 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 69 definition files declare 98 child Flux Kustomizations and lead to 70 HelmReleases. There are 51 OCIRepositories across the source tree: 50 application-local and one shared app-template source. These are source counts, not counts of running applications.
+The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 9 first-level namespace directories. Together, those namespaces have 56 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 68 definition files declare 96 child Flux Kustomizations and lead to 68 HelmReleases. There are 49 OCIRepositories across the source tree: 48 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
 Definitions that are intentionally not deployed live under [`.archived/kubernetes`](https://github.com/soulwhisper/home-ops/tree/main/.archived/kubernetes); see the [archive index](https://github.com/soulwhisper/home-ops/blob/main/.archived/README.md) for why each definition is kept.
 
@@ -46,7 +46,7 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [1Password Connect](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/security-system/onepassword-connect/ks.yaml) | 1Password API bridge |
 | [Authentik](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/security-system/authentik/ks.yaml) | SSO/OIDC provider |
 | [Cert-Manager](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/security-system/cert-manager/ks.yaml) | TLS certificate automation |
-| [Kyverno](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/security-system/kyverno/ks.yaml) | Policy engine |
+| [Native Policies](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/security-system/native-policies/ks.yaml) | ValidatingAdmissionPolicies for critical namespace deletes and image-registry audit |
 
 ## networking-system — Network Services (5)
 
@@ -80,7 +80,7 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [CloudNativePG](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/database-system/cnpg-operator/ks.yaml) | PostgreSQL operator and shared database cluster |
 | [Dragonfly Operator](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/database-system/dragonfly-operator/ks.yaml) | Redis-compatible cache operator |
 
-## monitoring-system — Observability (16)
+## monitoring-system — Observability (15)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/kustomization.yaml)
 
@@ -97,7 +97,6 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [VMware Exporter](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/vmware-exporter/ks.yaml) | ESXi host metrics |
 | [Blackbox Exporter](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/blackbox-exporter/ks.yaml) | Endpoint probing |
 | [Silence Operator](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/silence-operator/ks.yaml) | Alert silencing for maintenance |
-| [Headlamp](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/headlamp/ks.yaml) | Kubernetes web UI |
 | [Prometheus CRDs](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/prometheus-crds/ks.yaml) | Prometheus operator resource definitions |
 | [Robusta](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/robusta/ks.yaml) | Alert enrichment, Holmes analysis, and scheduled health checks |
 | [KRR](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/krr/ks.yaml) | Scheduled Kubernetes resource recommendations |

@@ -22,7 +22,6 @@ resources:
   - ./victoria-metrics/ks.yaml # replace kube-prometheus-stack
   - ./victoria-traces/ks.yaml # replace tempo
   # others
-  - ./headlamp/ks.yaml
   - ./krr/ks.yaml
   - ./robusta/ks.yaml
   - ./webhook-relay/ks.yaml

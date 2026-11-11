@@ -26,6 +26,7 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 | `kubernetes/storage/openebs-localpv` | OpenEBS local hostPath provisioner | Retired with the Talos prod bring-up; Ceph backs the active storage classes |
 | `kubernetes/database/clickhouse-operator` | ClickHouse operator, cluster and keeper | Langfuse was the only consumer; archived with it |
 | `kubernetes/monitoring/langfuse` | LLM trace backend | Dropped almost every span after the OTel attribute change and saw no UI traffic, so it was retired together with ClickHouse |
+| `kubernetes/monitoring/headlamp` | Kubernetes web UI with the Flux plugin and Authentik OIDC. Its blueprint is `.archived/kubernetes/monitoring/headlamp/blueprints/oidc/headlamp.yaml`; restore it to `kubernetes/apps/security-system/authentik/app/blueprints/oidc/headlamp.yaml` and re-add the secret to the Authentik `blueprints.secrets` | No gateway traffic observed; CLI and desktop clients cover the same view |
 | `kubernetes/gaming/crafty-controller` | Minecraft server manager | Retired with the gaming stack |
 | `kubernetes/gaming/foundryvtt` | Foundry virtual tabletop | Retired with the gaming stack |
 | `kubernetes/gaming/gaming-nfs` | NFS PV/PVC binding for gaming data | Retired with the gaming stack; NAS files remain |
@@ -39,6 +40,7 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 | `kubernetes/media/qbittorrent` | Torrent client | Retired with the media stack |
 | `kubernetes/media/qbittorrent-ui` | Web UI for qBittorrent | Retired with the media stack |
 | `kubernetes/security/authentik/blueprints` | Forward-auth and OIDC blueprints for archived applications | Kept so archived definitions mirror the active layout; only active-app blueprints are installed |
+| `kubernetes/security/kyverno` | Policy engine: six audit policies and the namespace-delete guard | The namespace guard and image-registry audit are now `protect-critical-namespaces` and `audit-image-registries` in the `native-policies` Kustomization; the remaining audit rules were dropped because their reports were not consumed by alerts or dashboards |
 | `kubernetes/selfhosted/dispatcharr` | IPTV proxy and DVR | Retired with the self-hosted stack |
 | `kubernetes/selfhosted/karakeep` | Bookmarks and read-later | Retired with the self-hosted stack |
 | `kubernetes/selfhosted/netbox` | DCIM/IPAM | Retired with the self-hosted stack |

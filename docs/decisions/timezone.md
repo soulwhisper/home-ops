@@ -45,7 +45,7 @@ Remove `k8tz` entirely. Timezones are owned by workloads:
 | system-upgrade-controller Plans | `Asia/Shanghai` | Plan resources already declare their schedule timezone |
 
 Applications that expose browser-local timestamps or have their own timezone
-setting do **not** get process `TZ`: Grafana, Headlamp, Homepage, Authentik,
+setting do **not** get process `TZ`: Grafana, Homepage, Authentik,
 Frigate, Navidrome, Kavita, MeTube, Stirling PDF, Karakeep, SearXNG, Hindsight,
 Firecrawl, Langfuse, FoundryVTT, and Scrypted render in the browser or in
 application/user settings.

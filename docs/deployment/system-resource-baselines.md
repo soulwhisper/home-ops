@@ -71,7 +71,6 @@ chart default applies even when Git shows `none`.
 | --- | --- | --- | --- | --- |
 | `blackbox-exporter` | `prometheus-blackbox-exporter@11.21.1` | `resources`, `configReloader.resources` | configReloader `10m/20Mi` + `50Mi` limit; main empty | none |
 | `grafana-operator` | `grafana-operator@5.25.0` | `resources` | empty | none |
-| `headlamp` | `headlamp@0.46.0` | `resources` | empty | none |
 | `kube-state-metrics` | `kube-state-metrics@9.0.0` | `resources` | empty | none |
 | `node-exporter` | `prometheus-node-exporter@5.0.0` | `resources` | empty; commented `100m/64Mi` | requests `23m`; memory limit `64M` |
 | `opentelemetry-collector` | `opentelemetry-collector@0.178.2` | `resources` | empty | requests `10m/512Mi`, memory limit `1Gi` |
@@ -105,7 +104,6 @@ chart default applies even when Git shows `none`.
 | `authentik` | `authentik@2026.8.5` | `server.resources`, `worker.resources` | empty | none |
 | `cert-manager` | `cert-manager@v1.21.3` | `resources`, `webhook.resources`, `cainjector.resources` | empty; commented examples per component | none |
 | `external-secrets` | `external-secrets@2.14.0` | `resources`, `webhook.resources`, `certController.resources` | empty | `10m/64Mi` + `256Mi`; webhook `10m/32Mi` + `128Mi` |
-| `kyverno` | `kyverno@3.9.2` | `admissionController.resources`, `backgroundController.resources`, `cleanupController.resources`, `reportsController.resources`, plus test/init paths | non-empty per-controller defaults | all four controllers set |
 | `onepassword-connect` | `connect@2.4.3` | `connect.api.resources`, `connect.sync.resources` | api `200m` + `128Mi` limit; sync empty | api `200m/128Mi` + `256Mi`; sync `50m/64Mi` + `128Mi` |
 
 ### storage-system
@@ -164,7 +162,6 @@ rounded up to 64Mi with a 64Mi floor, and is optional.
 | `storage-system/storage-system.cephfs.csi.ceph.com-ctrlplugin` | `csi-cephfsplugin` | 0m / 512Mi / 1024Mi | 0m | 69Mi | 10m / 512Mi / 1024Mi |
 | `kube-system/spegel` | `registry` | 0m / 128Mi / 128Mi | 20m | 65Mi | 25m / 128Mi / 128Mi |
 | `kube-system/hubble-relay` | `hubble-relay` | 0m / 0Mi / — | 1m | 65Mi | 10m / 80Mi / 192Mi |
-| `monitoring-system/headlamp` | `headlamp` | 0m / 0Mi / — | 1m | 64Mi | 10m / 80Mi / 128Mi |
 | `database-system/cnpg-barman` | `barman-cloud` | 0m / 0Mi / — | 2m | 62Mi | 10m / 80Mi / 128Mi |
 | `security-system/cert-manager-webhook` | `cert-manager-webhook` | 0m / 0Mi / — | 1m | 58Mi | 10m / 80Mi / 128Mi |
 | `kube-system/hubble-ui` | `backend` | 0m / 0Mi / — | 0m | 58Mi | 10m / 80Mi / 128Mi |

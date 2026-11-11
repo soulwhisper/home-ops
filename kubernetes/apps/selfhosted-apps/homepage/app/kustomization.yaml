@@ -32,7 +32,6 @@ configMapGenerator:
       - icons/forgejo.svg
       - icons/frigate.svg
       - icons/grafana.svg
-      - icons/headlamp.svg
       - icons/heimdall.svg
       - icons/home-assistant.svg
       - icons/immich.svg
