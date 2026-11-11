@@ -131,10 +131,10 @@ snapshot or explicitly disposable application state is not the same as losing
 the NAS library files.
 
 Media, gaming and smart-home namespaces, plus four self-hosted applications,
-are parked: removing them from the active indexes is expected to prune their
-workloads and PVCs (verify the prune result), while NAS-hosted files are
-untouched. CNPG databases/roles and leftover kopiur Snapshot objects still
-require the manual post-merge cleanup.
+are archived under `.archived/kubernetes`: their workloads and PVCs are expected
+to be pruned (verify the prune result), while NAS-hosted files remain untouched.
+CNPG databases/roles and leftover kopiur Snapshot objects still require manual
+cleanup.
 
 This is a data-value boundary, not an instruction to delete resources. Any
 service retirement still needs an explicit application or batch decision;
@@ -145,7 +145,7 @@ are outside the Kubernetes PVC backup mechanism.
 ### kopiur — PVC Backup
 
 [kopiur](https://github.com/home-operations/kopiur) (Kopia-native Rust operator)
-provides automated PVC backup and restore for **4 application definitions**; media, gaming, smart-home and parked self-hosted applications no longer carry policies.
+provides automated PVC backup and restore for **4 application definitions**; media, gaming, smart-home and the archived self-hosted applications do not carry policies.
 The reusable components are
 [`backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
 (referenced by each consumer's `ks.yaml`) and
@@ -251,11 +251,10 @@ after data loss is not a database restore. A restore must explicitly select the
 backup/archive source, preserve the required extensions and credentials, and
 verify database startup and application queries in an approved target.
 
-Do not apply that requirement to a media application's deliberately discarded
-cache or rebuildable configuration. Keep PostgreSQL business state and the NAS
-library separate from optional application snapshots. The archived Woodpecker
-DR workflow is historical reference, not evidence of a currently scheduled
-restore drill.
+Keep PostgreSQL business state and the NAS library separate from optional
+application snapshots. Do not apply the restore requirement to deliberately
+discarded caches or rebuildable configuration. A backup is not evidence of a
+tested restore; no scheduled restore drill is defined in GitOps.
 
 ### Synology NAS Services
 

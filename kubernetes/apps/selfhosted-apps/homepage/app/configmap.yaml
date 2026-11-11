@@ -29,7 +29,7 @@ data:
       Status:                 # ALL widget apps + ESXi; 2 internal columns like
         style: row            # Service/Observability (weights pair the rows:
         columns: 2            # pairs: nas+openwrt / unifi+forgejo / esxi
-                              # (media/gaming widgets were parked)
+                              # (media/gaming widgets were archived)
       Media:
         style: column
       SmartHome:
@@ -75,7 +75,7 @@ data:
     #               name: Ticktick
     #               url: {{HOMEPAGE_VAR_TICKTICK_ICAL}}
     # Status sidebar is static now: every route-discovered widget app
-    # (jellyfin, immich, qbittorrent, crafty) was parked.
+    # (jellyfin, immich, qbittorrent, crafty) was archived.
     - Status:
         - NAS:
             href: https://10.10.0.100:5001

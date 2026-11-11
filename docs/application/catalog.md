@@ -4,11 +4,11 @@
 
 The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 9 first-level namespace directories. Together, those namespaces have 57 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 69 definition files declare 98 child Flux Kustomizations and lead to 70 HelmReleases. There are 51 OCIRepositories across the source tree: 50 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
-Definitions that are intentionally not deployed live under [`kubernetes/parked`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/parked); see its README for the parked-versus-archived contract.
+Definitions that are intentionally not deployed live under [`.archived/kubernetes`](https://github.com/soulwhisper/home-ops/tree/main/.archived/kubernetes); see the [archive index](https://github.com/soulwhisper/home-ops/blob/main/.archived/README.md) for why each definition is kept.
 
-This catalog is documentation, not a deployment selector. Each namespace's linked `kustomization.yaml` is the current application selection and shared-resource entry point. Active definitions stay under `kubernetes/apps`; parked definitions live under `kubernetes/parked`. See [Cluster Architecture](../infrastructure/kubernetes.md) and [Storage](../infrastructure/storage.md) for reconciliation and data boundaries.
+This catalog is documentation, not a deployment selector. Each namespace's linked `kustomization.yaml` is the current application selection and shared-resource entry point. Active definitions stay under `kubernetes/apps`; archived definitions live under `.archived/kubernetes`. See [Cluster Architecture](../infrastructure/kubernetes.md) and [Storage](../infrastructure/storage.md) for reconciliation and data boundaries.
 
-[`.archived`](https://github.com/soulwhisper/home-ops/tree/main/.archived) contains historical implementations with old paths; it does not guarantee that an application can be redeployed or its data restored.
+[`.archived`](https://github.com/soulwhisper/home-ops/tree/main/.archived) contains historical implementations; archived definitions are reference-only and are not deployed.
 
 ## kube-system — Cluster Infrastructure (9)
 

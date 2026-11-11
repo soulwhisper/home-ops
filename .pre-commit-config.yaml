@@ -52,8 +52,8 @@ repos:
         entry: kubeconform
         args:
           - "-strict"
-          # mirror .woodpecker/flux-kubeconform.yaml: schema gaps (e.g.
-          # kustomize Kustomization) must not fail local runs when CI passes
+          # schema gaps (e.g. kustomize Kustomization) must not fail local
+          # runs when CI passes
           - "-ignore-missing-schemas"
           - "-summary"
           - "-schema-location=default"
@@ -68,4 +68,4 @@ repos:
         # (kubernetes/flux/cluster/cluster.yaml patches them in at reconcile
         # time), so the strict CRD schema can never pass pre-injection; CI
         # validates the rendered manifests instead.
-        exclude: ^kubernetes/(bootstrap|components|parked)/|/blueprints/|/ks\.yaml$
+        exclude: ^kubernetes/(bootstrap|components)/|/blueprints/|/ks\.yaml$

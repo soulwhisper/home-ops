@@ -202,18 +202,11 @@ rounded up to 64Mi with a 64Mi floor, and is optional.
   `agentgateway`, `rook-ceph`, `spegel` already receive a non-empty chart
   default; Git showing `none` does not mean the pod has no requests.
 
-## Tooling: flate and the parked tree
+## Tooling: flate and the archived tree
 
-`kubernetes/parked/` contains archived Kustomizations whose `spec.path` still
-points at the active tree. flate scans the whole Git tree, so a full
-`flate build hr` used to fail on those paths even though they are not deployed.
+`.archived/` holds retired definitions outside `kubernetes/`. Flux and flate
+only read the active cluster path, so archived manifests are never rendered and
+need no ignore file.
 
-The repo-root `.krmignore` now excludes `kubernetes/parked/`:
-
-```text
-kubernetes/parked/
-```
-
-Verification: `flate build hr --no-progress` renders the full tree with
-`rc=0` (37,085 lines). The ignore file must be committed; flate reads the
-Git tree, not untracked working-tree files.
+Verification: `flate test all --base main` renders the active tree without
+archived manifests.
