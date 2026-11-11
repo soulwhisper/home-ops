@@ -227,6 +227,7 @@ Restore both declarations and verify the token sync if the handoff is revisited.
    kustomizations can consume them:
 
    ```bash
+   set -euo pipefail
    BASE_DIR=kubernetes/apps/monitoring-system/grafana/cluster/dashboards
    SOURCES_DIR="$BASE_DIR/_sources"
    vendir sync --chdir "$BASE_DIR"
