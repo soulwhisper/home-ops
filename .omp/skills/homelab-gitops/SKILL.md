@@ -142,6 +142,45 @@ the current code. They are not a changelog.
 - When touching surrounding code, delete comments that only narrate
   history.
 
+## Archiving an application
+
+`kubernetes/` is the only reconciled tree. Archive with `git mv`; do not delete
+the manifests.
+
+1. Move `kubernetes/apps/<namespace>/<app-path>` to
+   `.archived/kubernetes/<namespace-without-apps-or-system>/<app-path>`,
+   preserving grouping directories (for example
+   `servitor-apps/mcp/smarthome` → `.archived/kubernetes/servitor/mcp/smarthome`,
+   `monitoring-system/headlamp` → `.archived/kubernetes/monitoring/headlamp`).
+2. Remove the app's `ks.yaml` from the nearest `kustomization.yaml` that lists
+   it (for `servitor-apps/mcp/<app>` that is
+   `kubernetes/apps/servitor-apps/mcp/kustomization.yaml`, not the namespace
+   root). If a replacement lands in the same change, add it there.
+3. Keep every archived `ks.yaml` byte-identical, including `spec.path`. The
+   path stays at its canonical `kubernetes/apps/...` location and is inert
+   because Flux never reads `.archived`.
+4. Move the app's Authentik blueprint from
+   `kubernetes/apps/security-system/authentik/app/blueprints/{core,forward,oidc}/<app>.yaml`
+   into the archived app directory, mirroring the blueprint subdirectory. Remove
+   it from the authentik `kustomization.yaml` and from the HelmRelease
+   `blueprints.secrets` list when mounted. For forward-auth apps, also remove
+   the provider from `blueprints/core/outpost-proxy.yaml`.
+5. Delete active-only assets the app referenced (for example Homepage icons and
+   their `kustomization.yaml` entries).
+6. Add one row to `.archived/README.md`: path, what it is, and why it is
+   archived. Update the counts and namespace rows in
+   `docs/application/catalog.md` and `docs/infrastructure/kubernetes.md`.
+7. Remove the app from the docs that describe the active architecture
+   (`docs/application/*`, `docs/decisions/*`, resource baselines) and from any
+   active `ks.yaml` `dependsOn` entry.
+8. Do not add an ignore file, kubeconform exclusion, or Renovate rule for the
+   archived path: `.archived/` sits outside `kubernetes/`, so Flux, flate and
+   the `^kubernetes/` hooks never see it. When an archived app is replaced by a
+   native resource, add that resource under `kubernetes/apps/` in the same
+   change.
+9. Verify with `flate test all --base main`, yamllint/kubeconform on the
+   changed manifests, and a server-side dry-run for cluster-scoped resources.
+
 ## Storage
 
 Discover the actual layout instead of assuming names:

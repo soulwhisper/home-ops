@@ -1,0 +1,44 @@
+---
+# Hard protection against accidental or malicious deletion of namespaces whose
+# loss is unrecoverable. system:masters and the Flux controllers that hold
+# cluster-admin by binding may delete these namespaces; every other actor is
+# denied.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: protect-critical-namespaces
+spec:
+  # Fail closed: if CEL cannot be evaluated, the delete is rejected.
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["DELETE"]
+        resources: ["namespaces"]
+  matchConditions:
+    - name: critical-namespaces-only
+      expression: >-
+        oldObject.metadata.name in
+        ['kube-system', 'gitops-system', 'networking-system', 'security-system',
+         'storage-system', 'database-system', 'monitoring-system']
+  validations:
+    - expression: >-
+        'system:masters' in request.userInfo.groups ||
+        request.userInfo.username in
+        ['system:serviceaccount:gitops-system:kustomize-controller',
+         'system:serviceaccount:gitops-system:helm-controller',
+         'system:serviceaccount:gitops-system:flux-operator']
+      message: >-
+        deleting this namespace is blocked by policy
+        (protect-critical-namespaces); only system:masters or the
+        gitops-system Flux controllers (kustomize-controller, helm-controller,
+        flux-operator) may do this.
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: protect-critical-namespaces
+spec:
+  policyName: protect-critical-namespaces
+  validationActions: ["Deny"]

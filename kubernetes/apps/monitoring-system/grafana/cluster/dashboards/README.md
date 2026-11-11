@@ -36,7 +36,7 @@ dashboards/
 
 #### Layout: debug-focused
 
-State checks live in native UIs (headlamp, ceph-mgr dashboard, hubble-ui,
+State checks live in native UIs (ceph-mgr dashboard, hubble-ui,
 agentgateway `:15000/ui`, VM UIs at metrics/logs/traces/alert.noirprime.com);
 failures are pushed by vmalert rules. Grafana keeps only trend/correlation
 boards that nothing else provides:

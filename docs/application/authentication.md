@@ -2,12 +2,11 @@
 
 ## OIDC via Authentik
 
-10 applications use Authentik OIDC for SSO, managed declaratively via Blueprints (ConfigMap + Secret).
+9 applications use Authentik OIDC for SSO, managed declaratively via Blueprints (ConfigMap + Secret).
 
 | App                  | OIDC Provider | Notes                                                                 |
 | -------------------- | :-----------: | --------------------------------------------------------------------- |
 | Grafana              |   Authentik   | SSO-protected                                                         |
-| Headlamp             |   Authentik   | K8s dashboard with read-only SA                                       |
 | Home Assistant       |   Authentik   | Requires `hass-openid` plugin + `/config/configuration.yaml` packages |
 | Immich               |   Authentik   | Configure via Admin Settings                                          |
 | Jellyfin             |   Authentik   | Install `jellyfin-plugin-sso` first, then web UI config               |

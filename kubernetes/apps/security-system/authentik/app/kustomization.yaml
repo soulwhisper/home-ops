@@ -15,7 +15,6 @@ resources:
   # oidc blueprints
   - ./blueprints/oidc/forgejo.yaml
   - ./blueprints/oidc/grafana.yaml
-  - ./blueprints/oidc/headlamp.yaml
 generatorOptions:
   annotations:
     kustomize.toolkit.fluxcd.io/substitute: "disabled"

@@ -29,7 +29,6 @@ flowchart LR
   subgraph Query
     VAUTH[VMAuth]
     GRAF[Grafana]
-    HEAD[Headlamp]
   end
 
   subgraph Alerting
@@ -193,7 +192,7 @@ VictoriaTraces datasource includes traces-to-logs and traces-to-metrics correlat
 
 Dashboards are vendir-synced from upstream sources into `_sources/` and converted to ConfigMaps via `configMapGenerator` in kustomize. The Grafana Operator picks them up via `GrafanaDashboard` CRs. Repo-owned custom boards live in `custom/` (not vendored).
 
-The set is **debug-focused** (2026-09 audit): current state belongs to native UIs (headlamp, ceph-mgr dashboard, hubble-ui, agentgateway `:15000/ui`, VM UIs at metrics/logs/traces/alert.noirprime.com) and failures are pushed by vmalert rules; Grafana keeps only trend/correlation boards nothing else provides. Dropped boards (dead datasources, duplicated by native UIs, or duplicated envoy views) stay commented in `vendir.yml` for re-import.
+The set is **debug-focused** (2026-09 audit): current state belongs to native UIs (ceph-mgr dashboard, hubble-ui, agentgateway `:15000/ui`, VM UIs at metrics/logs/traces/alert.noirprime.com) and failures are pushed by vmalert rules; Grafana keeps only trend/correlation boards nothing else provides. Dropped boards (dead datasources, duplicated by native UIs, or duplicated envoy views) stay commented in `vendir.yml` for re-import.
 
 | Folder | Boards |
 |--------|--------|
@@ -242,10 +241,6 @@ Per-node DaemonSet exposing S.M.A.R.T. disk health metrics from NVMe and SATA dr
 |---------|----------|--------|
 | `vm-health-too-many-logs` | `TooManyLogs` | Chart-default threshold-0 rule: any warn log in the VM stack fires |
 | `vm-health-too-many-scrape-errors` | `TooManyScrapeErrors` | Threshold-0 rule: a single failed scrape in 15m fires; `TargetDown` covers real outages |
-
-## Headlamp
-
-Headlamp K8s web UI deployed with 1 replica at `headlamp.noirprime.com`. Uses a read-only `view` ClusterRole (aggregated, excludes secrets) extended with Flux CRD read access (`headlamp-flux-view` aggregated ClusterRole). Kubeconfig generated at init via SA token. OIDC SSO via Authentik (client credentials from ExternalSecret). Flux plugin (`headlamp-plugin-flux`) copied at init.
 
 ## Robusta
 
