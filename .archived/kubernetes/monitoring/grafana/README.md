@@ -17,14 +17,24 @@ from history.
 | `cluster/` | `Grafana` CR, datasources, ServiceAccount for MCP, ESO Role/RoleBinding, HTTPRoute, ServiceMonitor, PDB |
 | `blueprints/oidc/grafana.yaml` | Authentik OIDC provider, application, and admin-group policy binding |
 | `cluster/dashboards/custom/` | The only retained boards: `basement-health.json`, `kopiur-slo.json`, `ALERTS.md`, design notes |
+| `cluster/dashboards/{databases,default,kubernetes,network,nodes,storage}/` | Grafana folder/dashboard CRs and ConfigMap generators for the vendir delivery |
+| `cluster/dashboards/vendir.yml`, `vendir.lock.yml`, `README.md` | Vendir source list, lock file, and sync strategy |
+| `homepage/icons/grafana.svg` | Homepage icon removed from the active app |
 | `.archived/kubernetes/servitor/mcp/grafana/` | `mcp-grafana` MCPServer, its `mcp-grafana-sa` ExternalSecret, and `ks.yaml` |
 | `.archived/.github/workflows/vendir.yaml` | Retired dashboard-sync workflow, byte-identical to the active copy |
 
-Deleted, not archived: vendir-sourced dashboard JSON (`_sources/`), `vendir.yml`
-and `vendir.lock.yml`, `GrafanaDashboard`/`GrafanaFolder` CRs and their
-ConfigMap generators, the Homepage icon, the gateway allowlist entry, and the
-Grafana rows/counts in active docs. Re-create vendir sources from upstream if
-dashboard sync returns.
+Only `cluster/dashboards/_sources/` was deleted. Every related config that
+referenced it is archived: the vendir files, dashboard CRs/generators, workflow,
+MCP server, OIDC blueprint, and Homepage icon. The archived dashboard
+kustomizations still reference `_sources/`; re-sync it with the archived workflow
+before restoring dashboard delivery.
+
+Active wiring removed (not archived as standalone files): monitoring/MCP index
+entries, the Authentik blueprint mount, the Homepage icon reference, the
+gateway MCP allowlist, the `mcp-fluxcd-extras` Grafana API group, the ToolHive
+group wording, the Renovate dashboard manager/group/label, the vendir
+yamllint/pre-commit exceptions, NOTICE/REUSE `_sources` license entries, and
+Grafana rows/counts in the active docs.
 
 ## Retired configuration
 
@@ -133,8 +143,8 @@ verify the token sync if that handoff is revisited.
    `grafana.integreatly.org` to `mcp-fluxcd-extras` if the MCP server should
    read Grafana CRs.
 5. Restore dashboard delivery: move the workflow back to
-   `.github/workflows/vendir.yaml`, re-create `vendir.yml`/`_sources` from
-   upstream, and re-add the dashboard folder CRs/generators. Wire the retained
-   custom boards to new `GrafanaDashboard` CRs.
-6. Re-add the Homepage icon and HTTPRoute annotations if Grafana should return
-   to Homepage.
+   `.github/workflows/vendir.yaml`, run `vendir sync` to recreate the deleted
+   `_sources/` tree, and keep the archived dashboard folders/config with the
+   restored app. Wire the retained custom boards to `GrafanaDashboard` CRs.
+6. Move `homepage/icons/grafana.svg` back to the homepage icon set and restore
+   the HTTPRoute Homepage annotations if Grafana should return to Homepage.

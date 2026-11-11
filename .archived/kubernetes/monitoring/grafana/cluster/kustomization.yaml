@@ -12,3 +12,10 @@ resources:
   - ./httproute.yaml
   - ./servicemonitor.yaml
   - ./poddisruptionbudget.yaml
+  # dashboards
+  - ./dashboards/databases
+  - ./dashboards/default
+  - ./dashboards/kubernetes
+  - ./dashboards/network
+  - ./dashboards/nodes
+  - ./dashboards/storage

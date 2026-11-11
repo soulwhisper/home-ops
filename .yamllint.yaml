@@ -6,6 +6,8 @@ ignore: |
   *.sops.yaml
   *.sops.yml
   **/blueprints/**/*.yaml
+  # archived generated vendir lock — hand-editing it is always wrong
+  **/vendir.lock.yml
 
 rules:
   braces: disable

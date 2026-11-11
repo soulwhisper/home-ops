@@ -1,0 +1,85 @@
+apiVersion: vendir.k14s.io/v1alpha1
+directories:
+- contents:
+  - configDigest: 37575973b28981210d2f580d461e95295cdf12ccc4853abf672799d3a7916019
+    http: {}
+    path: ceph-cluster
+  - configDigest: 6c53b6534e0a755761d96f1db2cbd9c541fd7b5805d80e3fd6c47896b0e02e9e
+    http: {}
+    path: ceph-osd
+  - configDigest: 859d6eb576ccb3d4ddb6c416bf8a9c7f8beb91f30713d1a3f5acd06c21f18402
+    http: {}
+    path: ceph-pools
+  path: _sources/ceph
+- contents:
+  - configDigest: 35b1590946e35f2f7f12b439626451c194b2ae5112bf226971637eb3c4c39a4e
+    git:
+      commitTitle: Prepare for release v1.20.4...
+      sha: beb276d2f38d4aadfda14710acf8d14a0f1ba723
+      tags:
+      - 1.20.4
+    path: .
+  path: _sources/cilium
+- contents:
+  - configDigest: c794d1bd992c2aab1866e9a9e0c9e078c8eed5d8f58eec9ce26492c75325c07c
+    git:
+      commitTitle: 'Revert "dashboards: add initial agentgateway dashboard" (#6)...'
+      sha: cc4b1f27754cb518da31adce89f6cb33c4a00f92
+    path: .
+  path: _sources/kgateway
+- contents:
+  - configDigest: fe6d51609c2d26f1e71173afa05ac19c1addf592367367af8f6e58313f9abb6a
+    git:
+      commitTitle: Release cluster-v0.0.5 (#36)...
+      sha: cececeb393fb7c5400b4fa290aca68041293a127
+      tags:
+      - cluster-v0.0.5
+    path: cnpg
+  - configDigest: 348af930e04c7486ded9c761a19758208d8c079eb31e230b8a850753f5df83db
+    git:
+      commitTitle: 'feat(operator): release version v1.8.0 (#626)...'
+      sha: 097189ef2149d01edab647fb646e0d75695bdb12
+      tags:
+      - v1.8.0
+    path: dragonfly
+  path: _sources/database
+- contents:
+  - configDigest: 437f12e5e75e806d746ee4c2f30426a9388781dc533396ff1d50d9f65a9c3c59
+    git:
+      commitTitle: '[release/v1.10] cherry pick v1.10.0 (#10541)...'
+      sha: 02e9f89d1c1dc16b723de48fa3289dfa413a6e01
+      tags:
+      - v1.10.0
+    path: gateway
+  path: _sources/envoy
+- contents:
+  - configDigest: e2b09003c7643f7797f26aafc5a5bda8981bfb6778986db52397f1c1f1a8f307
+    http: {}
+    path: k8s-system-api-server
+  - configDigest: b00ce572f00a12ece6ae115bb953afc7ae474ecd8966592373eb32fa0982ff9c
+    http: {}
+    path: k8s-views-global
+  - configDigest: 725feff831ed3d187d80fc258c6cc6a017ba213b63b90096691508832ca48c9a
+    http: {}
+    path: k8s-views-nodes
+  - configDigest: ce9ec65ce41816886ae3fbe7a107d1c303500c342e62a9faf7b393685e4e9195
+    http: {}
+    path: k8s-views-namespaces
+  - configDigest: 42d25289b64b7118b22d19a86a43885ef8eef62f1a4de5c9e4f711805342aa8c
+    http: {}
+    path: k8s-views-pods
+  path: _sources/kubernetes
+- contents:
+  - configDigest: e7b9c489ae1ab51df1583f1559d485e9e2827dc8350ce913836e8db52d6a2ffb
+    http: {}
+    path: node-exporter-full
+  - configDigest: 4df4c2d56d1559a5204d66f43dfce2e8a830e47af0cf56132b4b230d39e105f0
+    http: {}
+    path: smartctl-exporter
+  path: _sources/default
+- contents:
+  - configDigest: 162d4cb6ccb8dace1246e4f3f80c67d7d500ce224334875ef2c3a5aed24bbd9a
+    http: {}
+    path: blackbox-exporter
+  path: _sources/devices
+kind: LockConfig
