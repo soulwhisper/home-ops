@@ -220,15 +220,15 @@ For a workload that's misbehaving, the canonical triage order is:
 blaming resources — OOMKilled and app-level exits need different fixes.
 
 For VictoriaMetrics/VictoriaLogs/VictoriaTraces label discovery and bounded
-evidence queries, use `skill://victoria-reports`; it carries the read-only
-endpoints, human-facing label vocabulary, PromQL/LogsQL/trace recipes, and the
-dashboard contract.
+evidence queries, use `skill://victoria-reports` when installed; it carries the
+read-only endpoints, human-facing label vocabulary, PromQL/LogsQL/trace
+recipes, and the dashboard contract.
 
 ## Victoria stack evidence extraction
 
-`skill://victoria-reports` is the source of truth for Victoria labels and
-query recipes. For label-only extraction, do **not** render its dashboard and
-do not create a `temp/` HTML file:
+If `skill://victoria-reports` is available, it is the source of truth for
+Victoria labels and query recipes. For label-only extraction, do **not** render
+its dashboard and do not create a `temp/` HTML file:
 
 1. Read the skill's label vocabulary and required-coverage sections. Use the
    exact label keys from there; do not copy or re-derive them here.
@@ -262,6 +262,43 @@ curl -fsS "$T/select/jaeger/api/services"
 Use the dashboard/template only when the user explicitly asks for a visual
 artifact. Label extraction, incident triage, and evidence gathering end in the
 chat response, not in an HTML file.
+
+### Missing-skill fallback
+
+If `skill://victoria-reports` is absent, do not fail the task and do not invent
+a label vocabulary. Use these bounded, read-only internal probes and report the
+returned label/evidence in chat:
+
+```bash
+V=http://127.0.0.1:8428
+L=http://127.0.0.1:9428
+T=http://127.0.0.1:10428
+START=$(date -u -d '1 hour ago' +%s)
+END=$(date -u +%s)
+pids=()
+cleanup() { kill "${pids[@]}" 2>/dev/null || true; }
+trap cleanup EXIT
+
+kubectl -n monitoring-system port-forward svc/vmsingle-victoria-metrics-cluster 8428:8428 &
+pids+=($!)
+kubectl -n monitoring-system port-forward svc/victoria-logs-server 9428:9428 &
+pids+=($!)
+kubectl -n monitoring-system port-forward svc/victoria-traces 10428:10428 &
+pids+=($!)
+
+curl -fsS --get "$V/api/v1/labels" \
+  --data-urlencode "start=$START" --data-urlencode "end=$END"
+curl -fsS --get "$V/api/v1/series" \
+  --data-urlencode 'match[]=gotk_resource_info' \
+  --data-urlencode "start=$START" --data-urlencode "end=$END" \
+  --data-urlencode 'limit=200'
+curl -fsS --get "$L/select/logsql/field_names" \
+  --data-urlencode 'query=_time:1h' --data-urlencode 'limit=200'
+curl -fsS "$T/select/jaeger/api/services"
+```
+
+State that the dedicated skill was unavailable, keep the queries bounded, and
+return only the observed labels/values with their timestamps.
 
 ## Mutating safely
 
