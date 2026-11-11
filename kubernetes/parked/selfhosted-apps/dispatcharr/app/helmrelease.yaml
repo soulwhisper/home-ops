@@ -24,8 +24,8 @@ spec:
         initContainers:
           chown-dbdir:
             image:
-              repository: library/alpine
-              tag: "3.24"
+              repository: docker.io/library/busybox
+              tag: "1.38"
             command:
               - /bin/sh
               - -c
