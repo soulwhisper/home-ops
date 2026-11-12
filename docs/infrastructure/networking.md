@@ -224,12 +224,11 @@ The two kgateway gateways use the `kgateway` GatewayClass with TLS termination v
 
 | Path          | Tier                                   |
 | ------------- | -------------------------------------- |
-| `/mcp/search` | search (hermes, open-webui: web/news/code) |
-| `/mcp/cluster`| cluster read-only (hermes)              |
-| `/mcp/persona`| persona read-write (no current consumer) |
-| `/mcp/agent`  | operator agents (hermes and external operators; Forgejo RW + ops memory) |
+| `/mcp/search` | search (open-webui: web/news/code)      |
+| `/mcp/cluster`| cluster read-only (no in-cluster consumer; operator key) |
+| `/mcp/agent`  | external operator agents (Forgejo RW)   |
 
-The search + agent tiers carry the mcp-guardrails ExtMCP sidecar (FailClosed) — untrusted web content feeding an unguarded LLM lane, and operator agents (including hermes) reading alert-derived ticket content; hermes also uses the guarded `agent` LLM lane, while the ExtMCP sidecar adds tool-content scanning; cluster relies on guarded lanes + CEL allowlists + token/SA boundaries; persona is RW-by-design behind the guarded lane and the HA token. Tool allowlists are enforced per tier via `backend.mcp.authorization` CEL (`config/mcp/filters.yaml`).
+The search + agent tiers carry the mcp-guardrails ExtMCP sidecar (FailClosed) — untrusted web content feeding an unguarded LLM lane, and operator agents reading alert-derived ticket content; cluster relies on guarded lanes + CEL allowlists + token/SA boundaries. Tool allowlists are enforced per tier via `backend.mcp.authorization` CEL (`config/mcp/filters.yaml`). The `persona` MCP tier is retired with hindsight (2026-11): its bank is called directly at `http://nas.homelab.internal:8888/mcp/persona`.
 
 API key authentication is enforced via `AgentgatewayPolicy` in strict mode for all LLM and MCP routes — per-model keys on `/v1` (route-scoped, covering inference and discovery), per-group keys on `/mcp/*`. The gateway is the single choke point for auth, routing, guardrails, and observability.
 

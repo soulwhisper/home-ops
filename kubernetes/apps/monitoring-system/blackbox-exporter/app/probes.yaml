@@ -115,7 +115,9 @@ spec:
 # Hindsight moved to the NAS (doco-cd stack, `infrastructure/synology/hindsight`).
 # The CNPG alert rules that used to cover its database no longer apply, so this
 # probe replaces them: an unauthenticated GET on a bank endpoint must return 401,
-# which proves the service answers *and* that the API key is still enforced.
+# which proves the service answers *and* that the API key is still enforced. It does
+# NOT prove Postgres is reachable — auth is rejected before any DB call — so the
+# backup container's dump-freshness healthcheck is the DB-side signal.
 # It catches the container dying, the compose stack being deleted by doco-cd, and
 # the NAS losing the stack on reboot.
 apiVersion: monitoring.coreos.com/v1

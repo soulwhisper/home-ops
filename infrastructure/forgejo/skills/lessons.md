@@ -129,9 +129,11 @@ the `homelab-tickets` repo's `learnings/YYYY-MM-DD-ticket<N>-<slug>.md` as appli
   ToolHive proxy tier and no `/mcp/agent` bank entry. It requires a bearer key:
   send `Authorization: Bearer <key>` (the operator holds it; a request without
   it gets `401`). If recall and the lesson file disagree, the lesson file wins.
-- The bank was rebuilt empty when the service moved (it held test data only), so
-  an empty recall means no memory yet, not no history — read `learnings/` before
-  concluding anything.
+- The bank was rebuilt empty when the service moved (it held test data only) and
+  nothing indexes into it automatically: the workflow commits `learnings/` to
+  Forgejo, it does not retain into Hindsight. Treat the bank as a manual index
+  the operator backfills, so an empty recall means no memory yet, not no history
+  — read `learnings/` before concluding anything.
 - That endpoint is LAN-only, plain HTTP, and holds one shared key — treat write
   access as operator-equivalent anyway. The no-secrets rule below applies to it
   as strictly as to the repo.

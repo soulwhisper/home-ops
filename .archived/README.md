@@ -9,8 +9,8 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
   (for example `.archived/kubernetes/media/foo` →
   `kubernetes/apps/media-apps/foo`) and re-add it to that namespace index.
 - Renovate path globs for the retired namespaces (`kubernetes/apps/{gaming,media,smarthome}-apps/**`)
-  were dropped from `.renovate/autoMerge.json5`, and `.renovate/` ignores this
-  tree via `ignorePaths`. Restoring an app from one of those namespaces also
+  were dropped from `.renovate/autoMerge.json5`, and the repository-root
+  `renovate.json5` ignores this tree via `ignorePaths: [".archived/**"]`. Restoring an app from one of those namespaces also
   means putting its glob back, otherwise its minor updates stop auto-merging.
   Per-app Renovate entries that were removed are listed in that app's own
   `README.md` (`media/immich`, `servitor/hermes-agent`).

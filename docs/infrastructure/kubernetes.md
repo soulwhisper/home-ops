@@ -287,7 +287,7 @@ spec:
     namespace: gitops-system
 ```
 
-This cross-namespace reference is used by 13 HelmReleases across 4 namespaces:
+This cross-namespace reference is used by 13 application-facing HelmReleases across 4 namespaces (four further utility releases — restarters and database helpers — consume the same shared chart and are not listed):
 
 | Namespace         | Count | Apps |
 | ----------------- | ----- | ---- |

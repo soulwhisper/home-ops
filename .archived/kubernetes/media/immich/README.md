@@ -75,8 +75,8 @@ Immich.
 ### Renovate configuration for restore
 
 Four entries were removed from `.renovate/` when this app was archived; restore
-them or the images stop being tracked (Renovate ignores `.archived/**`, so
-nothing else re-adds them):
+them or the Image Server / Machine Learning updates lose their grouping and
+lookup behaviour (Renovate ignores `.archived/**`, so nothing else re-adds them):
 
 1. `.renovate/groups.json5` — the `Immich` group:
 
@@ -97,8 +97,3 @@ nothing else re-adds them):
 
 3. `.renovate/custom.json5` — the `immich-machine-learning` custom datasource
    (GitHub releases → `<tag>-openvino`).
-
-4. `.renovate/packageRules.json5` — `prodrigestivill/postgres-backup-local` in
-   the "Pin Postgres version to 18" pattern list. This app's HelmRelease is the
-   only archived user of that image; re-add it with the app or the sidecar stops
-   getting pinned to 18.

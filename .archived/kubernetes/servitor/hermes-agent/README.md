@@ -23,15 +23,21 @@ git prunes them. Either keep the volume:
 
 ```sh
 kubectl -n servitor-apps annotate pvc hermes-agent \
-  helm.sh/resource-policy=keep --overwrite
+  kustomize.toolkit.fluxcd.io/prune=disabled --overwrite
 ```
+
+Use the Flux annotation, not Helm's `helm.sh/resource-policy: keep`: this PVC is
+created by the app's Kustomization (through `components/kopiur/backup`), and
+kustomize-controller does not read Helm's annotation.
 
 or copy `/opt/data` out (or snapshot it) before the Kustomization reconciles.
 Kopiur snapshots already written to S3 survive the prune.
 
 ## Restore
 
-Re-add the directory and the `ks.yaml` entry, put back the `open-webui`
+Move the folder to `kubernetes/apps/servitor-apps/hermes-agent` (the archived
+`ks.yaml` already points at that path), then re-add `- ./hermes-agent/ks.yaml` to
+`kubernetes/apps/servitor-apps/kustomization.yaml`, put back the `open-webui`
 `dependsOn` if ordering still matters, and restore **both** Authentik changes
 (file-list entry and outpost provider) or the dashboard comes back unserved.
 The Feishu app credentials are in the `hermes-agent` 1Password item — note that

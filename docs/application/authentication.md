@@ -17,7 +17,14 @@ These apps use their own authentication — no OIDC needed:
 | App                 | Auth Method                               |
 | ------------------- | ----------------------------------------- |
 | DiceFrame           | 1Password-backed access password         |
+| Hindsight (NAS)     | Bearer API key — `Authorization: Bearer <key>` on REST and MCP |
 | Rook-Ceph Dashboard | Built-in auth (or SAML2 via manual setup) |
+
+Hindsight left the cluster in 2026-11 and no longer uses forward auth: the
+self-hosted engine runs with `HINDSIGHT_API_TENANT_EXTENSION=ApiKeyTenantExtension`
+and validates `HINDSIGHT_API_TENANT_API_KEY` (sops env, one key for both REST and
+MCP, no per-consumer split). A missing or wrong key is `401`; the endpoint is
+plain HTTP on the LAN, so the NAS firewall stays as a second boundary.
 
 DiceFrame has one shared owner access password and no named user accounts. Guests join games through per-game invite/share links. The password comes from the `diceframe` 1Password item (`TRPG_ACCESS_TOKEN`), so changing it in the UI is overridden on restart.
 

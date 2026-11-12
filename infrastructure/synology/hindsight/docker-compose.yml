@@ -14,15 +14,16 @@ services:
     entrypoint: ["/bin/bash", "-eu", "-c"]
     command:
       - |
-        want="${PG_MAJOR:-$(ls -1 /usr/lib/postgresql | sort -V | tail -1)}"
-        found=$(ls -1 /var/lib/postgresql 2>/dev/null | grep -E '^[0-9]+$' | sort -V | tail -1 || true)
-        if [ -n "$found" ] && [ "$found" != "$want" ]; then
-          echo "FATAL: /var/lib/postgresql holds cluster [$found] but this image is major $want." >&2
-          echo "postgres would initdb an EMPTY cluster there and report healthy while the real data sits in $found/docker." >&2
+        want="$${PG_MAJOR:-$$(ls -1 /usr/lib/postgresql | sort -V | tail -1)}"
+        found=$$(ls -1d /var/lib/postgresql/[0-9]*/docker/PG_VERSION 2>/dev/null \
+          | sed -E 's|.*/([0-9]+)/docker/PG_VERSION$$|\1|' | sort -V | tail -1)
+        if [ -n "$$found" ] && [ "$$found" != "$$want" ]; then
+          echo "FATAL: /var/lib/postgresql holds an initialised cluster [$$found/docker] but this image is major $$want." >&2
+          echo "postgres would initdb an EMPTY cluster beside it and report healthy." >&2
           echo "Run pg_upgrade (or restore a dump) first, or keep the previous image tag." >&2
           exit 1
         fi
-        echo "preflight ok: image major $want, data dir ${found:-empty}"
+        echo "preflight ok: image major $$want, cluster $${found:-none}"
     volumes:
       - "/volume3/docker/hindsight/data:/var/lib/postgresql:ro"
 
@@ -92,10 +93,17 @@ services:
           else
             rm -f "/backups/$$ts.dump.tmp"
             echo "backup FAILED at $$ts" >&2
+            exit 1
           fi
           find /backups -maxdepth 1 -name '*.dump' -mtime +7 -delete
           sleep 86400
         done
+    healthcheck:
+      test: ["CMD-SHELL", "find /backups -maxdepth 1 -name '*.dump' -mmin -1560 | grep -q ."]
+      interval: 1h
+      timeout: 10s
+      retries: 2
+      start_period: 5m
     volumes:
       - "/volume3/docker/hindsight/backups:/backups"
     mem_limit: "256m"

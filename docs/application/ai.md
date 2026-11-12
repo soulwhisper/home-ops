@@ -104,7 +104,7 @@ MCP has no open route (see MCP Backend).
 
 Lane-fit guidance: `omni` covers everything fidelity-sensitive: summarization, compression, session search, memory writes, OCR/vision, plus classification, tagging, title/routing decisions and short structured extraction. `agent` for AI-ops automation: alert RCA, ScheduledHealthChecks, MCP batch tool workloads. `persona` for identity-bound RP/persona chat; `uncensored` for open-ended human chat without a fixed persona.
 
-`omni` uses **MiniCPM-O-4.5** (Apache-2.0, 9B omni: Qwen3-8B backbone + vision/audio encoders; OpenCompass 77.6, OCRBench 876) served on the studio (studio id `minicpm-o-4.5`, ~7 GB at MLX 4bit). All `fast`/`memory`/`vision` consumers (firecrawl, hindsight memory, trendradar digest, hermes aux side-tasks) use `omni`. Not on omni: `agent` (automation main brain), `persona` (identity-bound RP), `uncensored` (open chat), embeddings/reranker (studio ids `qwen3-embedding-0.6b`/`qwen3-reranker-0.6b`). ASR: no deployment — no current consumer; when one appears, pick a lane deliberately.
+`omni` uses **MiniCPM-O-4.5** (Apache-2.0, 9B omni: Qwen3-8B backbone + vision/audio encoders; OpenCompass 77.6, OCRBench 876) served on the studio (studio id `minicpm-o-4.5`, ~7 GB at MLX 4bit). All `fast`/`memory`/`vision` consumers (firecrawl, hindsight memory, trendradar digest) use `omni`. Not on omni: `agent` (automation main brain), `persona` (identity-bound RP), `uncensored` (open chat), embeddings/reranker (studio ids `qwen3-embedding-0.6b`/`qwen3-reranker-0.6b`). ASR: no deployment — no current consumer; when one appears, pick a lane deliberately.
 
 ### Intranet exposure
 
@@ -132,7 +132,7 @@ Archived applications (media, gaming, smart-home and four self-hosted apps) do
 not consume these lanes, and the two DSH apps are archived; their lane
 assignments above are historical.
 
-All `omni` consumers (extractors + hermes aux) ride the **guarded**
+All `omni` consumers (extractors) ride the **guarded**
 `/v1` route for that model; their prompts carry scraped web content, so a low rate of
 promptGuard false-positive rejections (403) is expected and watched — see
 the TODO table. Bare `jailbreak`/`越狱` are allowed as topical terms;
@@ -199,7 +199,7 @@ because forgejo ticket bodies carry alert/log-derived (untrusted) strings.
 DSH Web now uses only the unguarded `uncensored` lane or direct DeepSeek and
 the search/cluster tiers; those LLM calls are not covered by the agent
 promptGuard. The browser and github-pr tiers have no current consumer. The
-cluster tier (hermes) adds CEL allowlists and token/SA boundaries. Neither it nor
+cluster tier adds CEL allowlists and token/SA boundaries. Neither it nor
 the remaining tiers carries the ExtMCP sidecar; all still require per-route API
 keys and retain their CEL/RBAC/token boundaries. No MCP route is
 unauthenticated.
@@ -299,7 +299,7 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
     `find_tool`/`call_tool` meta-tools, blocking gateway-level tool
     filtering; its removal also dropped the vmcp embeddings dependency
   - Daily restarter CronJob caps the runner's ~9Mi/h streamable-http leak
-    across all seven groups (homelab-tickets#59)
+    across all six groups (homelab-tickets#59)
 - **Ingress restricted**: only agentgateway-proxy (MCP protocol, tiered `/mcp/*`) and vmagent (metrics scrape) can connect; chat frontends reach tools through the gateway, never directly
 
 ### MCP Servers (12 total)
@@ -382,7 +382,7 @@ Plain-text pipeline, no extra copies: Obsidian → Dropbox (canonical; its own s
 
 - AI news digest pipeline (selfhosted-apps): community hot-list (47 sources, issue #95) + custom RSS watch list (aiera.com.cn, expreview.com + GitHub Atom placeholders); `report.mode: incremental` (zero-duplicate push), keyword grouping (科技 topic covers both portals), AI analysis via gateway (`openai/omni`)
 - Delivery: Feishu custom group robot (`FEISHU_WEBHOOK_URL` from 1Password `feishu.newsbot_webhook`); HTML report at `news.noirprime.com` (SSO)
-- MCP server (:3333) registered as `trendradar` in the `search` group (gateway-filtered to query/analysis tools; consumed by hermes and open-webui)
+- MCP server (:3333) registered as `trendradar` in the `search` group (gateway-filtered to query/analysis tools; consumed by open-webui)
 - Config fully in ConfigMap (`config.yaml` + `frequency_words.txt` + `ai_interests.txt`); output on 1Gi ceph-block PVC
 
 ## AI-Adjacent Services
@@ -398,7 +398,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 - `ghcr.io/firecrawl/firecrawl` (api + nuq-worker; playwright-service pinned by digest), sandboxed per ADR-03 (`hostUsers: false` + egress CNP)
 - Network: egress CNP plus default-deny ingress allowing ToolHive MCP and blackbox scrape/search canaries on `firecrawl-app:3002`, kubelet health probes, and internal Firecrawl callers to Playwright on `:3000`; ingress rules enable ingress default-deny, while egress-only selection does not restrict ingress
 - Backed by SearXNG, Dragonfly Redis, nuq-postgres
-- Exposed as MCP server + internal endpoint for Hermes
+- Exposed as MCP server + internal endpoint for open-webui's search tier
 
 ### Hindsight
 
@@ -411,7 +411,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 - Embeddings: **Qwen3-Embedding-0.6B on the MacStudio** (oMLX id `qwen3-embedding-0.6b`, 1024d) via `https://api.noirprime.com/v1/embeddings`
 - Reranker: **Qwen3-Reranker-0.6B on the MacStudio** (Cohere-compatible, id `qwen3-reranker-0.6b`) via `https://api.noirprime.com/v1/rerank`
 - Storage: local Postgres on the NAS with pgvector + pgroonga (same custom image as the CNPG cluster, pinned by digest); `shared_preload_libraries=pgroonga_wal_resource_manager` must be set at init
-- Monitoring: `hindsight-nas` probe (unauthenticated GET must return `401`, which also proves auth is on) → `HindsightNasDown` (5m, critical) and `HindsightProbeMissing` (`absent()`, 10m). The CNPG rules that used to cover it no longer apply.
+- Monitoring: `hindsight-nas` probe (unauthenticated GET must return `401`, which also proves auth is on) → `HindsightNasDown` (5m, critical) and `HindsightProbeMissing` (`absent()`, 10m). The probe does not exercise Postgres — auth is rejected before any DB call — so DB health shows up indirectly in the backup container's dump-freshness healthcheck. The CNPG rules that used to cover the database no longer apply.
 - OTEL tracing is off (the collector is in-cluster and unreachable from the NAS)
 
 ### Archived
@@ -519,7 +519,7 @@ items:
             │  model:
             ├─ uncensored   (OPEN)    ─► qwen3.8-27b        ── open-webui
             ├─ persona      (OPEN)    ─► orion-1.1-26b-a4b  ── dsh-tavern
-            ├─ agent        (guarded) ─► ornith-1.5-35b     ── hermes, holmes, automation
+            ├─ agent        (guarded) ─► ornith-1.5-35b     ── holmes, automation
             ├─ omni         (guarded) ─► minicpm-o-4.5
 /v1/embeddings /v1/rerank /v1/audio/speech /v1/audio/transcriptions  (media: alias ─► override ─► folder id; audio: direct)
 /v1/models/<model>  (alias or folder id; single-object direct response)

@@ -1,6 +1,6 @@
 # Application Catalog
 
-63 application definition units across 9 namespaces, managed via Flux GitOps. Each table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload.
+63 application definition units across 9 namespaces, managed via Flux GitOps. Each Flux table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload. The NAS table at the end is outside Flux and links to compose stacks instead.
 
 The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 9 first-level namespace directories. Together, those namespaces have 53 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 63 definition files declare 88 child Flux Kustomizations and lead to 64 HelmReleases. There are 48 OCIRepositories across the source tree: 47 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
@@ -113,9 +113,9 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Firecrawl](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/firecrawl/ks.yaml) | Web scraping pipeline |
 | [Bambuddy](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/bambuddy/ks.yaml) | Bambu Lab 3D printer monitor |
 
-## NAS — Compose services (1)
+## NAS — Compose services
 
-Managed by [doco-cd](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/synology) from git, not by Flux: these definitions live outside `kubernetes/` and are not part of the 64 Flux definition units above.
+Managed by [doco-cd](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/synology) from git, not by Flux: these definitions live outside `kubernetes/` and are not part of the Flux definition units above. Only application-facing stacks are listed — the directory also holds infrastructure stacks (`versitygw`, `forgejo`, `zotregistry`, `scrutiny`, `talos`).
 
 | App | Purpose |
 | --- | --- |

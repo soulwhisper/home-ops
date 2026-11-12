@@ -60,7 +60,9 @@ a consumer can call `http://nas.homelab.internal:8888/mcp/<bank>` directly.
 5. **MCP tier (only if the proxy is actually wanted)** — archived copy at
    `.archived/kubernetes/servitor/mcp/hindsight`, byte-identical to what was
    running (its `remoteUrl` still names `hindsight.selfhosted-apps.svc.cluster.local`,
-   which is correct for a restore). The tier it joined no longer
+   which is correct for a restore). Re-add `- ./hindsight/ks.yaml` to
+   `kubernetes/apps/servitor-apps/mcp/kustomization.yaml` as well — without that
+   index entry both archived Flux Kustomizations stay unapplied. The tier it joined no longer
    exists, so restoring it means also bringing back, from git history: the
    `persona` `MCPGroup` and `VirtualMCPServer`, `mcp-backend-persona`,
    `mcp-persona-auth`, the `/mcp/persona` HTTPRoute, the `mcp_persona` entry in
