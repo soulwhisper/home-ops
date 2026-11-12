@@ -36,22 +36,6 @@ spec:
         name: mcp-cluster-auth
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
-apiVersion: agentgateway.dev/v1alpha1
-kind: AgentgatewayPolicy
-metadata:
-  name: mcp-persona-auth
-spec:
-  targetRefs:
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: agentgateway-mcp-persona-route
-  traffic:
-    apiKeyAuthentication:
-      mode: Strict
-      secretRef:
-        name: mcp-persona-auth
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
 # operator-agent tier: distinct credential, issued only to operator agents.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy

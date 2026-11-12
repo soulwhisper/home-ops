@@ -88,45 +88,9 @@ spec:
           timeout: 30s
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
-apiVersion: toolhive.stacklok.dev/v1beta1
-kind: VirtualMCPServer
-metadata:
-  name: &name persona
-spec:
-  incomingAuth:
-    type: anonymous
-  outgoingAuth:
-    source: inline
-  groupRef:
-    name: *name
-  telemetryConfigRef:
-    name: shared-otel
-    serviceName: *name
-  config:
-    aggregation:
-      conflictResolution: prefix
-      conflictResolutionConfig:
-        prefixFormat: "{workload}_"
-    operational:
-      failureHandling:
-        partialFailureMode: best_effort
-        # vmcp requires timeout < interval (startup validation). ha-mcp's
-        # NORMAL tools/list is ~6s (measured healthy; tool-search index build
-        # spikes past 5s), so 10s/5s stormed the circuit breaker (#3958);
-        # 30s/15s clears normal latency with 2.5x headroom, catches real
-        # hangs, and cuts check churn vs the old 10s cadence.
-        healthCheckInterval: 30s
-        healthCheckTimeout: 15s
-        unhealthyThreshold: 2
-        circuitBreaker:
-          enabled: true
-          failureThreshold: 3
-          timeout: 30s
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/virtualmcpserver_v1beta1.json
-# operator-agent tier: forgejo ticket RW + hindsight ops bank. Separate group
-# + credential so chat-tier consumers can never reach incident memory or the
-# tickets repo; reached via agentgateway /mcp/agent only.
+# operator-agent tier: forgejo ticket RW. Separate group + credential so
+# chat-tier consumers can never reach the tickets repo; reached via
+# agentgateway /mcp/agent only.
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: VirtualMCPServer
 metadata:

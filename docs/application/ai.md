@@ -27,9 +27,7 @@ flowchart TB
         VMCP-SEARCH["search<br/>(3 servers: web/news/docs)"]
         VMCP-CLUSTER["cluster<br/>(6 servers: monitoring/k8s)"]
         VMCP-GITHUBRO["github-ro<br/>(1 server: read-only code)"]
-        VMCP-HOME["persona<br/>(1 server: hindsight persona)"]
-
-        VMCP-AGENT["agent<br/>(2 servers: forgejo + incident memory)"]
+        VMCP-AGENT["agent<br/>(1 server: forgejo)"]
         VMCP-BROWSER["browser<br/>(1 server: Playwright)"]
         VMCP-GITHUBPR["github-pr<br/>(1 server: branch/commit/PR)"]
     end
@@ -40,7 +38,6 @@ flowchart TB
     AG-MCP --> VMCP-SEARCH
     AG-MCP --> VMCP-CLUSTER
     AG-MCP --> VMCP-GITHUBRO
-    AG-MCP --> VMCP-HOME
     AG-MCP --> VMCP-AGENT
     AG-MCP --> VMCP-BROWSER
     AG-MCP --> VMCP-GITHUBPR
@@ -118,7 +115,7 @@ The gateway API surface is exposed to the intranet via `kgateway-internal` (10.1
 - `/v1/chat/completions` — LLM lanes (strict API key; promptGuard on all but `uncensored` and `persona`)
 - `/v1/models/<model>` — per-model direct-response discovery on the model's own route, authorized by that route's credential
 - `/v1/embeddings`, `/v1/rerank`, `/v1/audio/speech`, `/v1/audio/transcriptions` — media lanes via LLM-pipeline backends (strict API key)
-- `/mcp/search`, `/mcp/cluster`, `/mcp/persona`, `/mcp/agent`, `/mcp/browser`, `/mcp/github-ro`, `/mcp/github-pr` — tiered MCP routing (per-tier API key; mcp-guardrails ExtMCP on the search + github-ro + agent + browser + github-pr tiers, FailClosed)
+- `/mcp/search`, `/mcp/cluster`, `/mcp/agent`, `/mcp/browser`, `/mcp/github-ro`, `/mcp/github-pr` — tiered MCP routing (per-tier API key; mcp-guardrails ExtMCP on the search + github-ro + agent + browser + github-pr tiers, FailClosed)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)
 
 TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirprime.com`); external-dns auto-creates the AdGuardHome record. Machine clients authenticate with agentgateway API keys — no SSO extAuth on API paths. Reachable from trusted VLANs (10/100/200); IoT VLAN 210 is ACL-blocked from RFC1918.
@@ -156,23 +153,21 @@ the canonical `/mcp` upstream):
 | `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar                               | `mcp_search`                   | hermes, open-webui     |
 | `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes                      |
 | `/mcp/github-ro` | `vmcp-github-ro` | github-ro (read-only mode + lockdown; repos/issues/pull_requests) | `mcp_github_ro`            | hermes |
-| `/mcp/persona` | `vmcp-persona`| hindsight persona bank                                        | `mcp_persona`                  | none (reserved)                      |
-
-| `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW), hindsight-ops bank                       | `mcp_agent`                    | hermes, external operator agents |
+| `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW)                                           | `mcp_agent`                    | hermes, external operator agents |
 | `/mcp/browser` | `vmcp-browser`| playwright (Chromium via pod-local CDP proxy)                 | `mcp_browser`                  | none (reserved)                    |
 | `/mcp/github-pr` | `vmcp-github-pr` | github-pr (branch/commit/create PR, no merge)              | `mcp_github_pr`                | none (reserved)                    |
 
 A key minted for one group is invalid on every other route — this is what
-scopes the search consumer to search and keeps chat-tier consumers out of incident
-memory and the tickets repo. The read-only GitHub server was split out of
+scopes the search consumer to search and keeps chat-tier consumers out of the
+tickets repo. The read-only GitHub server was split out of
 `search` into its own `github-ro` tier so cluster-tier consumers can hold code
 retrieval without the web-retrieval toolsets; `search` no longer exposes GitHub.
 With the DSH apps archived, search is consumed by hermes and open-webui;
-cluster and github-ro by hermes. Persona, browser, and github-pr remain
-defined but are unused.
-The persona group uses the `mcp_persona` credential and aggregates only the
-Hindsight `persona` bank; Home Assistant sits in the archived `smarthome`
-group together with its application. `mcp_agent` is never distributed to in-cluster
+cluster and github-ro by hermes. Browser and github-pr remain defined but are
+unused. The `persona` tier is retired with hindsight (2026-11): memory is reached
+directly at `http://nas.homelab.internal:8888/mcp/<bank>`, so the proxy that only
+existed to expose it is archived under `.archived/kubernetes/servitor/mcp/`.
+`mcp_agent` is never distributed to in-cluster
 
 chat apps. **Grouping rule:** create a group only for a new consumer or a
 new permission class; a new server joins the matching existing group.
@@ -207,10 +202,10 @@ because forgejo ticket bodies carry alert/log-derived (untrusted) strings.
 DSH Web now uses only the unguarded `uncensored` lane or direct DeepSeek and
 the search/cluster tiers; those LLM calls are not covered by the agent
 promptGuard. The browser and github-pr tiers have no current consumer. The
-cluster tier (hermes) adds CEL allowlists and token/SA boundaries; the
-persona tier is RW-by-design behind the HA token. Neither carries
-the ExtMCP sidecar; both still require per-route API keys and retain their
-CEL/RBAC/token boundaries. No MCP route is unauthenticated.
+cluster tier (hermes) adds CEL allowlists and token/SA boundaries. Neither it nor
+the remaining tiers carries the ExtMCP sidecar; all still require per-route API
+keys and retain their CEL/RBAC/token boundaries. No MCP route is
+unauthenticated.
 Response scanning uses four balanced windows (11KiB
 by default) with a 3.5s scanner deadline and a 15s Service-scoped ExtMCP
 callout deadline; readiness completes a full-size warmup before traffic.
@@ -304,8 +299,8 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 ### ToolHive
 
 - **Operator**: namespace-scoped RBAC
-- **Variant layout**: `mcp/hindsight/{app,persona,ops}` and `mcp/github/{app,ro,hr}`; each `app` is a shared Kustomize base, while sibling directories are independently reconciled overlays
-- **7 Virtual MCP Servers** (search / cluster / github-ro / persona / agent / browser / github-pr) with:
+- **Variant layout**: `mcp/github/{app,ro,hr}`; `app` is a shared Kustomize base, while sibling directories are independently reconciled overlays
+- **6 Virtual MCP Servers** (search / cluster / github-ro / agent / browser / github-pr) with:
   - Circuit breaker (3 failures → 30s timeout)
   - OTEL telemetry: vMCP emits all spans; the collector drops connection noise, retains `tools/call`, and samples the rest at 10%. Selected backend servers (`mcp-kubernetes`, `mcp-firecrawl`) use `backend-otel` at 10% source sampling for server-internal latency.
   - **No optimizer** (removed 2026-10): it hid real tool names behind
@@ -342,11 +337,12 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | victoria-metrics | Streamable HTTP :8081 | VictoriaMetrics; gateway-filtered to the query surface |
 | victoria-traces | Streamable HTTP :8081 | VictoriaTraces                |
 
-#### persona (read-write, no egress — no current consumer)
+#### persona (retired 2026-11)
 
-| Server            | Transport            | Connects To            |
-| ----------------- | -------------------- | ---------------------- |
-| hindsight-persona | HTTP proxy :8080     | Hindsight `persona` bank (single-bank MCPToolConfig) |
+The `persona` group and its vMCP exist only to serve the Hindsight persona bank.
+Hindsight speaks MCP natively, so the proxy duplicated it; with the service on
+the NAS, consumers call `http://nas.homelab.internal:8888/mcp/<bank>` directly and
+the whole tier is archived (`.archived/kubernetes/servitor/mcp/hindsight`).
 
 The smart-home control server is archived with the smart-home stack under the
 `smarthome` group (`.archived/kubernetes/servitor/mcp/smarthome`).
@@ -356,7 +352,6 @@ The smart-home control server is archived with the smart-home stack under the
 | Server       | Transport             | Notes                                       |
 | ------------ | --------------------- | ------------------------------------------- |
 | forgejo      | Streamable HTTP :8080 | Forgejo on nas:9003 via forgejo-mcp; forwarded repo-scoped `pat_tickets` — the Forgejo-side token scope is the security boundary (no CEL) |
-| hindsight-ops | Streamable HTTP :8080 (proxy→:8888) | Hindsight `ops` bank; incident/RCA memory, no chat-tier consumers |
 
 Forgejo's `pat_tickets` retains repository-write scope for the manual lessons
 workflow, so the guard is the token's Forgejo-side permission scope itself.
@@ -416,7 +411,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 
 - AI memory / context store (agent long-term memory: retain / recall / reflect)
 - **Runs on the NAS**, not in the cluster: doco-cd stack `infrastructure/synology/hindsight` (postgres 18.6 + `ghcr.io/vectorize-io/hindsight:1.2.1-slim`). It holds the only dataset in the homelab that cannot be rebuilt from git, so it lives on the UPS-backed host that already receives the cluster's barman backups. Nothing in the cluster consumes its database any more; the CNPG role/database and the Flux app are gone.
-- Reached from the cluster at `http://nas.homelab.internal:8888/mcp/<bank>` by the toolhive proxies `mcp-hindsight-{persona,ops}` in `servitor-apps` (port published on the NAS, no ingress route, no Authentik in front — the previous `memory.noirprime.com` forward-auth provider was removed with the app; access control is handled on the NAS side)
+- Consumers call `http://nas.homelab.internal:8888/mcp/<bank>` directly — hindsight speaks MCP natively, so the toolhive proxy tier that fronted it is archived with the app (port published on the NAS, no ingress route, no Authentik in front; the previous `memory.noirprime.com` forward-auth provider was removed with the app, and access control is handled on the NAS side)
 - LLM: `omni` lane → **MiniCPM-O-4.5 on the MacStudio** (via `https://api.noirprime.com/v1/chat/completions`; lane keys live in the NAS-side sops env)
 - Embeddings: **Qwen3-Embedding-0.6B on the MacStudio** (oMLX id `qwen3-embedding-0.6b`, 1024d) via `https://api.noirprime.com/v1/embeddings`
 - Reranker: **Qwen3-Reranker-0.6B on the MacStudio** (Cohere-compatible, id `qwen3-reranker-0.6b`) via `https://api.noirprime.com/v1/rerank`
@@ -534,7 +529,7 @@ items:
 /v1/embeddings /v1/rerank /v1/audio/speech /v1/audio/transcriptions  (media: alias ─► override ─► folder id; audio: direct)
 /v1/models/<model>  (alias or folder id; single-object direct response)
 
-/mcp/search /mcp/cluster /mcp/github-ro /mcp/persona /mcp/agent /mcp/browser /mcp/github-pr  (per-tier key; guardrails ExtMCP on search+github-ro+agent+browser+github-pr, FailClosed) ── every MCP client
+/mcp/search /mcp/cluster /mcp/github-ro /mcp/agent /mcp/browser /mcp/github-pr  (per-tier key; guardrails ExtMCP on search+github-ro+agent+browser+github-pr, FailClosed) ── every MCP client
 ```
 
 Agentgateway-managed routing remains internal and centralized for auth, routing, guardrails, and observability. The UI-selected external DeepSeek provider is an explicit exception for its direct LLM calls; MCP still goes through the gateway.

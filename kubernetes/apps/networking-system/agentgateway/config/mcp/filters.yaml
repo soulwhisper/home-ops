@@ -79,10 +79,9 @@ spec:
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
 # agent tier: forgejo narrowed to the ticket workflow (the only sanctioned use
-# of this tier; homelab-tickets skill); hindsight-ops stays whole — it is the
-# incident memory. pat_tickets remains the permission boundary; this is the
-# second layer plus schema-size control (the full forgejo surface alone would
-# not fit a 64K-context consumer alongside the other tiers).
+# of this tier; homelab-tickets skill). pat_tickets remains the permission
+# boundary; this is the second layer plus schema-size control (the full forgejo
+# surface alone would not fit a 64K-context consumer alongside the other tiers).
 # Explicitly out: delete_*, repo/hook/secret admin, dispatch_workflow
 # (operator-only by design), stopwatch/tracked-time.
 # Tracked against forgejo-mcp v3.3.0 (163 tools enumerated) — re-verify on
@@ -104,7 +103,6 @@ spec:
           matchExpressions:
             - |
               mcp.tool.name.matches('^mcp-forgejo_(list_repo_issues|get_issue_by_index|list_issue_comments|get_issue_comment|create_issue_comment|edit_issue_comment|issue_state_change|search_issues|list_repo_labels|add_issue_labels|remove_issue_labels|update_issue)$')
-              || mcp.tool.name.startsWith('mcp-hindsight-ops_')
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/agentgateway.dev/agentgatewaypolicy_v1alpha1.json
 apiVersion: agentgateway.dev/v1alpha1

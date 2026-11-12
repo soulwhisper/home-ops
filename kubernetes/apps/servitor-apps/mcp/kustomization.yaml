@@ -8,7 +8,6 @@ resources:
   - ./fluxcd/ks.yaml
   - ./forgejo/ks.yaml
   - ./github/ks.yaml
-  - ./hindsight/ks.yaml
   - ./kubernetes/ks.yaml
   - ./playwright/ks.yaml
   - ./trendradar/ks.yaml
