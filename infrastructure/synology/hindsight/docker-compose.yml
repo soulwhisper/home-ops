@@ -2,10 +2,37 @@
 name: hindsight
 
 services:
+  # Refuses to let a major-version image bump boot an empty cluster beside the
+  # real one. With /var/lib/postgresql mounted, postgres:19 would initdb into
+  # 19/docker, look healthy, and leave the 18/docker data untouched — a silent
+  # "where did my memory go". After a pg_upgrade both directories exist and the
+  # newest major matches the image, so this passes.
+  preflight:
+    image: "ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2"
+    container_name: "hindsight-preflight"
+    restart: "no"
+    entrypoint: ["/bin/bash", "-eu", "-c"]
+    command:
+      - |
+        want="${PG_MAJOR:-$(ls -1 /usr/lib/postgresql | sort -V | tail -1)}"
+        found=$(ls -1 /var/lib/postgresql 2>/dev/null | grep -E '^[0-9]+$' | sort -V | tail -1 || true)
+        if [ -n "$found" ] && [ "$found" != "$want" ]; then
+          echo "FATAL: /var/lib/postgresql holds cluster [$found] but this image is major $want." >&2
+          echo "postgres would initdb an EMPTY cluster there and report healthy while the real data sits in $found/docker." >&2
+          echo "Run pg_upgrade (or restore a dump) first, or keep the previous image tag." >&2
+          exit 1
+        fi
+        echo "preflight ok: image major $want, data dir ${found:-empty}"
+    volumes:
+      - "/volume3/docker/hindsight:/var/lib/postgresql:ro"
+
   postgres:
     image: "ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2"
     container_name: "hindsight-postgres"
     restart: "unless-stopped"
+    depends_on:
+      preflight:
+        condition: service_completed_successfully
     command:
       - "postgres"
       - "-c"
@@ -24,7 +51,6 @@ services:
       - hindsight.sops.env
     volumes:
       - "/volume3/docker/hindsight:/var/lib/postgresql"
-      - "./initdb:/docker-entrypoint-initdb.d:ro"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 30s
