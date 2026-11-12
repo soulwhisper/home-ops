@@ -44,10 +44,10 @@ empty vector in VMSingle, so the recording rule writes nothing. The rule is
 structurally idle, not broken.
 
 The AI workload is not persistent: chats arrive in sessions rather than as
-steady load. The same 24h window carries 27 token-usage changes and zero TTFT
-observations, so one quiet day cannot distinguish "no streaming client" from
-"no traffic at all". That is why this page records evidence instead of
-removing the rule.
+steady load. The same 24h window carries 27 changes on the busiest token-usage
+series and zero TTFT observations, so one quiet day cannot distinguish "no
+streaming client" from "no traffic at all". That is why this page records
+evidence instead of removing the rule.
 
 No gateway configuration disables streaming: `httproute.yaml` only raises the
 timeout so long streams are not cut. Streaming is therefore client-decided.
