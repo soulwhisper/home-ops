@@ -43,10 +43,12 @@ services:
       - "archive_mode=off"
     env_file:
       - hindsight.sops.env
-    environment:
-      - "PGDATA=/var/lib/postgresql/data/pgdata"
     volumes:
-      - "/volume3/docker/hindsight/pgdata:/var/lib/postgresql/data"
+      # postgres:18 declares /var/lib/postgresql as its data volume and keeps the
+      # cluster in a versioned subdirectory (18/docker) beneath it. Mount the
+      # parent so a major-version bump can sit beside the old cluster instead of
+      # overwriting it; PGDATA is left at the image default for the same reason.
+      - "/volume3/docker/hindsight/pgdata:/var/lib/postgresql"
       # Only runs on an empty data dir — this stack is a rebuild, not a restore.
       - "./initdb:/docker-entrypoint-initdb.d:ro"
     healthcheck:

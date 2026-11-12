@@ -26,7 +26,11 @@ compose file that doco-cd reconciles from git, like `versitygw` and `zotregistry
 
 ## Data
 
-- Postgres: `/volume3/docker/hindsight/pgdata`
+- Host bind: `/volume3/docker/hindsight/pgdata` → container `/var/lib/postgresql`
+- The cluster itself lives one level down, in the image's versioned default
+  (`/var/lib/postgresql/18/docker`). `PGDATA` is deliberately not set — that
+  default is what lets a future major-version bump sit beside the old cluster
+  instead of overwriting it.
 - This is a rebuild, not a migration: the previous CNPG database held test data
   and was dropped with the role. There is no restore step.
 
@@ -41,7 +45,8 @@ docker exec hindsight-postgres pg_dump -U hindsight -d hindsight -Fc \
 ```
 
 Restore onto a fresh volume, then re-run the compose stack — `initdb/` is
-skipped once `pgdata` is non-empty.
+skipped once the cluster directory (`/var/lib/postgresql/18/docker`) exists and
+is non-empty.
 
 ## Rotation
 
