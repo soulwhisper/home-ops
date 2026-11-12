@@ -53,7 +53,7 @@ services:
       - "HINDSIGHT_API_TEXT_SEARCH_EXTENSION=pgroonga"
       - "HINDSIGHT_API_OTEL_TRACES_ENABLED=false"
     ports:
-      - "10.10.0.100:8888:8888/tcp"
+      - "8888:8888/tcp"
     read_only: true
     tmpfs:
       - "/tmp"

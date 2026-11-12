@@ -416,7 +416,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 
 - AI memory / context store (agent long-term memory: retain / recall / reflect)
 - **Runs on the NAS**, not in the cluster: doco-cd stack `infrastructure/synology/hindsight` (postgres 18.6 + `ghcr.io/vectorize-io/hindsight:1.2.1-slim`). It holds the only dataset in the homelab that cannot be rebuilt from git, so it lives on the UPS-backed host that already receives the cluster's barman backups. Nothing in the cluster consumes its database any more; the CNPG role/database and the Flux app are gone.
-- Reached from the cluster at `http://10.10.0.100:8888/mcp/<bank>` by the toolhive proxies `mcp-hindsight-{persona,ops}` in `servitor-apps` (LAN-bound port, no ingress route, no Authentik in front — the previous `memory.noirprime.com` forward-auth provider was removed with the app)
+- Reached from the cluster at `http://nas.homelab.internal:8888/mcp/<bank>` by the toolhive proxies `mcp-hindsight-{persona,ops}` in `servitor-apps` (port published on the NAS, no ingress route, no Authentik in front — the previous `memory.noirprime.com` forward-auth provider was removed with the app; access control is handled on the NAS side)
 - LLM: `omni` lane → **MiniCPM-O-4.5 on the MacStudio** (via `https://api.noirprime.com/v1/chat/completions`; lane keys live in the NAS-side sops env)
 - Embeddings: **Qwen3-Embedding-0.6B on the MacStudio** (oMLX id `qwen3-embedding-0.6b`, 1024d) via `https://api.noirprime.com/v1/embeddings`
 - Reranker: **Qwen3-Reranker-0.6B on the MacStudio** (Cohere-compatible, id `qwen3-reranker-0.6b`) via `https://api.noirprime.com/v1/rerank`

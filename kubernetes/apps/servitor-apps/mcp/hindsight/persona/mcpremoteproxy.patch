@@ -15,4 +15,4 @@
 # exist, so 404s before the first retain are expected.
 - op: add
   path: /spec/remoteUrl
-  value: http://10.10.0.100:8888/mcp/persona
+  value: http://nas.homelab.internal:8888/mcp/persona
