@@ -20,21 +20,21 @@ tracking=$("$CHRONYC" tracking 2>/dev/null) || fail
 [ -n "$tracking" ] || fail
 
 printf '%s\n' "$tracking" | awk '
-  /^Stratum/         { printf "chrony_stratum %d\n", $3; seen = 1 }
-  /^System time/     { v = $4 + 0; if ($6 == "slow") v = -v; printf "chrony_system_offset_seconds %.9g\n", v }
-  /^Last offset/     { printf "chrony_last_offset_seconds %.9g\n", $4 + 0 }
-  /^RMS offset/      { printf "chrony_rms_offset_seconds %.9g\n", $4 + 0 }
-  /^Frequency/       { v = $3 + 0; if ($5 == "slow") v = -v; printf "chrony_frequency_ppm %.9g\n", v }
-  /^Residual freq/   { printf "chrony_residual_frequency_ppm %.9g\n", $4 + 0 }
-  /^Skew/            { printf "chrony_skew_ppm %.9g\n", $3 + 0 }
-  /^Root delay/      { printf "chrony_root_delay_seconds %.9g\n", $4 + 0 }
-  /^Root dispersion/ { printf "chrony_root_dispersion_seconds %.9g\n", $4 + 0 }
-  /^Update interval/ { printf "chrony_update_interval_seconds %.9g\n", $4 + 0 }
-  END { if (!seen) exit 1 }
+  /^Stratum/         { printf "chrony_stratum %d\n", $3; seen++ }
+  /^System time/     { v = $4 + 0; if ($6 == "slow") v = -v; printf "chrony_system_offset_seconds %.9g\n", v; seen++ }
+  /^Last offset/     { printf "chrony_last_offset_seconds %.9g\n", $4 + 0; seen++ }
+  /^RMS offset/      { printf "chrony_rms_offset_seconds %.9g\n", $4 + 0; seen++ }
+  /^Frequency/       { v = $3 + 0; if ($5 == "slow") v = -v; printf "chrony_frequency_ppm %.9g\n", v; seen++ }
+  /^Residual freq/   { printf "chrony_residual_frequency_ppm %.9g\n", $4 + 0; seen++ }
+  /^Skew/            { printf "chrony_skew_ppm %.9g\n", $3 + 0; seen++ }
+  /^Root delay/      { printf "chrony_root_delay_seconds %.9g\n", $4 + 0; seen++ }
+  /^Root dispersion/ { printf "chrony_root_dispersion_seconds %.9g\n", $4 + 0; seen++ }
+  /^Update interval/ { printf "chrony_update_interval_seconds %.9g\n", $4 + 0; seen++ }
+  END { if (seen < 10) exit 1 }
 ' || fail
 
-sources=$("$CHRONYC" sources 2>/dev/null) || sources=
-stats=$("$CHRONYC" sourcestats 2>/dev/null) || stats=
+sources=$("$CHRONYC" sources 2>/dev/null) || fail
+stats=$("$CHRONYC" sourcestats 2>/dev/null) || fail
 
 if [ -n "$sources" ]; then
   printf '%s\n' "$sources" | awk '
@@ -59,11 +59,12 @@ if [ -n "$stats" ]; then
       u = v
       sub(/^[+-]?[0-9.]+/, "", u)
       v = v + 0
-      if (u == "ms") return v / 1000
+      if (u == "ns") return v / 1000000000
       if (u == "us") return v / 1000000
+      if (u == "ms") return v / 1000
       return v
     }
-    $2 ~ /^[0-9]+$/ && $1 ~ /[0-9]/ {
+    $2 ~ /^[0-9]+$/ {
       printf "chrony_source_offset_seconds{source=\"%s\"} %s\n", $1, secs($7)
       printf "chrony_source_frequency_ppm{source=\"%s\"} %s\n", $1, $5 + 0
       printf "chrony_source_skew_ppm{source=\"%s\"} %s\n", $1, $6 + 0
