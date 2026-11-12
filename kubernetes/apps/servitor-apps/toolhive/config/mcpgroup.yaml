@@ -23,17 +23,9 @@ spec:
 apiVersion: toolhive.stacklok.dev/v1beta1
 kind: MCPGroup
 metadata:
-  name: persona
-spec:
-  description: "In-cluster, read-write. No egress; Hindsight persona bank only. Home Assistant moved to the archived smarthome group with its application."
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
-apiVersion: toolhive.stacklok.dev/v1beta1
-kind: MCPGroup
-metadata:
   name: agent
 spec:
-  description: "Operator-agent tier. Forgejo ticket RW (pat_tickets; the Forgejo-side token scope is the boundary) + incident/RCA memory (hindsight ops bank). Separate credential keeps chat-tier consumers out. Issued to hermes and external operator agents."
+  description: "Operator-agent tier. Forgejo ticket RW (pat_tickets; the Forgejo-side token scope is the boundary). Separate credential keeps chat-tier consumers out. Issued to external operator agents."
 ---
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/toolhive.stacklok.dev/mcpgroup_v1beta1.json
 apiVersion: toolhive.stacklok.dev/v1beta1

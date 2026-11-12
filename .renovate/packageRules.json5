@@ -24,7 +24,6 @@
       matchDatasources: ["docker"],
       matchPackagePatterns: [
         "ghcr.io/home-operations/postgres-init",
-        "prodrigestivill/postgres-backup-local",
       ],
       allowedVersions: "18",
     },
@@ -37,17 +36,6 @@
       ],
       separateMajorMinor: true,
       separateMinorPatch: true,
-    },
-    {
-      description: "ghcr tag-list rate limits (31k+ tags, v3.3.0 on last page): look up immich-server via GitHub releases",
-      matchPackageNames: ["ghcr.io/immich-app/immich-server"],
-      overrideDatasource: "github-releases",
-      overridePackageName: "immich-app/immich",
-    },
-    {
-      description: "Look up immich-machine-learning via GitHub releases and append the -openvino suffix required by its ghcr image tags",
-      matchPackageNames: ["ghcr.io/immich-app/immich-machine-learning"],
-      overrideDatasource: "custom.immich-machine-learning",
     },
     {
       description: "forgejo-mcp tags are tracked from the GitHub mirror; the image registry's tag API does not reliably answer lookups",

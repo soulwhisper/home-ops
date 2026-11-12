@@ -45,7 +45,7 @@ spec:
         serviceAccount:
           identifier: restarter
         cronjob:
-          # 10 min after hindsight-restarter; both off the Renovate/backup windows
+          # off the Renovate/backup windows
           schedule: "30 4 * * *"
           timeZone: Asia/Shanghai
           concurrencyPolicy: Forbid

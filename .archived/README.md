@@ -8,6 +8,12 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
   `-apps`/`-system` suffix, so restore to the path named by `spec.path`
   (for example `.archived/kubernetes/media/foo` →
   `kubernetes/apps/media-apps/foo`) and re-add it to that namespace index.
+- Renovate path globs for the retired namespaces (`kubernetes/apps/{gaming,media,smarthome}-apps/**`)
+  were dropped from `.renovate/autoMerge.json5`, and the repository-root
+  `renovate.json5` ignores this tree via `ignorePaths: [".archived/**"]`. Restoring an app from one of those namespaces also
+  means putting its glob back, otherwise its minor updates stop auto-merging.
+  Per-app Renovate entries that were removed are listed in that app's own
+  `README.md` (`media/immich`, `servitor/hermes-agent`).
 - Archived definitions are not a backup. Restoring one starts from its
   manifests only; PVC data, CNPG roles/databases and kopiur snapshots may need
   manual recovery.
@@ -46,10 +52,13 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 | `kubernetes/security/authentik/blueprints` | Forward-auth and OIDC blueprints for archived applications | Kept so archived definitions mirror the active layout; only active-app blueprints are installed |
 | `kubernetes/security/kyverno` | Policy engine: six audit policies and the namespace-delete guard | The namespace guard and image-registry audit are now `protect-critical-namespaces` and `audit-image-registries` in the `native-policies` Kustomization; the remaining audit rules were dropped because their reports were not consumed by alerts or dashboards |
 | `kubernetes/selfhosted/dispatcharr` | IPTV proxy and DVR | Retired with the self-hosted stack |
+| `kubernetes/selfhosted/hindsight` | AI memory service (app, egress CNP, EXTERNALSECRET, restart cronjob) | Moved to the NAS (`infrastructure/synology/hindsight`) so the one non-rebuildable dataset lives on the UPS-backed host. Consumers call `nas.homelab.internal:8888` directly. Restore steps — including the CNPG role and `Database` CR that were removed with it — are in this folder's `README.md`; its Authentik blueprint is at `.archived/kubernetes/security/authentik/blueprints/forward/hindsight.yaml`, and restoring it needs **both** auth changes — re-add the file to the `authentik-blueprints-forward` list and its provider to `outpost-proxy.yaml` — or the app comes back unserved by the outpost |
 | `kubernetes/selfhosted/karakeep` | Bookmarks and read-later | Retired with the self-hosted stack |
 | `kubernetes/selfhosted/netbox` | DCIM/IPAM | Retired with the self-hosted stack |
 | `kubernetes/selfhosted/stirling-pdf` | PDF toolbox | Retired with the self-hosted stack |
+| `kubernetes/servitor/hermes-agent` | In-cluster AI agent (gateway + dashboard, Feishu websocket, MCP tier consumers) | Archived 2026-11: the homelab runs one Hermes, the native instance on `nix-ops`. Its Authentik blueprint is archived alongside, and the kopiur-backed `/opt/data` PVC is pruned unless kept — restore steps and the data warning are in the folder `README.md` |
 | `kubernetes/servitor/mcp/grafana` | Grafana MCP server and its service-account token sync | Retired with Grafana; Victoria query MCP servers cover the remaining read-only surface |
+| `kubernetes/servitor/mcp/hindsight` | ToolHive MCP proxies for the hindsight persona and ops banks (base + both overlays) | Hindsight speaks MCP natively, so the proxy duplicated it; with the service on the NAS a consumer points at `nas.homelab.internal:8888/mcp/<bank>`. Archived with its `persona` MCP tier (group, vmcp, route, key) — see the hindsight app's archived `README.md` for the full restore list |
 | `kubernetes/servitor/mcp/smarthome` | MCP smart-home control tier | Retired with the smart-home stack |
 | `kubernetes/smarthome/frigate` | Frigate NVR | Retired with the smart-home stack |
 | `kubernetes/smarthome/frigate-vision` | Frigate alert forwarder to hermes-agent | Retired with the smart-home stack |

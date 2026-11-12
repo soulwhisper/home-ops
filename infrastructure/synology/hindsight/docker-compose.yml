@@ -1,0 +1,160 @@
+---
+name: hindsight
+
+services:
+  # Refuses to let a major-version image bump boot an empty cluster beside the
+  # real one. With /var/lib/postgresql mounted, postgres:19 would initdb into
+  # 19/docker, look healthy, and leave the 18/docker data untouched — a silent
+  # "where did my memory go". After a pg_upgrade both directories exist and the
+  # newest major matches the image, so this passes.
+  preflight:
+    image: "ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2"
+    container_name: "hindsight-preflight"
+    restart: "no"
+    entrypoint: ["/bin/bash", "-eu", "-c"]
+    command:
+      - |
+        want="$${PG_MAJOR:-$$(ls -1 /usr/lib/postgresql | sort -V | tail -1)}"
+        found=$$(ls -1d /var/lib/postgresql/[0-9]*/docker/PG_VERSION 2>/dev/null \
+          | sed -E 's|.*/([0-9]+)/docker/PG_VERSION$$|\1|' | sort -V | tail -1)
+        if [ -n "$$found" ] && [ "$$found" != "$$want" ]; then
+          echo "FATAL: /var/lib/postgresql holds an initialised cluster [$$found/docker] but this image is major $$want." >&2
+          echo "postgres would initdb an EMPTY cluster beside it and report healthy." >&2
+          echo "Run pg_upgrade (or restore a dump) first, or keep the previous image tag." >&2
+          exit 1
+        fi
+        echo "preflight ok: image major $$want, cluster $${found:-none}"
+    volumes:
+      - "/volume3/docker/hindsight/data:/var/lib/postgresql:ro"
+
+  postgres:
+    image: "ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2"
+    container_name: "hindsight-postgres"
+    restart: "unless-stopped"
+    depends_on:
+      preflight:
+        condition: service_completed_successfully
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_preload_libraries=pgroonga_wal_resource_manager"
+      - "-c"
+      - "pgroonga.enable_wal_resource_manager=on"
+      - "-c"
+      - "shared_buffers=768MB"
+      - "-c"
+      - "max_connections=100"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "archive_mode=off"
+    env_file:
+      - hindsight.sops.env
+    volumes:
+      - "/volume3/docker/hindsight/data:/var/lib/postgresql"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    security_opt:
+      - "no-new-privileges:true"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    networks:
+      - internal
+
+  # The database is the one thing the cluster cannot rebuild, so it gets a dump
+  # on start and every 24h. Dumps land under the stack directory that the NAS
+  # snapshot schedule already covers; an off-host copy is still the operator's
+  # job. Retention: 7 days.
+  backup:
+    image: "ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2"
+    container_name: "hindsight-backup"
+    restart: "unless-stopped"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - hindsight.sops.env
+    entrypoint: ["/bin/bash", "-eu", "-c"]
+    command:
+      - |
+        mkdir -p /backups
+        while true; do
+          ts=$$(date -u +%Y%m%dT%H%M%SZ)
+          export PGPASSWORD="$$POSTGRES_PASSWORD"
+          if pg_dump -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" \
+               -Fc -f "/backups/$$ts.dump.tmp"; then
+            mv "/backups/$$ts.dump.tmp" "/backups/$$ts.dump"
+            echo "backup ok: $$ts.dump"
+          else
+            rm -f "/backups/$$ts.dump.tmp"
+            echo "backup FAILED at $$ts" >&2
+            exit 1
+          fi
+          find /backups -maxdepth 1 -name '*.dump' -mtime +7 -delete
+          sleep 86400
+        done
+    healthcheck:
+      test: ["CMD-SHELL", "find /backups -maxdepth 1 -name '*.dump' -mmin -1560 | grep -q ."]
+      interval: 1h
+      timeout: 10s
+      retries: 2
+      start_period: 5m
+    volumes:
+      - "/volume3/docker/hindsight/backups:/backups"
+    mem_limit: "256m"
+    security_opt:
+      - "no-new-privileges:true"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    networks:
+      - internal
+
+  hindsight:
+    image: "ghcr.io/vectorize-io/hindsight:1.2.1-slim"
+    container_name: "hindsight"
+    restart: "unless-stopped"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - hindsight.sops.env
+    environment:
+      - "HINDSIGHT_API_VECTOR_EXTENSION=pgvector"
+      - "HINDSIGHT_API_TEXT_SEARCH_EXTENSION=pgroonga"
+      - "HINDSIGHT_API_OTEL_TRACES_ENABLED=false"
+      - "HINDSIGHT_API_TENANT_EXTENSION=hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension"
+    ports:
+      - "8888:8888/tcp"
+    mem_limit: "2g"
+    read_only: true
+    tmpfs:
+      - "/tmp"
+    cap_drop:
+      - "ALL"
+    security_opt:
+      - "no-new-privileges:true"
+    healthcheck:
+      test:
+        - "CMD"
+        - "python3"
+        - "-c"
+        - "import http.client,sys;c=http.client.HTTPConnection('127.0.0.1',8888,timeout=5);c.request('GET','/mcp/persona');sys.exit(0 if c.getresponse().status<500 else 1)"
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge

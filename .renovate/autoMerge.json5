@@ -27,11 +27,8 @@
     {
       description: "User apps: auto-merge minor updates after CI",
       matchFileNames: [
-        "kubernetes/apps/gaming-apps/**",
-        "kubernetes/apps/media-apps/**",
         "kubernetes/apps/selfhosted-apps/**",
         "kubernetes/apps/servitor-apps/**",
-        "kubernetes/apps/smarthome-apps/**",
       ],
       matchUpdateTypes: ["minor"],
       automerge: true,
@@ -80,7 +77,6 @@
         "siderolabs/talos",
         "ghcr.io/soulwhisper/covel",
         "ghcr.io/diceframe/diceframe",
-        "ghcr.io/soulwhisper/hermes-agent",
         "ghcr.io/open-webui/open-webui",
       ],
       automerge: false,

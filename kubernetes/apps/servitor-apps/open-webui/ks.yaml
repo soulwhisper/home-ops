@@ -17,8 +17,6 @@ spec:
   dependsOn:
     - name: agentgateway
       namespace: networking-system
-    - name: hermes-agent
-      namespace: servitor-apps
   components:
     - ../../../../components/cache
     - ../../../../components/authentik

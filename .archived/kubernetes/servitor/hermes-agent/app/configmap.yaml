@@ -81,7 +81,7 @@ data:
       base_url: $${OPENAI_BASE_URL}
       api_key: $${OPENAI_API_KEY}
     # ops profile is the automation brain: cluster read-only, agent (forgejo
-    # ticket RW + hindsight-ops memory), search (web/docs retrieval), and
+    # ticket RW), search (web/docs retrieval), and
     # github-ro (read-only GitHub code retrieval; issued alongside cluster).
     # agent/search ride the FailClosed mcp-guardrails sidecar: if the sidecar
     # is down, those two tiers are suspended for ops.

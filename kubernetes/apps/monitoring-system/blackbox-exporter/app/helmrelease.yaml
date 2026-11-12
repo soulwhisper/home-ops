@@ -91,6 +91,18 @@ spec:
           timeout: 5s
           tcp:
             preferred_ip_protocol: ip4
+        # Hindsight (NAS) canary: an unauthenticated GET must answer 401. This
+        # asserts two things at once — the HTTP API answers, and the API key is
+        # still enforced. A 200 here means the tenant extension was dropped.
+        hindsight_auth:
+          prober: http
+          timeout: 10s
+          http:
+            method: GET
+            valid_http_versions:
+              - HTTP/1.1
+            preferred_ip_protocol: ip4
+            valid_status_codes: [401]
         # MacStudio (oMLX) API-plane probe: GET /v1/models with the server
         # key, direct to the host (bypasses agentgateway on purpose — its
         # health is covered by pod monitoring). Per-model inference probes
@@ -115,9 +127,9 @@ spec:
         - alert: BlackboxProbeFailed
           # $labels.target does not exist on probe metrics (host is .instance).
           # Services with dedicated canary alerts are excluded so their severity
-          # is decided once: macstudio (5m), firecrawl/scrape (10m) and
-          # firecrawl/searxng search (10m).
-          expr: probe_success{service!~"^(macstudio|firecrawl-scrape|firecrawl-search|searxng-search)$"} == 0
+          # is decided once: macstudio (5m), hindsight (5m), firecrawl/scrape
+          # (10m) and firecrawl/searxng search (10m).
+          expr: probe_success{service!~"^(macstudio|firecrawl-scrape|firecrawl-search|searxng-search|hindsight)$"} == 0
           for: 15m
           labels:
             severity: critical
@@ -138,6 +150,32 @@ spec:
             summary: |-
               Mac Studio oMLX API probe failing: {{ $labels.instance }} (5m).
               Dependents: agentgateway LLM lanes, vmcp optimizer (find_tool), hindsight embeddings/rerank.
+        # Memory store lives on the NAS now. A dead MCP port means every retain
+        # and recall fails, and the toolhive proxies plus Hermes degrade to
+        # "no memory" silently — hence 5m here rather than the 15m generic rule.
+        - alert: HindsightNasDown
+          expr: probe_success{service="hindsight"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: |-
+              Hindsight MCP port unreachable on the NAS ({{ $labels.instance }}, 5m).
+              Check the doco-cd stack `hindsight`: postgres health, disk space on
+              /volume3, and that hindsight.sops.env still decrypts on restart.
+        # A missing series looks identical to health: if the Probe object is
+        # deleted or renamed, HindsightNasDown has nothing to evaluate and the
+        # generic rule excludes the service. absent() catches the hole itself.
+        - alert: HindsightProbeMissing
+          expr: absent(probe_success{service="hindsight"})
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: |-
+              No probe_success series for service="hindsight" for 10m: the
+              hindsight-nas Probe is missing or unscraped, so HindsightNasDown
+              cannot fire either. Check the Probe object and vmagent's scrape.
         # Firecrawl search/scrape canaries. Native /metrics is absent, so
         # probe_success carries the content/challenge failure signal. Use
         # stable canaries only; do not add NYT/36kr (known anti-bot failures).

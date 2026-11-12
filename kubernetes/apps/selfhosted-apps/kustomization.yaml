@@ -9,7 +9,6 @@ components:
 resources:
   - ./bambuddy/ks.yaml
   - ./firecrawl/ks.yaml
-  - ./hindsight/ks.yaml
   - ./homepage/ks.yaml
   - ./searxng/ks.yaml
   - ./trendradar/ks.yaml
