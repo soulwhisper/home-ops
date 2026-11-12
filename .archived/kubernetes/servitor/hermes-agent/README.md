@@ -14,7 +14,12 @@ tickers and two copies of memory, and the cluster copy held the authoritative
 - the `dependsOn: hermes-agent` in `open-webui/ks.yaml`
 - its provider binding in `blueprints/core/outpost-proxy.yaml`
 
-## Data warning — read before the prune lands
+## Data warning — the volume was deleted at decommission (2026-11-12)
+
+The PVC and its Ceph volume were removed during cleanup: **`/opt/data` is gone**,
+including kopiur snapshots held only under the old repository paths. A restore
+starts empty. The section below is kept for the next retirement, not because
+there is anything left to preserve.
 
 The app mounted the kopiur-backed PVC `hermes-agent` (5 Gi, `ceph-block`) at
 `/opt/data`: sessions, cron state, skills, memories. That PVC and its

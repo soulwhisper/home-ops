@@ -27,7 +27,10 @@ a consumer can call `http://nas.homelab.internal:8888/mcp/<bank>` directly.
    ```
 
 3. **CNPG database** — same file, appended as its own document. Removing this CR
-   is what dropped the data, so restoring it recreates an empty database:
+   is what drops the data — and on 2026-11-12 the cleanup dropped the database
+   and the `hindsight` role by hand as well (`DROP DATABASE ... WITH (FORCE)`,
+   `DROP ROLE`), because removing the role from `spec.managed.roles` leaves it
+   behind. Restoring recreates an empty database:
 
    ```yaml
    ---
