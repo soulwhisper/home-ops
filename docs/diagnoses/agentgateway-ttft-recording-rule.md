@@ -32,7 +32,8 @@ name their lookback; instant rows are as of that capture time.
 
 The histogram itself is internally consistent: for a given
 `gen_ai_request_model` + `route` series the `+Inf` bucket equals `_count`
-(for example 28 and 28 on the persona route). The values are simply frozen.
+(for example 28 and 28 on one persona-route series). The values are simply
+frozen.
 
 ## Mechanism
 
