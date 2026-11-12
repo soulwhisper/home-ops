@@ -47,8 +47,6 @@ services:
       - "wal_level=replica"
       - "-c"
       - "archive_mode=off"
-    # One env file for the whole stack (owner's call): postgres therefore also
-    # sees the model keys. Keep this file out of anything untrusted.
     env_file:
       - hindsight.sops.env
     volumes:
@@ -122,18 +120,9 @@ services:
       - "HINDSIGHT_API_VECTOR_EXTENSION=pgvector"
       - "HINDSIGHT_API_TEXT_SEARCH_EXTENSION=pgroonga"
       - "HINDSIGHT_API_OTEL_TRACES_ENABLED=false"
-      # Bearer auth for REST and MCP (the extension validates
-      # HINDSIGHT_API_TENANT_API_KEY from the sops env; without it the server is
-      # open). One key for both surfaces — there is no per-lane split.
       - "HINDSIGHT_API_TENANT_EXTENSION=hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension"
     ports:
-      # The app enforces Bearer auth on both REST and MCP, so this is not an open
-      # port — but it is plain HTTP on a shared VLAN, so keep the NAS firewall
-      # rule as defence in depth: allow 8888 only from 10.10.0.101-103.
       - "8888:8888/tcp"
-    # The upstream process leaks under steady MCP traffic (the in-cluster
-    # deployment ran a daily restart cronjob for it). Cap it at the old 2Gi
-    # limit so growth ends in an OOM restart, not host memory pressure.
     mem_limit: "2g"
     read_only: true
     tmpfs:
@@ -143,9 +132,6 @@ services:
     security_opt:
       - "no-new-privileges:true"
     healthcheck:
-      # HTTP, not a bare socket: a hung API still accepts TCP. Any status under
-      # 500 proves the HTTP stack answers — and with no key sent, 401 is the
-      # normal answer, so auth being enforced also reads as healthy.
       test:
         - "CMD"
         - "python3"
