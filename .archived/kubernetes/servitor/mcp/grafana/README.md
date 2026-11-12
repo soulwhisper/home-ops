@@ -30,12 +30,49 @@ and writes a token Secret into `monitoring-system`. The `mcp-grafana-sa`
 ExternalSecret reads it through the `kubernetes` ClusterSecretStore and
 projects `token` into the MCP pod as `GRAFANA_SERVICE_ACCOUNT_TOKEN`.
 
-The source read needs `Role/eso-store-role` and
-`RoleBinding/eso-kubernetes-store-role` from
-`.archived/kubernetes/monitoring/grafana/cluster/eso-rbac.yaml`. The removed
-doc chapter described a staged ownership handoff with
-`security-system/external-secrets-cluster`; restore both declarations and
-verify the token sync before enabling the server.
+### Restore set
+
+The token read needs five declarations that left the active tree with Grafana.
+Recreate all of them before enabling the server:
+
+| Object | Namespace | Definition |
+| --- | --- | --- |
+| `ClusterSecretStore/kubernetes` | cluster-scoped | manifest below |
+| `ServiceAccount/eso-kubernetes` | `security-system` | manifest below |
+| `Role/eso-store-role` | `monitoring-system` | `.archived/kubernetes/monitoring/grafana/cluster/eso-rbac.yaml` |
+| `RoleBinding/eso-kubernetes-store-role` | `monitoring-system` | same file |
+| `Kustomization/external-secrets-cluster` | `security-system` (Flux) | path `./kubernetes/apps/security-system/external-secrets/cluster`, `dependsOn: external-secrets`, health-checks `ClusterSecretStore/kubernetes` |
+
+```yaml
+# kubernetes/apps/security-system/external-secrets/cluster/clustersecretstore.yaml
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: kubernetes
+spec:
+  provider:
+    kubernetes:
+      # Source namespace for all secrets served by this store.
+      remoteNamespace: monitoring-system
+      server:
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          # read next to the secrets; SA itself stays in security-system
+          namespace: monitoring-system
+          key: ca.crt
+      auth:
+        serviceAccount:
+          name: "eso-kubernetes"
+          namespace: security-system
+---
+# kubernetes/apps/security-system/external-secrets/cluster/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: eso-kubernetes
+  namespace: security-system
+```
 
 ### Gateway filter (removed)
 
@@ -56,8 +93,8 @@ named "scoped Grafana/Victoria* tokens".
 1. Move this directory back to
    `kubernetes/apps/servitor-apps/mcp/grafana` and re-add
    `./grafana/ks.yaml` to the MCP index.
-2. Restore Grafana first, including the `GrafanaServiceAccount` and ESO
-   Role/RoleBinding. See
+2. Restore Grafana first, including the `GrafanaServiceAccount` and the
+   restore set above. See
    `../../../monitoring/grafana/README.md`.
 3. Re-add the gateway allowlist expression above to `mcp-cluster-filter`.
 4. Re-add `grafana.integreatly.org` to `mcp-fluxcd-extras` and restore the
