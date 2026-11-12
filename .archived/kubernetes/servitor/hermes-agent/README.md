@@ -1,0 +1,38 @@
+# Hermes Agent (archived)
+
+Retired from the cluster because the homelab runs exactly one Hermes: the native
+instance on `nix-ops` (`nix-config` → `hermes-agent`, dashboard on
+`10.10.0.200:9119`). Two gateways meant two Feishu websocket consumers, two cron
+tickers and two copies of memory, and the cluster copy held the authoritative
+`/opt/data`.
+
+## What moved with it
+
+- Authentik forward-auth blueprint →
+  `.archived/kubernetes/security/authentik/blueprints/forward/hermes-agent.yaml`
+- its entry in `kubernetes/apps/servitor-apps/kustomization.yaml`
+- the `dependsOn: hermes-agent` in `open-webui/ks.yaml`
+- its provider binding in `blueprints/core/outpost-proxy.yaml`
+
+## Data warning — read before the prune lands
+
+The app mounted the kopiur-backed PVC `hermes-agent` (5 Gi, `ceph-block`) at
+`/opt/data`: sessions, cron state, skills, memories. That PVC and its
+`SnapshotPolicy` come from `components/kopiur/backup`, so removing the app from
+git prunes them. Either keep the volume:
+
+```sh
+kubectl -n servitor-apps annotate pvc hermes-agent \
+  helm.sh/resource-policy=keep --overwrite
+```
+
+or copy `/opt/data` out (or snapshot it) before the Kustomization reconciles.
+Kopiur snapshots already written to S3 survive the prune.
+
+## Restore
+
+Re-add the directory and the `ks.yaml` entry, put back the `open-webui`
+`dependsOn` if ordering still matters, and restore **both** Authentik changes
+(file-list entry and outpost provider) or the dashboard comes back unserved.
+The Feishu app credentials are in the `hermes-agent` 1Password item — note that
+restoring this app makes a second websocket consumer of the same bot.

@@ -34,7 +34,6 @@ configMapGenerator:
       - ./blueprints/forward/agentgateway.yaml
       - ./blueprints/forward/bambuddy.yaml
       - ./blueprints/forward/covel.yaml
-      - ./blueprints/forward/hermes-agent.yaml
       - ./blueprints/forward/homepage.yaml
       - ./blueprints/forward/hubble.yaml
       - ./blueprints/forward/open-webui.yaml

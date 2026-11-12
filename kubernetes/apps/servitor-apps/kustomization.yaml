@@ -13,7 +13,6 @@ resources:
   - ./mcp
   # app
   - ./playwright/ks.yaml
-  - ./hermes-agent/ks.yaml
   - ./covel/ks.yaml
   - ./diceframe/ks.yaml
   - ./open-webui/ks.yaml

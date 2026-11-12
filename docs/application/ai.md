@@ -8,7 +8,7 @@ Source: Flux manifests in `kubernetes/apps/`.
 ```mermaid
 flowchart TB
     subgraph Clients["AI Clients"]
-        Hermes["Hermes Agent"]
+        Hermes["Hermes Agent<br/>(native, nix-ops)"]
         OWUI["Open WebUI"]
         HS["Hindsight"]
     end
@@ -45,7 +45,7 @@ flowchart TB
 
 ## Agent Gateway — Central LLM + MCP Router
 
-The agent gateway is the single entry point for all agentgateway-managed LLM lanes and MCP traffic. UI-configured external providers (DeepSeek) connect directly from DSH apps; Hermes always uses the gateway for LLM and MCP calls.
+The agent gateway is the single entry point for all agentgateway-managed LLM lanes and MCP traffic. UI-configured external providers (DeepSeek) connect directly from DSH apps. The native Hermes on `nix-ops` is configured outside GitOps and currently calls a provider directly with no MCP servers; the in-cluster Hermes app was archived 2026-11 (§ Hermes Agent).
 
 ### LLM lanes
 
@@ -76,14 +76,12 @@ inject the oMLX server key via `policies.auth.secretRef`
 (`studio-api-auth`). Consumers authenticate with **per-lane** API keys
 (ExternalSecret-managed from the 1Password `agentgateway` item; format
 `llm-<lane>-<hex16>`): `llm_uncensored` (open chat / open-webui),
-`llm_persona` (reserved; no active consumer), `llm_agent` (hermes, robusta), `llm_omni`
-(extractors, hermes aux). Each model route carries its own
+`llm_persona` (reserved; no active consumer), `llm_agent` (robusta/holmes), `llm_omni`
+(extractors). Each model route carries its own
 apiKeyAuthentication policy covering both inference and discovery, so a chat
 key cannot call the automation lane. Each route accepts only its own lane key;
-a consumer that needs a second lane holds that lane's key directly — hermes
-keeps `llm_agent` for its main brain and `llm_omni` as `OPENAI_AUX_API_KEY`
-for auxiliary tasks. open-webui uses only `llm_uncensored` for chat and has no
-omni credential. Each media model has its own route, credential, and field in
+a consumer that needs a second lane holds that lane's key directly. open-webui
+uses only `llm_uncensored` for chat and has no omni credential. Each media model has its own route, credential, and field in
 the `agentgateway` 1Password item:
 `llm-embedding-auth` uses `llm_embedding`, `llm-reranker-auth` uses
 `llm_reranker`, and `llm-audio-auth` uses `llm_audio`. Chat-lane keys do not
@@ -95,8 +93,8 @@ item, force the owning ExternalSecret to reconcile
 confirm the rendered Secret changed, then verify the gateway rejects the old
 key. Deleting a field alone is not revocation: if a template reference is
 missing, External Secrets Operator leaves the previously rendered Secret in
-place. Rotating `llm_omni` affects every omni consumer (extractors and hermes
-aux), so rotate deliberately.
+place. Rotating `llm_omni` affects every omni consumer (extractors), so rotate
+deliberately.
 
 There is no cloud fallback — the studio is a deliberate SPOF.
 
@@ -124,7 +122,6 @@ TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirpr
 
 | App                  | Lane              | Model              | Notes                                                        |
 | -------------------- | ----------------- | ------------------ | ------------------------------------------------------------ |
-| hermes-agent         | `agent`           | Ornith-1.5-35B | Agent brain: automation / KB QA / ops batching; aux side-tasks on `omni` (GitOps configmap) |
 | robusta (holmes)     | `agent`           | Ornith-1.5-35B      | Alert RCA + ScheduledHealthChecks; 32K client context cap bounds oMLX prefill memory; temperature 0.6 per model tuning |
 | hindsight            | `omni`            | MiniCPM-o 4.5      | Extraction-dominant (single-model constraint); embeddings + reranker via gateway media routes |
 | firecrawl            | `omni`            | MiniCPM-o 4.5      | Batch page extraction/summarization                          |
@@ -150,10 +147,10 @@ the canonical `/mcp` upstream):
 
 | Route          | vmcp          | Servers (aggregated)                                          | Key (1Password `agentgateway`) | Issued to                    |
 | -------------- | ------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------- |
-| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar                               | `mcp_search`                   | hermes, open-webui     |
-| `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | hermes                      |
-| `/mcp/github-ro` | `vmcp-github-ro` | github-ro (read-only mode + lockdown; repos/issues/pull_requests) | `mcp_github_ro`            | hermes |
-| `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW)                                           | `mcp_agent`                    | hermes, external operator agents |
+| `/mcp/search`  | `vmcp-search` | firecrawl, context7, trendradar                               | `mcp_search`                   | open-webui |
+| `/mcp/cluster` | `vmcp-cluster`| kubernetes, fluxcd, victoria-logs/-metrics/-traces   | `mcp_cluster`                  | none in-cluster (operator key) |
+| `/mcp/github-ro` | `vmcp-github-ro` | github-ro (read-only mode + lockdown; repos/issues/pull_requests) | `mcp_github_ro`            | none in-cluster (operator key) |
+| `/mcp/agent`   | `vmcp-agent`  | forgejo (ticket RW)                                           | `mcp_agent`                    | external operator agents only |
 | `/mcp/browser` | `vmcp-browser`| playwright (Chromium via pod-local CDP proxy)                 | `mcp_browser`                  | none (reserved)                    |
 | `/mcp/github-pr` | `vmcp-github-pr` | github-pr (branch/commit/create PR, no merge)              | `mcp_github_pr`                | none (reserved)                    |
 
@@ -162,9 +159,10 @@ scopes the search consumer to search and keeps chat-tier consumers out of the
 tickets repo. The read-only GitHub server was split out of
 `search` into its own `github-ro` tier so cluster-tier consumers can hold code
 retrieval without the web-retrieval toolsets; `search` no longer exposes GitHub.
-With the DSH apps archived, search is consumed by hermes and open-webui;
-cluster and github-ro by hermes. Browser and github-pr remain defined but are
-unused. The `persona` tier is retired with hindsight (2026-11): memory is reached
+With the DSH apps archived, search is consumed by open-webui; cluster and
+github-ro have no in-cluster consumer (their keys stay in 1Password for operator
+use); the agent tier is held only by external operator agents. Browser and
+github-pr remain defined but are unused. The `persona` tier is retired with hindsight (2026-11): memory is reached
 directly at `http://nas.homelab.internal:8888/mcp/<bank>`, so the proxy that only
 existed to expose it is archived under `.archived/kubernetes/servitor/mcp/`.
 `mcp_agent` is never distributed to in-cluster
@@ -196,8 +194,7 @@ rather than passing them unguarded). The 1.4.0 LoopRule evaluates only the
 newest call fingerprint: historical retry triads cannot deny new tools or
 arguments, while identical retries still block. This prevents denied attempts
 from permanently locking a trace. Scope decision (2026-10-20): search is
-the tier where untrusted web content reaches an unguarded lane (any `uncensored`- or `persona`-lane consumer). Hermes rides the guarded
-`agent` LLM lane, and the ExtMCP sidecar additionally scans MCP tool content
+the tier where untrusted web content reaches an unguarded lane (any `uncensored`- or `persona`-lane consumer). The ExtMCP sidecar additionally scans MCP tool content
 because forgejo ticket bodies carry alert/log-derived (untrusted) strings.
 DSH Web now uses only the unguarded `uncensored` lane or direct DeepSeek and
 the search/cluster tiers; those LLM calls are not covered by the agent
@@ -224,27 +221,22 @@ All lanes run on the MacStudio inference host (`uncensored` Qwen3.8-27B, `person
 
 ## AI Agent Platform
 
-### Hermes Agent
+### Hermes Agent (native, outside the cluster)
 
-Runs `ghcr.io/soulwhisper/hermes-agent` — the upstream image plus baked
-extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
-`dashboard` in one container. Tag tracks upstream semver releases.
+Archived from the cluster in 2026-11: the homelab runs exactly one Hermes, the
+native instance on `nix-ops` (`nix-config` → `hermes-agent`, dashboard
+`10.10.0.200:9119`, gateway `:8642`). Two gateways meant two Feishu websocket
+consumers, two cron tickers and two memory stores.
 
-| Component | Port | Notes                       |
-| --------- | ---- | --------------------------- |
-| Dashboard | 9119 | SSO-protected               |
-| Gateway   | 8642 | Internal; probes require `/health` plus a current cron heartbeat |
-
-- **Runtime**: user namespaces (`hostUsers: false`) + RuntimeDefault seccomp + egress CNP (ADR-03; Kata removed)
-- **Resources**: req: 750m CPU / 1Gi RAM, lim: 4Gi RAM
-- **Integrations**: Feishu (plugin `plugins/platforms/feishu`, WebSocket mode, the only messaging platform), Firecrawl (internal), ToolHive MCP (`search`+`cluster`+`agent` tiers in the ops profile; the default profile has no MCP access), Agent Gateway LLM
-- **Egress**: CiliumNetworkPolicy — agentgateway-proxy:80 (L7: POST `/v1/*` + `/mcp/*` only), kube-dns, world-except-private :443 restricted to TLS SNI `open.feishu.cn` (API) + `msg-frontier.feishu.cn` (long-connection WebSocket frontend). No direct vmcp access — MCP goes through the guarded tiered `/mcp/*` endpoints like every other client
-- **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 + webhook ingest :8644 via kgateway-internal (shared rule), webhook ingest :8644 also from LAN, profile API :8642 same-namespace only; `fromEntities: host` keeps kubelet probes working
-- **Depends on**: `agentgateway` (Flux dependency)
-- **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
-  - `ops` — the batching brain: cron/Feishu/automation workload lives here (search, cluster read-only, and the agent ticket MCP tier); owns the Feishu adapter, credentials, home channel and new Feishu sessions
-  - `default` — fallback/scratch with no Feishu adapter and no MCP servers (chat through the provider only); the retired `chat` profile was removed 2026-10 when the human interface moved to dedicated portals
-  Model/provider config (`model.provider: custom` → agent gateway, `model.default: agent`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression`/`title_generation` → `omni`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. The main brain uses `OPENAI_API_KEY` (`llm_agent`); each aux task selects `OPENAI_AUX_API_KEY` (`llm_omni`) via `key_env`, so the agent key is never accepted on the omni route. Requires 1Password `hermes-agent` field: `api_server_key_root` (>=16 chars)
+- **Config**: `nix-config` owns the module, the model/provider and the aux
+  side-tasks; nothing about it is GitOps-managed from this repo
+- **Current wiring**: a direct provider (no agentgateway lane) and no MCP
+  servers. The gateway lanes and MCP tiers remain available if that changes;
+  their keys are still in the 1Password `agentgateway` item
+- **Retired with the app**: the `hermes.noirprime.com` Authentik forward-auth
+  blueprint (archived), the `open-webui` dependency on it, and its kopiur PVC.
+  Restore steps and a data warning — the prune deletes `/opt/data` — are in
+  `.archived/kubernetes/servitor/hermes-agent/README.md`
 
 ---
 
@@ -310,9 +302,9 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
     across all seven groups (homelab-tickets#59)
 - **Ingress restricted**: only agentgateway-proxy (MCP protocol, tiered `/mcp/*`) and vmagent (metrics scrape) can connect; chat frontends reach tools through the gateway, never directly
 
-### MCP Servers (14 total)
+### MCP Servers (12 total)
 
-#### search (web/docs/news retrieval — hermes, open-webui)
+#### search (web/docs/news retrieval — open-webui)
 
 | Server    | Transport             | Notes                    |
 | --------- | --------------------- | ------------------------ |
@@ -321,13 +313,13 @@ Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backe
 | trendradar | Streamable HTTP :8080 (proxy→:3333) | TrendRadar news DB; gateway-filtered to query/analysis (no trigger/notify) |
 
 
-#### github-ro (read-only code retrieval — hermes)
+#### github-ro (read-only code retrieval — no in-cluster consumer)
 
 | Server    | Transport     | Notes                                                                 |
 | --------- | ------------- | --------------------------------------------------------------------- |
 | github-ro | HTTP :8082    | `GITHUB_READ_ONLY=1` + lockdown, toolsets repos/issues/pull_requests; uses the shared write-capable GitHub PAT from `github-keys` (same credential as github-pr); read-only is enforced by `GITHUB_READ_ONLY=1` plus lockdown, not by token scope. Keeps the FailClosed injection scan. Split from `search` so cluster-tier consumers can hold it without the web-retrieval toolsets. |
 
-#### cluster (read-only, no egress — hermes)
+#### cluster (read-only, no egress — no in-cluster consumer)
 
 | Server        | Transport             | Connects To                   |
 | ------------- | --------------------- | ----------------------------- |
@@ -514,7 +506,7 @@ items:
 | ---- | ----- | ------------ |
 | open-webui MCP bearer key rollout | Restored with the native search-tier bearer connection | Smoke-verify a native tool call after rollout; check the `tool_server.connections` config row if the persisted shape diverges |
 | promptGuard FP rate on extractor traffic | Extractors (firecrawl/trendradar/hindsight) ride the guarded lane with scraped web content in-prompt | Watch gateway 403 rates via logs; if painful, expose `omni-raw` (one unguarded rule) as the designed escape hatch |
-| hermes MCP server endpoints | Done: the ops profile covers search, cluster, and agent tiers; the default profile has no MCP access | Watch ops-profile tool calls |
+| hermes MCP server endpoints | Moot after 2026-11: the in-cluster app is archived; the native Hermes has no MCP servers configured | Re-add tier keys if the native agent is wired to MCP |
 | SillyTavern endpoints | UI-managed, no repo manifests | Self-managed surface; listed for completeness |
 | mcp-guardrails P2 (audit volume, explicit HUMAN_REVIEW_MODE) | Deferred; monitor gateway logs and sampled guardrail spans | Revisit on the first FP/rejection report; a sidecar outage fail-closes ALL tool traffic — accepted blast radius |
 | ASR/TTS model | VoxCPM2-4bit served on the studio via `/v1/audio/speech` and `/v1/audio/transcriptions` (`studio-audio` backend) — lane ready, no in-repo consumer | Point a consumer at the lane when one appears; ASR (`/v1/audio/transcriptions`) wired but unused |

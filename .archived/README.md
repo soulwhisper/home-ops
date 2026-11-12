@@ -50,6 +50,7 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 | `kubernetes/selfhosted/karakeep` | Bookmarks and read-later | Retired with the self-hosted stack |
 | `kubernetes/selfhosted/netbox` | DCIM/IPAM | Retired with the self-hosted stack |
 | `kubernetes/selfhosted/stirling-pdf` | PDF toolbox | Retired with the self-hosted stack |
+| `kubernetes/servitor/hermes-agent` | In-cluster AI agent (gateway + dashboard, Feishu websocket, MCP tier consumers) | Archived 2026-11: the homelab runs one Hermes, the native instance on `nix-ops`. Its Authentik blueprint is archived alongside, and the kopiur-backed `/opt/data` PVC is pruned unless kept — restore steps and the data warning are in the folder `README.md` |
 | `kubernetes/servitor/mcp/grafana` | Grafana MCP server and its service-account token sync | Retired with Grafana; Victoria query MCP servers cover the remaining read-only surface |
 | `kubernetes/servitor/mcp/hindsight` | ToolHive MCP proxies for the hindsight persona and ops banks (base + both overlays) | Hindsight speaks MCP natively, so the proxy duplicated it; with the service on the NAS a consumer points at `nas.homelab.internal:8888/mcp/<bank>`. Archived with its `persona` MCP tier (group, vmcp, route, key) — see the hindsight app's archived `README.md` for the full restore list |
 | `kubernetes/servitor/mcp/smarthome` | MCP smart-home control tier | Retired with the smart-home stack |
