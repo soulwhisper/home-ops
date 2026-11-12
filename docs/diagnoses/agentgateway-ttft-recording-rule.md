@@ -14,19 +14,21 @@ evaluation window.
 
 ## Evidence
 
-All queries run against VMSingle at `2026-11-12T01:5xZ`, 24h lookback.
+All queries run against VMSingle at `2026-11-12T03:01:35Z`; each row names its
+own lookback.
 
 | Query | Result |
 | --- | --- |
-| `count(agentgateway:gen_ai_ttft:p95_5m)` | 0 series |
-| `count_over_time(agentgateway:gen_ai_ttft:p95_5m[24h])` | 0 — the rule has never produced a sample |
-| `count(agentgateway_gen_ai_server_time_to_first_token_bucket)` | 102 series over 17 `le` values |
+| `count(agentgateway:gen_ai_ttft:p95_5m)` | empty — no recorded series |
+| `count_over_time(agentgateway:gen_ai_ttft:p95_5m[7d])` | empty; the 7d lookback spans the rule's whole life (added `2026-11-10`) |
+| `count(agentgateway_gen_ai_server_time_to_first_token_bucket)` | 102 series |
+| `count(count by (le) (agentgateway_gen_ai_server_time_to_first_token_bucket))` | 17 distinct `le` values |
 | `sum(rate(agentgateway_gen_ai_server_time_to_first_token_bucket{le="+Inf"}[5m]))` | 0 |
-| `sum(changes(agentgateway_gen_ai_server_time_to_first_token_count[24h]))` | 0 — no new observations in 24h |
-| `sum(changes(agentgateway_gen_ai_client_token_usage_count[24h]))` | 27 on the busiest series — GenAI metrics do advance |
-| `sum(changes(agentgateway_requests_total[24h]))` | 1984 |
-| `up{job="networking-system/agentgateway-proxy"}` | 1, samples ~5s old |
-| `timestamp` age of the TTFT series | ~5s — scrape path is healthy |
+| `max(changes(agentgateway_gen_ai_server_time_to_first_token_count[24h]))` | 0 — no new observations in 24h |
+| `max(changes(agentgateway_gen_ai_client_token_usage_count[24h]))` | 27 — the busiest GenAI series does advance |
+| `sum(changes(agentgateway_requests_total[24h]))` | 1980 |
+| `up{job="networking-system/agentgateway-proxy"}` | 1 |
+| `time() - max(timestamp(agentgateway_gen_ai_server_time_to_first_token_bucket))` | 0.22 s — scrape path is healthy |
 
 The histogram itself is internally consistent: for a given
 `gen_ai_request_model` + `route` series the `+Inf` bucket equals `_count`
@@ -34,12 +36,12 @@ The histogram itself is internally consistent: for a given
 
 ## Mechanism
 
-`agentgateway_gen_ai_server_time_to_first_token_*` is only observed when a
-completion is streamed; the gateway has no observation to record for a
-non-streaming response. Current traffic produces token-usage and request
-counters but no TTFT observations, so every bucket rate over 5m is `0`.
-`histogram_quantile` over all-zero buckets yields `NaN`, and the recording
-rule therefore writes nothing. The rule is structurally idle, not broken.
+The TTFT histogram is believed to be observed only for streamed completions;
+whether the upstream records anything for a non-streaming response is
+unverified (see Open questions). With no observations, every bucket rate over
+5m is `0`, and `histogram_quantile` over all-zero buckets evaluates to an
+empty vector in VMSingle, so the recording rule writes nothing. The rule is
+structurally idle, not broken.
 
 The AI workload is not persistent: chats arrive in sessions rather than as
 steady load. The same 24h window carries 27 token-usage changes and zero TTFT
@@ -55,7 +57,7 @@ timeout so long streams are not cut. Streaming is therefore client-decided.
 | Option | Change | Trade-off |
 | --- | --- | --- |
 | A. Remove the rule | Delete `agentgateway:gen_ai_ttft:p95_5m` and the sentence advertising it in `docs/application/monitoring.md` | Matches the existing precedent: synced rule groups that are empty by design are disabled rather than tolerated (`helmrelease.yaml`, `RecordingRulesNoData` comment). Loses the series if streaming is adopted later. |
-| B. Widen the window | Evaluate over `[1h]` or `[6h]` instead of `[5m]` | A sparse signal would then produce a value, but a six-hour p95 is a different measurement and will look stale next to the other 5m recordings. |
+| B. Widen the window | Evaluate over `[1h]` or `[6h]` instead of `[5m]`, and rename the recording and its documentation to the new window | A sparse signal would then produce a value, but a six-hour p95 is a different measurement and will look stale next to the other 5m recordings; keeping the `_5m` name would mislabel it. |
 | C. Make streaming the reported path | Client/gateway change so the lanes that should report TTFT stream | Fixes the root cause, but is a product decision and cannot be validated from the metrics alone. |
 | D. Scope the alert | Restrict `RecordingRulesNoData` to rules expected to be dense | Broadest blast radius; this alert has already caught real gaps and should not be weakened to accommodate one idle rule. |
 
@@ -75,7 +77,7 @@ changing the rule.
 
 - Observation: the 7–14 day watch above; treat a single quiet day as
   inconclusive.
-- A: `count(agentgateway:gen_ai_ttft:p95_5m)` stays 0 by design and
+- A: `count(agentgateway:gen_ai_ttft:p95_5m)` stays empty by design and
   `ALERTS{alertname="RecordingRulesNoData", recording="agentgateway:gen_ai_ttft:p95_5m"}`
   clears within one evaluation interval.
 - B: the recording produces a sample only after a streaming request; confirm
