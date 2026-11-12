@@ -1,38 +1,17 @@
 ---
-# Hindsight (AI memory service) — migrated out of the Talos cluster.
-#
-# Why on the NAS: hindsight is the only irreplaceable dataset in the homelab.
-# Everything in the cluster is rebuildable from git; this database is not, and
-# the NAS is the UPS-backed host that already receives the cluster's barman
-# backups. Moving it also drops four Flux objects, the CNPG operator dependency
-# and the daily restart cronjob (the app leaks under steady MCP traffic; compose
-# restart plus the probe below replaces the cronjob).
-#
-# Deployed by doco-cd (working_dir ./infrastructure/synology, depth 1).
-# Consumer: the in-cluster toolhive proxy `mcp-hindsight-{persona,ops}` in
-# servitor-apps, which reaches this stack at http://10.10.0.100:8888/mcp/<bank>.
 name: hindsight
 
 services:
   postgres:
-    # Same image the cluster ran under CloudNativePG (pinned by digest there),
-    # so pgvector + pgroonga and the pgroonga WAL resource manager match the
-    # data this service expects.
     image: "ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2"
     container_name: "hindsight-postgres"
     restart: "unless-stopped"
     command:
       - "postgres"
-      # The WAL resource manager has to be preloaded, exactly as the cluster did
-      # (`shared_preload_libraries: [pgroonga_wal_resource_manager]`); preloading
-      # pgroonga itself is wrong — its initdb hook breaks per-database grn init.
       - "-c"
       - "shared_preload_libraries=pgroonga_wal_resource_manager"
-      # Must be set from first init: pgroonga's WAL resource manager changes the
-      # on-disk format for its own indexes, so flipping it later needs a reindex.
       - "-c"
       - "pgroonga.enable_wal_resource_manager=on"
-      # Sized for one consumer, not the 3-instance CNPG cluster (2GB/400 conns).
       - "-c"
       - "shared_buffers=768MB"
       - "-c"
@@ -44,15 +23,9 @@ services:
     env_file:
       - hindsight.sops.env
     volumes:
-      # postgres:18 declares /var/lib/postgresql as its data volume and keeps the
-      # cluster in a versioned subdirectory (18/docker) beneath it. Mount the
-      # parent so a major-version bump can sit beside the old cluster instead of
-      # overwriting it; PGDATA is left at the image default for the same reason.
-      - "/volume3/docker/hindsight/pgdata:/var/lib/postgresql"
-      # Only runs on an empty data dir — this stack is a rebuild, not a restore.
+      - "/volume3/docker/hindsight:/var/lib/postgresql"
       - "./initdb:/docker-entrypoint-initdb.d:ro"
     healthcheck:
-      # busybox-free image: use the postgres client that ships with it.
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 30s
       timeout: 5s
@@ -78,12 +51,8 @@ services:
     environment:
       - "HINDSIGHT_API_VECTOR_EXTENSION=pgvector"
       - "HINDSIGHT_API_TEXT_SEARCH_EXTENSION=pgroonga"
-      # OTEL traces stay off-cluster: the collector is in-cluster and this host
-      # has no route to its Service IP. Re-add a LAN-reachable endpoint if traces
-      # are wanted later.
       - "HINDSIGHT_API_OTEL_TRACES_ENABLED=false"
     ports:
-      # LAN-bound, not 0.0.0.0: the MCP proxy in the cluster is the only consumer.
       - "10.10.0.100:8888:8888/tcp"
     read_only: true
     tmpfs:
@@ -93,8 +62,6 @@ services:
     security_opt:
       - "no-new-privileges:true"
     healthcheck:
-      # JSON-RPC POST to the persona bank: 401/404 still proves the HTTP server
-      # is up, a refused connection does not.
       test:
         - "CMD-SHELL"
         - "python3 -c \"import socket; s=socket.create_connection(('127.0.0.1',8888),3); s.close()\""
