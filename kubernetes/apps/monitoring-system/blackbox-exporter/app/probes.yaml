@@ -114,8 +114,9 @@ spec:
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
 # Hindsight moved to the NAS (doco-cd stack, `infrastructure/synology/hindsight`).
 # The CNPG alert rules that used to cover its database no longer apply, so this
-# probe replaces them: an unauthenticated GET on a bank endpoint must return 401,
-# which proves the service answers *and* that the API key is still enforced. It does
+# probe replaces them: an unauthenticated POST on a bank endpoint must return 401,
+# which proves the service answers *and* that the API key is still enforced. (GET on
+# the same path is an open liveness stub that returns 200, so it proves nothing.) It does
 # NOT prove Postgres is reachable — auth is rejected before any DB call — so the
 # backup container's dump-freshness healthcheck is the DB-side signal.
 # It catches the container dying, the compose stack being deleted by doco-cd, and

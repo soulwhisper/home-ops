@@ -411,7 +411,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 - Embeddings: **Qwen3-Embedding-0.6B on the MacStudio** (oMLX id `qwen3-embedding-0.6b`, 1024d) via `https://api.noirprime.com/v1/embeddings`
 - Reranker: **Qwen3-Reranker-0.6B on the MacStudio** (Cohere-compatible, id `qwen3-reranker-0.6b`) via `https://api.noirprime.com/v1/rerank`
 - Storage: local Postgres on the NAS with pgvector + pgroonga (same custom image as the CNPG cluster, pinned by digest); `shared_preload_libraries=pgroonga_wal_resource_manager` must be set at init
-- Monitoring: `hindsight-nas` probe (unauthenticated GET must return `401`, which also proves auth is on) → `HindsightNasDown` (5m, critical) and `HindsightProbeMissing` (`absent()`, 10m). The probe does not exercise Postgres — auth is rejected before any DB call — so DB health shows up indirectly in the backup container's dump-freshness healthcheck. The CNPG rules that used to cover the database no longer apply.
+- Monitoring: `hindsight-nas` probe (unauthenticated POST to a bank endpoint must return `401`, which also proves auth is on; `GET /mcp/<bank>` is an open liveness stub returning `200 {}`) → `HindsightNasDown` (5m, critical) and `HindsightProbeMissing` (`absent()`, 10m). The probe does not exercise Postgres — auth is rejected before any DB call — so DB health shows up indirectly in the backup container's dump-freshness healthcheck. The CNPG rules that used to cover the database no longer apply.
 - OTEL tracing is off (the collector is in-cluster and unreachable from the NAS)
 
 ### Archived
