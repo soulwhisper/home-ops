@@ -1,14 +1,5 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  customDatasources: {
-    "immich-machine-learning": {
-      defaultRegistryUrlTemplate: "https://api.github.com/repos/immich-app/immich/releases?per_page=100",
-      format: "json",
-      transformTemplates: [
-        '{"releases": $map($filter($, function($release) { $not($release.draft) and $not($release.prerelease) }), function($release) { {"version": $release.tag_name & "-openvino", "releaseTimestamp": $release.published_at} })}',
-      ],
-    },
-  },
   customManagers: [
     {
       customType: "regex",
