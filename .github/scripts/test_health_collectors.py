@@ -499,6 +499,41 @@ class CephTests(unittest.TestCase):
                 reader.queries[collectors.CEPH_SCALARS[key]] = [sample(value)]
                 self.assertEqual(run(reader, collectors.CEPH)["status"], "fail")
 
+    def test_health_err_is_a_finding_with_complete_coverage(self):
+        reader = CephFixtureReader()
+        reader.queries[collectors.CEPH_SCALARS["health"]] = [sample(2)]
+        outcome = run(reader, collectors.CEPH)
+        self.assertEqual(outcome["status"], "fail")
+        health = categories(outcome)["ceph_cluster_health"]
+        self.assertEqual(health["finding_count"], 1)
+        self.assertTrue(health["coverage_complete"])
+
+    def test_warn_only_cluster_is_a_single_health_finding(self):
+        # A HEALTH_WARN with every OSD and PG nominal is the shape a monitor
+        # clock-skew window takes; it must never be classified as pass, and the
+        # evidence must not be diluted into other categories.
+        reader = CephFixtureReader()
+        reader.queries[collectors.CEPH_SCALARS["health"]] = [sample(1)]
+        outcome = run(reader, collectors.CEPH)
+        self.assertEqual(outcome["status"], "fail")
+        groups = categories(outcome)
+        health = groups["ceph_cluster_health"]
+        self.assertEqual(health["finding_count"], 1)
+        self.assertTrue(health["coverage_complete"])
+        self.assertEqual(groups["ceph_pool_capacity"]["finding_count"], 0)
+        self.assertEqual(groups["ceph_pool_growth_24h"]["finding_count"], 0)
+
+    def test_invalid_health_status_is_an_error_not_a_finding(self):
+        for value in (3, -1):
+            with self.subTest(value=value):
+                reader = CephFixtureReader()
+                reader.queries[collectors.CEPH_SCALARS["health"]] = [sample(value)]
+                outcome = run(reader, collectors.CEPH)
+                self.assertEqual(outcome["status"], "error")
+                health = categories(outcome)["ceph_cluster_health"]
+                self.assertEqual(health["finding_count"], 0)
+                self.assertFalse(health["coverage_complete"])
+
     def test_nearfull_pool_is_a_finding(self):
         reader = CephFixtureReader()
         reader.queries[collectors.CEPH_POOL_USAGE] = [
