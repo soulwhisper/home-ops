@@ -14,8 +14,8 @@ evaluation window.
 
 ## Evidence
 
-All queries run against VMSingle at `2026-11-12T03:01:35Z`; each row names its
-own lookback.
+All queries run against VMSingle at `2026-11-12T03:01:35Z`. Range-query rows
+name their lookback; instant rows are as of that capture time.
 
 | Query | Result |
 | --- | --- |
@@ -45,9 +45,9 @@ structurally idle, not broken.
 
 The AI workload is not persistent: chats arrive in sessions rather than as
 steady load. The same 24h window carries 27 changes on the busiest token-usage
-series and zero TTFT observations, so one quiet day cannot distinguish "no
-streaming client" from "no traffic at all". That is why this page records
-evidence instead of removing the rule.
+series and zero TTFT observations, so one quiet day cannot distinguish an
+unused streaming path from missing TTFT emission. That is why this page
+records evidence instead of removing the rule.
 
 No gateway configuration disables streaming: `httproute.yaml` only raises the
 timeout so long streams are not cut. Streaming is therefore client-decided.
@@ -64,14 +64,15 @@ timeout so long streams are not cut. Streaming is therefore client-decided.
 ## Recommendation
 
 Decide on a longer window than one day. Record 7–14 days of
-`sum(changes(agentgateway_gen_ai_server_time_to_first_token_count[24h]))`
+`max(changes(agentgateway_gen_ai_server_time_to_first_token_count[24h]))`
 alongside token-usage changes, and send at least one known-streaming request
-in that window. Only a streaming request observed with a zero change count
-proves the rule idle rather than merely quiet.
+in that window:
 
-If no streaming client exists and none is planned, take A. If TTFT is wanted,
-take C first and then B, validating with the same streaming request before
-changing the rule.
+- the counter advances and the recording stays empty → widen the window (B)
+  and rename it.
+- the counter does not advance → the emission path is broken; fix upstream (C).
+- no streaming request occurs at all → the lanes do not stream; remove the
+  rule (A).
 
 ## Verification
 
