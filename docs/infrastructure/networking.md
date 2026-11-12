@@ -284,7 +284,9 @@ While the infrastructure is predominantly self-hosted, a small set of cloud serv
 
 ### NTP
 
-The OpenWrt router (`10.255.255.2`) serves as the primary NTP server for the network. The core switch synchronizes to it via `ntp-service unicast-server`, and Talos nodes synchronize via `10.10.0.254` (AdGuardHome, which itself chains to the router). Beijing timezone (UTC+8) is configured on the switch.
+The OpenWrt router (`10.255.255.2`, LAN `10.10.0.254`) serves as the primary NTP server for the network. The core switch synchronizes to it via `ntp-service unicast-server`, and Talos nodes synchronize via `10.10.0.254` (AdGuardHome, which itself chains to the router). Beijing timezone (UTC+8) is configured on the switch.
+
+The router's chrony is scraped every 60 s (`ScrapeConfig/chrony` → `/cgi-bin/chrony`, source in [`infrastructure/openwrt`](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/openwrt)), so its own offset, per-upstream reach and the selected source sit next to `node_timex_offset_seconds` and ceph's `MON_CLOCK_SKEW`. `RouterClockOffsetHigh` fires above 50 ms — before the nodes follow and before ceph warns. The router runs `local stratum 10`, so an upstream outage leaves the LAN following a free-running clock rather than failing over.
 
 ### Key Design Decisions
 

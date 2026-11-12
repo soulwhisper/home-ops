@@ -30,3 +30,22 @@ spec:
     - action: replace
       targetLabel: job
       replacement: *name
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: &name chrony
+spec:
+  staticConfigs:
+    - targets:
+        - 10.10.0.254:80
+  metricsPath: /cgi-bin/chrony
+  scrapeInterval: 60s
+  relabelings:
+    - action: replace
+      targetLabel: job
+      replacement: *name
+    - action: replace
+      sourceLabels: [__address__]
+      targetLabel: instance
+      replacement: router.homelab.internal
