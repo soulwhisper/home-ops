@@ -125,12 +125,14 @@ services:
     env_file:
       - hindsight.sops.env
     environment:
+      - "HINDSIGHT_API_WORKER_ID=hindsight"
       - "HINDSIGHT_API_VECTOR_EXTENSION=pgvector"
       - "HINDSIGHT_API_TEXT_SEARCH_EXTENSION=pgroonga"
       - "HINDSIGHT_API_OTEL_TRACES_ENABLED=false"
       - "HINDSIGHT_API_TENANT_EXTENSION=hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension"
     ports:
       - "8888:8888/tcp"
+      - "9999:9999/tcp"
     mem_limit: "2g"
     read_only: true
     tmpfs:
