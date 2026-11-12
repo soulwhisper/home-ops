@@ -36,3 +36,17 @@ Re-add the directory and the `ks.yaml` entry, put back the `open-webui`
 (file-list entry and outpost provider) or the dashboard comes back unserved.
 The Feishu app credentials are in the `hermes-agent` 1Password item — note that
 restoring this app makes a second websocket consumer of the same bot.
+
+## Renovate configuration for restore
+
+`.renovate/autoMerge.json5` lost one entry when this app was archived: the image
+was in the "Kubernetes, Talos, and sensitive app updates require human review"
+rule (`matchPackageNames`), so a Hermes bump could never auto-merge. Renovate
+ignores `.archived/**`, so re-add it with the app:
+
+```json5
+        "ghcr.io/soulwhisper/hermes-agent",
+```
+
+Without it the image falls back to the user-apps automerge rule for patch and
+minor bumps — the opposite of what a hand-tracked agent build wants.
