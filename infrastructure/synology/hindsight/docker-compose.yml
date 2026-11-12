@@ -24,7 +24,7 @@ services:
         fi
         echo "preflight ok: image major $want, data dir ${found:-empty}"
     volumes:
-      - "/volume3/docker/hindsight:/var/lib/postgresql:ro"
+      - "/volume3/docker/hindsight/data:/var/lib/postgresql:ro"
 
   postgres:
     image: "ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2"
@@ -51,7 +51,7 @@ services:
     env_file:
       - postgres.sops.env
     volumes:
-      - "/volume3/docker/hindsight:/var/lib/postgresql"
+      - "/volume3/docker/hindsight/data:/var/lib/postgresql"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 30s
