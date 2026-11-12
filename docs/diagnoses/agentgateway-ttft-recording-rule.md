@@ -1,6 +1,6 @@
 # Agentgateway TTFT recording rule: diagnosis
 
-**Status:** open, awaiting a decision. Nothing is changed by this page.
+**Status:** open, awaiting a longer watch and a decision. Nothing is changed by this page.
 **Date:** 2026-11-12
 **Scope:** `agentgateway:gen_ai_ttft:p95_5m` in the `agentgateway.rules` group of
 `kubernetes/apps/monitoring-system/victoria-metrics/cluster/prometheusrule.yaml`.
@@ -41,6 +41,12 @@ counters but no TTFT observations, so every bucket rate over 5m is `0`.
 `histogram_quantile` over all-zero buckets yields `NaN`, and the recording
 rule therefore writes nothing. The rule is structurally idle, not broken.
 
+The AI workload is not persistent: chats arrive in sessions rather than as
+steady load. The same 24h window carries 27 token-usage changes and zero TTFT
+observations, so one quiet day cannot distinguish "no streaming client" from
+"no traffic at all". That is why this page records evidence instead of
+removing the rule.
+
 No gateway configuration disables streaming: `httproute.yaml` only raises the
 timeout so long streams are not cut. Streaming is therefore client-decided.
 
@@ -55,12 +61,20 @@ timeout so long streams are not cut. Streaming is therefore client-decided.
 
 ## Recommendation
 
-Decide whether TTFT is a signal we intend to act on. If not, take A. If it is,
-take C first and then B, and validate with a real streaming request before
+Decide on a longer window than one day. Record 7–14 days of
+`sum(changes(agentgateway_gen_ai_server_time_to_first_token_count[24h]))`
+alongside token-usage changes, and send at least one known-streaming request
+in that window. Only a streaming request observed with a zero change count
+proves the rule idle rather than merely quiet.
+
+If no streaming client exists and none is planned, take A. If TTFT is wanted,
+take C first and then B, validating with the same streaming request before
 changing the rule.
 
 ## Verification
 
+- Observation: the 7–14 day watch above; treat a single quiet day as
+  inconclusive.
 - A: `count(agentgateway:gen_ai_ttft:p95_5m)` stays 0 by design and
   `ALERTS{alertname="RecordingRulesNoData", recording="agentgateway:gen_ai_ttft:p95_5m"}`
   clears within one evaluation interval.
