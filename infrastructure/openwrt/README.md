@@ -39,8 +39,7 @@ each sample is fresh and timestamped by the scrape.
 ### Why
 
 Steps on this clock reach every production node (the prod Talos
-`TimeSyncConfig` points at `10.10.0.254`; the test environment uses
-`172.19.82.10`) and can trip ceph's `MON_CLOCK_SKEW`. Without the router's own
+`TimeSyncConfig` points at `10.10.0.254`. Without the router's own
 offset, node and ceph clock alerts can only show that the source moved, not
 which hop moved. The alerts are `RouterClockOffsetHigh` (above 50 ms),
 `RouterClockSourcesUnreachable`, and `RouterClockMetricsUnavailable`.
