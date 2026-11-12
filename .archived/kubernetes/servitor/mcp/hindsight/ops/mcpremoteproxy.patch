@@ -18,4 +18,4 @@
 # Hindsight creates the bank on first retain; reads require it to exist.
 - op: add
   path: /spec/remoteUrl
-  value: http://nas.homelab.internal:8888/mcp/ops
+  value: http://hindsight.selfhosted-apps.svc.cluster.local:8888/mcp/ops

@@ -15,4 +15,4 @@
 # exist, so 404s before the first retain are expected.
 - op: add
   path: /spec/remoteUrl
-  value: http://nas.homelab.internal:8888/mcp/persona
+  value: http://hindsight.selfhosted-apps.svc.cluster.local:8888/mcp/persona

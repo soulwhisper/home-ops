@@ -360,8 +360,9 @@ A model-facing `MCPToolConfig` allowlist was tried and removed the same day
 through a lossy struct that strips the SEP-2322 `resultType` envelope, which
 vmcp rejects for Modern-era backends — the forgejo backend circuit-broke out
 of its group until the filter was dropped. Permission filtering now lives at
-the gateway where needed (see filters.yaml); toolhive `MCPToolConfig` is
-kept ONLY for the hindsight banks' description overrides. No draftbox or
+the gateway where needed (see filters.yaml); the only `MCPToolConfig` was the
+hindsight banks' description override and it is archived with those proxies, so
+none remain. No draftbox or
 broad user PAT was provisioned.
 
 #### browser (no current consumer)

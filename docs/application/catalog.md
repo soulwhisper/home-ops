@@ -131,7 +131,7 @@ Six direct application definitions and 12 nested MCP definitions. ToolHive confi
 
 ### MCP Definitions (12)
 
-The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/kustomization.yaml) selects 12 definition files declaring 14 child Flux Kustomizations: GitHub has two identities, Hindsight has two, and each other definition has one. These are not 12 individual backend server instances.
+The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/kustomization.yaml) selects 11 definition files declaring 12 child Flux Kustomizations: GitHub has two identities and each other definition has one. These are not 12 individual backend server instances.
 
 | Definition | Purpose |
 | --- | --- |
@@ -140,7 +140,6 @@ The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/app
 | [FluxCD](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/fluxcd/ks.yaml) | Read-only Flux inspection |
 | [Forgejo](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/forgejo/ks.yaml) | Operator ticket tools |
 | [GitHub](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/github/ks.yaml) | Read-only search and separate branch/commit/pull-request tools |
-| [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/hindsight/ks.yaml) | Memory proxies for the persona and ops banks |
 | [Kubernetes](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/kubernetes/ks.yaml) | Kubernetes inspection tools |
 | [Playwright MCP](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/playwright/ks.yaml) | Browser automation tools using the standalone browser runtime |
 | [TrendRadar](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/trendradar/ks.yaml) | News retrieval tools |

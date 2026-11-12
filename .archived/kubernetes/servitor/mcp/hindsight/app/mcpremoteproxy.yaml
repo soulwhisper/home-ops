@@ -6,11 +6,7 @@ metadata:
   name: mcp-hindsight
 spec:
   # Default persona bank; each overlay selects its own single-bank endpoint.
-  # hindsight runs on the NAS (doco-cd stack `infrastructure/synology/hindsight`)
-  # — the memory store is the one dataset in the homelab that cannot be rebuilt
-  # from git, so it lives on the UPS-backed host. The hostname resolves to the
-  # NAS on the flat 10.10.0.0/24; access control is a NAS-side concern.
-  remoteUrl: http://nas.homelab.internal:8888/mcp/persona
+  remoteUrl: http://hindsight.selfhosted-apps.svc.cluster.local:8888/mcp/persona
   # in-cluster DNS suffix is blocked by toolhive's SSRF guard unless opted in
   allowPrivateEndpoint: true
   proxyPort: 8080
