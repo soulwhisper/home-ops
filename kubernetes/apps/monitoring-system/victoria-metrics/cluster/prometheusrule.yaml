@@ -92,6 +92,42 @@ spec:
           for: 5m
           labels:
             severity: warning
+        # The edge router is the NTP source for every node and the switch, so
+        # its own offset moves before node drift and ceph's mon clock check.
+        - alert: RouterClockOffsetHigh
+          annotations:
+            summary: "router clock is {{ $value | humanizeDuration }} from NTP"
+            description: >-
+              The router feeds NTP to the nodes. An offset above 50ms reaches
+              them on their next poll and can trip ceph's mon clock check.
+              Check chrony sources and WAN state before blaming node or ceph
+              clocks.
+          expr: abs(chrony_system_offset_seconds) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+        - alert: RouterClockSourcesUnreachable
+          annotations:
+            summary: "no chrony source is reachable on the router"
+            description: >-
+              With local stratum 10 the router keeps answering NTP while its
+              clock free-runs, so the nodes follow a drifting source. Check WAN
+              and upstream reachability before trusting node or ceph clock
+              signals.
+          expr: chrony_sources_reachable == 0
+          for: 10m
+          labels:
+            severity: warning
+        - alert: RouterClockMetricsUnavailable
+          annotations:
+            summary: "chrony metrics from the edge router are missing or unparsable"
+            description: >-
+              vmagent could not scrape the router's chrony metrics, or the CGI
+              parser reported failure, so drift on the NTP source is unobserved.
+          expr: absent(chrony_metrics_ok) or chrony_metrics_ok == 0
+          for: 15m
+          labels:
+            severity: warning
         - alert: HolmesHealthCheckFailed
           annotations:
             summary: "Holmes health check {{ $labels.name }} last result: {{ $labels.result }}"
