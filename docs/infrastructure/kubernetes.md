@@ -41,8 +41,8 @@ flowchart TB
         FR --> CA
         CA --> NS["9 namespace
         Kustomize indexes"]
-        NS --> APPS["66 ks.yaml files
-        92 child Flux Kustomizations"]
+        NS --> APPS["64 ks.yaml files
+        89 child Flux Kustomizations"]
     end
 
     subgraph Components["Kustomize Components"]
@@ -69,7 +69,7 @@ flowchart TB
         OCIRepositories"]
         OCI_TPL["1 shared app-template
         OCIRepository"]
-        CROSS["15 cross-namespace
+        CROSS["14 cross-namespace
         HelmReleases"]
     end
 
@@ -108,11 +108,11 @@ The two cluster-level `Kustomization` resources live in [`kubernetes/flux/cluste
 
 Neither [`kubernetes/apps/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) nor [`kubernetes/flux/cluster/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/flux/cluster) has a root `kustomization.yaml`. Flux autogenerates these build entrypoints by discovering manifests and explicit Kustomize indexes. Adding resources under an auto-discovered root can therefore affect deployment; `apps/` is not an inactive definition library.
 
-The 9 namespace directories each have an explicit **Kustomize index**, not a separate namespace-level Flux Kustomization. For example, the [`monitoring-system` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/kustomization.yaml) selects application `ks.yaml` files and shared namespace components. Its `namespace: monitoring-system` injects `metadata.namespace` into the selected namespaced objects. All **92 child Flux Kustomizations** omit `metadata.namespace` in their source and rely on this index; `spec.targetNamespace` controls their rendered resources, not the namespace of the Flux Kustomization itself.
+The 9 namespace directories each have an explicit **Kustomize index**, not a separate namespace-level Flux Kustomization. For example, the [`monitoring-system` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/kustomization.yaml) selects application `ks.yaml` files and shared namespace components. Its `namespace: monitoring-system` injects `metadata.namespace` into the selected namespaced objects. All **89 child Flux Kustomizations** omit `metadata.namespace` in their source and rely on this index; `spec.targetNamespace` controls their rendered resources, not the namespace of the Flux Kustomization itself.
 
-There are **66 `ks.yaml` definition units**, containing one or more Flux Kustomizations each, and **67 HelmReleases**. A `ks.yaml` selects resource build paths such as `app/`, `cluster/`, `drivers/`, or `config/`; it is not interchangeable with an `app/kustomization.yaml`, which builds workload resources. For example, [`rook-ceph/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/rook-ceph/ks.yaml) defines three child Kustomizations. The [`servitor-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml) also includes a nested `mcp/` index.
+There are **64 `ks.yaml` definition units**, containing one or more Flux Kustomizations each, and **65 HelmReleases**. A `ks.yaml` selects resource build paths such as `app/`, `cluster/`, `drivers/`, or `config/`; it is not interchangeable with an `app/kustomization.yaml`, which builds workload resources. For example, [`rook-ceph/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/rook-ceph/ks.yaml) defines three child Kustomizations. The [`servitor-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml) also includes a nested `mcp/` index.
 
-The source/static count is **94 Flux Kustomizations** (92 children plus the two in `cluster.yaml`). The operator-created root adds one, giving **95 in the deployed topology**. See the [Application Catalog](../application/catalog.md) for definition paths and counts, and [Storage](storage.md) for data ownership and lifecycle boundaries.
+The source/static count is **91 Flux Kustomizations** (89 children plus the two in `cluster.yaml`). The operator-created root adds one, giving **92 in the deployed topology**. See the [Application Catalog](../application/catalog.md) for definition paths and counts, and [Storage](storage.md) for data ownership and lifecycle boundaries.
 
 To inspect an application's composed output from the repository root:
 
@@ -135,13 +135,13 @@ The [FluxInstance configuration](https://github.com/soulwhisper/home-ops/blob/ma
 
 ## Strategic Patching System
 
-The `cluster-apps` Kustomization applies three strategic patches to its 92 child Flux Kustomizations. They are defined in [`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml); the effective configuration includes these patches, not just the local `ks.yaml`.
+The `cluster-apps` Kustomization applies three strategic patches to its 89 child Flux Kustomizations. They are defined in [`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml); the effective configuration includes these patches, not just the local `ks.yaml`.
 
 ### Layer 1: Kustomization Defaults (managed annotation)
 
 **Target**: Any `Kustomization` with annotation `config.home-ops.io/managed=true`
 
-All 92 child Flux Kustomizations carry this annotation. The patch sets:
+All 89 child Flux Kustomizations carry this annotation. The patch sets:
 
 ```yaml
 spec:
@@ -159,7 +159,7 @@ spec:
 `wait: true` in its own `ks.yaml` — an injected default would silently
 override it.
 
-These scalar values override local declarations. In particular, [`flux-operator`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-operator/ks.yaml), [`flux-instance`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/ks.yaml), and [`coredns`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/coredns/ks.yaml) declare `prune: false` locally, but all three have effective `prune: true`, as do all 92 children. The local value is not deletion protection; changes that remove a core Kustomization or alter its ownership must account for its effective prune behavior.
+These scalar values override local declarations. In particular, [`flux-operator`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-operator/ks.yaml), [`flux-instance`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/ks.yaml), and [`coredns`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/coredns/ks.yaml) declare `prune: false` locally, but all three have effective `prune: true`, as do all 89 children. The local value is not deletion protection; changes that remove a core Kustomization or alter its ownership must account for its effective prune behavior.
 
 ### Layer 2: Baseline Infrastructure Dependencies (deps label)
 
@@ -287,7 +287,7 @@ spec:
     namespace: gitops-system
 ```
 
-This cross-namespace reference is used by 15 HelmReleases across 4 namespaces:
+This cross-namespace reference is used by 14 HelmReleases across 4 namespaces:
 
 | Namespace         | Count | Apps |
 | ----------------- | ----- | ---- |
@@ -506,7 +506,7 @@ Two custom labels and an annotation drive the strategic patching and component i
 
 **Type**: Annotation
 **Purpose**: Opts a `Kustomization` into Layer 1 strategic patching (Kustomization defaults).
-**Scope**: All 92 child Flux Kustomizations in 66 `ks.yaml` files.
+**Scope**: All 89 child Flux Kustomizations in 64 `ks.yaml` files.
 
 Without this annotation, a Kustomization would not receive the automatic `sourceRef`, `prune`, `interval`, and `timeout` defaults. Infrastructure-only Kustomizations (like `flux-repositories`) omit it intentionally.
 

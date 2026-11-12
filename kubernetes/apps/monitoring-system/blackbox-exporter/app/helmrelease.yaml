@@ -115,8 +115,8 @@ spec:
         - alert: BlackboxProbeFailed
           # $labels.target does not exist on probe metrics (host is .instance).
           # Services with dedicated canary alerts are excluded so their severity
-          # is decided once: macstudio (5m), firecrawl/scrape (10m) and
-          # firecrawl/searxng search (10m).
+          # is decided once: macstudio (5m), hindsight (5m), firecrawl/scrape
+          # (10m) and firecrawl/searxng search (10m).
           expr: probe_success{service!~"^(macstudio|firecrawl-scrape|firecrawl-search|searxng-search|hindsight)$"} == 0
           for: 15m
           labels:
@@ -151,6 +151,19 @@ spec:
               Hindsight MCP port unreachable on the NAS ({{ $labels.instance }}, 5m).
               Check the doco-cd stack `hindsight`: postgres health, disk space on
               /volume3, and that hindsight.sops.env still decrypts on restart.
+        # A missing series looks identical to health: if the Probe object is
+        # deleted or renamed, HindsightNasDown has nothing to evaluate and the
+        # generic rule excludes the service. absent() catches the hole itself.
+        - alert: HindsightProbeMissing
+          expr: absent(probe_success{service="hindsight"})
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: |-
+              No probe_success series for service="hindsight" for 10m: the
+              hindsight-nas Probe is missing or unscraped, so HindsightNasDown
+              cannot fire either. Check the Probe object and vmagent's scrape.
         # Firecrawl search/scrape canaries. Native /metrics is absent, so
         # probe_success carries the content/challenge failure signal. Use
         # stable canaries only; do not add NYT/36kr (known anti-bot failures).

@@ -47,8 +47,9 @@ services:
       - "wal_level=replica"
       - "-c"
       - "archive_mode=off"
+    # Database credentials only — the app's model keys stay out of this container.
     env_file:
-      - hindsight.sops.env
+      - postgres.sops.env
     volumes:
       - "/volume3/docker/hindsight:/var/lib/postgresql"
     healthcheck:
@@ -57,6 +58,48 @@ services:
       timeout: 5s
       retries: 5
       start_period: 40s
+    security_opt:
+      - "no-new-privileges:true"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    networks:
+      - internal
+
+  # The database is the one thing the cluster cannot rebuild, so it gets a dump
+  # on start and every 24h. Dumps land under the stack directory that the NAS
+  # snapshot schedule already covers; an off-host copy is still the operator's
+  # job. Retention: 7 days.
+  backup:
+    image: "ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2"
+    container_name: "hindsight-backup"
+    restart: "unless-stopped"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - postgres.sops.env
+    entrypoint: ["/bin/bash", "-eu", "-c"]
+    command:
+      - |
+        mkdir -p /backups
+        while true; do
+          ts=$$(date -u +%Y%m%dT%H%M%SZ)
+          export PGPASSWORD="$$POSTGRES_PASSWORD"
+          if pg_dump -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" \
+               -Fc -f "/backups/$$ts.dump.tmp"; then
+            mv "/backups/$$ts.dump.tmp" "/backups/$$ts.dump"
+            echo "backup ok: $$ts.dump"
+          else
+            rm -f "/backups/$$ts.dump.tmp"
+            echo "backup FAILED at $$ts" >&2
+          fi
+          find /backups -maxdepth 1 -name '*.dump' -mtime +7 -delete
+          sleep 86400
+        done
+    volumes:
+      - "/volume3/docker/hindsight/backups:/backups"
+    mem_limit: "256m"
     security_opt:
       - "no-new-privileges:true"
     logging:
@@ -79,7 +122,14 @@ services:
       - "HINDSIGHT_API_TEXT_SEARCH_EXTENSION=pgroonga"
       - "HINDSIGHT_API_OTEL_TRACES_ENABLED=false"
     ports:
+      # Hindsight has no auth layer of its own. The bind is 0.0.0.0 because the
+      # NAS firewall is the boundary: allow 8888 only from the cluster node
+      # CIDRs (10.10.0.101-103) before relying on this.
       - "8888:8888/tcp"
+    # The upstream process leaks under steady MCP traffic (the in-cluster
+    # deployment ran a daily restart cronjob for it). Cap it at the old 2Gi
+    # limit so growth ends in an OOM restart, not host memory pressure.
+    mem_limit: "2g"
     read_only: true
     tmpfs:
       - "/tmp"
@@ -88,9 +138,14 @@ services:
     security_opt:
       - "no-new-privileges:true"
     healthcheck:
+      # HTTP, not a bare socket: a hung API still accepts TCP. Any status under
+      # 500 proves the HTTP stack answers; the banks speak JSON-RPC, so a 4xx is
+      # expected and healthy.
       test:
-        - "CMD-SHELL"
-        - "python3 -c \"import socket; s=socket.create_connection(('127.0.0.1',8888),3); s.close()\""
+        - "CMD"
+        - "python3"
+        - "-c"
+        - "import http.client,sys;c=http.client.HTTPConnection('127.0.0.1',8888,timeout=5);c.request('GET','/mcp/persona');sys.exit(0 if c.getresponse().status<500 else 1)"
       interval: 60s
       timeout: 10s
       retries: 3

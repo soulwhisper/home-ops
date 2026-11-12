@@ -1,8 +1,8 @@
 # Application Catalog
 
-66 application definition units across 9 namespaces, managed via Flux GitOps. Each table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload.
+64 application definition units across 9 namespaces, managed via Flux GitOps. Each table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload.
 
-The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 9 first-level namespace directories. Together, those namespaces have 55 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 66 definition files declare 93 child Flux Kustomizations and lead to 67 HelmReleases. There are 48 OCIRepositories across the source tree: 47 application-local and one shared app-template source. These are source counts, not counts of running applications.
+The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 9 first-level namespace directories. Together, those namespaces have 54 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 64 definition files declare 89 child Flux Kustomizations and lead to 65 HelmReleases. There are 48 OCIRepositories across the source tree: 47 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
 Definitions that are intentionally not deployed live under [`.archived/kubernetes`](https://github.com/soulwhisper/home-ops/tree/main/.archived/kubernetes); see the [archive index](https://github.com/soulwhisper/home-ops/blob/main/.archived/README.md) for why each definition is kept.
 
@@ -101,7 +101,7 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [KRR](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/krr/ks.yaml) | Scheduled Kubernetes resource recommendations |
 | [Webhook Relay](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/webhook-relay/ks.yaml) | Inbound webhook collection and Feishu fan-out |
 
-## selfhosted-apps — Self-Hosted Services (6)
+## selfhosted-apps — Self-Hosted Services (5)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/kustomization.yaml)
 
@@ -110,9 +110,16 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [TrendRadar](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/trendradar/ks.yaml) | Scheduled AI news digest |
 | [SearXNG](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/searxng/ks.yaml) | Privacy-focused metasearch |
 | [Homepage](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/homepage/ks.yaml) | Application dashboard |
-| [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/hindsight/docker-compose.yml) | AI memory service (NAS compose stack) |
 | [Firecrawl](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/firecrawl/ks.yaml) | Web scraping pipeline |
 | [Bambuddy](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/bambuddy/ks.yaml) | Bambu Lab 3D printer monitor |
+
+## NAS — Compose services (1)
+
+Managed by [doco-cd](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/synology) from git, not by Flux: these definitions live outside `kubernetes/` and are not part of the 64 Flux definition units above.
+
+| App | Purpose |
+| --- | --- |
+| [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/hindsight/docker-compose.yml) | AI memory service (moved out of the cluster; data lives on the NAS) |
 
 ## servitor-apps — AI Infrastructure (17)
 
