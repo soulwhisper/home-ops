@@ -114,9 +114,10 @@ spec:
 # yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/monitoring.coreos.com/probe_v1.json
 # Hindsight moved to the NAS (doco-cd stack, `infrastructure/synology/hindsight`).
 # The CNPG alert rules that used to cover its database no longer apply, so this
-# TCP probe replaces them: it catches the container dying, the compose stack
-# being deleted by doco-cd, and the NAS losing the stack on reboot. A TCP check
-# is deliberate — the MCP endpoints are JSON-RPC and a GET would 405 on health.
+# probe replaces them: an unauthenticated GET on a bank endpoint must return 401,
+# which proves the service answers *and* that the API key is still enforced.
+# It catches the container dying, the compose stack being deleted by doco-cd, and
+# the NAS losing the stack on reboot.
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:
@@ -124,12 +125,12 @@ metadata:
 spec:
   interval: 60s
   scrapeTimeout: 10s
-  module: tcp_connect
+  module: hindsight_auth
   prober:
     url: blackbox-exporter.monitoring-system.svc.cluster.local:9115
   targets:
     staticConfig:
       static:
-        - nas.homelab.internal:8888
+        - http://nas.homelab.internal:8888/mcp/persona
       labels:
         service: hindsight

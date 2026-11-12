@@ -126,14 +126,15 @@ the `homelab-tickets` repo's `learnings/YYYY-MM-DD-ticket<N>-<slug>.md` as appli
   the Hindsight `ops` bank is a recall index over them, never the source of
   truth. Hindsight left the cluster with its service, so the bank is called
   directly at `http://nas.homelab.internal:8888/mcp/ops` — native MCP, no
-  ToolHive proxy tier, no `/mcp/agent` bank entry and no per-lane key. If recall
-  and the lesson file disagree, the lesson file wins.
+  ToolHive proxy tier and no `/mcp/agent` bank entry. It requires a bearer key:
+  send `Authorization: Bearer <key>` (the operator holds it; a request without
+  it gets `401`). If recall and the lesson file disagree, the lesson file wins.
 - The bank was rebuilt empty when the service moved (it held test data only), so
   an empty recall means no memory yet, not no history — read `learnings/` before
   concluding anything.
-- That endpoint is LAN-only and unauthenticated: treat write access as
-  operator-equivalent. The no-secrets rule below applies to it as strictly as to
-  the repo.
+- That endpoint is LAN-only, plain HTTP, and holds one shared key — treat write
+  access as operator-equivalent anyway. The no-secrets rule below applies to it
+  as strictly as to the repo.
 - Recurrence recall includes matching source-ticket bodies and all comments.
   Full lesson recall reads the lesson file and its source ticket, including
   comments; listing `learnings/` filenames is discovery, not recall.
