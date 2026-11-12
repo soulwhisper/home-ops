@@ -59,6 +59,8 @@ nav:
       - AI: application/ai.md
   - Operations:
       - Bootstrap: deployment/bootstrap.md
+      - Diagnoses:
+          - Agentgateway TTFT recording rule: diagnoses/agentgateway-ttft-recording-rule.md
   - Decisions:
       - BGP: decisions/bgp.md
       - Public Exposure: decisions/public-exposure.md

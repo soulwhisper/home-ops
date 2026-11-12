@@ -161,7 +161,7 @@ The exporter uses queued retry with 10 consumers, 5000 queue depth, and exponent
 
 ### AgentGateway metrics
 
-`agentgateway_*` metrics are already scraped by the gateway ServiceMonitor/PodMonitor. The `agentgateway.rules` recording group exposes `agentgateway:gen_ai_tokens:rate5m` (model, token type, route), `agentgateway:requests:rate5m` and `agentgateway:mcp_requests:rate5m` (route, status), and `agentgateway:gen_ai_ttft:p95_5m` (model, route).
+`agentgateway_*` metrics are already scraped by the gateway ServiceMonitor/PodMonitor. The `agentgateway.rules` recording group exposes `agentgateway:gen_ai_tokens:rate5m` (model, token type, route), `agentgateway:requests:rate5m` and `agentgateway:mcp_requests:rate5m` (route, status), and `agentgateway:gen_ai_ttft:p95_5m` (model, route). The TTFT recording only has data for streamed completions; see the [TTFT recording-rule diagnosis](../diagnoses/agentgateway-ttft-recording-rule.md) before relying on it.
 
 ## Host, cluster, and disk metrics
 
