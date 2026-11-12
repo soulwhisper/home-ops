@@ -74,6 +74,11 @@ metadata:
   namespace: security-system
 ```
 
+Apply the Grafana Role/RoleBinding before expecting the store to become Ready.
+Flux orders only `external-secrets` ahead of the store, not the Grafana RBAC,
+and the store's validation fails until the provider can read secrets in
+`monitoring-system`.
+
 ### Gateway filter (removed)
 
 The cluster MCP policy in
