@@ -424,7 +424,7 @@ Application definitions are grouped into 9 namespace directories. The numbering 
 | 4   | `database-system`   | Database operators                   | CloudNativePG, Dragonfly Operator                                                                                                                                                                                     |
 | 5   | `networking-system` | Ingress, DNS, API gateway            | kgateway (Envoy), Agent Gateway (AI agent routing), ExternalDNS, forgejo-proxy |
 | 6   | `monitoring-system` | Observability                        | Victoria Metrics (operator + cluster), Victoria Logs, Victoria Traces, Prometheus CRDs, kube-state-metrics, node-exporter, blackbox-exporter, Smartctl exporter, OTel Collector, Silence Operator, Robusta, webhook-relay, KRR, VMware exporter |
-| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, Covel, DiceFrame, Open WebUI, Playwright, Toolhive, MCP definitions (12 units) |
+| 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, Covel, DiceFrame, Open WebUI, Playwright, Toolhive, MCP definitions (11 units) |
 | 8   | `selfhosted-apps`   | Self-hosted web services             | SearXNG, Homepage, BambuBuddy, trendradar, Firecrawl |
 | 9   | `gitops-system`     | Flux itself                          | Flux Operator, Flux Instance, System Upgrade Controller                                                                                                                                                                                    |
 

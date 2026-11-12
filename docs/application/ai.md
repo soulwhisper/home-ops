@@ -15,7 +15,7 @@ flowchart TB
 
     subgraph Gateway["Agent Gateway"]
         AG-LLM["LLM Routing<br/>header-based: x-model"]
-        AG-MCP["MCP Routing<br/>7 VirtualMCP tiers"]
+        AG-MCP["MCP Routing<br/>6 VirtualMCP tiers"]
     end
 
     subgraph LLM["LLM Providers"]
@@ -242,7 +242,7 @@ extras (rtk, caveman skills, feishu deps), supervisord-managed `gateway` +
 - **Ingress**: caller-scoped CNP (#3934) — dashboard :9119 + webhook ingest :8644 via kgateway-internal (shared rule), webhook ingest :8644 also from LAN, profile API :8642 same-namespace only; `fromEntities: host` keeps kubelet probes working
 - **Depends on**: `agentgateway` (Flux dependency)
 - **Profiles** (seeded declaratively by the `seed-config` initContainer from `configmap.yaml`; dashboard edits to `config.yaml`/profile files revert on restart):
-  - `ops` — the batching brain: cron/Feishu/automation workload lives here (search, cluster read-only, and agent ticket/incident-memory MCP tiers); owns the Feishu adapter, credentials, home channel and new Feishu sessions
+  - `ops` — the batching brain: cron/Feishu/automation workload lives here (search, cluster read-only, and the agent ticket MCP tier); owns the Feishu adapter, credentials, home channel and new Feishu sessions
   - `default` — fallback/scratch with no Feishu adapter and no MCP servers (chat through the provider only); the retired `chat` profile was removed 2026-10 when the human interface moved to dedicated portals
   Model/provider config (`model.provider: custom` → agent gateway, `model.default: agent`) and aux side-tasks (`vision`/`web_extract`/`session_search`/`compression`/`title_generation` → `omni`) are GitOps-managed in `configmap.yaml`; the gateway's PreRouting transformation maps body `model` → `x-model` header, so lane names are model names. The main brain uses `OPENAI_API_KEY` (`llm_agent`); each aux task selects `OPENAI_AUX_API_KEY` (`llm_omni`) via `key_env`, so the agent key is never accepted on the omni route. Requires 1Password `hermes-agent` field: `api_server_key_root` (>=16 chars)
 

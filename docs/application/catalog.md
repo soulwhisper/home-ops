@@ -114,11 +114,11 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Firecrawl](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/firecrawl/ks.yaml) | Web scraping pipeline |
 | [Bambuddy](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/bambuddy/ks.yaml) | Bambu Lab 3D printer monitor |
 
-## servitor-apps — AI Infrastructure (18)
+## servitor-apps — AI Infrastructure (17)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml)
 
-Six direct application definitions and 12 nested MCP definitions. ToolHive configures seven VirtualMCP groups: `search`, `cluster`, `github-ro`, `persona`, `agent`, `browser`, and `github-pr`.
+Six direct application definitions and 11 nested MCP definitions. ToolHive configures six VirtualMCP groups: `search`, `cluster`, `github-ro`, `agent`, `browser`, and `github-pr`.
 
 | App | Purpose |
 | --- | --- |
@@ -129,7 +129,7 @@ Six direct application definitions and 12 nested MCP definitions. ToolHive confi
 | [ToolHive](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/toolhive/ks.yaml) | MCP operator, CRDs, and VirtualMCP configuration |
 | [Playwright](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/playwright/ks.yaml) | Standalone Chromium browser runtime for MCP automation |
 
-### MCP Definitions (12)
+### MCP Definitions (11)
 
 The [MCP index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/mcp/kustomization.yaml) selects 11 definition files declaring 12 child Flux Kustomizations: GitHub has two identities and each other definition has one. These are not 12 individual backend server instances.
 
