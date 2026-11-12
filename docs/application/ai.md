@@ -415,13 +415,14 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 ### Hindsight
 
 - AI memory / context store (agent long-term memory: retain / recall / reflect)
-- Image: upstream `ghcr.io/vectorize-io/hindsight` (slim variant) — no in-process local-ml
-- LLM: `omni` lane → **MiniCPM-O-4.5 on the MacStudio** (via agentgateway `/v1/chat/completions`)
-- Embeddings: **Qwen3-Embedding-0.6B on the MacStudio** (oMLX id `qwen3-embedding-0.6b`, 1024d) via gateway `/v1/embeddings`; store rebuilt from scratch for the 0.6B space
-- Reranker: **Qwen3-Reranker-0.6B on the MacStudio** (Cohere-compatible, id `qwen3-reranker-0.6b`) via gateway `/v1/rerank`
-- Resources: req: 150m CPU / 768Mi, lim: 2 CPU / 2Gi
-- Storage: CloudNativePG (pgvector + pgroonga text search), OTEL enabled
-- Exposed as MCP server for agent context retrieval
+- **Runs on the NAS**, not in the cluster: doco-cd stack `infrastructure/synology/hindsight` (postgres 18.6 + `ghcr.io/vectorize-io/hindsight:1.2.1-slim`). It holds the only dataset in the homelab that cannot be rebuilt from git, so it lives on the UPS-backed host that already receives the cluster's barman backups. Nothing in the cluster consumes its database any more; the CNPG role/database and the Flux app are gone.
+- Reached from the cluster at `http://10.10.0.100:8888/mcp/<bank>` by the toolhive proxies `mcp-hindsight-{persona,ops}` in `servitor-apps` (LAN-bound port, no ingress route, no Authentik in front — the previous `memory.noirprime.com` forward-auth provider was removed with the app)
+- LLM: `omni` lane → **MiniCPM-O-4.5 on the MacStudio** (via `https://api.noirprime.com/v1/chat/completions`; lane keys live in the NAS-side sops env)
+- Embeddings: **Qwen3-Embedding-0.6B on the MacStudio** (oMLX id `qwen3-embedding-0.6b`, 1024d) via `https://api.noirprime.com/v1/embeddings`
+- Reranker: **Qwen3-Reranker-0.6B on the MacStudio** (Cohere-compatible, id `qwen3-reranker-0.6b`) via `https://api.noirprime.com/v1/rerank`
+- Storage: local Postgres on the NAS with pgvector + pgroonga (same custom image as the CNPG cluster, pinned by digest); `shared_preload_libraries=pgroonga_wal_resource_manager` must be set at init
+- Monitoring: `hindsight-nas` blackbox TCP probe → `HindsightNasDown` (5m, critical). The CNPG rules that used to cover it no longer apply.
+- OTEL tracing is off (the collector is in-cluster and unreachable from the NAS)
 
 ### Archived
 
@@ -437,7 +438,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 | Service                     | Namespace           | Purpose                                             |
 | --------------------------- | ------------------- | --------------------------------------------------- |
 | **Agent Gateway**           | `networking-system` | LLM + MCP routing                                   |
-| **CloudNativePG**           | `database-system`   | PostgreSQL + PGVector for Hindsight |
+| **CloudNativePG**           | `database-system`   | PostgreSQL for Authentik, Open WebUI (Hindsight moved to the NAS) |
 | **Dragonfly**               | Various             | Redis-compatible cache/queue                        |
 | **Ceph (Rook)**             | `storage-system`    | S3 + block + CephFS for model/data storage          |
 | **Workload sandboxing**      | —                   | user namespaces + egress CNP per ADR-03 (Kata removed)  |

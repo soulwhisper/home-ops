@@ -110,7 +110,7 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [TrendRadar](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/trendradar/ks.yaml) | Scheduled AI news digest |
 | [SearXNG](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/searxng/ks.yaml) | Privacy-focused metasearch |
 | [Homepage](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/homepage/ks.yaml) | Application dashboard |
-| [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/hindsight/ks.yaml) | AI memory service |
+| [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/hindsight/docker-compose.yml) | AI memory service (NAS compose stack) |
 | [Firecrawl](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/firecrawl/ks.yaml) | Web scraping pipeline |
 | [Bambuddy](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/bambuddy/ks.yaml) | Bambu Lab 3D printer monitor |
 

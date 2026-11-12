@@ -293,7 +293,7 @@ This cross-namespace reference is used by 15 HelmReleases across 4 namespaces:
 | ----------------- | ----- | ---- |
 | monitoring-system | 2     | vmware-exporter, webhook-relay |
 | networking-system | 1     | mcp-guardrails |
-| selfhosted-apps   | 7     | bambuddy, firecrawl (+database), hindsight, homepage, searxng, trendradar |
+| selfhosted-apps   | 6     | bambuddy, firecrawl (+database), homepage, searxng, trendradar |
 | servitor-apps     | 5     | covel, diceframe, hermes-agent, open-webui, playwright |
 
 The `flux-repositories` Kustomization is a dependency of `cluster-apps` and registers the shared source. It sets `wait: false`, so this edge does not itself wait for the OCI artifact to become ready; helm-controller resolves chart source readiness.
@@ -425,7 +425,7 @@ Application definitions are grouped into 9 namespace directories. The numbering 
 | 5   | `networking-system` | Ingress, DNS, API gateway            | kgateway (Envoy), Agent Gateway (AI agent routing), ExternalDNS, forgejo-proxy |
 | 6   | `monitoring-system` | Observability                        | Victoria Metrics (operator + cluster), Victoria Logs, Victoria Traces, Prometheus CRDs, kube-state-metrics, node-exporter, blackbox-exporter, Smartctl exporter, OTel Collector, Silence Operator, Robusta, webhook-relay, KRR, VMware exporter |
 | 7   | `servitor-apps`     | AI and development tooling           | Hermes Agent, Covel, DiceFrame, Open WebUI, Playwright, Toolhive, MCP definitions (12 units) |
-| 8   | `selfhosted-apps`   | Self-hosted web services             | SearXNG, Homepage, Hindsight, BambuBuddy, trendradar, Firecrawl |
+| 8   | `selfhosted-apps`   | Self-hosted web services             | SearXNG, Homepage, BambuBuddy, trendradar, Firecrawl |
 | 9   | `gitops-system`     | Flux itself                          | Flux Operator, Flux Instance, System Upgrade Controller                                                                                                                                                                                    |
 
 ### Dependency Order

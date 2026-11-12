@@ -50,28 +50,3 @@ spec:
       cpu: 500m
     limits:
       memory: 6Gi
-  managed:
-    roles:
-      - name: hindsight
-        ensure: present
-        login: true
-        superuser: false
-
----
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/postgresql.cnpg.io/database_v1.json
-apiVersion: postgresql.cnpg.io/v1
-kind: Database
-metadata:
-  name: &name hindsight
-spec:
-  cluster:
-    name: postgres
-  name: *name
-  owner: *name
-  extensions:
-    - name: vector
-      ensure: present
-    - name: vchord
-      ensure: absent
-    - name: pgroonga
-      ensure: present

@@ -117,7 +117,7 @@ spec:
           # Services with dedicated canary alerts are excluded so their severity
           # is decided once: macstudio (5m), firecrawl/scrape (10m) and
           # firecrawl/searxng search (10m).
-          expr: probe_success{service!~"^(macstudio|firecrawl-scrape|firecrawl-search|searxng-search)$"} == 0
+          expr: probe_success{service!~"^(macstudio|firecrawl-scrape|firecrawl-search|searxng-search|hindsight)$"} == 0
           for: 15m
           labels:
             severity: critical
@@ -138,6 +138,19 @@ spec:
             summary: |-
               Mac Studio oMLX API probe failing: {{ $labels.instance }} (5m).
               Dependents: agentgateway LLM lanes, vmcp optimizer (find_tool), hindsight embeddings/rerank.
+        # Memory store lives on the NAS now. A dead MCP port means every retain
+        # and recall fails, and the toolhive proxies plus Hermes degrade to
+        # "no memory" silently — hence 5m here rather than the 15m generic rule.
+        - alert: HindsightNasDown
+          expr: probe_success{service="hindsight"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: |-
+              Hindsight MCP port unreachable on the NAS ({{ $labels.instance }}, 5m).
+              Check the doco-cd stack `hindsight`: postgres health, disk space on
+              /volume3, and that hindsight.sops.env still decrypts on restart.
         # Firecrawl search/scrape canaries. Native /metrics is absent, so
         # probe_success carries the content/challenge failure signal. Use
         # stable canaries only; do not add NYT/36kr (known anti-bot failures).
