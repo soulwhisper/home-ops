@@ -94,7 +94,7 @@ spec:
         globalMounts:
           - path: /config
       library:
-        existingClaim: selfhosted-nfs
+        existingClaim: 3d-assets
         globalMounts:
           - path: /libraries/main
             subPath: library
