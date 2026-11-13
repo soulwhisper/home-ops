@@ -62,6 +62,10 @@ the LaunchAgent. `RunAtLoad` and `KeepAlive` require the destination model to
 exist before bootstrap:
 
 ```sh
+(
+set -eu
+test -d "$HOME/models/minicpm-o-4.5"
+test ! -e "$HOME/Library/Application Support/omni-audio/model"
 install -d "$HOME/Library/Application Support/omni-audio"
 mv "$HOME/models/minicpm-o-4.5" \
   "$HOME/Library/Application Support/omni-audio/model"
@@ -76,6 +80,7 @@ install -m 644 sh.homelab.omni-audio.plist "$HOME/Library/LaunchAgents/"
 launchctl bootstrap "gui/$(id -u)" \
   "$HOME/Library/LaunchAgents/sh.homelab.omni-audio.plist"
 launchctl kickstart -k "gui/$(id -u)/sh.homelab.omni-audio"
+)
 ```
 
 The LaunchAgent runs `run.sh`, which injects the lane key and starts uvicorn
