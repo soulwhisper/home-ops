@@ -16,3 +16,4 @@ resources:
   - ./covel/ks.yaml
   - ./diceframe/ks.yaml
   - ./open-webui/ks.yaml
+  - ./open-webui/oikb/ks.yaml

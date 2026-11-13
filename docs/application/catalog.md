@@ -1,8 +1,8 @@
 # Application Catalog
 
-73 application definition units across 10 namespaces, managed via Flux GitOps. Each Flux table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload. The NAS table at the end is outside Flux and links to compose stacks instead.
+74 application definition units across 10 namespaces, managed via Flux GitOps. Each Flux table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload. The NAS table at the end is outside Flux and links to compose stacks instead.
 
-The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 10 first-level namespace directories. Together, those namespaces have 63 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 73 definition files declare 98 child Flux Kustomizations and lead to 72 HelmReleases. There are 48 OCIRepositories across the source tree: 47 application-local and one shared app-template source. These are source counts, not counts of running applications.
+The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 10 first-level namespace directories. Together, those namespaces have 63 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 74 definition files declare 99 child Flux Kustomizations and lead to 73 HelmReleases. There are 48 OCIRepositories across the source tree: 47 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
 Definitions that are intentionally not deployed live under [`.archived/kubernetes`](https://github.com/soulwhisper/home-ops/tree/main/.archived/kubernetes); see the [archive index](https://github.com/soulwhisper/home-ops/blob/main/.archived/README.md) for why each definition is kept.
 
@@ -150,13 +150,14 @@ Managed by [doco-cd](https://github.com/soulwhisper/home-ops/tree/main/infrastru
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml)
 
-Five direct application definitions and 11 nested MCP definitions. ToolHive configures six VirtualMCP groups: `search`, `cluster`, `github-ro`, `agent`, `browser`, and `github-pr`.
+Six direct application definitions and 11 nested MCP definitions. ToolHive configures six VirtualMCP groups: `search`, `cluster`, `github-ro`, `agent`, `browser`, and `github-pr`.
 
 | App | Purpose |
 | --- | --- |
 | [Covel](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/covel/ks.yaml) | Agentic AI role-playing framework |
 | [DiceFrame](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/diceframe/ks.yaml) | Self-hosted AI tabletop RPG engine |
 | [Open WebUI](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/open-webui/ks.yaml) | Human chat portal with search-group MCP |
+| [OIKB](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/open-webui/oikb/ks.yaml) | Optional read-only NAS Markdown sync for Open WebUI Knowledge; parked until configured |
 | [ToolHive](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/toolhive/ks.yaml) | MCP operator, CRDs, and VirtualMCP configuration |
 | [Playwright](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/playwright/ks.yaml) | Standalone Chromium browser runtime for MCP automation |
 
