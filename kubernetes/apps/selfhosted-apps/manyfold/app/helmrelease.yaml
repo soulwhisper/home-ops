@@ -25,43 +25,14 @@ spec:
             runAsGroup: 2000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
-        initContainers:
-          prepare-paths:
-            image:
-              repository: docker.io/library/busybox
-              tag: "1.38"
-            command:
-              - sh
-              - -ec
-              - |
-                mkdir -p /tmp/manyfold
-                chmod 0700 /tmp/manyfold
-                chown 2000:2000 /usr/src/app/tmp /usr/src/app/log /tmp/manyfold
-            resources:
-              requests: { cpu: 10m, memory: 16Mi }
-              limits: { memory: 64Mi }
-            # Kubelet creates these mountpoints root-owned; only init needs CHOWN/FOWNER.
-            securityContext:
-              runAsNonRoot: false
-              runAsUser: 0
-              runAsGroup: 0
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop: ["ALL"]
-                add: ["CHOWN", "FOWNER"]
-              readOnlyRootFilesystem: true
         containers:
           app:
             image:
-              repository: ghcr.io/manyfold3d/manyfold-solo
+              repository: ghcr.io/soulwhisper/manyfold
               tag: 0.154.1
             env:
               PGID: 2000
               PUID: 2000
-              TMPDIR: /tmp/manyfold
-              # Kubernetes leaves /run root-owned and fsGroup-writable; s6
-              # accepts that single-UID layout without additional privileges.
-              S6_YES_I_WANT_A_WORLD_WRITABLE_RUN_BECAUSE_KUBERNETES: "1"
             envFrom:
               - secretRef:
                   name: *name
@@ -97,7 +68,6 @@ spec:
               allowPrivilegeEscalation: false
               capabilities:
                 drop: ["ALL"]
-                add: ["CHOWN", "DAC_OVERRIDE", "SETUID", "SETGID"]
               readOnlyRootFilesystem: true
 
     service:
@@ -136,5 +106,3 @@ spec:
             subPath: app-tmp
           - path: /usr/src/app/log
             subPath: log
-          - path: /run
-            subPath: run
