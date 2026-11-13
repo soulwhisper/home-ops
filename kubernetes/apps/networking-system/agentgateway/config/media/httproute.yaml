@@ -82,10 +82,6 @@ spec:
             type: Exact
             value: /v1/audio/speech
           method: POST
-        - path:
-            type: Exact
-            value: /v1/audio/transcriptions
-          method: POST
       backendRefs:
         - group: agentgateway.dev
           kind: AgentgatewayBackend

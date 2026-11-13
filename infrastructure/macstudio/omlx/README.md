@@ -51,11 +51,13 @@ the studio id accepted by direct calls.
 | `embedding` | RAG recall, offline semantic clustering fallback | `qwen3-embedding-0.6b` | 0.6B / MLX | — | yes |
 | `persona` | RP persona, dialogue, knowledge base | `orion-1.1-26b-a4b` | 26B-A4B / MLX 4bit | 30m | no |
 | `agent` | AI-OPS automation, audits, MCP batches | `ornith-1.5-35b-a3b` | 35B-A3B / MLX 4bit | 20m | no |
-| `omni` | Batch/app copilot, tags, summaries, OCR, memory extraction | `minicpm-o-4.5` | 9B / MLX 4bit | 10m | no |
 | `uncensored` | Sensitive/open chat | `qwen3.8-27b` | 27.8B / MLX 4bit | 5m | no |
 | `reranker` | Rerank and regression checks | `qwen3-reranker-0.6b` | 0.6B / MLX | 5m | no |
 | `voice` | TTS and voice cloning | `voxcpm2` | 2B / MLX 4bit | 5m | no |
 | `image` | Image generation | `qwen-image-2.1` | 7B / int8 safetensors | 5m | no |
+
+Omni (`minicpm-o-4.5`) is pinned by the standalone audio service on port 8010;
+see [`omni-audio/`](omni-audio/). It is not loaded by this oMLX model plan.
 
 `persona` is the renamed 4-bit Orion folder and is served through the
 agentgateway persona lane. oMLX 0.7 does not currently discover

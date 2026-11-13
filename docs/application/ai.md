@@ -61,7 +61,7 @@ rules by section name:
 | `uncensored` | none (open lane) | `llm-backend-uncensored` | Qwen3.8-27B Uncensored (`qwen3.8-27b`, MLX 4bit) — pure chat only |
 | `persona` | none (open lane) | `llm-backend-persona` | Orion-26B-A4B-v1.1 (`orion-1.1-26b-a4b`, MLX 4bit) — RP/identity-bound chat |
 | `agent` | **guarded** | `llm-backend-agent` | Ornith-1.5-35B (`ornith-1.5-35b-a3b`, MLX 4bit) — AI-ops automation |
-| `omni` | **guarded** | `llm-backend-omni` | MiniCPM-O-4.5 (`minicpm-o-4.5`, text+vision+audio-in) |
+| `omni` | **guarded** | `llm-backend-omni` | MiniCPM-O-4.5 (`minicpm-o-4.5`, text+vision+bilingual audio conversation) |
 
 Consumer base URLs
 are `.../v1` — OpenAI/litellm clients append `/chat/completions`
@@ -70,9 +70,9 @@ themselves; raw-HTTP consumers must use the full path.
 There is no catch-all: an unknown or missing model id matches no rule and
 the gateway answers `404`. `uncensored` and `persona` are the unguarded
 lanes — open chat and identity-bound RP respectively. `omni` is reachable
-exclusively guarded. All backends
-speak the OpenAI-compatible API on `studio.homelab.internal:8000` and
-inject the oMLX server key via `policies.auth.secretRef`
+exclusively guarded. Most backends speak the OpenAI-compatible API on
+`studio.homelab.internal:8000`; the standalone Omni service uses port `8010`.
+All backends inject the oMLX server key via `policies.auth.secretRef`
 (`studio-api-auth`). Consumers authenticate with **per-lane** API keys
 (ExternalSecret-managed from the 1Password `agentgateway` item; format
 `llm-<lane>-<hex16>`): `llm_uncensored` (open chat / open-webui),
@@ -104,7 +104,7 @@ MCP has no open route (see MCP Backend).
 
 Lane-fit guidance: `omni` covers everything fidelity-sensitive: summarization, compression, session search, memory writes, OCR/vision, plus classification, tagging, title/routing decisions and short structured extraction. `agent` for AI-ops automation: alert RCA, ScheduledHealthChecks, MCP batch tool workloads. `persona` for identity-bound RP/persona chat; `uncensored` for open-ended human chat without a fixed persona.
 
-`omni` uses **MiniCPM-O-4.5** (Apache-2.0, 9B omni: Qwen3-8B backbone + vision/audio encoders; OpenCompass 77.6, OCRBench 876) served on the studio (studio id `minicpm-o-4.5`, ~7 GB at MLX 4bit). All `fast`/`memory`/`vision` consumers (firecrawl, hindsight memory, trendradar digest) use `omni`. Not on omni: `agent` (automation main brain), `persona` (identity-bound RP), `uncensored` (open chat), embeddings/reranker (studio ids `qwen3-embedding-0.6b`/`qwen3-reranker-0.6b`). ASR: no deployment — no current consumer; when one appears, pick a lane deliberately.
+`omni` uses **MiniCPM-O-4.5** (Apache-2.0, 9B omni: Qwen3-8B backbone + vision/audio encoders; OpenCompass 77.6, OCRBench 876) served by a pinned standalone `mlx-vlm` service on port 8010 (studio id `minicpm-o-4.5`, ~7 GB at MLX 4bit). All `fast`/`memory`/`vision` consumers (firecrawl, hindsight memory, trendradar digest) use `omni`. Not on omni: `agent` (automation main brain), `persona` (identity-bound RP), `uncensored` (open chat), embeddings/reranker (studio ids `qwen3-embedding-0.6b`/`qwen3-reranker-0.6b`). ASR and bilingual speech conversation use the same pinned Omni service; no separate ASR model is deployed.
 
 ### Intranet exposure
 
@@ -278,9 +278,10 @@ Non-chat vector modalities run on the same oMLX process as the chat lanes, expos
 | ---------------- | ------------------- | ------------ | ------------------------ | --------------------------------------- | ------- |
 | `/v1/embeddings` | `studio-embedding` | `embedding`  | `qwen3-embedding-0.6b`   | Qwen3-Embedding-0.6B (1024d)            | 120s    |
 | `/v1/rerank`     | `studio-reranker`  | `reranker`   | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B (Cohere-compatible) | 120s    |
-| `/v1/audio/speech`, `/v1/audio/transcriptions` | `studio-audio` | `voxcpm2` | (passthrough — no override) | VoxCPM2 (TTS) | 300s |
+| `/v1/audio/speech` | `studio-audio` | `voxcpm2` | (passthrough — no override) | VoxCPM2 (TTS) | 300s |
+| `/v1/audio/transcriptions`, `/v1/audio/conversation`, `/v1/audio/realtime` | `llm-backend-omni` | `omni` | MiniCPM-O-4.5 (standalone port 8010) | MiniCPM-O-4.5 (ASR + bilingual conversation) | 300s for request/response |
 
-The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download remains deferred. `/v1/audio/transcriptions` (ASR) is wired on the audio backend but has no consumer yet. Passthrough applies no LLM parsing — the audio lane has no model override, so clients send the folder id `voxcpm2` (unlike embeddings/rerank aliases).
+The ComfyUI `image`/`voice` lanes (`:8001`) stay retired — plain passthrough gains nothing from gateway policy; the qwen-image-2.1 download remains deferred. VoxCPM2 retains only `/v1/audio/speech`; Omni handles ASR and audio conversation through the standalone service. Passthrough applies no LLM parsing, so media clients send `voxcpm2` and Omni audio clients send `omni`. Omni audio routes use the existing `llm_omni` credential; VoxCPM2 speech uses `llm_audio`.
 
 Config: `kubernetes/apps/networking-system/agentgateway/config/media/` — backends + per-model routes on `agentgateway-proxy`. Clients use `https://api.noirprime.com` as base URL with their capability key (`llm_embedding` for hindsight embeddings, `llm_reranker` for hindsight rerank, `llm_audio` for future audio consumers) — each media backend injects the oMLX server key upstream via `policies.auth.secretRef: studio-api-auth`, identical to the chat lanes (the studio key is held by the backends and a read-only `blackbox-exporter` copy for direct probes; it is not issued to lane consumers). **Consumers**: embeddings — hindsight; rerank — **hindsight only**; audio — none yet (TTS lane ready). The direct-to-studio blackbox probe reads the oMLX key via `credentials_file` — API-plane only (`GET /v1/models`): per-model inference probes were removed because oMLX auto-loads models and evicts KV on TTL. hindsight's vector store was rebuilt for the 0.6B/1024d embedding space (no old data was preserved).
 
