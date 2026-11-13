@@ -269,18 +269,18 @@ order. `cluster-apps` depends on `flux-repositories` and builds
 `./kubernetes/apps`. Neither the apps root nor `flux/cluster` has a root
 `kustomization.yaml`; Flux autogenerates their build entrypoints.
 
-The 9 namespace `kustomization.yaml` files are Kustomize indexes, not
+The 10 namespace `kustomization.yaml` files are Kustomize indexes, not
 additional Flux Kustomizations. They select applications and shared namespace
-components and inject `metadata.namespace` into all 101 child Flux
-Kustomizations, whose source declarations omit it. The 71 selected `ks.yaml`
+components and inject `metadata.namespace` into all 99 child Flux
+Kustomizations, whose source declarations omit it. The 74 selected `ks.yaml`
 files can each define multiple children pointing to `app/`, `cluster/`,
 `drivers/`, or other resource build directories. The deployed topology has
-104 Flux Kustomizations: the operator-created root, two cluster-level
-resources, and 101 children. Source/static tooling counts 103 because the
+102 Flux Kustomizations: the operator-created root, two cluster-level
+resources, and 99 children. Source/static tooling counts 101 because the
 operator creates the root.
 
 Root patches set child reconciliation defaults and HelmRelease policies.
-For the 35 children labelled `config.home-ops.io/deps=infra`, they intentionally
+For the 36 children labelled `config.home-ops.io/deps=infra`, they intentionally
 replace local dependency lists with cert-manager, onepassword-connect,
 rook-ceph-cluster, and kopiur; the lists are not merged. The managed-annotation
 patch also makes all children effectively `prune: true`, including

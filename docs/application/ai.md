@@ -247,6 +247,7 @@ consumers, two cron tickers and two memory stores.
 - **Ingress**: `chat.noirprime.com` via kgateway-internal
 - **LLM**: single agentgateway OpenAI provider; `uncensored` only. The admin connection sets `model_ids` to `[uncensored]`; open-webui does not use the `omni` lane or hold an omni credential. Existing installations must save the same `model_ids` in the admin UI before the global catalog is removed.
 - **MCP**: native search-tier connection through `/mcp/search` with the `mcp_search` bearer key
+- **Knowledge sync**: optional `open-webui-oikb` companion mirrors Markdown from NAS `/volume1/open-webui-oikb-sources`, mounted read-only at `/sources/markdown`; it remains parked at zero replicas until a Knowledge Base ID is configured
 - **State**: shared CNPG for app data and pgvector, app Dragonfly for session/rate-limit state, and the `open-webui` Ceph bucket for uploads and KB files; the entire data directory is rewarmable cache on the `open-webui-cache` ceph-cache PVC
 - **Egress**: agentgateway, CNPG, Dragonfly, Ceph RGW, OTLP collector, kube-dns, and world-except-private for RAG fetching
 

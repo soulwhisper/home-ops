@@ -115,6 +115,7 @@ applications; see the [catalog](../application/catalog.md) for definition links.
 | Photos, video, music, documents and downloads | `media-apps/media-nfs` KS; NAS `/volume1/{photo,video,music,document}` and `/volume2/downloads` | Keep the shared claims and NAS files independent of an individual media application's deployment selection |
 | Manyfold configuration and database | `selfhosted-apps/manyfold` KS; 10 Gi `ceph-block` PVC with kopiur | Application state is snapshotted independently of the model library |
 | Manyfold model library | `selfhosted-apps/selfhosted-nfs` KS; mounted at `/libraries/main` | NAS-hosted models are outside the kopiur PVC backup boundary |
+| Open WebUI Markdown knowledge sources | `servitor-apps/open-webui/oikb` KS; NAS `/volume1/open-webui-oikb-sources` | OIKB mounts the source read-only; synced KB files and vectors remain in the app's Ceph bucket and CNPG |
 | Media application configuration and indexes | Application KS or HelmRelease; usually Ceph PVCs | Git/ESO-managed settings and rebuildable indexes may be recreated. Other application state in the same PVC needs a backup if it must survive; explicitly accepting its loss does not require preserving every old Kopiur snapshot |
 | Transcode, machine-learning and mover caches | Application or kopiur controller; `ceph-cache` | Rewarmable, not a durable-data retention boundary |
 | PostgreSQL and application RGW buckets | Shared CNPG cluster or application OBC | Separate business state; do not infer that it is disposable because media files are on NFS |

@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: &name open-webui-oikb
+data:
+  .oikb.yaml: |
+    defaults:
+      interval: 1h
+      concurrency: 2
+      filter:
+        include: ["*.md", "**/*.md"]
+        max-size: 50mb
+    sources: []
+    # Replace the empty list with a source, then set replicas: 1 in
+    # helmrelease.yaml. The source mount is read-only; OIKB mirrors additions,
+    # changes and deletions into the selected Open WebUI Knowledge Base.
+    # sources:
+    #   - name: nas-markdown
+    #     source: /sources/markdown
+    #     kb-id: <kb-uuid from Open WebUI>
