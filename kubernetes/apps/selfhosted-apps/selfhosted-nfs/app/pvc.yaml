@@ -2,23 +2,12 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: "${BAMBUDDY_NFS_NAME}"
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 20Gi
-  storageClassName: "${BAMBUDDY_NFS_STORAGE_CLASS}"
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: "${MANYFOLD_NFS_NAME}"
+  name: 3d-assets
+  namespace: selfhosted-apps
 spec:
   accessModes:
     - ReadWriteMany
   resources:
     requests:
       storage: 100Gi
-  storageClassName: "${MANYFOLD_NFS_STORAGE_CLASS}"
+  storageClassName: synology-volume1
