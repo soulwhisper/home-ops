@@ -6,13 +6,7 @@
   <string>sh.homelab.omni-audio</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/soulwhisper/Library/Application Support/omni-audio/venv/bin/uvicorn</string>
-    <string>--factory</string>
-    <string>omni_audio:create_app</string>
-    <string>--host</string>
-    <string>0.0.0.0</string>
-    <string>--port</string>
-    <string>8010</string>
+    <string>/Users/soulwhisper/Library/Application Support/omni-audio/run.sh</string>
   </array>
   <key>WorkingDirectory</key>
   <string>/Users/soulwhisper/Library/Application Support/omni-audio</string>

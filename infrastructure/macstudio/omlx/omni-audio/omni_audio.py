@@ -48,26 +48,38 @@ CONVERSATION_PROMPTS = {
 }
 
 
-def load_api_key() -> str:
-    """Read the existing oMLX upstream key without copying it into this repo."""
-    if value := os.environ.get("OMNI_API_KEY"):
-        return value
-    settings_path = Path.home() / ".omlx" / "settings.json"
-    with settings_path.open() as handle:
-        value = json.load(handle)["auth"]["api_key"]
-    if not value or value == "INJECT_AT_DEPLOY":
-        raise RuntimeError("A usable oMLX auth.api_key is required")
-    return value
+def load_api_keys() -> set[str]:
+    """Load the oMLX upstream key and the gateway's Omni lane key without logging either."""
+    upstream = os.environ.get("OMNI_API_KEY")
+    if upstream is None:
+        settings_path = Path.home() / ".omlx" / "settings.json"
+        with settings_path.open() as handle:
+            upstream = json.load(handle)["auth"]["api_key"]
+    lane = os.environ.get("OMNI_LANE_API_KEY")
+    if not upstream or upstream == "INJECT_AT_DEPLOY":
+        raise RuntimeError("A usable oMLX auth.api_key or OMNI_API_KEY is required")
+    if not lane or lane == "INJECT_AT_DEPLOY":
+        raise RuntimeError(
+            "OMNI_LANE_API_KEY must contain the agentgateway Omni credential"
+        )
+    return {upstream, lane}
 
 
-def authorized(header: str | None, api_key: str) -> bool:
+def key_matches(value: str, api_keys: set[str]) -> bool:
+    return any(secrets.compare_digest(value.encode(), key.encode()) for key in api_keys)
+
+
+def authorized(header: str | None, api_keys: set[str]) -> bool:
     if not header or not header.startswith("Bearer "):
         return False
-    return secrets.compare_digest(header[7:], api_key)
+    return key_matches(header[7:], api_keys)
 
 
 def normalize_audio(input_path: Path, output_path: Path) -> float:
     """Convert an uploaded clip to 16 kHz mono PCM WAV and bound its duration."""
+    duration = librosa.get_duration(path=str(input_path))
+    if duration > MAX_AUDIO_SECONDS:
+        raise ValueError(f"Audio exceeds the {MAX_AUDIO_SECONDS}-second limit")
     samples, _ = librosa.load(input_path, sr=INPUT_SAMPLE_RATE, mono=True)
     if samples.size == 0:
         raise ValueError("Audio contains no samples")
@@ -174,8 +186,13 @@ def write_chat_media(
                 if audio_format not in audio_suffixes:
                     raise ValueError(f"Unsupported audio format: {audio_format}")
                 path = directory / f"audio-{len(audio)}.{audio_format}"
-                path.write_bytes(decode_inline_data(data))
-                audio.append(str(path))
+                payload = decode_inline_data(data)
+                if len(payload) > MAX_UPLOAD_BYTES:
+                    raise ValueError("Inline audio exceeds the 100 MiB limit")
+                path.write_bytes(payload)
+                normalized = directory / f"audio-{len(audio)}-normalized.wav"
+                normalize_audio(path, normalized)
+                audio.append(str(normalized))
     return images, audio
 
 
@@ -339,12 +356,26 @@ class OmniEngine:
 
 
 class EngineLimiter:
-    """Serialize model calls and bound the number waiting for the pinned engine."""
+    """Serialize model calls and retain capacity until cancelled workers actually finish."""
 
     def __init__(self):
         self._model_lock = asyncio.Lock()
         self._counter_lock = asyncio.Lock()
         self._waiting = 0
+
+    async def _release(self, lock_acquired: bool) -> None:
+        if lock_acquired:
+            self._model_lock.release()
+        async with self._counter_lock:
+            self._waiting -= 1
+
+    async def _release_when_done(self, worker: asyncio.Task) -> None:
+        try:
+            await worker
+        except Exception:
+            pass
+        finally:
+            await self._release(True)
 
     async def run(self, function: Callable[[], Any]) -> Any:
         async with self._counter_lock:
@@ -353,22 +384,33 @@ class EngineLimiter:
                     status_code=429, detail="Omni inference queue is full"
                 )
             self._waiting += 1
+        lock_acquired = False
+        worker: asyncio.Task | None = None
         try:
-            async with self._model_lock:
-                return await asyncio.to_thread(function)
+            await self._model_lock.acquire()
+            lock_acquired = True
+            worker = asyncio.create_task(asyncio.to_thread(function))
+            return await asyncio.shield(worker)
         finally:
-            async with self._counter_lock:
-                self._waiting -= 1
+            if worker is not None and not worker.done():
+                asyncio.create_task(self._release_when_done(worker))
+            else:
+                await self._release(lock_acquired)
 
 
-def create_app(engine: OmniEngine | None = None, api_key: str | None = None) -> FastAPI:
+def create_app(
+    engine: OmniEngine | None = None, api_keys: set[str] | None = None
+) -> FastAPI:
     engine = engine or OmniEngine(
         model_path=Path(
-            os.environ.get("OMNI_MODEL_PATH", "~/models/minicpm-o-4.5")
+            os.environ.get(
+                "OMNI_MODEL_PATH",
+                "~/Library/Application Support/omni-audio/model",
+            )
         ).expanduser(),
         voice_dir=Path(os.environ.get("OMNI_VOICE_DIR", "~/.omlx/voices")).expanduser(),
     )
-    api_key = api_key or load_api_key()
+    api_keys = api_keys or load_api_keys()
     limiter = EngineLimiter()
 
     async def lifespan(_: FastAPI):
@@ -377,12 +419,32 @@ def create_app(engine: OmniEngine | None = None, api_key: str | None = None) -> 
 
     app = FastAPI(lifespan=lifespan)
 
+    @app.middleware("http")
+    async def authenticate_before_body_parsing(request: Request, call_next):
+        if request.url.path.startswith("/v1/") and not authorized(
+            request.headers.get("authorization"), api_keys
+        ):
+            return JSONResponse(
+                status_code=401, content={"detail": "Invalid or missing bearer token"}
+            )
+        try:
+            content_length = int(request.headers.get("content-length", "0"))
+        except ValueError:
+            return JSONResponse(
+                status_code=400, content={"detail": "Invalid Content-Length"}
+            )
+        if content_length > MAX_UPLOAD_BYTES:
+            return JSONResponse(
+                status_code=413, content={"detail": "Request exceeds the 100 MiB limit"}
+            )
+        return await call_next(request)
+
     @app.exception_handler(ValueError)
     async def invalid_value(_: Request, error: ValueError) -> JSONResponse:
         return JSONResponse(status_code=400, content={"detail": str(error)})
 
     async def require_auth(request: Request) -> None:
-        if not authorized(request.headers.get("authorization"), api_key):
+        if not authorized(request.headers.get("authorization"), api_keys):
             raise HTTPException(
                 status_code=401, detail="Invalid or missing bearer token"
             )
@@ -561,9 +623,10 @@ def create_app(engine: OmniEngine | None = None, api_key: str | None = None) -> 
 
         try:
             start = await websocket.receive_json()
-            if start.get("type") != "start" or not secrets.compare_digest(
-                str(start.get("api_key", "")), api_key
-            ):
+            authenticated = authorized(
+                websocket.headers.get("authorization"), api_keys
+            ) or key_matches(str(start.get("api_key", "")), api_keys)
+            if start.get("type") != "start" or not authenticated:
                 await send_error("Invalid or missing API key")
                 await websocket.close(code=4401)
                 return

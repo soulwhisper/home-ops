@@ -1,5 +1,7 @@
 import base64
+import asyncio
 import io
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -9,6 +11,8 @@ from fastapi.testclient import TestClient
 
 from omni_audio import (
     INPUT_SAMPLE_RATE,
+    EngineLimiter,
+    authorized,
     create_app,
     normalize_audio,
     pcm16_to_wav,
@@ -60,7 +64,7 @@ class FakeEngine:
 @pytest.fixture
 def client():
     engine = FakeEngine()
-    with TestClient(create_app(engine=engine, api_key="test-key")) as test_client:
+    with TestClient(create_app(engine=engine, api_keys={"test-key"})) as test_client:
         test_client.engine = engine
         yield test_client
 
@@ -167,6 +171,14 @@ def test_realtime_rejects_invalid_key(client):
         assert websocket.receive_json()["type"] == "error"
 
 
+def test_realtime_accepts_forwarded_bearer(client):
+    with client.websocket_connect(
+        "/v1/audio/realtime", headers=auth_headers()
+    ) as websocket:
+        websocket.send_json({"type": "start"})
+        assert websocket.receive_json()["type"] == "session.created"
+
+
 def test_pcm16_rejects_odd_byte_count(tmp_path):
     with pytest.raises(ValueError, match="odd byte length"):
         pcm16_to_wav(b"\x00", tmp_path / "invalid.wav")
@@ -228,7 +240,9 @@ def test_chat_media_decodes_inline_audio_and_image(tmp_path):
 
     assert len(audio_paths) == 1
     assert len(image_paths) == 1
-    assert Path(audio_paths[0]).read_bytes() == make_wav()
+    samples, sample_rate = sf.read(audio_paths[0])
+    assert sample_rate == INPUT_SAMPLE_RATE
+    assert len(samples) == int(INPUT_SAMPLE_RATE * 0.05)
     assert Path(image_paths[0]).read_bytes() == b"png-test"
     assert messages[0]["content"][1]["input_audio"]["data"] == audio
 
@@ -249,3 +263,34 @@ def test_chat_rejects_remote_images(tmp_path):
             ],
             tmp_path,
         )
+
+
+def test_cancelled_request_retains_limiter_until_worker_finishes():
+    async def scenario():
+        limiter = EngineLimiter()
+        started = threading.Event()
+        finish = threading.Event()
+
+        def work():
+            started.set()
+            assert finish.wait(2)
+            return "done"
+
+        first = asyncio.create_task(limiter.run(work))
+        await asyncio.to_thread(started.wait, 1)
+        assert started.is_set()
+        first.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await first
+
+        second = asyncio.create_task(limiter.run(lambda: "second"))
+        await asyncio.sleep(0.05)
+        assert not second.done()
+        finish.set()
+        assert await asyncio.wait_for(second, 1) == "second"
+
+    asyncio.run(scenario())
+
+
+def test_non_ascii_authorization_is_rejected_without_type_error():
+    assert not authorized("Bearer 非ASCII", {"test-key"})

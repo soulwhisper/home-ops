@@ -66,14 +66,8 @@ spec:
       openai:
         model: "minicpm-o-4.5"
       host: studio.homelab.internal
-      port: 8010
+      port: 8000
   policies:
     auth:
       secretRef:
         name: studio-api-auth
-    ai:
-      routes:
-        "/v1/chat/completions": "Completions"
-        "/v1/audio/transcriptions": "Passthrough"
-        "/v1/audio/conversation": "Passthrough"
-        "/v1/audio/realtime": "Realtime"

@@ -3,5 +3,6 @@ librosa==1.0.1
 mlx-vlm==0.7.12
 numpy==2.5.4
 python-multipart==0.0.33
+pydantic==2.14.3
 soundfile==0.14.0
 uvicorn[standard]==0.54.0

@@ -138,31 +138,6 @@ spec:
           name: llm-backend-omni
       timeouts:
         request: 300s
-    - name: audio
-      matches:
-        - path:
-            type: Exact
-            value: /v1/audio/transcriptions
-          method: POST
-        - path:
-            type: Exact
-            value: /v1/audio/conversation
-          method: POST
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: llm-backend-omni
-      timeouts:
-        request: 300s
-    - name: realtime
-      matches:
-        - path:
-            type: Exact
-            value: /v1/audio/realtime
-      backendRefs:
-        - group: agentgateway.dev
-          kind: AgentgatewayBackend
-          name: llm-backend-omni
     - name: discovery
       matches:
         - path:

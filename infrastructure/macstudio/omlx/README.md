@@ -29,11 +29,10 @@ not a global lock between models.
   sidecars retain FP32 precision; speculative decoding and ANE offload remain
   disabled until separately measured.
 - Keep embeddings pinned. Reranking is on demand with a five-minute TTL.
-  Persona unloads after thirty idle minutes, Ornith after twenty, MiniCPM-o
-  after ten, and the chat model after five.
-- Default output budgets are 4K globally, 8K for chat and persona, 4K for
-  Ornith, and 2K for MiniCPM-o. Client-supplied output limits override these
-  defaults.
+  Persona unloads after thirty idle minutes, Ornith after twenty, and the chat
+  model after five.
+- Default output budgets are 4K globally, 8K for chat and persona, and 4K for
+  Ornith. Client-supplied output limits override these defaults.
 - Preserve the 64K model ceiling for chat, persona, and Ornith; use a 32K
   client window for ordinary requests. A smaller ceiling does not reduce
   weight residency.
@@ -57,7 +56,9 @@ the studio id accepted by direct calls.
 | `image` | Image generation | `qwen-image-2.1` | 7B / int8 safetensors | 5m | no |
 
 Omni (`minicpm-o-4.5`) is pinned by the standalone audio service on port 8010;
-see [`omni-audio/`](omni-audio/). It is not loaded by this oMLX model plan.
+see [`omni-audio/`](omni-audio/). Its checkout lives at
+`~/Library/Application Support/omni-audio/model`, outside oMLX's `~/models`
+scan root, so a single engine owns it.
 
 `persona` is the renamed 4-bit Orion folder and is served through the
 agentgateway persona lane. oMLX 0.7 does not currently discover

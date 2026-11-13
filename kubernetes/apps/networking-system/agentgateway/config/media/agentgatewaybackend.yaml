@@ -67,3 +67,4 @@ spec:
     ai:
       routes:
         "/v1/audio/speech": "Passthrough"
+        "/v1/audio/transcriptions": "Passthrough"
