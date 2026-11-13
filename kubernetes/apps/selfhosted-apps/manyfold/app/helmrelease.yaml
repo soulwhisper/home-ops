@@ -66,8 +66,7 @@ spec:
                 memory: 4Gi
             securityContext:
               allowPrivilegeEscalation: false
-              capabilities:
-                drop: ["ALL"]
+              capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
 
     service:
