@@ -16,7 +16,6 @@ spec:
   path: "./kubernetes/apps/selfhosted-apps/bambuddy/app"
   components:
     - ../../../../components/authentik
-    - ../../../../components/kopiur/backup
   postBuild:
     substitute:
       APP: *name

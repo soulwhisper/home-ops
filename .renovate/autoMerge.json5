@@ -29,6 +29,7 @@
       matchFileNames: [
         "kubernetes/apps/selfhosted-apps/**",
         "kubernetes/apps/servitor-apps/**",
+        "kubernetes/apps/smarthome-apps/**",
       ],
       matchUpdateTypes: ["minor"],
       automerge: true,

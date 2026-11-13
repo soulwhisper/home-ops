@@ -1,8 +1,9 @@
 # Frigate alerts → hermes-agent
 
-Frigate, frigate-vision and the `smarthome-apps` namespace are archived
-together. This note records the integration contract so it can be restored
-without re-deriving it.
+`frigate-vision` remains archived because its webhook target is the retired
+in-cluster hermes-agent. Frigate and the other core smart-home applications are
+active under `kubernetes/apps/smarthome-apps/`. This note records the alert
+integration contract for a future native-Hermes connection.
 
 ## Flow
 
@@ -67,8 +68,8 @@ The sender is `frigate-vision`; its `HERMES_WEBHOOK_URL` and
 
 ## Restore checklist
 
-1. Restore the smart-home applications under `kubernetes/apps/smarthome-apps/`
-   (frigate, frigate-vision, mosquitto and the rest).
+1. Restore `frigate-vision` under `kubernetes/apps/smarthome-apps/` and add it
+   to the namespace index; the other core smart-home applications are active.
 2. Re-add the `frigate-alert` webhook route above to hermes, restore
    `FRIGATE_WEBHOOK_SECRET` in the hermes ExternalSecret, and add
    `FRIGATE_WEBHOOK_SECRET=$${FRIGATE_WEBHOOK_SECRET}` to the seed script's

@@ -10,5 +10,8 @@ resources:
   - ./bambuddy/ks.yaml
   - ./firecrawl/ks.yaml
   - ./homepage/ks.yaml
+  - ./manyfold/ks.yaml
+  - ./obico-ml/ks.yaml
   - ./searxng/ks.yaml
+  - ./selfhosted-nfs/ks.yaml
   - ./trendradar/ks.yaml

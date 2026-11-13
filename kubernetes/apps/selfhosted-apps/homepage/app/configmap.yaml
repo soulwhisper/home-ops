@@ -35,6 +35,9 @@ data:
       Observability:
         style: row
         columns: 2
+      SmartHome:
+        style: row
+        columns: 2
       # Calendar:             # re-enable together with the services.yaml entry
       #   header: false
       #   style: column
@@ -137,12 +140,6 @@ data:
                 - { field: data.result.2.value.1, label: "CPU", format: percent }
                 - { field: data.result.3.value.1, label: "Mem", format: percent }
   widgets.yaml: |
-    - search:
-        provider: custom
-        url: https://search.noirprime.com/search?q=
-        suggestionUrl: https://search.noirprime.com/autocompleter?q=
-        focus: false
-        target: _blank
     - kubernetes:
         cluster:
           show: true
