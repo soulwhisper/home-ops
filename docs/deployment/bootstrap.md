@@ -280,7 +280,7 @@ resources, and 101 children. Source/static tooling counts 103 because the
 operator creates the root.
 
 Root patches set child reconciliation defaults and HelmRelease policies.
-For the 36 children labelled `config.home-ops.io/deps=infra`, they intentionally
+For the 35 children labelled `config.home-ops.io/deps=infra`, they intentionally
 replace local dependency lists with cert-manager, onepassword-connect,
 rook-ceph-cluster, and kopiur; the lists are not merged. The managed-annotation
 patch also makes all children effectively `prune: true`, including
