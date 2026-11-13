@@ -6,4 +6,5 @@ resources:
   # app
   - ./helmrelease.yaml
   # utils
+  - ./configmap.yaml
   - ./externalsecret.yaml
