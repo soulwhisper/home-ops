@@ -12,7 +12,7 @@ spec:
       app.kubernetes.io/name: *name
   targetNamespace: selfhosted-apps
   path: "./kubernetes/apps/selfhosted-apps/selfhosted-nfs/app"
-  wait: true
+  # WaitForFirstConsumer: do not wait for binding before consumers can start.
   dependsOn:
     - name: nfs-cluster
       namespace: storage-system
