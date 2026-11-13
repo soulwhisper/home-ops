@@ -16,11 +16,3 @@ spec:
   dependsOn:
     - name: csi-driver-nfs
       namespace: storage-system
-    - name: nfs-storageclass
-      namespace: storage-system
-  postBuild:
-    substitute:
-      BAMBUDDY_NFS_NAME: bambuddy-nfs
-      BAMBUDDY_NFS_STORAGE_CLASS: synology-volume2
-      MANYFOLD_NFS_NAME: manyfold-nfs
-      MANYFOLD_NFS_STORAGE_CLASS: synology-volume2
