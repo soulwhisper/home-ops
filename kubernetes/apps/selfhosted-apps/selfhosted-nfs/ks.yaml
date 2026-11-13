@@ -14,5 +14,5 @@ spec:
   path: "./kubernetes/apps/selfhosted-apps/selfhosted-nfs/app"
   wait: true
   dependsOn:
-    - name: csi-driver-nfs
+    - name: nfs-cluster
       namespace: storage-system

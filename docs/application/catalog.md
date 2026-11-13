@@ -130,7 +130,13 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Obico ML](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/obico-ml/ks.yaml) | Internal CPU inference API for Obico |
 | [Selfhosted-NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/selfhosted-nfs/ks.yaml) | Shared self-hosted NFS claims |
 
-Manyfold mounts its NFS share at `/libraries/main`; create the initial library with that path after first login.
+Manyfold mounts its NFS share at `/libraries/main`, but mounting the share does not register a library. After the pod is ready, run this bootstrap once using the [supported Manyfold CLI](https://manyfold.app/sysadmin/advanced_tasks.html):
+
+```sh
+kubectl -n selfhosted-apps exec deploy/manyfold -- \
+  bundle exec /usr/src/app/bin/manyfold libraries create \
+    --name=main --path=/libraries/main
+```
 
 ## NAS — Compose services
 
