@@ -20,7 +20,10 @@ spec:
           reloader.stakater.com/auto: "true"
         pod:
           securityContext:
-            fsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 2000
+            runAsGroup: 2000
+            fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         containers:
           app:
@@ -28,13 +31,11 @@ spec:
               repository: ghcr.io/manyfold3d/manyfold-solo
               tag: 0.154.1
             env:
-              PGID: 1000
-              PUID: 1000
-              SECRET_KEY_BASE:
-                valueFrom:
-                  secretKeyRef:
-                    name: *name
-                    key: SECRET_KEY_BASE
+              PGID: 2000
+              PUID: 2000
+            envFrom:
+              - secretRef:
+                  name: *name
             probes:
               liveness: &probes
                 enabled: true
@@ -93,9 +94,10 @@ spec:
         globalMounts:
           - path: /config
       library:
-        existingClaim: manyfold-nfs
+        existingClaim: selfhosted-nfs
         globalMounts:
           - path: /libraries/main
+            subPath: library
       tmpfs:
         type: emptyDir
         globalMounts:
