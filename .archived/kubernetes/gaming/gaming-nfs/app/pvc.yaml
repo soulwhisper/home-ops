@@ -10,15 +10,3 @@ spec:
     requests:
       storage: 100Gi
   storageClassName: synology-volume1
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: trpg
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 100Gi
-  storageClassName: synology-volume1

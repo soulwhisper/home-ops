@@ -130,10 +130,10 @@ spec:
             selinux-relabel:
               - path: /vol
       shared:
-        existingClaim: trpg
+        existingClaim: backup
         globalMounts:
           - path: /data
-            subPath: fvtt
+            subPath: trpg/fvtt
       tmpfs:
         type: emptyDir
         globalMounts:

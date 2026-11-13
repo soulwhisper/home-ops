@@ -37,6 +37,9 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       namespace: servitor-apps
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: smarthome-apps
   to:
     - group: ""
       kind: Service

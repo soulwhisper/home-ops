@@ -113,13 +113,16 @@ applications; see the [catalog](../application/catalog.md) for definition links.
 | Data | Definition owner | Lifecycle expectation |
 |------|------------------|-----------------------|
 | Photos, video, music, documents and downloads | `media-apps/media-nfs` KS; NAS `/volume1/{photo,video,music,document}` and `/volume2/downloads` | Keep the shared claims and NAS files independent of an individual media application's deployment selection |
+| Manyfold configuration and database | `selfhosted-apps/manyfold` KS; 10 Gi `ceph-block` PVC with kopiur | Application state is snapshotted independently of the model library |
+| Manyfold model library | `selfhosted-apps/selfhosted-nfs` KS; mounted at `/libraries/main` | NAS-hosted models are outside the kopiur PVC backup boundary |
 | Media application configuration and indexes | Application KS or HelmRelease; usually Ceph PVCs | Git/ESO-managed settings and rebuildable indexes may be recreated. Other application state in the same PVC needs a backup if it must survive; explicitly accepting its loss does not require preserving every old Kopiur snapshot |
 | Transcode, machine-learning and mover caches | Application or kopiur controller; `ceph-cache` | Rewarmable, not a durable-data retention boundary |
 | PostgreSQL and application RGW buckets | Shared CNPG cluster or application OBC | Separate business state; do not infer that it is disposable because media files are on NFS |
 
-Media, gaming and smart-home namespaces, plus four self-hosted applications,
-are archived under `.archived/kubernetes`: their workloads and PVCs are expected
-to be pruned (verify the prune result), while NAS-hosted files remain untouched.
+Media and gaming namespaces, `frigate-vision`, the smart-home MCP tier, and the
+archived self-hosted applications remain under `.archived/kubernetes`: their
+workloads and PVCs are expected to be pruned (verify the prune result), while
+NAS-hosted files remain untouched.
 CNPG databases/roles and leftover kopiur Snapshot objects still require manual
 cleanup.
 
@@ -132,7 +135,7 @@ are outside the Kubernetes PVC backup mechanism.
 ### kopiur — PVC Backup
 
 [kopiur](https://github.com/home-operations/kopiur) (Kopia-native Rust operator)
-provides automated PVC backup and restore for **4 application definitions**; media, gaming, smart-home and the archived self-hosted applications do not carry policies.
+provides automated PVC backup and restore for **8 application definitions**; media, gaming and the archived self-hosted applications do not carry policies.
 The reusable components are
 [`backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
 (referenced by each consumer's `ks.yaml`) and

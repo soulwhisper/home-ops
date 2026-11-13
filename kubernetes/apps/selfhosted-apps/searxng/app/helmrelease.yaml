@@ -32,7 +32,6 @@ spec:
               tag: 2026.10.13-22c64b8d3
             env:
               SEARXNG_PORT: &port 8080
-              SEARXNG_BASE_URL: https://search.noirprime.com
               SEARXNG_VALKEY_URL: "redis://:$(SEARXNG_VALKEY_PASSWORD)@searxng-dragonfly.selfhosted-apps.svc.cluster.local:6379"
               SEARXNG_VALKEY_PASSWORD:
                 valueFrom:
@@ -75,18 +74,6 @@ spec:
         ports:
           http:
             port: *port
-    route:
-      app:
-        hostnames: ["search.noirprime.com"]
-        annotations:
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/icon: /icons/searxng.svg
-          gethomepage.dev/name: SearXNG
-          gethomepage.dev/group: Service
-        parentRefs:
-          - name: kgateway-internal
-            namespace: networking-system
-
     persistence:
       config:
         type: configMap

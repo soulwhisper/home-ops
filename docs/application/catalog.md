@@ -1,8 +1,8 @@
 # Application Catalog
 
-63 application definition units across 9 namespaces, managed via Flux GitOps. Each Flux table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload. The NAS table at the end is outside Flux and links to compose stacks instead.
+73 application definition units across 10 namespaces, managed via Flux GitOps. Each Flux table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload. The NAS table at the end is outside Flux and links to compose stacks instead.
 
-The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 9 first-level namespace directories. Together, those namespaces have 53 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 63 definition files declare 88 child Flux Kustomizations and lead to 64 HelmReleases. There are 48 OCIRepositories across the source tree: 47 application-local and one shared app-template source. These are source counts, not counts of running applications.
+The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 10 first-level namespace directories. Together, those namespaces have 63 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 73 definition files declare 98 child Flux Kustomizations and lead to 72 HelmReleases. There are 48 OCIRepositories across the source tree: 47 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
 Definitions that are intentionally not deployed live under [`.archived/kubernetes`](https://github.com/soulwhisper/home-ops/tree/main/.archived/kubernetes); see the [archive index](https://github.com/soulwhisper/home-ops/blob/main/.archived/README.md) for why each definition is kept.
 
@@ -101,17 +101,42 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [KRR](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/krr/ks.yaml) | Scheduled Kubernetes resource recommendations |
 | [Webhook Relay](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/webhook-relay/ks.yaml) | Inbound webhook collection and Feishu fan-out |
 
-## selfhosted-apps — Self-Hosted Services (5)
+## smarthome-apps — Smart Home (7)
+
+[Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/kustomization.yaml)
+
+| App | Purpose |
+| --- | --- |
+| [Home Assistant](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/home-assistant/ks.yaml) | Home automation hub |
+| [Home Assistant SGCC](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/home-assistant-sgcc/ks.yaml) | State Grid power integration |
+| [Mosquitto](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/mosquitto/ks.yaml) | MQTT broker |
+| [Zigbee2MQTT](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/zigbee2mqtt/ks.yaml) | Zigbee to MQTT bridge |
+| [Frigate](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/frigate/ks.yaml) | AI NVR with Intel GPU acceleration |
+| [Scrypted](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/scrypted/ks.yaml) | Video streaming with iGPU acceleration |
+| [Smarthome-NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/smarthome-nfs/ks.yaml) | Shared smart-home NFS storage |
+
+## selfhosted-apps — Self-Hosted Services (8)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/kustomization.yaml)
 
 | App | Purpose |
 | --- | --- |
 | [TrendRadar](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/trendradar/ks.yaml) | Scheduled AI news digest |
-| [SearXNG](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/searxng/ks.yaml) | Privacy-focused metasearch |
+| [SearXNG](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/searxng/ks.yaml) | Internal metasearch backend for Firecrawl |
 | [Homepage](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/homepage/ks.yaml) | Application dashboard |
 | [Firecrawl](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/firecrawl/ks.yaml) | Web scraping pipeline |
 | [Bambuddy](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/bambuddy/ks.yaml) | Bambu Lab 3D printer monitor |
+| [Manyfold](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/manyfold/ks.yaml) | 3D model library and digital asset manager |
+| [Obico ML](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/obico-ml/ks.yaml) | Internal CPU inference API for Obico |
+| [Selfhosted-NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/selfhosted-nfs/ks.yaml) | Shared self-hosted NFS claims |
+
+Manyfold mounts its NFS share at `/libraries/main`, but mounting the share does not register a library. After the pod is ready, run this bootstrap once using the [supported Manyfold CLI](https://manyfold.app/sysadmin/advanced_tasks.html):
+
+```sh
+kubectl -n selfhosted-apps exec deploy/manyfold -- \
+  bundle exec /usr/src/app/bin/manyfold libraries create \
+    --name=main --path=/libraries/main
+```
 
 ## NAS — Compose services
 

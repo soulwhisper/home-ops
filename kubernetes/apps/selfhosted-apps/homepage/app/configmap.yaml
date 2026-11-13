@@ -35,6 +35,9 @@ data:
       Observability:
         style: row
         columns: 2
+      SmartHome:
+        style: row
+        columns: 2
       # Calendar:             # re-enable together with the services.yaml entry
       #   header: false
       #   style: column
@@ -49,12 +52,14 @@ data:
       #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / -1; }
       #layout-groups > .services-group:nth-child(2) { grid-column: 2; }
       #layout-groups > .services-group:nth-child(3) { grid-column: 3; }
+      #layout-groups > .services-group:nth-child(4) { grid-column: 2 / -1; grid-row: 2; }
     }
     @media (min-width: 1280px) and (max-width: 1899px) {
       #layout-groups { display: grid !important; grid-template-columns: minmax(440px, 560px) 1fr 1fr; grid-template-rows: auto; grid-auto-flow: row; align-items: start; }
       #layout-groups > .services-group:first-child { grid-column: 1; grid-row: 1 / -1; }
       #layout-groups > .services-group:nth-child(2) { grid-column: 2; }
       #layout-groups > .services-group:nth-child(3) { grid-column: 3; }
+      #layout-groups > .services-group:nth-child(4) { grid-column: 2 / -1; grid-row: 2; }
     }
   custom.js: ""
   bookmarks.yaml: ""
@@ -137,12 +142,6 @@ data:
                 - { field: data.result.2.value.1, label: "CPU", format: percent }
                 - { field: data.result.3.value.1, label: "Mem", format: percent }
   widgets.yaml: |
-    - search:
-        provider: custom
-        url: https://search.noirprime.com/search?q=
-        suggestionUrl: https://search.noirprime.com/autocompleter?q=
-        focus: false
-        target: _blank
     - kubernetes:
         cluster:
           show: true

@@ -26,13 +26,15 @@ configMapGenerator:
       - icons/diceframe.svg
       - icons/discord.svg
       - icons/forgejo.svg
+      - icons/frigate.svg
       - icons/heimdall.svg
+      - icons/home-assistant.svg
       - icons/metabrainz.svg
       - icons/microsoft-outlook.svg
       - icons/open-webui.svg
       - icons/openwrt.svg
       - icons/rook.svg
-      - icons/searxng.svg
+      - icons/scrypted.svg
       - icons/si-anthropic.svg
       - icons/si-bambulab.svg
       - icons/si-jpeg.svg
@@ -44,6 +46,7 @@ configMapGenerator:
       - icons/unifi.svg
       - icons/victoriametrics.svg
       - icons/vmware-esxi.svg
+      - icons/zigbee2mqtt.svg
 generatorOptions:
   annotations:
     kustomize.toolkit.fluxcd.io/substitute: disabled

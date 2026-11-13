@@ -14,7 +14,6 @@ spec:
   values:
     defaultPodOptions:
       automountServiceAccountToken: false
-      hostUsers: false
     controllers:
       *name :
         annotations:
@@ -23,7 +22,7 @@ spec:
           app:
             image:
               repository: ghcr.io/maziggy/bambuddy
-              tag: 1.2.5.7
+              tag: 1.3.1
             env:
               PORT: &httpPort 8000
             probes:

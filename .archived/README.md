@@ -8,7 +8,7 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
   `-apps`/`-system` suffix, so restore to the path named by `spec.path`
   (for example `.archived/kubernetes/media/foo` →
   `kubernetes/apps/media-apps/foo`) and re-add it to that namespace index.
-- Renovate path globs for the retired namespaces (`kubernetes/apps/{gaming,media,smarthome}-apps/**`)
+- Renovate path globs for the retired namespaces (`kubernetes/apps/{gaming,media}-apps/**`)
   were dropped from `.renovate/autoMerge.json5`, and the repository-root
   `renovate.json5` ignores this tree via `ignorePaths: [".archived/**"]`. Restoring an app from one of those namespaces also
   means putting its glob back, otherwise its minor updates stop auto-merging.
@@ -59,15 +59,8 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 | `kubernetes/servitor/hermes-agent` | In-cluster AI agent (gateway + dashboard, Feishu websocket, MCP tier consumers) | Archived 2026-11: the homelab runs one Hermes, the native instance on `nix-ops`. Its Authentik blueprint is archived alongside, and the kopiur-backed `/opt/data` PVC is pruned unless kept — restore steps and the data warning are in the folder `README.md` |
 | `kubernetes/servitor/mcp/grafana` | Grafana MCP server and its service-account token sync | Retired with Grafana; Victoria query MCP servers cover the remaining read-only surface |
 | `kubernetes/servitor/mcp/hindsight` | ToolHive MCP proxies for the hindsight persona and ops banks (base + both overlays) | Hindsight speaks MCP natively, so the proxy duplicated it; with the service on the NAS a consumer points at `nas.homelab.internal:8888/mcp/<bank>`. Archived with its `persona` MCP tier (group, vmcp, route, key) — see the hindsight app's archived `README.md` for the full restore list |
-| `kubernetes/servitor/mcp/smarthome` | MCP smart-home control tier | Retired with the smart-home stack |
-| `kubernetes/smarthome/frigate` | Frigate NVR | Retired with the smart-home stack |
-| `kubernetes/smarthome/frigate-vision` | Frigate alert forwarder to hermes-agent | Retired with the smart-home stack |
-| `kubernetes/smarthome/home-assistant` | Home automation | Retired with the smart-home stack |
-| `kubernetes/smarthome/home-assistant-sgcc` | Home Assistant with the SGCC (State Grid) bridge | Retired with the smart-home stack |
-| `kubernetes/smarthome/mosquitto` | MQTT broker | Retired with the smart-home stack |
-| `kubernetes/smarthome/scrypted` | Scrypted camera/NVR platform | Retired with the smart-home stack |
-| `kubernetes/smarthome/smarthome-nfs` | NFS PV/PVC binding for home-automation data | Retired with the smart-home stack; NAS files remain |
-| `kubernetes/smarthome/zigbee2mqtt` | Zigbee bridge | Retired with the smart-home stack |
+| `kubernetes/servitor/mcp/smarthome` | MCP smart-home control tier | Not restored with the core smart-home applications |
+| `kubernetes/smarthome/frigate-vision` | Frigate alert forwarder to hermes-agent | The native Hermes instance has no GitOps-managed Frigate webhook route; the other core smart-home definitions were restored |
 
 ### infrastructure
 
