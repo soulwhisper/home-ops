@@ -38,9 +38,13 @@ spec:
                 spec:
                   exec:
                     command:
-                      - /bin/sh
+                      - python
                       - -c
-                      - 'test "$(wget -q -O - http://localhost:3333/hc/)" = "ok"'
+                      - |
+                        import sys
+                        import urllib.request
+                        body = urllib.request.urlopen("http://localhost:3333/hc/", timeout=3).read().strip()
+                        sys.exit(0 if body == b"ok" else 1)
                   periodSeconds: 10
                   timeoutSeconds: 5
                   failureThreshold: 6
@@ -51,9 +55,13 @@ spec:
                 spec:
                   exec:
                     command:
-                      - /bin/sh
+                      - python
                       - -c
-                      - 'test "$(wget -q -O - http://localhost:3333/hc/)" = "ok"'
+                      - |
+                        import sys
+                        import urllib.request
+                        body = urllib.request.urlopen("http://localhost:3333/hc/", timeout=3).read().strip()
+                        sys.exit(0 if body == b"ok" else 1)
                   periodSeconds: 10
                   timeoutSeconds: 5
                   failureThreshold: 30

@@ -33,6 +33,9 @@ spec:
             env:
               PGID: 2000
               PUID: 2000
+              # Kubernetes leaves /run root-owned and fsGroup-writable; s6
+              # accepts that single-UID layout without additional privileges.
+              S6_YES_I_WANT_A_WORLD_WRITABLE_RUN_BECAUSE_KUBERNETES: "1"
             envFrom:
               - secretRef:
                   name: *name
