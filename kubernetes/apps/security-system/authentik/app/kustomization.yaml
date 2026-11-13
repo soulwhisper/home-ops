@@ -38,6 +38,7 @@ configMapGenerator:
       - ./blueprints/forward/frigate-go2rtc.yaml
       - ./blueprints/forward/homepage.yaml
       - ./blueprints/forward/hubble.yaml
+      - ./blueprints/forward/manyfold.yaml
       - ./blueprints/forward/open-webui.yaml
       - ./blueprints/forward/scrypted.yaml
       - ./blueprints/forward/victoria-logs.yaml
