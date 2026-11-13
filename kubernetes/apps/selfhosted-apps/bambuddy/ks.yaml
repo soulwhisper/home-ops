@@ -21,3 +21,4 @@ spec:
     substitute:
       APP: *name
       APP_HOST: "bambuddy.noirprime.com"
+      KOPIUR_CAPACITY: 20Gi
