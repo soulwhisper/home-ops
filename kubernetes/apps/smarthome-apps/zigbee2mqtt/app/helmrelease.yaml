@@ -31,59 +31,11 @@ spec:
             image:
               repository: ghcr.io/koenkk/zigbee2mqtt
               tag: 2.14.3
-            env:
-              Z2M_WATCHDOG: default
-              ZIGBEE2MQTT_DATA: /data
-              ZIGBEE2MQTT_CONFIG_ADVANCED_CHANNEL: 20
-              ZIGBEE2MQTT_CONFIG_ADVANCED_EXT_PAN_ID:
-                valueFrom:
-                  secretKeyRef:
-                    name: *name
-                    key: zigbee_ext_pan_id
-              ZIGBEE2MQTT_CONFIG_ADVANCED_LAST_SEEN: ISO_8601
-              ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_LEVEL: info
-              ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_OUTPUT: >-
-                ["console"]
-              ZIGBEE2MQTT_CONFIG_ADVANCED_NETWORK_KEY:
-                valueFrom:
-                  secretKeyRef:
-                    name: *name
-                    key: zigbee_network_key
-              ZIGBEE2MQTT_CONFIG_ADVANCED_PAN_ID:
-                valueFrom:
-                  secretKeyRef:
-                    name: *name
-                    key: zigbee_pan_id
-              ZIGBEE2MQTT_CONFIG_AVAILABILITY_ACTIVE_TIMEOUT: 60
-              ZIGBEE2MQTT_CONFIG_AVAILABILITY_PASSIVE_TIMEOUT: 2000
-              ZIGBEE2MQTT_CONFIG_DEVICE_OPTIONS_RETAIN: true
-              ZIGBEE2MQTT_CONFIG_FRONTEND_ENABLED: "true"
-              ZIGBEE2MQTT_CONFIG_FRONTEND_PORT: &httpPort 8080
-              ZIGBEE2MQTT_CONFIG_FRONTEND_URL: https://z2m.noirprime.com
-              ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_DISCOVERY_TOPIC: homeassistant
-              ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_ENABLED: "true"
-              ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_EXPERIMENTAL_EVENT_ENTITIES: true
-              ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_STATUS_TOPIC: homeassistant/status
-              ZIGBEE2MQTT_CONFIG_MQTT_BASE_TOPIC: zigbee2mqtt
-              ZIGBEE2MQTT_CONFIG_MQTT_INCLUDE_DEVICE_INFORMATION: true
-              ZIGBEE2MQTT_CONFIG_MQTT_KEEPALIVE: 60
-              ZIGBEE2MQTT_CONFIG_MQTT_REJECT_UNAUTHORIZED: true
-              ZIGBEE2MQTT_CONFIG_MQTT_SERVER: "mqtt://mosquitto:1883"
-              ZIGBEE2MQTT_CONFIG_MQTT_USER:
-                valueFrom:
-                  secretKeyRef:
-                    name: *name
-                    key: mosquitto_username
-              ZIGBEE2MQTT_CONFIG_MQTT_PASSWORD:
-                valueFrom:
-                  secretKeyRef:
-                    name: *name
-                    key: mosquitto_password
-              ZIGBEE2MQTT_CONFIG_MQTT_VERSION: 5
-              ZIGBEE2MQTT_CONFIG_SERIAL_ADAPTER: zstack # SLZB-06P10
-              ZIGBEE2MQTT_CONFIG_SERIAL_PORT: tcp://zigbee.homelab.internal:6638
-              ZIGBEE2MQTT_CONFIG_SERIAL_BAUDRATE: 115200
-              ZIGBEE2MQTT_CONFIG_SERIAL_DISABLE_LED: false
+            envFrom:
+              - configMapRef:
+                  name: *name
+              - secretRef:
+                  name: *name
             resources:
               requests:
                 cpu: 40m
