@@ -18,7 +18,6 @@ spec:
     - name: selfhosted-nfs
       namespace: selfhosted-apps
   components:
-    - ../../../../components/authentik
     - ../../../../components/kopiur/backup
   postBuild:
     substitute:
