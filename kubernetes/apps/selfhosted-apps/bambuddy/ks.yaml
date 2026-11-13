@@ -6,17 +6,17 @@ metadata:
   name: &name bambuddy
   annotations:
     config.home-ops.io/managed: "true"
+  labels:
+    config.home-ops.io/deps: "infra"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: selfhosted-apps
   path: "./kubernetes/apps/selfhosted-apps/bambuddy/app"
-  dependsOn:
-    - name: selfhosted-nfs
-      namespace: selfhosted-apps
   components:
     - ../../../../components/authentik
+    - ../../../../components/kopiur/backup
   postBuild:
     substitute:
       APP: *name
