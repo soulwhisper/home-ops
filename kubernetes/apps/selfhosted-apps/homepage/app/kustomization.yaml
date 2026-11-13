@@ -29,6 +29,7 @@ configMapGenerator:
       - icons/frigate.svg
       - icons/heimdall.svg
       - icons/home-assistant.svg
+      - icons/manyfold.svg
       - icons/metabrainz.svg
       - icons/microsoft-outlook.svg
       - icons/open-webui.svg
