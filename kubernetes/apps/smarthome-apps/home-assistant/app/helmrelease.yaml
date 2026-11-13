@@ -54,15 +54,6 @@ spec:
             image:
               repository: ghcr.io/home-assistant/home-assistant
               tag: 2026.11.1
-            env:
-              OIDC_CLIENT_ID:
-                secretKeyRef:
-                  name: *name
-                  key: oidc_client_id
-              OIDC_CLIENT_SECRET:
-                secretKeyRef:
-                  name: *name
-                  key: oidc_client_secret
             resources:
               requests:
                 cpu: 300m
@@ -94,9 +85,3 @@ spec:
         existingClaim: *name
         globalMounts:
           - path: /config
-      packages:
-        type: configMap
-        name: *name
-        globalMounts:
-          - path: /config/packages
-            readOnly: true
