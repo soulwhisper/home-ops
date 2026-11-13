@@ -51,7 +51,7 @@ spec:
         ports:
           http:
             primary: true
-            port: *httpPort
+            port: 8080
 
     route:
       app:
