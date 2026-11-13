@@ -6,5 +6,5 @@ metadata:
 data:
   # shared
   PUBLISHER: "mqtt"
-  MQTT_HOST: "http://mosquitto.smarthome-apps.svc.cluster.local"
+  MQTT_HOST: "mosquitto.smarthome-apps.svc.cluster.local"
   MQTT_PORT: "1883"
