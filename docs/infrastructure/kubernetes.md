@@ -69,7 +69,7 @@ flowchart TB
         OCIRepositories"]
         OCI_TPL["1 shared app-template
         OCIRepository"]
-        CROSS["14 cross-namespace
+        CROSS["25 cross-namespace
         HelmReleases"]
     end
 
@@ -165,7 +165,7 @@ These scalar values override local declarations. In particular, [`flux-operator`
 
 **Target**: Any `Kustomization` with label `config.home-ops.io/deps=infra`
 
-The 37 child Kustomizations carrying this label use a uniform four-item infrastructure gate:
+The 35 child Kustomizations carrying this label use a uniform four-item infrastructure gate:
 
 ```yaml
 spec:
@@ -516,7 +516,7 @@ Without this annotation, a Kustomization would not receive the automatic `source
 
 **Type**: Label
 **Purpose**: Opts a `Kustomization` into Layer 2 strategic patching (baseline infrastructure dependencies).
-**Scope**: 37 child Flux Kustomizations.
+**Scope**: 35 child Flux Kustomizations.
 
 This label signals "I'm a workload that needs the core infra layer." Infrastructure components themselves (e.g., cert-manager, rook-ceph, cnpg-operator) omit this label — they _are_ the infra, so they only carry `managed: "true"`.
 

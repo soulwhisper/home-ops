@@ -111,7 +111,7 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Home Assistant SGCC](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/home-assistant-sgcc/ks.yaml) | State Grid power integration |
 | [Mosquitto](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/mosquitto/ks.yaml) | MQTT broker |
 | [Zigbee2MQTT](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/zigbee2mqtt/ks.yaml) | Zigbee to MQTT bridge |
-| [Frigate](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/frigate/ks.yaml) | AI NVR with Coral TPU |
+| [Frigate](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/frigate/ks.yaml) | AI NVR with Intel GPU acceleration |
 | [Scrypted](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/scrypted/ks.yaml) | Video streaming with iGPU acceleration |
 | [Smarthome-NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/smarthome-nfs/ks.yaml) | Shared smart-home NFS storage |
 
@@ -129,6 +129,8 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Manyfold](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/manyfold/ks.yaml) | 3D model library and digital asset manager |
 | [Obico ML](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/obico-ml/ks.yaml) | Internal CPU inference API for Obico |
 | [Selfhosted-NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/selfhosted-nfs/ks.yaml) | Shared self-hosted NFS claims |
+
+Manyfold mounts its NFS share at `/libraries/main`; create the initial library with that path after first login.
 
 ## NAS — Compose services
 

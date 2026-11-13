@@ -32,27 +32,31 @@ spec:
             env:
               FLASK_APP: server.py
             probes:
-              liveness:
+              liveness: &healthCheck
                 enabled: true
                 custom: true
                 spec:
-                  tcpSocket:
-                    port: &httpPort 3333
-                  initialDelaySeconds: 30
-                  periodSeconds: 30
-                  timeoutSeconds: 5
-                  failureThreshold: 6
-              readiness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /hc/
-                    port: *httpPort
-                  initialDelaySeconds: 15
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - 'test "$(wget -q -O - http://localhost:3333/hc/)" = "ok"'
                   periodSeconds: 10
                   timeoutSeconds: 5
                   failureThreshold: 6
+              readiness: *healthCheck
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - 'test "$(wget -q -O - http://localhost:3333/hc/)" = "ok"'
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
             resources:
               requests:
                 cpu: 500m
@@ -65,4 +69,4 @@ spec:
       app:
         ports:
           http:
-            port: *httpPort
+            port: 3333

@@ -16,6 +16,8 @@ spec:
   dependsOn:
     - name: csi-driver-nfs
       namespace: storage-system
+    - name: nfs-storageclass
+      namespace: storage-system
   postBuild:
     substitute:
       BAMBUDDY_NFS_NAME: bambuddy-nfs

@@ -6,14 +6,23 @@ metadata:
   name: &name manyfold
   annotations:
     config.home-ops.io/managed: "true"
-  labels:
-    config.home-ops.io/deps: "infra"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: selfhosted-apps
   path: "./kubernetes/apps/selfhosted-apps/manyfold/app"
+  dependsOn:
+    - name: cert-manager
+      namespace: security-system
+    - name: onepassword-connect
+      namespace: security-system
+    - name: rook-ceph-cluster
+      namespace: storage-system
+    - name: kopiur
+      namespace: storage-system
+    - name: selfhosted-nfs
+      namespace: selfhosted-apps
   components:
     - ../../../../components/authentik
     - ../../../../components/kopiur/backup
