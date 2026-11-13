@@ -35,7 +35,6 @@ configMapGenerator:
       - icons/searxng.svg
       - icons/si-anthropic.svg
       - icons/si-bambulab.svg
-      - icons/si-hermes.svg
       - icons/si-jpeg.svg
       - icons/si-langflow.svg
       - icons/si-materialdesign.svg
