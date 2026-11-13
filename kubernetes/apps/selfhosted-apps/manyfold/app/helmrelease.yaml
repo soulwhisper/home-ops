@@ -25,6 +25,22 @@ spec:
             runAsGroup: 2000
             fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
+        initContainers:
+          prepare-tmp:
+            image:
+              repository: docker.io/library/busybox
+              tag: "1.38"
+            command:
+              - sh
+              - -c
+              - mkdir -p /tmp/manyfold && chmod 0700 /tmp/manyfold
+            resources:
+              requests: { cpu: 10m, memory: 16Mi }
+              limits: { memory: 64Mi }
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+              readOnlyRootFilesystem: true
         containers:
           app:
             image:
@@ -33,6 +49,7 @@ spec:
             env:
               PGID: 2000
               PUID: 2000
+              TMPDIR: /tmp/manyfold
               # Kubernetes leaves /run root-owned and fsGroup-writable; s6
               # accepts that single-UID layout without additional privileges.
               S6_YES_I_WANT_A_WORLD_WRITABLE_RUN_BECAUSE_KUBERNETES: "1"
