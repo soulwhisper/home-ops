@@ -29,8 +29,8 @@ spec:
         initContainers:
           hacs-installer:
             image:
-              repository: busybox
-              tag: "1.38.0"
+              repository: docker.io/library/busybox
+              tag: "1.38"
             env:
               HACS_VERSION: "2.0.5"
             command:
