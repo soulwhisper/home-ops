@@ -57,10 +57,14 @@ accepts a client-provided filesystem path.
 ## Install after merge
 
 Use Python 3.12 or newer. Run these steps on the Mac Studio only after the PR
-is merged:
+is merged. Unload Omni from oMLX first, then move its checkout before installing
+the LaunchAgent. `RunAtLoad` and `KeepAlive` require the destination model to
+exist before bootstrap:
 
 ```sh
 install -d "$HOME/Library/Application Support/omni-audio"
+mv "$HOME/models/minicpm-o-4.5" \
+  "$HOME/Library/Application Support/omni-audio/model"
 install -m 644 omni_audio.py requirements.txt \
   "$HOME/Library/Application Support/omni-audio/"
 install -m 755 run.sh "$HOME/Library/Application Support/omni-audio/"
@@ -81,10 +85,9 @@ environment; do not start a second copy on another port.
 
 ## Verification and cutover
 
-1. Unload Omni from oMLX, then move `~/models/minicpm-o-4.5` to
-   `$HOME/Library/Application Support/omni-audio/model`. Moving the checkout
-   outside oMLX's scan root prevents a second engine from loading it; do not
-   copy it back into `~/models`.
+1. Confirm the checkout is now `$HOME/Library/Application Support/omni-audio/model`
+   and oMLX no longer discovers it. Keep the checkout outside `~/models`;
+   copying it back would allow a second engine to load it.
 2. Start the service and verify `/healthz` reports `"loaded": true` after model
    initialization.
 3. Use authenticated requests on port 8010 to verify a known WAV through
