@@ -219,10 +219,6 @@ interface ten-gigabitethernet 1/0/17
  multicast-suppression 5
  unicast-suppression 5
 
-# spare SFP+ port
-interface ten-gigabitethernet 1/0/18
- shutdown
-
 # to management eth
 interface ten-gigabitethernet 1/0/19
  description management-eth
