@@ -295,7 +295,7 @@ This cross-namespace reference is used by 21 application-facing HelmReleases acr
 | networking-system | 1     | mcp-guardrails |
 | selfhosted-apps   | 8     | bambuddy, firecrawl (+database), homepage, manyfold, obico-ml, searxng, trendradar |
 | servitor-apps     | 4     | covel, diceframe, open-webui, playwright |
-| smarthome-apps    | 6     | frigate, home-assistant (app + sgcc), mosquitto, scrypted, zigbee2mqtt |
+| smarthome-apps    | 5     | frigate, home-assistant (app + sgcc), mosquitto, scrypted |
 
 The `flux-repositories` Kustomization is a dependency of `cluster-apps` and registers the shared source. It sets `wait: false`, so this edge does not itself wait for the OCI artifact to become ready; helm-controller resolves chart source readiness.
 
@@ -426,7 +426,7 @@ Application definitions are grouped into 10 namespace directories. The numbering
 | 5   | `networking-system` | Ingress, DNS, API gateway            | kgateway (Envoy), Agent Gateway (AI agent routing), ExternalDNS, forgejo-proxy |
 | 6   | `monitoring-system` | Observability                        | Victoria Metrics (operator + cluster), Victoria Logs, Victoria Traces, Prometheus CRDs, kube-state-metrics, node-exporter, blackbox-exporter, Smartctl exporter, OTel Collector, Silence Operator, Robusta, webhook-relay, KRR, VMware exporter |
 | 7   | `servitor-apps`     | AI and development tooling           | Covel, DiceFrame, Open WebUI, Playwright, Toolhive, MCP definitions (11 units) |
-| 8   | `smarthome-apps`    | Home automation                      | Home Assistant (app + SGCC), Frigate NVR, Zigbee2MQTT, Mosquitto MQTT, Scrypted, smarthome-nfs |
+| 8   | `smarthome-apps`    | Home automation                      | Home Assistant (app + SGCC), Frigate NVR, Mosquitto MQTT, Scrypted, smarthome-nfs |
 | 9   | `selfhosted-apps`   | Self-hosted web services             | SearXNG, Homepage, BambuBuddy, Manyfold, Obico ML, trendradar, Firecrawl, selfhosted-nfs |
 | 10  | `gitops-system`     | Flux itself                          | Flux Operator, Flux Instance, System Upgrade Controller                                                                                                                                                                                    |
 

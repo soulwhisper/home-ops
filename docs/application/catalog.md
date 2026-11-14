@@ -101,7 +101,7 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [KRR](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/krr/ks.yaml) | Scheduled Kubernetes resource recommendations |
 | [Webhook Relay](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/webhook-relay/ks.yaml) | Inbound webhook collection and Feishu fan-out |
 
-## smarthome-apps — Smart Home (7)
+## smarthome-apps — Smart Home (6)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/kustomization.yaml)
 
@@ -110,7 +110,6 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Home Assistant](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/home-assistant/ks.yaml) | Home automation hub |
 | [Home Assistant SGCC](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/home-assistant-sgcc/ks.yaml) | State Grid power integration |
 | [Mosquitto](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/mosquitto/ks.yaml) | MQTT broker |
-| [Zigbee2MQTT](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/zigbee2mqtt/ks.yaml) | Zigbee to MQTT bridge |
 | [Frigate](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/frigate/ks.yaml) | AI NVR with Intel GPU acceleration |
 | [Scrypted](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/scrypted/ks.yaml) | Video streaming with iGPU acceleration |
 | [Smarthome-NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/smarthome-nfs/ks.yaml) | Shared smart-home NFS storage |
