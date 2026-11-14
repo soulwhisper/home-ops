@@ -4,15 +4,19 @@ kind: ConfigMap
 metadata:
   name: zigbee2mqtt
 data:
+  # The install is fully environment-configured; skip the interactive first-run onboarding server.
+  Z2M_ONBOARD_NO_SERVER: "1"
   Z2M_WATCHDOG: "default"
   ZIGBEE2MQTT_DATA: "/data"
   ZIGBEE2MQTT_CONFIG_ADVANCED_CHANNEL: "20"
   ZIGBEE2MQTT_CONFIG_ADVANCED_LAST_SEEN: "ISO_8601"
   ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_LEVEL: "info"
   ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_OUTPUT: '["console"]'
+  ZIGBEE2MQTT_CONFIG_AVAILABILITY_ENABLED: "true"
   ZIGBEE2MQTT_CONFIG_AVAILABILITY_ACTIVE_TIMEOUT: "60"
   ZIGBEE2MQTT_CONFIG_AVAILABILITY_PASSIVE_TIMEOUT: "2000"
-  ZIGBEE2MQTT_CONFIG_DEVICE_OPTIONS_RETAIN: "true"
+  # z2m only reads env overrides declared in its settings schema; nested device option keys are not parsed.
+  ZIGBEE2MQTT_CONFIG_DEVICE_OPTIONS: '{"retain":true}'
   ZIGBEE2MQTT_CONFIG_FRONTEND_ENABLED: "true"
   ZIGBEE2MQTT_CONFIG_FRONTEND_PORT: "8080"
   ZIGBEE2MQTT_CONFIG_FRONTEND_URL: "https://z2m.noirprime.com"
