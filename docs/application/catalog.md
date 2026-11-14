@@ -1,8 +1,8 @@
 # Application Catalog
 
-73 application definition units across 10 namespaces, managed via Flux GitOps. Each Flux table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload. The NAS table at the end is outside Flux and links to compose stacks instead.
+72 application definition units across 10 namespaces, managed via Flux GitOps. Each Flux table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload. The NAS table at the end is outside Flux and links to compose stacks instead.
 
-The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 10 first-level namespace directories. Together, those namespaces have 63 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 73 definition files declare 98 child Flux Kustomizations and lead to 72 HelmReleases. There are 48 OCIRepositories across the source tree: 47 application-local and one shared app-template source. These are source counts, not counts of running applications.
+The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 10 first-level namespace directories. Together, those namespaces have 62 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 72 definition files declare 97 child Flux Kustomizations and lead to 71 HelmReleases. There are 48 OCIRepositories across the source tree: 47 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
 Definitions that are intentionally not deployed live under [`.archived/kubernetes`](https://github.com/soulwhisper/home-ops/tree/main/.archived/kubernetes); see the [archive index](https://github.com/soulwhisper/home-ops/blob/main/.archived/README.md) for why each definition is kept.
 
