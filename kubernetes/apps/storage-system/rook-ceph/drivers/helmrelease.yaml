@@ -9,6 +9,34 @@ spec:
   chartRef:
     kind: OCIRepository
     name: ceph-csi-drivers
+  # Talos does not ship /etc/selinux/config; inject a minimal generated config
+  # so mount keeps context=. The chart renders a non-empty nodePlugin.volumes
+  # list at the key's indentation, which is invalid YAML, hence post-render.
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              group: csi.ceph.io
+              version: v1
+              kind: Driver
+              name: storage-system.rbd.csi.ceph.com
+            patch: |
+              apiVersion: csi.ceph.io/v1
+              kind: Driver
+              metadata:
+                name: storage-system.rbd.csi.ceph.com
+              spec:
+                nodePlugin:
+                  volumes:
+                    - mount:
+                        name: selinux-config
+                        mountPath: /etc/selinux/config
+                        subPath: config
+                        readOnly: true
+                      volume:
+                        name: selinux-config
+                        configMap:
+                          name: ceph-csi-selinux-config
 
   values:
     operatorConfig:
@@ -58,9 +86,6 @@ spec:
                 cpu: 20m
                 memory: 96Mi
         nodePlugin:
-          # RBD CSI volumes need the host SELinux config so mount can apply
-          # the StorageClass context= label instead of silently dropping it.
-          enableSeLinuxHostMount: true
           priorityClassName: system-node-critical
           resources:
             plugin:

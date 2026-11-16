@@ -53,12 +53,12 @@ Mount options: discard, context=system_u:object_r:ephemeral_t:s0
 
 Both RBD StorageClasses mount with `context=system_u:object_r:ephemeral_t:s0`.
 Talos runs pods as `pod_t` and does not label CSI volumes itself; the mount
-option labels every inode `ephemeral_t`, which pods can write. The ceph-csi
-node plugin must mount the host `/etc/selinux` (`enableSeLinuxHostMount: true`);
-without it, `mount` silently drops `context=`. The label applies to newly
-provisioned PVs; existing PVs keep their stored mount options. Volumes covered
-by the previous init-container relabel already carry `ephemeral_t`; any other
-existing volume must be relabelled or recreated once.
+option labels every inode `ephemeral_t`, which pods can write. The RBD node
+plugin mounts a minimal generated `/etc/selinux/config`; Talos does not ship
+that file, and without it `mount` silently drops `context=`. The label applies
+to newly provisioned PVs; existing PVs keep their stored mount options.
+Volumes covered by the previous init-container relabel already carry
+`ephemeral_t`; any other existing volume must be relabelled or recreated once.
 
 #### CephFileSystem: `ceph-filesystem`
 
