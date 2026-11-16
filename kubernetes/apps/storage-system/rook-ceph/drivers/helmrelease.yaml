@@ -9,9 +9,10 @@ spec:
   chartRef:
     kind: OCIRepository
     name: ceph-csi-drivers
-  # Talos does not ship /etc/selinux/config; inject a minimal generated config
-  # so mount keeps context=. The chart renders a non-empty nodePlugin.volumes
-  # list at the key's indentation, which is invalid YAML, hence post-render.
+  # Talos does not ship /etc/selinux/config; mount a minimal permissive config
+  # from the ceph-csi-selinux-config ConfigMap so mount keeps context=. The
+  # chart renders a non-empty nodePlugin.volumes list at the key's indentation,
+  # which is invalid YAML, hence post-render.
   postRenderers:
     - kustomize:
         patches:
