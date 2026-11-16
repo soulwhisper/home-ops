@@ -6,10 +6,6 @@ metadata:
   name: postgres
 spec:
   instances: 3
-  # SELinux (Talos pod_t vs unlabeled RBD volumes): CNPG Cluster v1 has no
-  # initContainers/podTemplate knob, so labels must be verified live. A new
-  # volume (rebuild, scale-out) must be relabeled by hand until CNPG or Talos
-  # provides a hook.
   # one instance per node: default podAntiAffinityType is "preferred" (soft) —
   # postgres-2/-3 both landed on exarch-03. "required" is free here:
   # 3 instances on 3 nodes means every feasible placement is 1:1:1 anyway.

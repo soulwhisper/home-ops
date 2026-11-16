@@ -58,6 +58,9 @@ spec:
                 cpu: 20m
                 memory: 96Mi
         nodePlugin:
+          # RBD CSI volumes need the host SELinux config so mount can apply
+          # the StorageClass context= label instead of silently dropping it.
+          enableSeLinuxHostMount: true
           priorityClassName: system-node-critical
           resources:
             plugin:
