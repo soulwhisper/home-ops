@@ -81,7 +81,7 @@ spec:
       sources:
         existingClaim: backup
         globalMounts:
-          - path: /sources/markdown
+          - path: /sources/homelab
             subPath: dropbox/Obsidian\noirprime\300-Homelab
             readOnly: true
       tmpfs:
