@@ -1,0 +1,14 @@
+---
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/operator.victoriametrics.com/vmservicescrape_v1beta1.json
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: open-webui-oikb
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: open-webui-oikb
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 60s

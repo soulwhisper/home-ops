@@ -11,3 +11,5 @@ resources:
   # utils
   - ./externalsecret.yaml
   - ./ciliumnetworkpolicy.yaml
+  # monitoring
+  - ./vmservicescrape.yaml
