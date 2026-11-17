@@ -79,9 +79,10 @@ spec:
             subPath: .oikb.yaml
             readOnly: true
       sources:
-        existingClaim: obsidian
+        existingClaim: backup
         globalMounts:
           - path: /sources/markdown
+            subPath: dropbox/Obsidian\noirprime\300-Homelab
             readOnly: true
       tmpfs:
         type: emptyDir
