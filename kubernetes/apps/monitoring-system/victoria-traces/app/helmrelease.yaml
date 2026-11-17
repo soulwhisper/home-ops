@@ -21,38 +21,6 @@ spec:
         requests:
           cpu: 25m
           memory: 320Mi
-      # Same Talos SELinux fix as victoria-logs (see its helmrelease for the
-      # full story): idempotent relabel to ephemeral_t at pod start.
-      initContainers:
-        - name: selinux-relabel
-          image: docker.io/library/busybox:1.38
-          command:
-            - sh
-            - -eu
-            - -c
-            - |
-              # Marker-file proof of a COMPLETED full walk; deleted BEFORE
-              # each redo so a mid-walk failure can't leave a stale marker
-              # (see victoria-logs helmrelease for the full failure mode).
-              # busybox lacks chcon and SELinux-aware stat; use the xattr tools without following symlinks.
-              label() { getfattr -n security.selinux "$1" 2>/dev/null | sed -n 's/^security\.selinux="\(.*\)"$/\1/p'; }
-              if [ "$(label /storage)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /storage/.selinux-relabelled ]; then
-                rm -f /storage/.selinux-relabelled
-                find /storage -exec setfattr -h -n security.selinux -v system_u:object_r:ephemeral_t:s0 {} +
-                touch /storage/.selinux-relabelled
-                echo "relabelled /storage"
-              fi
-          securityContext:
-            runAsUser: 0
-            runAsNonRoot: false  # overrides the pod-level runAsNonRoot
-            allowPrivilegeEscalation: false
-            capabilities: { drop: ["ALL"], add: ["FOWNER"] }
-            readOnlyRootFilesystem: true
-          volumeMounts:
-            - { name: server-volume, mountPath: /storage }
-          resources:
-            requests: { cpu: 50m, memory: 64Mi }
-            limits: { memory: 256Mi }
       persistentVolume:
         enabled: true
         storageClassName: ceph-block

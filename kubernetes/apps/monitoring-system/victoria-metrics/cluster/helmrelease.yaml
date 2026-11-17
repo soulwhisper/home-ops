@@ -83,38 +83,6 @@ spec:
         extraArgs:
           storage.maxHourlySeries: "1000000"
           storage.maxDailySeries: "2000000"
-        # Same Talos SELinux fix as victoria-logs (full story there):
-        # idempotent relabel to ephemeral_t at pod start. set -eu so a failed
-        # relabel fails the init (and the pod) loudly; FOWNER because volume
-        # files have mixed ownership (lost+found is root).
-        initContainers:
-          - name: selinux-relabel
-            image: docker.io/library/busybox:1.38
-            command:
-              - sh
-              - -eu
-              - -c
-              - |
-                # Marker-file proof of a completed full walk; deleted before
-                # each redo so a failed walk cannot leave a stale marker.
-                # busybox lacks chcon and SELinux-aware stat; use the xattr tools without following symlinks.
-                label() { getfattr -n security.selinux "$1" 2>/dev/null | sed -n 's/^security\.selinux="\(.*\)"$/\1/p'; }
-                if [ "$(label /victoria-metrics-data)" != "system_u:object_r:ephemeral_t:s0" ] || [ ! -f /victoria-metrics-data/.selinux-relabelled ]; then
-                  rm -f /victoria-metrics-data/.selinux-relabelled
-                  find /victoria-metrics-data -exec setfattr -h -n security.selinux -v system_u:object_r:ephemeral_t:s0 {} +
-                  touch /victoria-metrics-data/.selinux-relabelled
-                  echo "relabelled data"
-                fi
-            securityContext:
-              runAsUser: 0
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"], add: ["FOWNER"] }
-              readOnlyRootFilesystem: true
-            volumeMounts:
-              - { name: data, mountPath: /victoria-metrics-data }
-            resources:
-              requests: { cpu: 50m, memory: 64Mi }
-              limits: { memory: 256Mi }
 
     # : vmalert
     # : http://vmalert-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8080
