@@ -7,6 +7,8 @@ components:
   - ../../components/namespace
   - ../../components/kopiur/shared
 resources:
+  # storage
+  - ./servitor-nfs/ks.yaml
   # system
   - ./toolhive/ks.yaml
   # mcp
@@ -16,4 +18,3 @@ resources:
   - ./covel/ks.yaml
   - ./diceframe/ks.yaml
   - ./open-webui/ks.yaml
-  - ./open-webui/oikb/ks.yaml
