@@ -47,7 +47,6 @@ configMapGenerator:
       - icons/unifi.svg
       - icons/victoriametrics.svg
       - icons/vmware-esxi.svg
-      - icons/zigbee2mqtt.svg
 generatorOptions:
   annotations:
     kustomize.toolkit.fluxcd.io/substitute: disabled

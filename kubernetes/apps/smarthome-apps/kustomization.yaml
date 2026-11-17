@@ -15,4 +15,3 @@ resources:
   - ./home-assistant-sgcc/ks.yaml
   - ./mosquitto/ks.yaml
   - ./scrypted/ks.yaml
-  - ./zigbee2mqtt/ks.yaml

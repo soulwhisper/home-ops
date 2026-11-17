@@ -46,4 +46,3 @@ configMapGenerator:
       - ./blueprints/forward/victoria-alert.yaml
       - ./blueprints/forward/victoria-traces.yaml
       - ./blueprints/forward/trendradar.yaml
-      - ./blueprints/forward/z2m.yaml

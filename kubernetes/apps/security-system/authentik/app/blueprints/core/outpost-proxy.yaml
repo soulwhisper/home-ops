@@ -32,4 +32,3 @@ entries:
         - !Find [authentik_providers_proxy.proxyprovider, [name, victoria-metrics-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, victoria-alert-proxy-provider]]
         - !Find [authentik_providers_proxy.proxyprovider, [name, victoria-traces-proxy-provider]]
-        - !Find [authentik_providers_proxy.proxyprovider, [name, z2m-proxy-provider]]

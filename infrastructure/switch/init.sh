@@ -210,7 +210,7 @@ interface ten-gigabitethernet 1/0/16
  lacp period short
 
 # to macstudio eth
-interface ten-gigabitethernet 1/0/18
+interface ten-gigabitethernet 1/0/17
  description macstudio-eth
  port link-type access
  port access vlan 100

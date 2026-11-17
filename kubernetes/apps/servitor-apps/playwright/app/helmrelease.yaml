@@ -30,7 +30,7 @@ spec:
           app:
             image:
               repository: mcr.microsoft.com/playwright
-              tag: v1.65.0-noble
+              tag: v1.65.1-noble
             env:
               HOME: /home/pwuser
             command: ["/bin/bash", "-ec"]

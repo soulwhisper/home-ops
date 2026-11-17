@@ -164,8 +164,9 @@ spec:
           volumeBindingMode: WaitForFirstConsumer
           mountOptions:
             - discard
-            # No SELinux `context=` here: ceph-csi rbd drops it from mountFlags.
-            # Use pod-level seLinuxOptions.level=s0 (kubelet recursive relabel).
+            # Talos runs pods as pod_t and does not label CSI volumes; apply
+            # ephemeral_t at mount so inodes are pod-writable.
+            - context=system_u:object_r:ephemeral_t:s0
           parameters:
             imageFormat: "2"
             imageFeatures: layering,fast-diff,object-map,deep-flatten,exclusive-lock
@@ -198,7 +199,7 @@ spec:
           volumeBindingMode: WaitForFirstConsumer
           mountOptions:
             - discard
-            # See ceph-blockpool above: no SELinux context= (dropped by ceph-csi).
+            - context=system_u:object_r:ephemeral_t:s0
           parameters:
             imageFormat: "2"
             imageFeatures: layering,fast-diff,object-map,deep-flatten,exclusive-lock
