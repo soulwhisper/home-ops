@@ -18,27 +18,22 @@ spec:
       *name :
         annotations:
           reloader.stakater.com/auto: "true"
-        # Empty sources make `oikb daemon` exit. Keep the workload parked
-        # until configmap.yaml names a Knowledge Base and source.
-        replicas: 0
         pod:
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
-            fsGroup: 1000
+            fsGroup: 2000
             fsGroupChangePolicy: OnRootMismatch
         containers:
           app:
             image:
               repository: ghcr.io/open-webui/oikb
-              # renovate: datasource=docker depName=ghcr.io/open-webui/oikb
-              tag: 0.6.0@sha256:2a8a480c2c6db99499558ba620ec0ea9cb71754ef915d104fa88f05348e83467
+              tag: 0.6.0
             args: ["daemon"]
             env:
               OPEN_WEBUI_URL: "http://open-webui:8080"
               LOG_FORMAT: "json"
-              # SQLite sync history; the image's home is read-only.
               OIKB_CONFIG_DIR: /var/lib/oikb
             envFrom:
               - secretRef:
@@ -68,11 +63,13 @@ spec:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
               readOnlyRootFilesystem: true
+
     service:
       app:
         ports:
           http:
             port: 8080
+
     persistence:
       config:
         type: configMap
@@ -82,15 +79,14 @@ spec:
             subPath: .oikb.yaml
             readOnly: true
       sources:
-        existingClaim: open-webui-oikb-sources
+        existingClaim: obsidian
         globalMounts:
           - path: /sources/markdown
             readOnly: true
-      state:
-        type: emptyDir
-        globalMounts:
-          - path: /var/lib/oikb
       tmpfs:
         type: emptyDir
         globalMounts:
+          - path: /var/lib/oikb
+            subPath: state
           - path: /tmp
+            subPath: tmp
