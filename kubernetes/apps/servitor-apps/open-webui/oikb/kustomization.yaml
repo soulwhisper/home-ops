@@ -5,11 +5,7 @@ kind: Kustomization
 resources:
   # app
   - ./helmrelease.yaml
-  - ./configmap.yaml
-  # storage
-  - ./pvc.yaml
   # utils
+  - ./configmap.yaml
   - ./externalsecret.yaml
   - ./ciliumnetworkpolicy.yaml
-  # monitoring
-  - ./vmservicescrape.yaml
