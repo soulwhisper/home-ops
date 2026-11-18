@@ -156,7 +156,7 @@ Six direct application definitions and 11 nested MCP definitions. ToolHive confi
 | [Covel](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/covel/ks.yaml) | Agentic AI role-playing framework |
 | [DiceFrame](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/diceframe/ks.yaml) | Self-hosted AI tabletop RPG engine |
 | [Open WebUI](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/open-webui/ks.yaml) | Human chat portal with search-group MCP |
-| [OIKB](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/open-webui/oikb/ks.yaml) | Optional read-only NAS Markdown sync for Open WebUI Knowledge; parked until configured |
+| [OIKB](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/open-webui/ks.yaml) | Optional read-only NAS Markdown sync for Open WebUI Knowledge; parked until configured |
 | [ToolHive](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/toolhive/ks.yaml) | MCP operator, CRDs, and VirtualMCP configuration |
 | [Playwright](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/playwright/ks.yaml) | Standalone Chromium browser runtime for MCP automation |
 
