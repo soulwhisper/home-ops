@@ -42,7 +42,7 @@ spec:
               DEPLOYMENT_TIER: self
               COVEL_ALLOWED_HOSTS: covel.noirprime.com
               COVEL_HOME: /home/node/.covel
-              COVEL_LLM_TOML: /home/node/.covel/llm.toml
+              COVEL_LLM_TOML: /etc/covel/llm.toml
               COVEL_WORLDS_DIR: /app/worlds
               COVEL_PLUGINS_DIR: /app/plugins
               COVEL_USER_WORLDS_DIR: /home/node/.covel/worlds
@@ -112,6 +112,12 @@ spec:
         existingClaim: *name
         globalMounts:
           - path: /home/node/.covel
+      llm:
+        type: configMap
+        name: *name
+        globalMounts:
+          - path: /etc/covel
+            readOnly: true
       tmpfs:
         type: emptyDir
         globalMounts:

@@ -251,6 +251,11 @@ consumers, two cron tickers and two memory stores.
 - **State**: shared CNPG for app data and pgvector, app Dragonfly for session/rate-limit state, and the `open-webui` Ceph bucket for uploads and KB files; the entire data directory is rewarmable cache on the `open-webui-cache` ceph-cache PVC
 - **Egress**: agentgateway, CNPG, Dragonfly, Ceph RGW, OTLP collector, kube-dns, and world-except-private for RAG fetching
 
+### Covel
+
+- **LLM**: the server-managed `story` slot uses DeepSeek `deepseek-flash` from `/etc/covel/llm.toml`. The `covel` ExternalSecret injects `DEEPSEEK_API_KEY` from `llm-api.deepseek`.
+- The server preset needs no browser-entered key. Custom provider settings and keys entered in the web UI stay in that browser profile.
+
 ### DSH Web (archived)
 
 - Agent workbench, image `ghcr.io/soulwhisper/dsh-web` (DSH Web + `dshmarket` + required forward-auth). Lives in **servitor-apps**

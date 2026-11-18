@@ -85,6 +85,11 @@ Instances:         1
 Data policy:       3 replicas, host failure domain
 ```
 
+The host-networked RGW Service forwards to the node running RGW. Open WebUI's
+egress allows TCP/80 on every cluster node so RGW can reschedule without a policy
+change. Any other listener on node TCP/80 would also be reachable from Open WebUI.
+RGW ingress and other clients' policies are unchanged.
+
 A companion `StorageClass` named `ceph-bucket` is registered for OBC (`ObjectBucketClaim`) usage, with extended configuration fields (`bucketOwner`, `bucketPolicy`, `bucketLifecycle`) enabled on the operator.
 
 #### Volume Snapshots
