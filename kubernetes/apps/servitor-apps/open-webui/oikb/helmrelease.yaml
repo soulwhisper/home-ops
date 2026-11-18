@@ -82,7 +82,7 @@ spec:
         existingClaim: backup
         globalMounts:
           - path: /sources/homelab
-            subPath: dropbox/Obsidian\noirprime\300-Homelab
+            subPath: dropbox/Obsidian/noirprime/300-Homelab
             readOnly: true
       tmpfs:
         type: emptyDir
