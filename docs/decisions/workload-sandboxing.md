@@ -74,7 +74,7 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
   idmapped mounts, so userns pods cannot mount NFS volumes (k8s docs).
   Excluded workloads: jellyfin, immich, kavita, metube, moviepilot,
   navidrome, qbittorrent(+ui), frigate, scrypted, crafty-controller,
-  foundryvtt. Escape hatch: migrate those volumes to cephfs (idmap-capable
+  foundryvtt, open-webui-oikb. Escape hatch: migrate those volumes to cephfs (idmap-capable
   since kernel 6.2; cluster runs 6.18) or wait for kernel NFS idmap support.
 - **userns × hostNetwork/hostPID/hostIPC** — invalid combination; no
   workload in scope uses these.

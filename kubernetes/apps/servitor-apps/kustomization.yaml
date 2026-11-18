@@ -7,6 +7,8 @@ components:
   - ../../components/namespace
   - ../../components/kopiur/shared
 resources:
+  # storage
+  - ./servitor-nfs/ks.yaml
   # system
   - ./toolhive/ks.yaml
   # mcp

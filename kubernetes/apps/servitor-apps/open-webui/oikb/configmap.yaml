@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: &name open-webui-oikb
+data:
+  .oikb.yaml: |
+    defaults:
+      interval: 1h
+      concurrency: 2
+      filter:
+        include: ["*.md", "**/*.md"]
+        max-size: 50mb
+    sources:
+      - name: obsidian-homelab
+        source: /sources/homelab
+        kb-id: 1f93ad80-9c67-4c80-8373-03bad29bf1ea
