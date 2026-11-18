@@ -85,6 +85,10 @@ Instances:         1
 Data policy:       3 replicas, host failure domain
 ```
 
+The host-networked RGW Service forwards to a node address. Open WebUI allows TCP/80
+to Cilium's `host` and `remote-node` identities in its own egress policy; this does
+not restrict which clients can reach RGW.
+
 A companion `StorageClass` named `ceph-bucket` is registered for OBC (`ObjectBucketClaim`) usage, with extended configuration fields (`bucketOwner`, `bucketPolicy`, `bucketLifecycle`) enabled on the operator.
 
 #### Volume Snapshots

@@ -18,7 +18,7 @@ spec:
       toPorts:
         - ports:
             - { port: "80", protocol: TCP }
-    # state: shared CNPG, app dragonfly, app ceph bucket (RGW)
+    # State: shared CNPG and app Dragonfly.
     - toServices:
         - k8sService:
             serviceName: postgres-rw
@@ -33,10 +33,10 @@ spec:
       toPorts:
         - ports:
             - { port: "6379", protocol: TCP }
-    - toServices:
-        - k8sService:
-            serviceName: rook-ceph-rgw-ceph-objectstore
-            namespace: storage-system
+    # Host-networked RGW uses node identities after Service translation.
+    - toEntities:
+        - host
+        - remote-node
       toPorts:
         - ports:
             - { port: "80", protocol: TCP }
