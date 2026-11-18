@@ -3,7 +3,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: backup
-  namespace: servitor-nfs
+  namespace: servitor-apps
 spec:
   accessModes:
     - ReadWriteMany
