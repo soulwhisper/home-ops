@@ -33,7 +33,8 @@ spec:
       toPorts:
         - ports:
             - { port: "6379", protocol: TCP }
-    # Host-networked RGW uses node identities after Service translation.
+    # Host-networked RGW can move between nodes. This allows Open WebUI to
+    # reach any node TCP/80 listener, not just RGW.
     - toEntities:
         - host
         - remote-node
