@@ -116,7 +116,7 @@ services:
       - internal
 
   hindsight:
-    image: "ghcr.io/vectorize-io/hindsight:1.2.1-slim"
+    image: "ghcr.io/vectorize-io/hindsight:1.2.2-slim"
     container_name: "hindsight"
     restart: "unless-stopped"
     depends_on:
