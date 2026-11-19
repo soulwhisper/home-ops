@@ -25,6 +25,19 @@
       ignoreTests: false,
     },
     {
+      description: "Frequent quiet-train apps: auto-merge minor updates after CI",
+      matchPackageNames: [
+        "ghcr.io/kimdre/doco-cd",
+        "ghcr.io/starosdev/scrutiny",
+        "ghcr.io/open-telemetry/opentelemetry-helm-charts/opentelemetry-collector",
+      ],
+      matchUpdateTypes: ["minor"],
+      automerge: true,
+      automergeType: "pr",
+      platformAutomerge: true,
+      ignoreTests: false,
+    },
+    {
       description: "User apps: auto-merge minor updates after CI",
       matchFileNames: [
         "kubernetes/apps/selfhosted-apps/**",
@@ -52,18 +65,6 @@
       matchUpdateTypes: ["minor"],
       automerge: false,
       addLabels: ["review/required"],
-    },
-    {
-      description: "Frequent quiet-train apps: auto-merge minor updates after CI",
-      matchPackageNames: [
-        "ghcr.io/kimdre/doco-cd",
-        "ghcr.io/starosdev/scrutiny",
-      ],
-      matchUpdateTypes: ["minor"],
-      automerge: true,
-      automergeType: "pr",
-      platformAutomerge: true,
-      ignoreTests: false,
     },
     {
       description: "Global: major updates always require manual merge",
