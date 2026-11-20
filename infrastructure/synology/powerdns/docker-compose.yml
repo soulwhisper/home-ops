@@ -1,0 +1,43 @@
+---
+name: powerdns
+
+services:
+  powerdns:
+    image: "docker.io/powerdns/pdns-auth-51:5.1.5"
+    container_name: "powerdns"
+    restart: "unless-stopped"
+    command:
+      - "--local-port=5300"
+      - "--api=yes"
+      - "--webserver-address=0.0.0.0"
+      - "--webserver-port=9200"
+      - "--webserver-allow-from=10.10.0.0/24"
+    ports:
+      - "10.10.0.100:53:5300/tcp"
+      - "10.10.0.100:53:5300/udp"
+      - "10.10.0.100:9200:9200/tcp"
+    secrets:
+      - source: pdns_api_key
+        target: /etc/powerdns/pdns.d/api-key.conf
+    volumes:
+      # Docker seeds the empty named volume with the image's SQLite database.
+      - "pdns_data:/var/lib/powerdns"
+    cap_drop:
+      - "ALL"
+    security_opt:
+      - "no-new-privileges:true"
+    mem_limit: "256m"
+    healthcheck:
+      test: ["CMD", "pdns_control", "rping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+secrets:
+  pdns_api_key:
+    # api-key={key}
+    file: ./powerdns.sops.conf
+
+volumes:
+  pdns_data: {}

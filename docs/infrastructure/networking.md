@@ -236,12 +236,10 @@ API key authentication is enforced via `AgentgatewayPolicy` in strict mode for a
 
 Split-horizon DNS separates internal homelab resolution from public records.
 
-#### Internal DNS — AdGuardHome
+#### Static DNS — DNSControl
 
-- **Server:** `10.10.0.254` (AdGuardHome, advertised via DHCP option 6 on VLANs 1, 10, 200, 210)
-- **Domain:** `homelab.internal`
-- **Management:** [dnscontrol](https://github.com/StackExchange/dnscontrol) with declarative JS configuration
-- **Records:**
+[DNSControl](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/dnscontrol)
+publishes both zones, including these existing `homelab.internal` records:
 
 | Hostname                     | IP                  | Purpose                      |
 | ---------------------------- | ------------------- | ---------------------------- |
@@ -253,21 +251,19 @@ Split-horizon DNS separates internal homelab resolution from public records.
 | `zigbee.homelab.internal`    | 10.10.0.20          | Zigbee coordinator           |
 | `nas.homelab.internal`       | 10.10.0.100         | Synology NAS                 |
 | `unifi.homelab.internal`     | 10.10.0.200         | UniFi controller             |
-| `studio.homelab.internal`    | 10.10.0.210         | MacStudio inference host       |
+| `studio.homelab.internal`    | 10.10.0.210         | MacStudio inference host     |
+| `ns.homelab.internal`        | 10.10.0.100         | PowerDNS nameserver          |
 
 #### Dynamic DNS — external-dns
 
-`external-dns` syncs Kubernetes Gateway and HTTPRoute resources to AdGuardHome via the `muhlba91/external-dns-provider-adguard` webhook:
+The `externaldns-powerdns` HelmRelease replaces the AdGuard webhook and updates
+Kubernetes records in the internal `noirprime.com` zone:
 
 - **Sources:** `gateway-httproute`, `service`
 - **Domain filter:** `noirprime.com`
 - **Gateway filter:** `kgateway-internal`
 - **Policy:** upsert-only
 - **TXT prefix:** `k8s-int.`
-
-#### External DNS — Cloudflare (optional)
-
-The dnscontrol configuration also supports Cloudflare as a provider for public DNS records, though this is secondary to the internal AdGuardHome setup.
 
 ### External Services
 

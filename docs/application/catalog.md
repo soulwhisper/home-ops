@@ -56,7 +56,7 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | --- | --- |
 | [Kgateway](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/kgateway/ks.yaml) | Internal and external Envoy gateways |
 | [Agent Gateway](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/agentgateway/ks.yaml) | LLM routing and MCP gateway |
-| [External DNS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/externaldns/ks.yaml) | AdGuardHome DNS automation |
+| [External DNS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/externaldns/ks.yaml) | PowerDNS automation for internal Kubernetes names |
 | [Kgateway CRDs](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/kgateway-crds/ks.yaml) | Kgateway control-plane resource definitions |
 | [Forgejo Proxy](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/forgejo-proxy/ks.yaml) | Internal HTTPS gateway for NAS-hosted Forgejo |
 

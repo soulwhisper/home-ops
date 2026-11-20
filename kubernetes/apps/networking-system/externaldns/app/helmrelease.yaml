@@ -3,7 +3,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &name externaldns-adguard
+  name: &name externaldns-powerdns
 spec:
   interval: 1h
   chartRef:
@@ -15,6 +15,13 @@ spec:
     domainFilters: ["noirprime.com"]
     extraArgs:
       - --gateway-name=kgateway-internal
+      - --pdns-server=http://10.10.0.100:9200
+    env:
+      - name: EXTERNAL_DNS_PDNS_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: *name
+            key: EXTERNAL_DNS_PDNS_API_KEY
     podAnnotations:
       reloader.stakater.com/auto: "true"
     podSecurityContext:
@@ -26,43 +33,13 @@ spec:
       capabilities: { drop: ["ALL"] }
     policy: upsert-only
     provider:
-      name: webhook
-      webhook:
-        image:
-          repository: ghcr.io/muhlba91/external-dns-provider-adguard
-          tag: v11.2.1
-        livenessProbe: &probes
-          httpGet:
-            path: /healthz
-            port: http-webhook
-          initialDelaySeconds: 30
-          periodSeconds: 20
-          timeoutSeconds: 10
-        readinessProbe: *probes
-        env:
-          - name: DRY_RUN
-            value: "false"
-          - name: LOG_LEVEL
-            value: info
-          - name: SERVER_HOST
-            value: 0.0.0.0
-          - name: ADGUARD_URL
-            value: "http://10.10.0.254:9200"
-          - name: ADGUARD_USER
-            valueFrom:
-              secretKeyRef:
-                name: *name
-                key: adguard-user
-          - name: ADGUARD_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: *name
-                key: adguard-password
+      name: pdns
     resources:
       requests:
         cpu: 16m
+        memory: 64Mi
       limits:
-        memory: 90M
+        memory: 128Mi
     serviceMonitor:
       enabled: true
     sources:

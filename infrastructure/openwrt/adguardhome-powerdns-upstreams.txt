@@ -1,0 +1,2 @@
+[/homelab.internal/noirprime.com/]10.10.0.100
+[/_acme-challenge.noirprime.com/_dmarc.noirprime.com/_domainkey.noirprime.com/opn.noirprime.com/]#
