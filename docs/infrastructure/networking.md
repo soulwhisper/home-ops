@@ -265,6 +265,22 @@ Split-horizon DNS separates internal homelab resolution from public records.
 - **Policy:** upsert-only
 - **TXT prefix:** `k8s-int.`
 
+#### Synology authoritative DNS — PowerDNS
+
+Doco-CD discovers the [PowerDNS stack](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/powerdns/docker-compose.yml) on `main`. It serves explicitly managed zones on `10.10.0.100:53` (UDP and TCP), mapped to unprivileged port `5300` in the container. It does not recurse or seed any zones; AdGuardHome remains the client resolver. There is no change to DHCP, forwarding, or existing records.
+
+- **Before first merge:** On DSM, inspect `sudo netstat -lntu` and `sudo docker ps --format '{{.Names}} {{.Ports}}'`. Confirm neither TCP nor UDP `:53` is already bound on `10.10.0.100` or by a wildcard listener that covers it.
+- **After rollout:** `sudo docker exec powerdns pdns_control rping` should return `PONG`. Send `dig @10.10.0.100 nonexistent.invalid SOA +norecurse` with and without `+tcp`; expect `REFUSED` from the empty authoritative server.
+- **Storage:** The image seeds SQLite in the local `powerdns_data` volume, with no separate database service. Use `sqlite3`'s `.backup` against `/var/lib/powerdns/pdns.sqlite3` inside the container and keep the resulting file in private off-NAS storage; do not copy a live database file. Stop the service before restoring a database.
+- **Rollback:** Revert the stack addition and let Doco-CD remove the project. Keep the named volume; do not remove it with `down -v`.
+
+Manage zones initially with `sudo docker exec powerdns pdnsutil`. The REST API is disabled and TCP `8081` is not published. Both integrations are supported, but neither existing AdGuardHome controller is changed:
+
+- [DNSControl](https://docs.dnscontrol.org/provider/powerdns) has a `POWERDNS` provider that can create and reconcile zones. Configure `apiUrl`, `apiKey`, and `serverName` (usually `localhost`) and declare the zone's SOA and NS records.
+- [ExternalDNS](https://kubernetes-sigs.github.io/external-dns/v0.23.0/docs/tutorials/pdns/) has a built-in `pdns` provider in the version used here. It needs a pre-created zone and does not support dry-run. Start with a dedicated zone, `--domain-filter`, `--txt-owner-id`, and `--policy=upsert-only`. Do not have DNSControl reconcile that same zone.
+
+If either client is enabled, restrict the write API to authorized clients, use TLS for remote access, and manage the key as a secret. No separate web-admin panel is needed for CLI or Git-managed zones; add one only if delegated manual editing or its access controls are required.
+
 #### External DNS — Cloudflare (optional)
 
 The dnscontrol configuration also supports Cloudflare as a provider for public DNS records, though this is secondary to the internal AdGuardHome setup.
