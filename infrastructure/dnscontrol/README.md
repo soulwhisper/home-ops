@@ -2,13 +2,16 @@
 
 `dnsconfig.js` manages `homelab.internal` and the internal view of `noirprime.com`.
 Run DNSControl from a workstation on VLAN 100. ExternalDNS publishes Kubernetes
-records to `noirprime.com`; `IGNORE_EXTERNAL_DNS("pdns-")` preserves its RRsets
+records to `noirprime.com`; `IGNORE_EXTERNAL_DNS("k8s-int.")` preserves its RRsets
 and TXT ownership records.
 
 ## Publish records
 
-After Doco-CD starts PowerDNS, run from the repo root on VLAN 100. The API key
-is sent over HTTP; use this endpoint only on the trusted LAN.
+After Doco-CD starts PowerDNS, run from the repo root on VLAN 100. The NAS
+binds the API directly to its LAN IP so PowerDNS can enforce the VLAN 100
+source ACL. DNSControl and ExternalDNS use the same 1Password field, which must
+match `api-key` in [`powerdns.sops.conf`](../synology/powerdns/powerdns.sops.conf).
+The API key is sent over HTTP; use this endpoint only on the trusted LAN.
 
 ```shell
 export PDNS_API_KEY=op://DevOps/dns-keys/powerdns
