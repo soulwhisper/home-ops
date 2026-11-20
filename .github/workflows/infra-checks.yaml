@@ -36,7 +36,7 @@ jobs:
             | tar -xz -C /tmp dnscontrol
           sudo install -m 0755 /tmp/dnscontrol /usr/local/bin/dnscontrol
 
-      - name: Check PowerDNS DNSControl config
+      - name: Run dnscontrol check
         working-directory: infrastructure/dnscontrol
         run: dnscontrol check
 
