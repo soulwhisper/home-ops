@@ -38,7 +38,9 @@ jobs:
 
       - name: Run dnscontrol check
         working-directory: infrastructure/dnscontrol
-        run: dnscontrol check
+        run: |
+          dnscontrol check
+          (cd powerdns && dnscontrol check)
 
   compose:
     name: Infra Checks - Compose
