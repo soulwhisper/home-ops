@@ -9,6 +9,7 @@ site*/
 # Other files
 kubeconfig
 talosconfig
+/infrastructure/dnscontrol/types-dnscontrol.d.ts
 .env
 .iso
 .log

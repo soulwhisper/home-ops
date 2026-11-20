@@ -16,13 +16,13 @@ spec:
     excludeDomains: ["derp.noirprime.com"]
     extraArgs:
       - --gateway-name=kgateway-internal
-      - --pdns-server=http://10.10.0.100:8081
+      - --pdns-server=http://10.10.0.100:9200
     env:
       - name: EXTERNAL_DNS_PDNS_API_KEY
         valueFrom:
           secretKeyRef:
             name: *name
-            key: api-key
+            key: EXTERNAL_DNS_PDNS_API_KEY
     podAnnotations:
       reloader.stakater.com/auto: "true"
     managedRecordTypes: [A, AAAA, CNAME]

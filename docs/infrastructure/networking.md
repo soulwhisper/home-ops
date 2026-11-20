@@ -239,10 +239,12 @@ Split-horizon DNS separates internal homelab resolution from public records.
 #### Recursive DNS — OpenWrt AdGuard Home
 
 AdGuard Home stays the recursive resolver advertised by DHCP. Talos uses only
-`10.10.0.254`; resolver lists do not route by suffix. Follow the
-[OpenWrt cutover](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/openwrt#adguard-home-dns-cutover)
-to forward `homelab.internal` and the internal view of `noirprime.com` to
-PowerDNS. Other names use the existing recursive upstreams.
+`10.10.0.254`; resolver lists do not route by suffix. After DNSControl publishes
+both zones and ExternalDNS syncs, compare the current AdGuard rewrites with
+direct PowerDNS answers. Back up the AdGuard settings, then add the
+[conditional upstreams](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/openwrt/adguardhome-powerdns-upstreams.txt)
+and remove only the migrated rewrites. Verify both zones, a public exception,
+and an unrelated public name through AdGuard.
 
 #### Static DNS — DNSControl
 
@@ -280,8 +282,8 @@ on `main`. The NAS serves authoritative DNS at `10.10.0.100:53` (UDP and TCP)
 and does not recurse. Run DNSControl after deployment to create the zones
 before switching client queries.
 
-- **Before first merge:** On DSM, inspect `sudo netstat -lntu` and `sudo docker ps --format '{{.Names}} {{.Ports}}'`. Check `53/TCP`, `53/UDP`, and `8081/TCP` on `10.10.0.100`, including wildcard listeners. [Provision the shared 1Password credential](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/dnscontrol#before-the-first-merge).
-- **Management API:** PowerDNS serves `http://10.10.0.100:8081` to `10.10.0.0/24`. The API requires the instance-wide key, which is sent unencrypted over HTTP. Do not expose this port outside the trusted LAN. The web UI is disabled.
+- **Before first merge:** On DSM, inspect `sudo netstat -lntu` and `sudo docker ps --format '{{.Names}} {{.Ports}}'`. Check `53/TCP`, `53/UDP`, and `9200/TCP` on `10.10.0.100`, including wildcard listeners. [Provision the shared 1Password credential](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/dnscontrol#before-the-first-merge).
+- **Management API:** PowerDNS serves `http://10.10.0.100:9200` to `10.10.0.0/24`. The instance-wide key travels unencrypted over HTTP; anyone who captures it can change both zones. Restrict this endpoint to the trusted LAN. The web UI is disabled.
 - **Storage:** SQLite is initialized in the Compose-managed `pdns_data` volume (`powerdns_pdns_data` in Docker). Take consistent backups with `sqlite3`'s `.backup` against `/var/lib/powerdns/pdns.sqlite3` inside the container and keep an off-NAS copy. Stop the service before restoring; do not copy the live SQLite database file.
 - **Rollback:** Restore the previous AdGuard upstreams and rewrites first. Reverting the stack then removes the service via Doco-CD; keep the SQLite volume and do not use `down -v`.
 
