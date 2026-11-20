@@ -236,16 +236,6 @@ API key authentication is enforced via `AgentgatewayPolicy` in strict mode for a
 
 Split-horizon DNS separates internal homelab resolution from public records.
 
-#### Recursive DNS — OpenWrt AdGuard Home
-
-AdGuard Home stays the recursive resolver advertised by DHCP. Talos uses only
-`10.10.0.254`; resolver lists do not route by suffix. After DNSControl publishes
-both zones and ExternalDNS syncs, compare the current AdGuard rewrites with
-direct PowerDNS answers. Back up the AdGuard settings, then add the
-[conditional upstreams](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/openwrt/adguardhome-powerdns-upstreams.txt)
-and remove only the migrated rewrites. Verify both zones, a public exception,
-and an unrelated public name through AdGuard.
-
 #### Static DNS — DNSControl
 
 [DNSControl](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/dnscontrol)
@@ -261,7 +251,7 @@ publishes both zones, including these existing `homelab.internal` records:
 | `zigbee.homelab.internal`    | 10.10.0.20          | Zigbee coordinator           |
 | `nas.homelab.internal`       | 10.10.0.100         | Synology NAS                 |
 | `unifi.homelab.internal`     | 10.10.0.200         | UniFi controller             |
-| `studio.homelab.internal`    | 10.10.0.210         | MacStudio inference host       |
+| `studio.homelab.internal`    | 10.10.0.210         | MacStudio inference host     |
 | `ns.homelab.internal`        | 10.10.0.100         | PowerDNS nameserver          |
 
 #### Dynamic DNS — external-dns
@@ -274,25 +264,6 @@ Kubernetes records in the internal `noirprime.com` zone:
 - **Gateway filter:** `kgateway-internal`
 - **Policy:** upsert-only
 - **TXT prefix:** `pdns-%{record_type}.`; DNSControl ignores the associated records
-
-#### Synology authoritative DNS — PowerDNS
-
-Doco-CD discovers the [PowerDNS stack](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/powerdns/docker-compose.yml)
-on `main`. The NAS serves authoritative DNS at `10.10.0.100:53` (UDP and TCP)
-and does not recurse. Run DNSControl after deployment to create the zones
-before switching client queries.
-
-- **Before first merge:** On DSM, inspect `sudo netstat -lntu` and `sudo docker ps --format '{{.Names}} {{.Ports}}'`. Check `53/TCP`, `53/UDP`, and `9200/TCP` on `10.10.0.100`, including wildcard listeners. [Provision the shared 1Password credential](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/dnscontrol#before-the-first-merge).
-- **Management API:** PowerDNS serves `http://10.10.0.100:9200` to `10.10.0.0/24`. The instance-wide key travels unencrypted over HTTP; anyone who captures it can change both zones. Restrict this endpoint to the trusted LAN. The web UI is disabled.
-- **Storage:** SQLite is initialized in the Compose-managed `pdns_data` volume (`powerdns_pdns_data` in Docker). Take consistent backups with `sqlite3`'s `.backup` against `/var/lib/powerdns/pdns.sqlite3` inside the container and keep an off-NAS copy. Stop the service before restoring; do not copy the live SQLite database file.
-- **Rollback:** Restore the previous AdGuard upstreams and rewrites first. Reverting the stack then removes the service via Doco-CD; keep the SQLite volume and do not use `down -v`.
-
-#### Public DNS — Cloudflare
-
-Cloudflare remains authoritative on the internet. The internal `noirprime.com`
-apex mirrors the public MX and SPF records. AdGuard forwards the public-only
-names listed in the cutover rules, including `_acme-challenge`, to its default
-upstreams. Cert-manager still uses Cloudflare for DNS-01.
 
 ### External Services
 
