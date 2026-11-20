@@ -263,7 +263,7 @@ Kubernetes records in the internal `noirprime.com` zone:
 - **Domain filter:** `noirprime.com`
 - **Gateway filter:** `kgateway-internal`
 - **Policy:** upsert-only
-- **TXT prefix:** `k8s-int.`; DNSControl ignores the associated records
+- **TXT prefix:** `k8s-int.`
 
 ### External Services
 
