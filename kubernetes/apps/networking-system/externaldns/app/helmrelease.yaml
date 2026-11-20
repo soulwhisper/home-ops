@@ -13,7 +13,6 @@ spec:
   values:
     fullnameOverride: *name
     domainFilters: ["noirprime.com"]
-    excludeDomains: ["derp.noirprime.com"]
     extraArgs:
       - --gateway-name=kgateway-internal
       - --pdns-server=http://10.10.0.100:9200
@@ -32,7 +31,6 @@ spec:
     securityContext:
       allowPrivilegeEscalation: false
       capabilities: { drop: ["ALL"] }
-    managedRecordTypes: [A, AAAA, CNAME]
     policy: upsert-only
     provider:
       name: pdns
