@@ -13,9 +13,9 @@ lookups.
 1. Save a private backup of the running AdGuard Home configuration, including
    **Upstream DNS servers**, **DNS rewrites**, and **Custom filtering rules**.
    The matching rewrite answers are the baseline for the cutover.
-2. After Doco-CD deploys PowerDNS, verify `docker logs powerdns-dnscontrol`
-   shows a successful DNSControl run and the `externaldns-powerdns` deployment
-   has synced. Compare the existing AdGuard `homelab.internal` and
+2. After Doco-CD deploys PowerDNS, run the
+   [first DNSControl publish](../dnscontrol/README.md#publish-records) and wait
+   for `externaldns-powerdns` to sync. Compare the existing AdGuard `homelab.internal` and
    `noirprime.com` address rewrites with direct queries to `10.10.0.100`. Check
    all migrated names, including `k8s.homelab.internal` (three A records),
    `nas.homelab.internal`, `auth.noirprime.com`, and `postgres.noirprime.com`.
@@ -34,9 +34,9 @@ lookups.
    `registry.k8s.io`. If they regress, restore the saved AdGuard settings and
    clear the cache **before** rolling back the Git revision or stopping PowerDNS.
 
-OpenWrt is configured by hand. Merging the Git revision changes the DNS
-writers, not these settings or DHCP. Keep the old rewrites until the new
-answers have been checked.
+OpenWrt is configured by hand. Merging the Git revision does not publish
+DNSControl records or change the router or DHCP. Keep the old rewrites until
+the new answers have been checked.
 
 ## chrony metrics
 

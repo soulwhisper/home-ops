@@ -8,9 +8,3 @@ resources:
   - ./ocirepository.yaml
   # utils
   - ./externalsecret.yaml
-configMapGenerator:
-  - name: powerdns-api-tls
-    files:
-      - api.pem=powerdns-api.pem
-    options:
-      disableNameSuffixHash: true

@@ -1,10 +1,9 @@
 # DNSControl — Synology PowerDNS
 
 `dnsconfig.js` manages `homelab.internal` and the internal view of `noirprime.com`.
-Doco-CD runs the `dnscontrol` service on the NAS to create the zones and apply
-this configuration before publishing the HTTPS API. ExternalDNS then publishes
-Kubernetes records to `noirprime.com`; `IGNORE_EXTERNAL_DNS("pdns-")` keeps their
-RRsets and TXT ownership records out of DNSControl's changes.
+Run DNSControl from a workstation on VLAN 100. ExternalDNS publishes Kubernetes
+records to `noirprime.com`; `IGNORE_EXTERNAL_DNS("pdns-")` preserves its RRsets
+and TXT ownership records.
 
 ### Before the first merge
 
@@ -21,23 +20,29 @@ On a Linux machine with the NAS SOPS age identity configured and a signed-in 1Pa
 )
 ```
 
-### Preview a change
+### Publish records
 
-From the repo root on VLAN 100, after the API is up:
+After Doco-CD starts PowerDNS, run from the repo root on VLAN 100. The API key
+is sent over HTTP; use this endpoint only on the trusted LAN.
 
 ```shell
-export SSL_CERT_FILE="$PWD/kubernetes/apps/networking-system/externaldns/app/powerdns-api.pem"
-export PDNS_API_URL=https://10.10.0.100:8443
 export PDNS_API_KEY=op://DevOps/powerdns-api/credential
 cd infrastructure/dnscontrol
 
 dnscontrol check
-op run -- dnscontrol preview --no-populate
+# First publish: create both zones and apply their static records.
+op run -- dnscontrol push
 ```
 
-Publish by merging the record changes; use `docker logs powerdns-dnscontrol`
-on the NAS to verify the run. See the [router cutover](../openwrt/README.md#adguard-home-dns-cutover)
-before moving client queries. Update the private apex MX and SPF records here
-when their Cloudflare public counterparts change.
+For subsequent changes, preview and apply without creating any zones:
 
-When rotating the API key, update the encrypted NAS config and the `credential` field together. For TLS renewal, replace the encrypted certificate/key bundle and the public certificate pin together. Do not disable certificate validation during rotation.
+```shell
+op run -- dnscontrol preview --no-populate
+op run -- dnscontrol push --no-populate
+```
+
+See the [router cutover](../openwrt/README.md#adguard-home-dns-cutover) before
+moving client queries. Update the private apex MX and SPF records when their
+Cloudflare public counterparts change.
+
+When rotating the API key, update the encrypted NAS config and the `credential` field together.

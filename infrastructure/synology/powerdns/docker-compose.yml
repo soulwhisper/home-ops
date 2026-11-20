@@ -10,23 +10,18 @@ services:
     command:
       - "--local-port=5300"
       - "--api=yes"
-      - "--webserver=yes"
-      - "--webserver-address=127.0.0.1"
-      - "--webserver-allow-from=127.0.0.1/32"
+      - "--webserver-address=0.0.0.0"
+      - "--webserver-allow-from=10.10.0.0/24"
     ports:
       - "10.10.0.100:53:5300/tcp"
       - "10.10.0.100:53:5300/udp"
-      - "10.10.0.100:8443:8443/tcp"
+      - "10.10.0.100:8081:8081/tcp"
     secrets:
       - source: pdns_api_key
         target: /etc/powerdns/pdns.d/api-key.conf
     volumes:
       # Docker seeds the empty named volume with the image's SQLite database.
       - "pdns_data:/var/lib/powerdns"
-    cap_drop:
-      - "ALL"
-    security_opt:
-      - "no-new-privileges:true"
     mem_limit: "256m"
     healthcheck:
       test: ["CMD", "pdns_control", "rping"]
@@ -35,80 +30,9 @@ services:
       retries: 3
       start_period: 10s
 
-  dnscontrol:
-    image: "ghcr.io/dnscontrol/dnscontrol:4.44.1"
-    container_name: "powerdns-dnscontrol"
-    restart: "no"
-    user: "65532:65532"
-    network_mode: "service:powerdns"
-    depends_on:
-      powerdns:
-        condition: service_healthy
-    environment:
-      PDNS_API_URL: "http://127.0.0.1:8081"
-    entrypoint: ["/bin/sh", "-eu", "-c"]
-    command:
-      - |
-        IFS= read -r api_config < /run/secrets/pdns_api_key
-        case "$$api_config" in
-          api-key=?*) export PDNS_API_KEY="$${api_config#api-key=}" ;;
-          *) echo "Invalid PowerDNS API key file" >&2; exit 1 ;;
-        esac
-        exec dnscontrol push
-    configs:
-      - source: dnscontrol_config
-        target: /dns/dnsconfig.js
-      - source: dnscontrol_creds
-        target: /dns/creds.json
-    secrets:
-      - pdns_api_key
-    read_only: true
-    cap_drop:
-      - "ALL"
-    security_opt:
-      - "no-new-privileges:true"
-    mem_limit: "128m"
-
-  api:
-    image: "docker.io/library/nginx:1.31.8-alpine"
-    restart: "unless-stopped"
-    user: "101:101"
-    entrypoint: ["/usr/sbin/nginx", "-g", "daemon off;", "-c", "/etc/nginx/pdns-api.conf"]
-    # Keep the plain HTTP backend on loopback, not on the Compose bridge.
-    network_mode: "service:powerdns"
-    depends_on:
-      powerdns:
-        condition: service_started
-        restart: true
-      dnscontrol:
-        condition: service_completed_successfully
-    configs:
-      - source: api_proxy
-        target: /etc/nginx/pdns-api.conf
-    secrets:
-      - api_tls
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop:
-      - "ALL"
-    security_opt:
-      - "no-new-privileges:true"
-    mem_limit: "64m"
-
-configs:
-  api_proxy:
-    file: ./nginx.conf
-  dnscontrol_config:
-    file: ../../dnscontrol/dnsconfig.js
-  dnscontrol_creds:
-    file: ../../dnscontrol/creds.json
-
 secrets:
   pdns_api_key:
     file: ./api-key.sops.conf
-  api_tls:
-    file: ./api-tls.sops.pem
 
 volumes:
   pdns_data: {}

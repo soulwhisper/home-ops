@@ -277,11 +277,11 @@ Kubernetes records in the internal `noirprime.com` zone:
 
 Doco-CD discovers the [PowerDNS stack](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/powerdns/docker-compose.yml)
 on `main`. The NAS serves authoritative DNS at `10.10.0.100:53` (UDP and TCP)
-and does not recurse. On deployment, DNSControl publishes the zones through the
-loopback API before the HTTPS proxy starts.
+and does not recurse. Run DNSControl after deployment to create the zones
+before switching client queries.
 
-- **Before first merge:** On DSM, inspect `sudo netstat -lntu` and `sudo docker ps --format '{{.Names}} {{.Ports}}'`. Check `53/TCP`, `53/UDP`, and `8443/TCP` on `10.10.0.100`, including wildcard listeners. [Provision the shared 1Password credential](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/dnscontrol#before-the-first-merge).
-- **Management API:** Nginx exposes only `/api/v1/` at `https://10.10.0.100:8443` to `10.10.0.0/24`. Clients still need the instance-wide API key and verify the pinned TLS certificate. The backend HTTP listener on `8081` is container-loopback only. No web-admin panel.
+- **Before first merge:** On DSM, inspect `sudo netstat -lntu` and `sudo docker ps --format '{{.Names}} {{.Ports}}'`. Check `53/TCP`, `53/UDP`, and `8081/TCP` on `10.10.0.100`, including wildcard listeners. [Provision the shared 1Password credential](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/dnscontrol#before-the-first-merge).
+- **Management API:** PowerDNS serves `http://10.10.0.100:8081` to `10.10.0.0/24`. The API requires the instance-wide key, which is sent unencrypted over HTTP. Do not expose this port outside the trusted LAN. The web UI is disabled.
 - **Storage:** SQLite is initialized in the Compose-managed `pdns_data` volume (`powerdns_pdns_data` in Docker). Take consistent backups with `sqlite3`'s `.backup` against `/var/lib/powerdns/pdns.sqlite3` inside the container and keep an off-NAS copy. Stop the service before restoring; do not copy the live SQLite database file.
 - **Rollback:** Restore the previous AdGuard upstreams and rewrites first. Reverting the stack then removes the service via Doco-CD; keep the SQLite volume and do not use `down -v`.
 

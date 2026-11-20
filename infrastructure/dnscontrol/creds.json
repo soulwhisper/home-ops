@@ -1,7 +1,7 @@
 {
   "powerdns": {
     "TYPE": "POWERDNS",
-    "apiUrl": "$PDNS_API_URL",
+    "apiUrl": "http://10.10.0.100:8081",
     "apiKey": "$PDNS_API_KEY",
     "serverName": "localhost"
   }
