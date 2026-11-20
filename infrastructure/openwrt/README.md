@@ -3,41 +3,6 @@
 Host-side configuration for the NTP/DNS/VPN edge, kept here for reference.
 Nothing in this directory is applied by Flux; the router is configured by hand.
 
-## AdGuard Home DNS cutover
-
-Keep AdGuard Home as the recursive resolver for clients and Talos; Talos uses
-`10.10.0.254`. A second `nameserver` in Talos is a fallback, not routing by
-suffix. PowerDNS is authoritative only and cannot replace AdGuard for public
-lookups.
-
-1. Save a private backup of the running AdGuard Home configuration, including
-   **Upstream DNS servers**, **DNS rewrites**, and **Custom filtering rules**.
-   The matching rewrite answers are the baseline for the cutover.
-2. After Doco-CD deploys PowerDNS, run the
-   [first DNSControl publish](../dnscontrol/README.md#publish-records) and wait
-   for `externaldns-powerdns` to sync. Compare the existing AdGuard `homelab.internal` and
-   `noirprime.com` address rewrites with direct queries to `10.10.0.100`. Check
-   all migrated names, including `k8s.homelab.internal` (three A records),
-   `nas.homelab.internal`, `auth.noirprime.com`, and `postgres.noirprime.com`.
-   Check both zone SOAs and the `noirprime.com` apex MX and TXT before switching.
-3. In **Settings → DNS settings → Upstream DNS servers**, append the lines in
-   [`adguardhome-powerdns-upstreams.txt`](adguardhome-powerdns-upstreams.txt).
-   Keep the existing default upstreams. The `#` rule keeps the public ACME,
-   DMARC, DKIM, and `opn` names on those upstreams; `derp.noirprime.com` keeps
-   its local address in PowerDNS.
-4. Remove the migrated `homelab.internal` and `derp.noirprime.com` DNS rewrites
-   and the migrated `noirprime.com` ExternalDNS custom rules (including their
-   `k8s-int.*` ownership TXT rules). Local rewrites take precedence over
-   upstream forwarding. Do not remove unrelated rules. Clear the AdGuard cache.
-5. Query AdGuard at `10.10.0.254` for both SOAs, the migrated records, a public
-   exception such as `_dmarc.noirprime.com TXT`, and an unrelated name such as
-   `registry.k8s.io`. If they regress, restore the saved AdGuard settings and
-   clear the cache **before** rolling back the Git revision or stopping PowerDNS.
-
-OpenWrt is configured by hand. Merging the Git revision does not publish
-DNSControl records or change the router or DHCP. Keep the old rewrites until
-the new answers have been checked.
-
 ## chrony metrics
 
 `chrony-metrics.cgi` serves the router's chrony state as Prometheus text. It
