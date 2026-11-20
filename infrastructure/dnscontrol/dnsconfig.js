@@ -54,8 +54,7 @@ D("noirprime.com", REG_NONE, DnsProvider(PDNS),
   DefaultTTL(300),
   zoneSOA("noirprime.com"),
   NAMESERVER(NS_NAME),
-  // The ExternalDNS TXT registry uses the pdns- prefix.
-  IGNORE_EXTERNAL_DNS("pdns-"),
+  IGNORE_EXTERNAL_DNS("k8s-int."),
   A("derp", "10.10.0.254"),
   // Match Cloudflare's public apex mail records for clients using the internal view.
   MX("@", 73, "route2.mx.cloudflare.net."),
