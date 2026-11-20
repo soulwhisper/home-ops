@@ -1,30 +1,10 @@
-## DNS
+# DNSControl — Synology PowerDNS
 
-- cloudflare action examples, check [ref](https://github.com/SukkaW/dnscontrol-gitops-template/tree/master);
-
-```shell
-brew install dnscontrol
-dnscontrol [command]
-
-docker run --rm -it -v "$(pwd):/dns" ghcr.io/stackexchange/dnscontrol [command]
-
-pnpm install
-pnpm run lint
-
-dnscontrol write-types
-
-# required: creds.json references $ADGUARD_PASSWORD (1Password item
-# `app-user`, field `admin_pass` — same credentials external-dns uses)
-export ADGUARD_PASSWORD="$(op read 'op://DevOps/app-user/admin_pass')"
-
-dnscontrol check
-dnscontrol preview
-dnscontrol push
-```
-
-## Synology PowerDNS
-
-`powerdns/` is a separate configuration. Running the commands above still targets only AdGuardHome.
+`dnsconfig.js` manages `homelab.internal` and the internal view of `noirprime.com`.
+Doco-CD runs the `dnscontrol` service on the NAS to create the zones and apply
+this configuration before publishing the HTTPS API. ExternalDNS then publishes
+Kubernetes records to `noirprime.com`; `IGNORE_EXTERNAL_DNS("pdns-")` keeps their
+RRsets and TXT ownership records out of DNSControl's changes.
 
 ### Before the first merge
 
@@ -41,21 +21,23 @@ On a Linux machine with the NAS SOPS age identity configured and a signed-in 1Pa
 )
 ```
 
-### First publish and later changes
+### Preview a change
 
-After Doco-CD brings HTTPS up, run from the repo root on the DNSControl workstation (`10.10.0.200`):
+From the repo root on VLAN 100, after the API is up:
 
 ```shell
 export SSL_CERT_FILE="$PWD/kubernetes/apps/networking-system/externaldns/app/powerdns-api.pem"
+export PDNS_API_URL=https://10.10.0.100:8443
 export PDNS_API_KEY=op://DevOps/powerdns-api/credential
-cd infrastructure/dnscontrol/powerdns
+cd infrastructure/dnscontrol
 
-# First publish only: create both zones before previewing record changes.
-op run -- dnscontrol create-domains
+dnscontrol check
 op run -- dnscontrol preview --no-populate
-op run -- dnscontrol push --no-populate
 ```
 
-For subsequent changes, run only `preview` and `push`. DNSControl owns the `pdns.homelab.internal` zone and the child zone's SOA/NS records; it ignores all A, AAAA, CNAME, and TXT records in the child. The dedicated ExternalDNS controller writes those records for `k8s.pdns.homelab.internal` only.
+Publish by merging the record changes; use `docker logs powerdns-dnscontrol`
+on the NAS to verify the run. See the [router cutover](../openwrt/README.md#adguard-home-dns-cutover)
+before moving client queries. Update the private apex MX and SPF records here
+when their Cloudflare public counterparts change.
 
 When rotating the API key, update the encrypted NAS config and the `credential` field together. For TLS renewal, replace the encrypted certificate/key bundle and the public certificate pin together. Do not disable certificate validation during rotation.

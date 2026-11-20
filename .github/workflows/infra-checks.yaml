@@ -29,7 +29,6 @@ jobs:
           persist-credentials: false
 
       - name: Install dnscontrol
-        id: install-dnscontrol
         run: |
           # renovate: datasource=github-releases depName=StackExchange/dnscontrol
           DNSCONTROL_VERSION="v4.44.1"
@@ -37,13 +36,8 @@ jobs:
             | tar -xz -C /tmp dnscontrol
           sudo install -m 0755 /tmp/dnscontrol /usr/local/bin/dnscontrol
 
-      - name: Check AdGuardHome DNSControl config
-        working-directory: infrastructure/dnscontrol
-        run: dnscontrol check
-
       - name: Check PowerDNS DNSControl config
-        if: ${{ !cancelled() && steps.install-dnscontrol.outcome == 'success' }}
-        working-directory: infrastructure/dnscontrol/powerdns
+        working-directory: infrastructure/dnscontrol
         run: dnscontrol check
 
   compose:

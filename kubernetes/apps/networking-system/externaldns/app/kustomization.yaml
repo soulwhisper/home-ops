@@ -6,10 +6,8 @@ resources:
   # app
   - ./helmrelease.yaml
   - ./ocirepository.yaml
-  - ./powerdns-helmrelease.yaml
   # utils
   - ./externalsecret.yaml
-  - ./powerdns-externalsecret.yaml
 configMapGenerator:
   - name: powerdns-api-tls
     files:

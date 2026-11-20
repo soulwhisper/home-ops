@@ -1,8 +1,0 @@
-{
-  "powerdns": {
-    "TYPE": "POWERDNS",
-    "apiUrl": "https://10.10.0.100:8443",
-    "apiKey": "$PDNS_API_KEY",
-    "serverName": "localhost"
-  }
-}

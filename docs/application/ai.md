@@ -116,7 +116,7 @@ The gateway API surface is exposed to the intranet via `kgateway-internal` (10.1
 - `/mcp/search`, `/mcp/cluster`, `/mcp/agent`, `/mcp/browser`, `/mcp/github-ro`, `/mcp/github-pr` — tiered MCP routing (per-tier API key; mcp-guardrails ExtMCP on the search + github-ro + agent + browser + github-pr tiers, FailClosed)
   (dashboard UI lives separately at `https://ai.noirprime.com/ui`)
 
-TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirprime.com`); external-dns auto-creates the AdGuardHome record. Machine clients authenticate with agentgateway API keys — no SSO extAuth on API paths. Reachable from trusted VLANs (10/100/200); IoT VLAN 210 is ACL-blocked from RFC1918.
+TLS terminates at kgateway (cert-manager `noirprime-com-tls`, wildcard `*.noirprime.com`); ExternalDNS publishes the internal hostname to PowerDNS. Machine clients authenticate with agentgateway API keys — no SSO extAuth on API paths. Reachable from trusted VLANs (10/100/200); IoT VLAN 210 is ACL-blocked from RFC1918.
 
 ### App → model lane
 

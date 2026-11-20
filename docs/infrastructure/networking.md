@@ -236,12 +236,18 @@ API key authentication is enforced via `AgentgatewayPolicy` in strict mode for a
 
 Split-horizon DNS separates internal homelab resolution from public records.
 
-#### Internal DNS — AdGuardHome
+#### Recursive DNS — OpenWrt AdGuard Home
 
-- **Server:** `10.10.0.254` (AdGuardHome, advertised via DHCP option 6 on VLANs 1, 10, 200, 210)
-- **Domain:** `homelab.internal`
-- **Management:** [dnscontrol](https://github.com/StackExchange/dnscontrol) with declarative JS configuration
-- **Records:**
+AdGuard Home stays the recursive resolver advertised by DHCP. Talos uses only
+`10.10.0.254`; resolver lists do not route by suffix. Follow the
+[OpenWrt cutover](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/openwrt#adguard-home-dns-cutover)
+to forward `homelab.internal` and the internal view of `noirprime.com` to
+PowerDNS. Other names use the existing recursive upstreams.
+
+#### Static DNS — DNSControl
+
+[DNSControl](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/dnscontrol)
+publishes both zones, including these existing `homelab.internal` records:
 
 | Hostname                     | IP                  | Purpose                      |
 | ---------------------------- | ------------------- | ---------------------------- |
@@ -254,31 +260,37 @@ Split-horizon DNS separates internal homelab resolution from public records.
 | `nas.homelab.internal`       | 10.10.0.100         | Synology NAS                 |
 | `unifi.homelab.internal`     | 10.10.0.200         | UniFi controller             |
 | `studio.homelab.internal`    | 10.10.0.210         | MacStudio inference host       |
+| `ns.homelab.internal`        | 10.10.0.100         | PowerDNS nameserver          |
 
 #### Dynamic DNS — external-dns
 
-`external-dns` syncs Kubernetes Gateway and HTTPRoute resources to AdGuardHome via the `muhlba91/external-dns-provider-adguard` webhook:
+The `externaldns-powerdns` HelmRelease replaces the AdGuard webhook and updates
+Kubernetes records in the internal `noirprime.com` zone:
 
 - **Sources:** `gateway-httproute`, `service`
 - **Domain filter:** `noirprime.com`
 - **Gateway filter:** `kgateway-internal`
 - **Policy:** upsert-only
-- **TXT prefix:** `k8s-int.`
+- **TXT prefix:** `pdns-%{record_type}.`; DNSControl ignores the associated records
 
 #### Synology authoritative DNS — PowerDNS
 
-Doco-CD discovers the [PowerDNS stack](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/powerdns/docker-compose.yml) on `main`. The NAS serves authoritative DNS at `10.10.0.100:53` (UDP and TCP); it does not recurse. AdGuardHome remains the client resolver, with no changes to DHCP, forwarding, or existing records.
+Doco-CD discovers the [PowerDNS stack](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/powerdns/docker-compose.yml)
+on `main`. The NAS serves authoritative DNS at `10.10.0.100:53` (UDP and TCP)
+and does not recurse. On deployment, DNSControl publishes the zones through the
+loopback API before the HTTPS proxy starts.
 
 - **Before first merge:** On DSM, inspect `sudo netstat -lntu` and `sudo docker ps --format '{{.Names}} {{.Ports}}'`. Check `53/TCP`, `53/UDP`, and `8443/TCP` on `10.10.0.100`, including wildcard listeners. [Provision the shared 1Password credential](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/dnscontrol#before-the-first-merge).
-- **Management API:** Nginx exposes only `/api/v1/` at `https://10.10.0.100:8443`. It accepts requests from the three Talos node addresses (`10.10.0.101`–`10.10.0.103`, where ExternalDNS egress is masqueraded) and the DNSControl workstation (`10.10.0.200`). The backend HTTP listener on `8081` is container-loopback only. Both clients verify the pinned TLS certificate and use the same instance-wide API key, encrypted for Doco-CD and mirrored in 1Password. There is no web-admin panel.
-- **Zone ownership:** [DNSControl](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/dnscontrol#synology-powerdns) creates and reconciles `pdns.homelab.internal` and the SOA/NS of `k8s.pdns.homelab.internal`. The separate `externaldns-powerdns` release uses the built-in `pdns` provider and `upsert-only` for A/AAAA/CNAME and ownership TXT records in the child zone. It watches Services and routes attached to `kgateway-internal`; use a hostname under `k8s.pdns.homelab.internal` to opt in. Neither original AdGuardHome integration changes.
-- **Verify:** After publishing the zones, `dig @10.10.0.100 pdns.homelab.internal SOA +norecurse` should return an authoritative answer over UDP and with `+tcp`. Check `externaldns-powerdns` logs for successful sync. If clients should resolve these names through AdGuardHome later, add only `[/pdns.homelab.internal/]10.10.0.100` as a conditional upstream.
+- **Management API:** Nginx exposes only `/api/v1/` at `https://10.10.0.100:8443` to `10.10.0.0/24`. Clients still need the instance-wide API key and verify the pinned TLS certificate. The backend HTTP listener on `8081` is container-loopback only. No web-admin panel.
 - **Storage:** SQLite is initialized in the Compose-managed `pdns_data` volume (`powerdns_pdns_data` in Docker). Take consistent backups with `sqlite3`'s `.backup` against `/var/lib/powerdns/pdns.sqlite3` inside the container and keep an off-NAS copy. Stop the service before restoring; do not copy the live SQLite database file.
-- **Rollback:** Revert the API/controller changes to stop automated writes while keeping DNS and the volume. Reverting the entire stack addition removes the service through Doco-CD; keep the volume and do not use `down -v`.
+- **Rollback:** Restore the previous AdGuard upstreams and rewrites first. Reverting the stack then removes the service via Doco-CD; keep the SQLite volume and do not use `down -v`.
 
-#### External DNS — Cloudflare (optional)
+#### Public DNS — Cloudflare
 
-The dnscontrol configuration also supports Cloudflare as a provider for public DNS records, though this is secondary to the internal AdGuardHome setup.
+Cloudflare remains authoritative on the internet. The internal `noirprime.com`
+apex mirrors the public MX and SPF records. AdGuard forwards the public-only
+names listed in the cutover rules, including `_acme-challenge`, to its default
+upstreams. Cert-manager still uses Cloudflare for DNS-01.
 
 ### External Services
 
