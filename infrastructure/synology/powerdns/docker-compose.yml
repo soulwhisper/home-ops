@@ -6,7 +6,6 @@ services:
     image: "docker.io/powerdns/pdns-auth-51:5.1.5"
     container_name: "powerdns"
     restart: "unless-stopped"
-    # Use an unprivileged container port so the image's pdns user needs no capabilities.
     command:
       - "--local-port=5300"
       - "--api=yes"
@@ -37,7 +36,8 @@ services:
 
 secrets:
   pdns_api_key:
-    file: ./api-key.sops.conf
+    # api-key={key}
+    file: ./powerdns.sops.conf
 
 volumes:
   pdns_data: {}
