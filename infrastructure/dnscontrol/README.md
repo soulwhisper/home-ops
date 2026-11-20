@@ -43,7 +43,7 @@ On a Linux machine with the NAS SOPS age identity configured and a signed-in 1Pa
 
 ### First publish and later changes
 
-After Doco-CD brings HTTPS up, run from the repo root on the NAS management network:
+After Doco-CD brings HTTPS up, run from the repo root on the DNSControl workstation (`10.10.0.200`):
 
 ```shell
 export SSL_CERT_FILE="$PWD/kubernetes/apps/networking-system/externaldns/app/powerdns-api.pem"
