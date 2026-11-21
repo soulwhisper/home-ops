@@ -259,6 +259,8 @@ publishes both zones, including these existing `homelab.internal` records:
 | `studio.homelab.internal`    | 10.10.0.210         | MacStudio inference host     |
 | `ns.homelab.internal`        | 10.10.0.100         | PowerDNS nameserver          |
 
+The internal `noirprime.com` zone also resolves `unifi.noirprime.com` to `10.10.0.200`.
+
 #### Dynamic DNS — external-dns
 
 The `externaldns-powerdns` HelmRelease replaces the AdGuard webhook and updates
