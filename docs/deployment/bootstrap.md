@@ -26,15 +26,16 @@ the justfile `env` recipe) signs off on the mise config.
 ### Phase 1: Talos Image Build (bare metal)
 
 ```shell
-just talos image bootstrap
+just talos image prod
 ```
 
-Posts the environment's `00-schematic.yaml` to the [Talos Image
-Factory](https://factory.talos.dev) to resolve its schematic ID, then downloads
-the `metal-amd64.iso` for `talos_version` in `infrastructure/talos/version.yaml`.
-The ISO is placed in the repo root.
+Build the maintenance ISO with the same environment you will pass to
+`just talos generate` and `just bootstrap`. The command reads that environment's
+`00-schematic.yaml` and downloads `metal-amd64.iso` from the [Talos Image
+Factory](https://factory.talos.dev) using `talos_version` from
+`infrastructure/talos/version.yaml`. The ISO is placed in the repo root.
 
-**Bare-metal bootstrap schematic** (`infrastructure/talos/bootstrap/00-schematic.yaml`):
+**Production schematic** (`infrastructure/talos/prod/00-schematic.yaml`):
 
 | Extension | Purpose |
 |-----------|---------|
@@ -46,15 +47,11 @@ The ISO is placed in the repo root.
 **Kernel arguments**: `pcie_aspm=off`, `nvme_core.default_ps_max_latency_us=0`,
 `i915.enable_guc=3`, `module_blacklist=igc`.
 
-**Bootstrap and production network roles**: the bare-metal `bootstrap` image
-is only for initial maintenance. It creates `bond0` and obtains a temporary
-lease from OpenWrt's predefined maintenance pool, which is enabled only for
-that work and disabled afterward. The temporary address is used only to apply
-configuration and can differ from the final static address, so no per-node
-reservation, custom MAC, or node-specific image is needed. `just talos
-generate prod` or `just talos generate test` selects the corresponding
-installed image; that image omits the bootstrap `ip=` argument, and the
-applied config takes its address and route from `BondConfig`.
+For the production ISO only, `just talos image prod` adds `ip=:::::bond0:dhcp`
+to obtain a lease on `bond0`. Enable OpenWrt's predefined maintenance DHCP pool
+before booting. Use each lease only to reach the node for `apply-config`; the
+installed system uses the static address and route from `BondConfig` and has
+no maintenance DHCP argument.
 
 Write the ISO to a USB drive and boot each node into Talos maintenance mode
 (pure RAM disk, no install yet).
@@ -362,10 +359,9 @@ This runs `flate build ks` and does not apply resources. In contrast,
 
 ### Test Environment
 
-The test cluster runs on VMs inside a separate VLAN. The bare-metal
-`bootstrap` schematic is not valid for these VMs because its bond argument
-hardcodes the MS01 NIC names. Boot the test maintenance ISO instead, then use
-the same explicit DHCP-to-static handoff with `test` configs:
+The test cluster runs on VMs inside a separate VLAN. Use the `test` schematic;
+its maintenance ISO gets a temporary address via Talos's default DHCP on the
+VM NIC. Use that address for the handoff to the static test config:
 
 ```shell
 just talos image test

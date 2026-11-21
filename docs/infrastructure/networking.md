@@ -120,9 +120,14 @@ Management connectivity uses a dedicated access port (Ten-GE 1/0/19, VLAN 1) wit
 
 ### Talos Bring-up Networking
 
-`bootstrap` images are reserved for initial ISO/PXE maintenance. They use `ip=:::::bond0:dhcp` only on `bond0` to obtain a temporary address from OpenWrt's predefined maintenance pool. That address is used only to apply configuration and need not match the final static address. No per-node reservation, custom MAC, or node-specific image is required. If no DHCP service is available, the two IP-Config timeout cycles are an accepted bring-up risk.
+`just talos image prod` builds the maintenance ISO from the production
+schematic, adding `ip=:::::bond0:dhcp` only to that ISO. Enable OpenWrt's
+predefined maintenance pool before booting. The temporary lease is only for
+applying configuration; it need not match the final static address.
 
-`prod` images used for installation and upgrades omit `ip=`. Each node's `BondConfig` supplies its only IPv4 address and default route, and no custom `hardwareAddr` is required. No early DHCP runs during production boot, so a disabled DHCP service cannot delay startup. OpenWrt keeps `dhcp.lab.ignore=1` outside maintenance; its predefined maintenance range is enabled only for initial bootstrap and disabled again afterward.
+The production installer uses the same schematic without `ip=`. Each node's
+`BondConfig` supplies its IPv4 address and default route. Disable the
+maintenance pool (`dhcp.lab.ignore=1`) after provisioning.
 
 ### BGP Design
 
