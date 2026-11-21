@@ -45,9 +45,10 @@ jobs:
           persist-credentials: false
 
       - name: Install flate
-        uses: home-operations/flate/action@v0.8.0
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
         with:
-          token: ""
+          version: "2026.10.17"
+          install_args: github:home-operations/flate
 
       - name: Extract Images
         id: extract
@@ -71,9 +72,9 @@ jobs:
     name: Image Pull - Check
     runs-on: ubuntu-latest
     # GitHub overrides the image entrypoint (ko default `/ko-app/crane`) with
-    # `tail -f /dev/null`; `debug` is the only crane tag shipping a shell.
+    # `tail -f /dev/null`; the debug image ships a shell.
     container:
-      image: gcr.io/go-containerregistry/crane:debug
+      image: gcr.io/go-containerregistry/crane/debug:v0.22.1@sha256:e78770b31258a3846f878036d9c1f63fbe4c871f9f56990bf77fd95c013e3c1b
     strategy:
       matrix:
         image: ${{ fromJSON(needs.extract.outputs.images) }}

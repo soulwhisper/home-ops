@@ -1,7 +1,6 @@
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/j178/prek/refs/heads/master/prek.schema.json
 minimum_prek_version: "0.3.4"
-exclude: "^.*/.*_sources/"
 repos:
   # Basic file hygiene
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -28,7 +27,7 @@ repos:
 
   # GitHub Actions security audit
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: v1.24.1
+    rev: v1.32.0
     hooks:
       - id: zizmor
         args:
@@ -49,7 +48,9 @@ repos:
     hooks:
       - id: kubeconform
         name: kubeconform
-        entry: kubeconform
+        entry: >-
+          bash -euo pipefail -c 'version=$(yq -er ".k8s_version" infrastructure/talos/version.yaml);
+          exec mise exec kubeconform -- kubeconform -kubernetes-version "${version#v}" "$@"' --
         args:
           - "-strict"
           # schema gaps (e.g. kustomize Kustomization) must not fail local

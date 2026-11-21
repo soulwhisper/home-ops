@@ -20,6 +20,8 @@ injection, configuration patching, node provisioning, and application delivery.
 
 All mise-managed tools auto-install on first use. `mise trust` (included in
 the justfile `env` recipe) signs off on the mise config.
+CI uses the same mise-pinned `talosctl` and reads both generation targets from
+`infrastructure/talos/version.yaml` when validating prod and test configs.
 
 ---
 

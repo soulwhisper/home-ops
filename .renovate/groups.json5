@@ -9,7 +9,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 1,
       allowedVersions: "/^1\\./",
     },
     {
@@ -20,7 +19,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 1,
     },
     {
       description: "Flux Operator Group",
@@ -30,7 +28,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 1,
     },
     {
       description: "KGateway Group",
@@ -40,7 +37,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 1,
     },
     {
       description: "Rook Ceph Group",
@@ -50,7 +46,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 1,
     },
     {
       description: "Victoria Metrics Group",
@@ -64,7 +59,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 1,
     },
     {
       description: "Toolhive Group (operator and CRDs share a release)",
@@ -74,7 +68,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 1,
     },
     {
       description: "Firecrawl Group (core image and MCP server)",
@@ -84,7 +77,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 1,
     },
     {
       description: "Dragonfly Group (image and operator chart)",
@@ -93,7 +85,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 1,
     },
     {
       description: "Victoria Logs and Traces Group",
@@ -103,7 +94,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      minimumGroupSize: 1,
     },
   ],
 }

@@ -22,9 +22,7 @@
     {
       description: "Pin Postgres version to 18",
       matchDatasources: ["docker"],
-      matchPackagePatterns: [
-        "ghcr.io/home-operations/postgres-init",
-      ],
+      matchPackageNames: ["ghcr.io/home-operations/postgres-init"],
       allowedVersions: "18",
     },
     {
