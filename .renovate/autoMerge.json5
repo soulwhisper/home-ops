@@ -86,5 +86,20 @@
       reviewers: ["soulwhisper"],
       addLabels: ["review/required"],
     },
+    {
+      description: "Keep disruptive controller updates out of automatic rollout waves",
+      matchFileNames: [
+        "kubernetes/apps/kube-system/cilium/**",
+        "kubernetes/apps/gitops-system/system-upgrade-controller/**",
+        "kubernetes/apps/database-system/cnpg-operator/**",
+        "kubernetes/apps/storage-system/kopiur/**",
+        "kubernetes/apps/storage-system/rook-ceph/**",
+      ],
+      matchUpdateTypes: ["patch", "minor", "major"],
+      automerge: false,
+      platformAutomerge: false,
+      reviewers: ["soulwhisper"],
+      addLabels: ["review/required"],
+    },
   ],
 }
