@@ -36,7 +36,7 @@ The network is built around an enterprise-grade Layer 3 core switch with eBGP + 
 
 | Device             | Role                                  | NIC                   | Uplink                  |
 | ------------------ | ------------------------------------- | --------------------- | ----------------------- |
-| H3C S6520-24S-SI   | L3 core switch, BGP router (AS 65000) | 24×10G SFP+           | 2×10G LACP to router    |
+| H3C S6520-24S-SI   | L3 core switch, BGP router (AS 65000) | 24×10G SFP+           | 2×10G static LAG to router |
 | Miniforum MS-01 ×3 | Talos K8s control-plane + worker      | Intel X710 2×10G SFP+ | 2×10G LACP per node     |
 | N305 IPC           | ESXi hypervisor                       | 2.5G RJ45             | OpenWrt VM + management |
 | Synology DS1825+   | NAS (NFS, S3, Docker)                 | 2×10G SFP+ (ext card) | 2×10G LACP              |
@@ -56,7 +56,7 @@ graph TD
 
     INTERNET --- ROUTER
 
-    subgraph "VLAN 1000 — Transit 10.255.255.0/30"
+    subgraph "VLAN 1000 — Router .2/24, switch .1/30 (10.255.255.x)"
         ROUTER -->|"LAG 120 (2×10G, Static)"| SWITCH
     end
 
@@ -97,9 +97,9 @@ The core switch enforces strict L3 isolation between security domains. Inter-VLA
 | 100  | K8S / NAS  | 10.10.0.0/24    | 10.10.0.1    | Kubernetes nodes, NAS, workstation, BGP peering | On demand / OpenWrt |
 | 200  | WiFi       | 10.20.0.0/24    | 10.20.0.1    | Trusted wireless clients                        | Yes (OpenWrt)    |
 | 210  | IoT        | 10.20.10.0/24   | 10.20.10.1   | Untrusted IoT devices (ACL-isolated)            | Yes (OpenWrt)    |
-| 1000 | Transit    | 10.255.255.0/30 | 10.255.255.1 | Switch↔Router point-to-point link               | Static           |
+| 1000 | Transit    | Switch `10.255.255.1/30`; router `10.255.255.2/24` | — | Switch default route via `10.255.255.2` | Static |
 
-**IoT isolation (VLAN 210):** An advanced ACL (3500) restricts IoT egress to DHCP, DNS (switch only), NTP, and ICMP toward the gateway. Internet access is permitted; all RFC 1918 private ranges are explicitly denied. Inbound from WiFi (VLAN 200, ACL 3510) permits full IP access to the Aqara hub (10.20.10.100), plus TCP 80/443 and ICMP to the entire IoT subnet. A QoS policy (10 Mbps CIR) caps all IoT traffic at the access switch uplink.
+**IoT filtering (IPv4):** On VLAN 210's L3 interface, inbound ACL 3500 permits DHCP broadcasts and DHCP, DNS, and ICMP to the gateway. It also permits UDP/123 to any destination and Aqara hub (`10.20.10.100`) traffic to WiFi before blocking other traffic to private ranges. Internet traffic is allowed except for direct TCP/UDP DNS on port 53. On VLAN 200's L3 interface, inbound ACL 3510 permits WiFi clients to reach the hub over IP and the rest of VLAN 210 over TCP 80/443 and ICMP. These ACLs do not filter IPv6 or traffic switched within the same VLAN. A 10 Mbps QoS policy caps IoT ingress on the access switch uplink.
 
 ### LACP Link Aggregation
 
@@ -139,9 +139,8 @@ The core switch and each Kubernetes node run eBGP to advertise the LoadBalancer 
 | FRR-K8s per node        | 65100 | (node IP) | 10.10.0.1               |
 
 - **Advertised prefixes (FRR→switch):** LoadBalancer pool `10.10.0.128/27` (only prefix advertised)
-- **Advertised prefixes (switch→FRR):** `import-route direct` (connected routes)
-- **Timers:** FRR side keepalive 60s, hold 180s; switch side keepalive 10s, hold 30s — negotiated hold is 30s
-- **Graceful restart:** disabled (BFD provides faster failover)
+- **Advertised prefixes (switch→FRR):** No connected routes are redistributed. The switch can re-advertise the selected LoadBalancer route to the other peers; FRR filters all inbound routes.
+- **Timers:** The switch and FRR use 60s keepalive and 180s hold. BFD handles faster failure detection.
 
 #### BFD Fast Failover
 
@@ -294,4 +293,4 @@ The router's chrony is scraped every 60 s (`ScrapeConfig/chrony` → `/cgi-bin/c
 - **Static LAG for router:** The ESXi virtual switch does not support dynamic LACP negotiation, so the router uplink uses a static LAG with forced port membership.
 - **netkit over vxlan:** netkit provides better throughput and lower latency on 10G hardware compared to encapsulated overlay modes. Combined with native routing and autoDirectNodeRoutes, pod-to-pod traffic takes the shortest L3 path.
 - **Maglev LB hashing:** Provides consistent hashing for LoadBalancer services, minimizing connection disruption during backend changes.
-- **IoT air-gap via ACL:** Rather than relying on a separate physical switch or SSID-only isolation, the switch-level ACL ensures IoT devices cannot reach any private subnet even if VLAN isolation fails.
+- **IoT filtering at the core:** IPv4 ACLs enforce the listed exceptions between the IoT and WiFi VLANs without a separate physical switch.
