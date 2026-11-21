@@ -8,6 +8,14 @@
       versioning: "regex:^(?<major>\\d{4})\\.(?<minor>\\d{1,2})\\.(?<patch>\\d{1,2})-[0-9a-f]{7,40}$",
     },
     {
+      description: "Batch OpenTelemetry Collector chart changes on Saturdays",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/open-telemetry/opentelemetry-helm-charts/opentelemetry-collector"],
+      matchUpdateTypes: ["minor", "patch"],
+      schedule: ["* * * * 6"],
+      updateNotScheduled: false,
+    },
+    {
       description: "Block intel-device-plugins-operator 0.37.x: invalid MutatingWebhookConfiguration (missing sideEffects/clientConfig/admissionReviewVersions) rejected by server-side apply; revisit on 0.38.x",
       matchDatasources: ["docker"],
       matchPackageNames: ["ghcr.io/intel/helm-charts/intel-device-plugins-operator"],
