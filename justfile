@@ -40,18 +40,18 @@ reconcile:
   flux --namespace gitops-system reconcile kustomization gitops-system --with-source
 
 [doc('Bootstrap Cluster with generated prod/test config')]
-[script]
+[script, positional-arguments]
 bootstrap mode *targets:
   echo "Make sure you disable all proxies."
   echo "Bootstrapping Talos..."
-  just talos _bootstrap_talos {{mode}} {{targets}}
+  just talos _bootstrap_talos "$@"
   echo "completed."
   echo "Bootstrapping K8s..."
   just talos _bootstrap_k8s
   just talos kubeconfig
   echo "completed."
-  echo "Waiting for apiserver and node readiness..."
-  just talos _k8s_ready
+  echo "Waiting for apiservers and node registration..."
+  just talos _k8s_ready "${@:2}"
   echo "completed."
   echo "Bootstrapping Apps..."
   just _bootstrap_apps
@@ -64,10 +64,10 @@ _template file:
 
 [script]
 _bootstrap_apps:
-  # the 1Password item stores credentials.json base64url-encoded; decode before apply
-  just _template "{{K8S_DIR}}/bootstrap/resources.yaml.j2" \
-    | yq '(select(.kind == "Secret" and .metadata.name == "onepassword-connect")).stringData."1password-credentials.json" |= @base64d' \
-    | kubectl apply --server-side -f -
+  # The vault stores unpadded base64url; yq's @base64d reads the standard alphabet.
+  resources=$(just _template "{{K8S_DIR}}/bootstrap/resources.yaml.j2" \
+    | yq '(select(.kind == "Secret" and .metadata.name == "onepassword-connect")).stringData."1password-credentials.json" |= (sub("-", "+") | sub("_", "/") | @base64d)')
+  printf '%s\n' "$resources" | kubectl apply --server-side -f -
   echo "Syncing Helm Releases..."
   count=0; until helmfile --file "{{K8S_DIR}}/bootstrap/helmfile.yaml" sync --hide-notes; do
     count=$((count + 1))

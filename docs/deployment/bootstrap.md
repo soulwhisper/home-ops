@@ -28,9 +28,9 @@ just talos image bootstrap
 ```
 
 Posts the environment's `00-schematic.yaml` to the [Talos Image
-Factory](https://factory.talos.dev) to resolve a unique schematic ID, fetches
-the latest stable Talos version, then downloads the matching
-`metal-amd64.iso`. The ISO is placed in the repo root.
+Factory](https://factory.talos.dev) to resolve its schematic ID, then downloads
+the `metal-amd64.iso` for `talos_version` in `infrastructure/talos/version.yaml`.
+The ISO is placed in the repo root.
 
 **Bare-metal bootstrap schematic** (`infrastructure/talos/bootstrap/00-schematic.yaml`):
 
@@ -193,6 +193,11 @@ This waits for the API server port (6443) to become reachable (20 retries, 5s
 each), then runs `talosctl kubeconfig` and copies the result to
 `~/.kube/config`.
 
+Before installing bootstrap charts, `just bootstrap` gives the API servers
+and node registration a shared five-minute window. It checks `/readyz` at
+each node's installed static address, then waits for each named Node object
+to exist. It does not wait for `Ready`: Helmfile installs Cilium in the next phase.
+
 ---
 
 ### Phase 5: Flux Bootstrap
@@ -206,9 +211,9 @@ Two steps, run sequentially:
 1. **Bootstrap resources**: [`kubernetes/bootstrap/resources.yaml.j2`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/resources.yaml.j2) is
    templated with [minijinja](https://github.com/mitsuhiko/minijinja), then
    piped through `op inject` to resolve 1Password references
-   (`op://DevOps/1password-api/*`). The recipe decodes the stored credentials
-   field before applying the `security-system` Namespace and 1Password Connect
-   Secret with `kubectl apply --server-side`.
+   (`op://DevOps/1password-api/*`). The recipe decodes the vault's unpadded
+   base64url credentials to JSON before applying the `security-system`
+   Namespace and 1Password Connect Secret with `kubectl apply --server-side`.
 
 2. **Helmfile sync**: [`kubernetes/bootstrap/helmfile.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/helmfile.yaml) installs
    11 foundation releases as a `needs` DAG. The recipe allows up to five sync
