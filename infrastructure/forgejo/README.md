@@ -5,7 +5,7 @@ Truth for the **static content** of the `homelab-tickets` repo on Forgejo
 
 | Dir | Syncs to | Content |
 |---|---|---|
-| `skills/` | `homelab-tickets/skills/` | Ticket conventions, acceptance criteria, lessons format |
+| `skills/` | `homelab-tickets/skills/` | Instructions for the lesson-writing agent invoked by Forgejo Actions on the runner, including shared ticket conventions and acceptance criteria |
 | `workflows/` | `homelab-tickets/.forgejo/workflows/` | Repo workflows (manual dispatch only — no cron, no auto-fixers) |
 
 **Not tracked here** (by design): the tickets themselves (Forgejo issues) and

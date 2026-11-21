@@ -28,6 +28,13 @@
       allowedVersions: "18",
     },
     {
+      description: "Update the PostgreSQL backup verifier with the custom CNPG Cluster image, not on an independent release schedule",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/cloudnative-pg/postgresql"],
+      matchFileNames: ["kubernetes/apps/database-system/cnpg-operator/maintenance/cronjob-postgres-backup-verify.yaml"],
+      enabled: false,
+    },
+    {
       description: "Separate talos and kubelet versions",
       matchDatasources: ["docker"],
       matchPackageNames: [
