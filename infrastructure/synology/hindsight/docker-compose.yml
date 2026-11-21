@@ -8,7 +8,7 @@ services:
   # "where did my memory go". After a pg_upgrade both directories exist and the
   # newest major matches the image, so this passes.
   preflight:
-    image: "ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2"
+    image: "ghcr.io/soulwhisper/postgresql:18.7@sha256:a6857e9937546ea96e523585b7b3ca6188d2edf5a596ca8563dc0792d207708f"
     container_name: "hindsight-preflight"
     restart: "no"
     entrypoint: ["/bin/bash", "-eu", "-c"]
@@ -28,7 +28,7 @@ services:
       - "/volume3/docker/hindsight/data:/var/lib/postgresql:ro"
 
   postgres:
-    image: "ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2"
+    image: "ghcr.io/soulwhisper/postgresql:18.7@sha256:a6857e9937546ea96e523585b7b3ca6188d2edf5a596ca8563dc0792d207708f"
     container_name: "hindsight-postgres"
     restart: "unless-stopped"
     depends_on:
@@ -71,7 +71,7 @@ services:
   # snapshot schedule already covers; an off-host copy is still the operator's
   # job. Retention: 7 days.
   backup:
-    image: "ghcr.io/soulwhisper/postgresql:18.6@sha256:b8603020b65a51f4ce1b0545ea0d8d90f4430a8b1d47004b31fc6b5544a538a2"
+    image: "ghcr.io/soulwhisper/postgresql:18.7@sha256:a6857e9937546ea96e523585b7b3ca6188d2edf5a596ca8563dc0792d207708f"
     container_name: "hindsight-backup"
     restart: "unless-stopped"
     depends_on:
