@@ -213,8 +213,6 @@ spec:
     crds: CreateReplace
     strategy:
       name: RetryOnFailure
-    remediation:
-      retries: -1
   rollback:
     cleanupOnFail: true
   upgrade:
@@ -232,7 +230,7 @@ spec:
 Key behaviors this enforces cluster-wide:
 
 - **CRD lifecycle**: Helm creates/replaces CRDs included by the selected chart (`CreateReplace`).
-- **Install strategy**: `RetryOnFailure` retries failed installs; the patch also sets `install.remediation.retries: -1`.
+- **Install strategy**: `RetryOnFailure` retries a failed install with a Helm upgrade.
 - **Upgrade strategy**: `RemediateOnFailure` with 3 remediation retries and cleanup on failure.
 - **History hygiene**: `maxHistory: 1` and `keepHistory: false` prevent Helm release history accumulation.
 

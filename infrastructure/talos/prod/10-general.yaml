@@ -111,7 +111,6 @@ config:
         score:
           disabled:
             - name: ImageLocality
-            - name: SelectorSpread
       pluginConfig:
         - name: PodTopologySpread
           args:
@@ -120,9 +119,6 @@ config:
               - maxSkew: 1
                 topologyKey: kubernetes.io/hostname
                 whenUnsatisfiable: ScheduleAnyway
-                matchLabelKeys:
-                  - pod-template-hash
-                  - controller-revision-hash
 ---
 apiVersion: v1alpha1
 kind: KubeStaticPodConfig
