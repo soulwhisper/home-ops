@@ -92,6 +92,8 @@ interface vlan-interface 10
 
 interface vlan-interface 100
  ip address 10.10.0.1 24
+ bfd min-transmit-interval 400
+ bfd min-receive-interval 400
  bfd detect-multiplier 5
 
 interface vlan-interface 200
@@ -107,8 +109,10 @@ interface vlan-interface 1000
 ip route-static 0.0.0.0 0 10.255.255.2
 
 # eBGP with BFD
+bfd session init-mode active
 bgp 65000
  router-id 10.10.0.1
+ timer keepalive 60 hold 180
  group k8s external
  peer k8s as-number 65100
  peer k8s connect-interface vlan-interface 100

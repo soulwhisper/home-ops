@@ -140,7 +140,7 @@ The core switch and each Kubernetes node run eBGP to advertise the LoadBalancer 
 
 - **Advertised prefixes (FRR→switch):** LoadBalancer pool `10.10.0.128/27` (only prefix advertised)
 - **Advertised prefixes (switch→FRR):** No connected routes are redistributed. The switch can re-advertise the selected LoadBalancer route to the other peers; FRR filters all inbound routes.
-- **Timers:** The switch and FRR use 60s keepalive and 180s hold. BFD handles faster failure detection.
+- **Timers:** The switch recovery script and FRR-K8s explicitly configure 60s keepalive and 180s hold, matching the negotiated timers on all three live sessions. BFD handles faster failure detection.
 
 #### BFD Fast Failover
 
@@ -240,7 +240,8 @@ API key authentication is enforced via `AgentgatewayPolicy` in strict mode for a
 
 The LAN resolver forwards `homelab.internal` and the private view of
 `noirprime.com` to PowerDNS at `10.10.0.100`. Names that require public answers
-use public DNS. The edge router uses OpenClash TProxy with fake-IP disabled.
+use public DNS. See the [AdGuard upstream rules](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/openwrt#adguard-home-upstreams).
+The edge router uses OpenClash TProxy with fake-IP disabled.
 
 #### Static DNS — DNSControl
 

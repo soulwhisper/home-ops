@@ -1,4 +1,17 @@
-# Router NTP metrics
+# Edge router integrations
+
+## AdGuard Home upstreams
+
+Use these entries under **Upstream DNS servers**. PowerDNS at `10.10.0.100`
+serves `homelab.internal` and the private view of `noirprime.com`. The more
+specific `#` rule uses AdGuard Home's default upstreams for public records.
+
+```text
+[/homelab.internal/noirprime.com/]10.10.0.100
+[/_acme-challenge.noirprime.com/_dmarc.noirprime.com/_domainkey.noirprime.com/opn.noirprime.com/]#
+```
+
+## Router NTP metrics
 
 `chrony-metrics.cgi` exposes the homelab's NTP source to VictoriaMetrics.
 `ScrapeConfig/chrony` in
