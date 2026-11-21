@@ -421,6 +421,11 @@ edit.
    something (a config, an upstream repo, a cluster state): investigate,
    analyze, deliver a report. NO edits — not even "while you're in there"
    fixes. Findings and recommendations only.
+   Lead with the gaps that matter, not a version inventory. For each finding,
+   explain the context, cite what the repo and live state show, then give the
+   simplest useful fix, its benefit, and its main risk. Flag uncertainty once
+   where it changes the decision. Cut defensive wording, speculative upgrades,
+   and process that adds no value. Put detailed version and coverage tables last.
 2. **Feature work is two-phase.** For every feature/change request: first
    run the eval phase (investigate + propose, no edits) and explicitly ask
    to continue. Only after the user's go-ahead: implement on a branch and
