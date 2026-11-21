@@ -168,7 +168,7 @@ spec:
             image:
               repository: ghcr.io/cloudnative-pg/postgresql
               # Match the CNPG cluster's PostgreSQL version; this image provides Python and boto3.
-              tag: 18.6@sha256:899d3ed526b659d77935dde0e6bf2d69dbbf17d3d8c6486ca8cfd04bd3c18533
+              tag: 18.7-system-bookworm@sha256:e6770e842a0a6eabe2029dd5cc3153d6b34a5aec7197b88330005a5ecf5edacd
             command:
               - python3
             args:

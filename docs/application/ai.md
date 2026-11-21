@@ -409,7 +409,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 ### Hindsight
 
 - AI memory / context store (agent long-term memory: retain / recall / reflect)
-- **Runs on the NAS**, not in the cluster: doco-cd stack `infrastructure/synology/hindsight` (postgres 18.6 + `ghcr.io/vectorize-io/hindsight:1.2.1-slim`). It holds the only dataset in the homelab that cannot be rebuilt from git, so it lives on the UPS-backed host that already receives the cluster's barman backups. Nothing in the cluster consumes its database any more; the CNPG role/database and the Flux app are gone.
+- **Runs on the NAS**, not in the cluster. The [doco-cd Compose file](../../infrastructure/synology/hindsight/docker-compose.yml) pins the app and PostgreSQL images. The UPS-backed NAS holds Hindsight's data and receives the cluster's Barman backups.
 - Consumers call `http://nas.homelab.internal:8888/mcp/<bank>` directly — hindsight speaks MCP natively, so the toolhive proxy tier that fronted it is archived with the app
 - **Auth**: Bearer on both REST and MCP, via the built-in tenant extension — `HINDSIGHT_API_TENANT_EXTENSION=hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension` plus `HINDSIGHT_API_TENANT_API_KEY` (sops env). Clients send `Authorization: Bearer <key>`; a missing or wrong key is `401`. One key covers both surfaces; there is no per-lane split, so it is shared out of band, not minted per consumer
 - **Defence in depth**: plain HTTP on a shared VLAN, no ingress route, no Authentik in front (the `memory.noirprime.com` forward-auth provider was removed with the app) — keep the NAS firewall rule allowing TCP/8888 only from the cluster node CIDRs (`10.10.0.101-103`)
