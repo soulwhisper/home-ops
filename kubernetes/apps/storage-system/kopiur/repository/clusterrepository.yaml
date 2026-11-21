@@ -28,6 +28,8 @@ spec:
       name: kopiur-repository-secret
       namespace: storage-system
       key: KOPIA_PASSWORD
+  execution:
+    mode: Central
   create:
     enabled: true
   moverDefaults:

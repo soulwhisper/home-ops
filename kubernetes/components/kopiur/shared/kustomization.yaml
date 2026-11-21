@@ -2,9 +2,7 @@
 # yaml-language-server: $schema=https://json.schemastore.org/component.json
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
+components:
+  - ../mover-opt-in
 resources:
   - ./externalsecret.yaml
-patches:
-  - path: ./annotations.yaml
-    target:
-      kind: Namespace

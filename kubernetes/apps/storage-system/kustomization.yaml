@@ -5,6 +5,7 @@ kind: Kustomization
 namespace: storage-system
 components:
   - ../../components/namespace
+  - ../../components/kopiur/mover-opt-in
 resources:
   - ./csi-driver-nfs/ks.yaml
   - ./rook-ceph/ks.yaml
