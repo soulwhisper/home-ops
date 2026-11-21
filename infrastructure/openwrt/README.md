@@ -1,14 +1,9 @@
-# Edge router (ImmortalWrt)
+# Router NTP metrics
 
-Host-side configuration for the NTP/DNS/VPN edge, kept here for reference.
-Nothing in this directory is applied by Flux; the router is configured by hand.
-
-## chrony metrics
-
-`chrony-metrics.cgi` serves the router's chrony state as Prometheus text. It
-is installed as `/www/cgi-bin/chrony` (mode 0755) and scraped every 60 s by
+`chrony-metrics.cgi` exposes the homelab's NTP source to VictoriaMetrics.
 `ScrapeConfig/chrony` in
-`kubernetes/apps/monitoring-system/victoria-metrics/cluster/`.
+[`victoria-metrics/cluster`](../../kubernetes/apps/monitoring-system/victoria-metrics/cluster/)
+scrapes `http://10.10.0.254/cgi-bin/chrony` every 60 seconds.
 
 ```sh
 scp infrastructure/openwrt/chrony-metrics.cgi root@10.10.0.254:/www/cgi-bin/chrony
@@ -16,9 +11,8 @@ ssh root@10.10.0.254 'chmod 755 /www/cgi-bin/chrony'
 curl -s http://10.10.0.254/cgi-bin/chrony | head
 ```
 
-`/www` is a tmpfs, so the file disappears on reboot or firmware upgrade;
-reinstall it then. There is no cron: every vmagent scrape runs the CGI, so
-each sample is fresh and timestamped by the scrape.
+The CGI survives normal reboots. Reinstall it after a firmware upgrade if the
+upgrade did not preserve `/www/cgi-bin/chrony`.
 
 ### Metrics
 
@@ -34,12 +28,11 @@ each sample is fresh and timestamped by the scrape.
 | `chrony_source_reach{source}` | reachability register as decimal bits |
 | `chrony_source_selected{source}` | 1 for the source chrony currently steers by |
 | `chrony_sources_reachable` | count of sources with a non-zero reach bit |
-| `chrony_metrics_ok` | 1 when every section parsed; 0 when `chronyc` or the parser failed |
+| `chrony_metrics_ok` | 0 on a detected `chronyc` or tracking parse failure; 1 otherwise |
 
 ### Why
 
-Steps on this clock reach every production node (the prod Talos
-`TimeSyncConfig` points at `10.10.0.254`. Without the router's own
-offset, node and ceph clock alerts can only show that the source moved, not
-which hop moved. The alerts are `RouterClockOffsetHigh` (above 50 ms),
-`RouterClockSourcesUnreachable`, and `RouterClockMetricsUnavailable`.
+Production Talos nodes share this NTP source. The router's offset and source
+reachability help distinguish a shared clock problem from drift on one node.
+See `RouterClockOffsetHigh`, `RouterClockSourcesUnreachable`, and
+`RouterClockMetricsUnavailable` in the monitoring rules.

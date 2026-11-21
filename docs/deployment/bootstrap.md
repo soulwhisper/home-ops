@@ -50,8 +50,8 @@ Factory](https://factory.talos.dev) using `talos_version` from
 `i915.enable_guc=3`, `module_blacklist=igc`.
 
 For the production ISO only, `just talos image prod` adds `ip=:::::bond0:dhcp`
-to obtain a lease on `bond0`. Enable OpenWrt's predefined maintenance DHCP pool
-before booting. Use each lease only to reach the node for `apply-config`; the
+to obtain a lease on `bond0`. Enable the edge router's maintenance DHCP pool
+on VLAN 100 before booting. Use each lease only for `apply-config`; the
 installed system uses the static address and route from `BondConfig` and has
 no maintenance DHCP argument.
 
@@ -109,7 +109,7 @@ just talos generate prod
 ### Phase 3: Node Provisioning
 
 ```shell
-# Replace these example addresses with the nodes' current OpenWrt leases.
+# Replace these example addresses with the nodes' current DHCP leases.
 # They are temporary dynamic addresses, not reservations.
 just bootstrap prod \
   exarch-01=10.10.0.101 \
