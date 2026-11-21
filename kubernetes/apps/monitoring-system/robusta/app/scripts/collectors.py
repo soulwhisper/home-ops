@@ -4,7 +4,7 @@ The injectable reader implements kube_items(path, deadline, params=None) and
 prom_query(expression, deadline), rules(name, group, deadline). The production
 reader uses service-account TLS and GET only. CLI: python collectors.py
 home-ops:backup-chain --timeout 300 (also home-ops:resolved-alert-recheck,
-home-ops:ceph-health, or home-ops:cert-expiry).
+home-ops:ceph-health, home-ops:cert-expiry, or home-ops:node-density).
 """
 
 import argparse
@@ -24,6 +24,14 @@ BACKUP = "home-ops:backup-chain"
 RESOLVED = "home-ops:resolved-alert-recheck"
 CEPH = "home-ops:ceph-health"
 CERT_EXPIRY = "home-ops:cert-expiry"
+NODE_DENSITY = "home-ops:node-density"
+NODES = "/api/v1/nodes"
+NODE_PODS = ('sum by (node) (kube_pod_info{node=~"exarch.*"} unless on(namespace,pod) '
+             '(kube_pod_status_phase{phase=~"Succeeded|Failed"} == 1))')
+NODE_ALLOCATABLE = 'kube_node_status_allocatable{node=~"exarch.*",resource=~"pods|cpu|memory"}'
+NODE_REQUESTS = ('sum by (node, resource) (kube_pod_container_resource_requests{node=~"exarch.*",'
+                 'resource=~"cpu|memory"} unless on(namespace,pod) '
+                 '(kube_pod_status_phase{phase=~"Succeeded|Failed"} == 1))')
 CERTIFICATES = "/apis/cert-manager.io/v1/certificates"
 CEPH_SCALARS = {
     "health": "max(ceph_health_status)",
@@ -712,6 +720,61 @@ def cert_manager(category, reader, deadline, now):
         category.error("no cert-manager Certificates discovered")
 
 
+def _node_samples(reader, expression, expected, deadline, resource=None):
+    values = {}
+    for labels, value in samples(reader.prom_query(expression, deadline)):
+        node = labels.get("node")
+        kind = labels.get("resource") if resource is None else resource
+        if not isinstance(node, str) or not isinstance(kind, str) or (node, kind) not in expected:
+            raise CollectionError("unexpected node metric identity")
+        key = (node, kind)
+        if key in values:
+            raise CollectionError("duplicate node metric")
+        if value < 0 or (kind != "cpu" and not value.is_integer()):
+            raise CollectionError("invalid node resource value")
+        values[key] = value
+    if values.keys() != expected:
+        raise CollectionError("incomplete node metric coverage")
+    return values
+
+
+def _node_density(category, reader, deadline):
+    # Use the Node API as an independent inventory: a missing scrape can omit
+    # the same node from all vectors, which would otherwise look healthy.
+    nodes = set()
+    for obj in reader.kube_items(NODES, deadline):
+        name = obj.get("metadata", {}).get("name")
+        if not isinstance(name, str) or not name:
+            raise CollectionError("invalid node inventory")
+        if name.startswith("exarch"):
+            nodes.add(name)
+    if not nodes:
+        raise CollectionError("no target nodes discovered")
+
+    resources = ("pods", "cpu", "memory")
+    pod_keys = {(node, "pods") for node in nodes}
+    request_keys = {(node, kind) for node in nodes for kind in resources[1:]}
+    requested = _node_samples(reader, NODE_PODS, pod_keys, deadline, resource="pods")
+    requested.update(_node_samples(reader, NODE_REQUESTS, request_keys, deadline))
+    allocatable = _node_samples(reader, NODE_ALLOCATABLE, requested.keys(), deadline)
+    if any(value <= 0 for value in allocatable.values()):
+        raise CollectionError("node allocatable must be positive")
+
+    category.data["nodes"] = rows = []
+    for node in sorted(nodes):
+        usage = {kind: requested[node, kind] for kind in resources}
+        capacity = {kind: allocatable[node, kind] for kind in resources}
+        row = {"node": text(node, 253), "requested": usage, "allocatable": capacity}
+        category.data["evaluated_count"] += 1
+        if len(rows) < 12:
+            rows.append(row)
+        for kind in resources:
+            ratio = usage[kind] / capacity[kind]
+            # Summed CPU samples in cores can carry floating-point roundoff.
+            if ratio > 0.8 and not math.isclose(ratio, 0.8, rel_tol=1e-12):
+                category.finding("node allocation exceeds 80%", {**row, "resource": kind})
+
+
 def result(name, categories):
     errors = sum(c["error_count"] for c in categories)
     findings = sum(c["finding_count"] for c in categories)
@@ -837,11 +900,13 @@ def collect_with_reader(query, deadline, reader, now=None):
         return result(CERT_EXPIRY, [run_category(
             "cert_manager_certificates",
             lambda c: cert_manager(c, reader, deadline, time.time() if now is None else now))])
+    if query == NODE_DENSITY:
+        return result(NODE_DENSITY, [run_category("node_density", lambda c: _node_density(c, reader, deadline))])
     return None
 
 
 def collect(query: str, deadline: float) -> dict | None:
-    if query not in (BACKUP, RESOLVED, CEPH, CERT_EXPIRY):
+    if query not in (BACKUP, RESOLVED, CEPH, CERT_EXPIRY, NODE_DENSITY):
         return None
     try:
         return collect_with_reader(query, deadline, Reader())
@@ -852,7 +917,7 @@ def collect(query: str, deadline: float) -> dict | None:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("query", choices=(BACKUP, RESOLVED, CEPH, CERT_EXPIRY))
+    parser.add_argument("query", choices=(BACKUP, RESOLVED, CEPH, CERT_EXPIRY, NODE_DENSITY))
     parser.add_argument("--timeout", type=float, default=300)
     args = parser.parse_args()
     if not math.isfinite(args.timeout) or args.timeout <= 0:

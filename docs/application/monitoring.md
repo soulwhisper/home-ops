@@ -227,12 +227,12 @@ Holmes also runs on a schedule via `ScheduledHealthCheck` CRs. Results stay in C
 | `resolved-alert-recheck-daily` | every 6h | single-sample `sum(absent(expression)) or vector(0)` healing checks for recently resolved alerts |
 | `backup-chain-daily` | daily | kopiur + CNPG backup runs and snapshot age |
 
-`backup-chain-daily`, `resolved-alert-recheck-daily`, `ceph-health-growth` and
-`cert-expiry-watch` use the reserved query markers `home-ops:backup-chain`,
-`home-ops:resolved-alert-recheck`, `home-ops:ceph-health` and
-`home-ops:cert-expiry`. Their read-only collectors evaluate the fixed questions
-without an LLM investigation. Ceph collection uses validated instant PromQL for
-health, OSD/PG state, slow ops, live nearfull thresholds and pool usage/growth.
+`backup-chain-daily`, `resolved-alert-recheck-daily`, `ceph-health-growth`,
+`cert-expiry-watch` and `node-density-trend` use the reserved query markers
+`home-ops:backup-chain`, `home-ops:resolved-alert-recheck`, `home-ops:ceph-health`,
+`home-ops:cert-expiry` and `home-ops:node-density`. Their read-only collectors
+evaluate fixed questions without an LLM investigation. Ceph collection uses
+validated instant PromQL for health, OSD/PG state, slow ops, live nearfull thresholds and pool usage/growth.
 Growth fails when the 24h delta would take a pool to or above its live nearfull
 ratio; smaller movements remain evidence without an arbitrary rate threshold.
 Certificate collection covers every Certificate page and validates Ready,
@@ -243,6 +243,10 @@ or unsupported datasources remain evaluation errors. Expressions and
 annotations are not echoed into generated advice. A measured unhealthy
 condition is `fail`; incomplete or failed collection is `error`, never a
 healthy fallback.
+
+Node density checks all `exarch*` nodes from the Kubernetes Node API against
+instant pod counts, requests, and allocatable values. A missing node or
+dimension is `error`; only a measured ratio above 80% is `fail`.
 
 Each API check runs in a fresh worker process group with one execution
 deadline, including model initialization and tool calls. Deadline or client
