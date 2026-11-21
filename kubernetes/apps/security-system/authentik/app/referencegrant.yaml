@@ -1,6 +1,6 @@
 ---
-# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/referencegrant_v1beta1.json
-apiVersion: gateway.networking.k8s.io/v1beta1
+# yaml-language-server: $schema=https://soulwhisper.github.io/k8s-schemas/gateway.networking.k8s.io/referencegrant_v1.json
+apiVersion: gateway.networking.k8s.io/v1
 kind: ReferenceGrant
 metadata:
   name: authentik-ext-auth-grant
@@ -16,7 +16,7 @@ spec:
 ---
 # forward-auth app routes: /outpost.goauthentik.io/* must reach the embedded
 # outpost directly (OAuth callback etc.), bypassing ext-authz
-apiVersion: gateway.networking.k8s.io/v1beta1
+apiVersion: gateway.networking.k8s.io/v1
 kind: ReferenceGrant
 metadata:
   name: authentik-outpost-route-grant

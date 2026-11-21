@@ -69,6 +69,7 @@ D("noirprime.com", REG_NONE, DnsProvider(PDNS),
 
   IGNORE_EXTERNAL_DNS("k8s-int."),
   A("derp", "10.10.0.254"),
+  A("unifi", "10.10.0.200"),
 
   // Mirror Cloudflare's public apex mail records for internal clients.
   MX("@", 73, "route2.mx.cloudflare.net."),

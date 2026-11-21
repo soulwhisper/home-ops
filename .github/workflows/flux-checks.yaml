@@ -6,7 +6,7 @@ name: Flux-checks
 
 permissions:
   contents: read
-  pull-requests: write
+  pull-requests: read
 
 on:
   pull_request:
@@ -22,12 +22,28 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       changed-files: ${{ steps.changed-files.outputs.changed_files }}
+      render: ${{ steps.scope.outputs.render }}
     steps:
       - name: Get Changed Files
         id: changed-files
         uses: bjw-s-labs/action-changed-files@v0.7.0
         with:
-          patterns: kubernetes/**/*
+          patterns: |
+            kubernetes/**
+            .github/scripts/**
+            .github/workflows/flux-checks.yaml
+            .mise.toml
+            infrastructure/talos/version.yaml
+          include_deleted_files: true
+
+      - name: Identify render inputs
+        id: scope
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.changed_files }}
+        run: |
+          render=$(jq -r 'any(.[]; startswith("kubernetes/") or . == ".mise.toml" or
+            . == "infrastructure/talos/version.yaml" or . == ".github/workflows/flux-checks.yaml")' <<< "$CHANGED_FILES")
+          echo "render=$render" >> "$GITHUB_OUTPUT"
 
   test:
     if: ${{ needs.filter.outputs.changed-files != '[]' }}
@@ -44,29 +60,30 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Run backup verifier regressions
-        run: python3 -m unittest discover -s .github/scripts -p test_backup_verifier.py
-      - name: Test LLM guardrail regressions
-        run: python3 -m unittest discover -s .github/scripts -p test_guardrails.py
-      - name: Test HealthCheck execution and collection
-        run: python3 -m unittest discover -s .github/scripts -p 'test_health*.py'
+      - name: Install regression test runtime
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13.18"
+
+      - name: Run Python regressions
+        run: python3 -m unittest discover -s .github/scripts
 
       - name: Install flate
-        uses: home-operations/flate/action@v0.8.0
+        if: ${{ needs.filter.outputs.render == 'true' }}
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
         with:
-          cache: true
-          token: ""
-
-      - name: Test incident ticket lifecycle
-        run: python3 -m unittest discover -s .github/scripts -p test_ticket_consumer.py
+          version: "2026.10.17"
+          install_args: github:home-operations/flate
 
       - name: Run flate test
+        if: ${{ needs.filter.outputs.render == 'true' }}
         env:
           BASE_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           flate test all --base "${BASE_BRANCH}"
 
       - name: Run flate diff
+        if: ${{ needs.filter.outputs.render == 'true' }}
         id: diff
         run: |
           flate diff all > /tmp/flate-diff.out || true
@@ -92,6 +109,7 @@ jobs:
         with:
           client-id: ${{ secrets.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-pull-requests: write
 
       - if: ${{ steps.diff.outputs.diff != '' }}
         name: Add Comment
@@ -111,7 +129,7 @@ jobs:
             </details>
 
   kubeconform:
-    if: ${{ needs.filter.outputs.changed-files != '[]' }}
+    if: ${{ needs.filter.outputs.render == 'true' }}
     needs: filter
     name: Flux Checks - Kubeconform
     runs-on: ubuntu-latest
@@ -124,18 +142,15 @@ jobs:
           persist-credentials: false
 
       - name: Install kubeconform
-        run: |
-          # renovate: datasource=github-releases depName=yannh/kubeconform
-          KUBECONFORM_VERSION="v0.8.0"
-          curl -fsSL "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
-            | tar -xz -C /tmp kubeconform
-          sudo install -m 0755 /tmp/kubeconform /usr/local/bin/kubeconform
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: "2026.10.17"
+          install_args: kubeconform
 
       - name: Validate changed manifests
         run: |
           mapfile -t FILES < <(echo "${CHANGED_FILES}" | jq --raw-output '.[]' \
-            | grep --extended-regexp '\.ya?ml$' \
-            | grep --invert-match --regexp='_sources/' \
+            | grep --extended-regexp '^kubernetes/.*\.ya?ml$' \
             | grep --invert-match --regexp='ks\.yaml$' \
             | grep --invert-match --regexp='kubernetes/bootstrap/' \
             | grep --invert-match --regexp='kubernetes/components/' \
@@ -148,11 +163,12 @@ jobs:
             echo "No changed kubernetes manifests to validate."
             exit 0
           fi
+          version=$(yq -er '.k8s_version' infrastructure/talos/version.yaml)
           kubeconform \
             -strict \
             -summary \
             -ignore-missing-schemas \
-            -skip 'Repository,SnapshotPolicy,SnapshotSchedule,Restore,Maintenance' \
+            -kubernetes-version "${version#v}" \
             -schema-location default \
             -schema-location 'https://soulwhisper.github.io/k8s-schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
             "${MANIFESTS[@]}"

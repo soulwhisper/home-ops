@@ -16,13 +16,19 @@ browse-pvc ns pvc:
 [doc('Open a shell on a node')]
 [script]
 node-shell node:
-  kubectl debug node/{{node}} -n default -it --image='alpine:latest' --profile sysadmin
-  kubectl get pods -n default | awk '/node-debugger-/ {print $1}' | xargs kubectl delete pod -n default
+  result=$(kubectl debug "node/$1" -n default -it --attach=false --container=debugger --image='alpine:latest' --profile sysadmin)
+  pod=$(awk '/^Creating debugging pod / { print $4 }' <<< "$result")
+  if [[ "$pod" != "node-debugger-$1-"????? ]]; then
+    printf 'Could not identify the newly created debug pod:\n%s\n' "$result" >&2
+    exit 1
+  fi
+  trap 'kubectl delete pod -n default "$pod" --ignore-not-found --wait=false' EXIT
+  kubectl attach -n default -it "$pod" -c debugger
 
-[doc('Prune pods in Failed, Pending, or Succeeded state')]
+[doc('Prune pods in Failed or Succeeded state')]
 [script]
 prune-pods:
-  for phase in Failed Pending Succeeded; do
+  for phase in Failed Succeeded; do
     kubectl delete pods -A --field-selector status.phase="$phase" --ignore-not-found=true
   done
 

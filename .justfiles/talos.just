@@ -10,25 +10,37 @@ TALOS_ENDPOINT := `talosctl config info --output json | jq --raw-output '.endpoi
 default:
   @just --list
 
-[doc('Get latest ISO for talos, with https_proxy support')]
+[doc('Download the pinned Talos maintenance ISO for prod or test')]
 [script]
 image mode:
-  IMAGE_VERSION=$(curl --silent --noproxy '*' https://factory.talos.dev/versions \
-    | jq --raw-output 'map(select(test("^v[0-9.]+$"))) | sort_by(. | ltrimstr("v") | split(".") | map(tonumber)) | reverse | .[0]' \
-    | tail -n1)
-  IMAGE_SCHEMA=$(just talos _schema {{mode}})
-  echo "Latest version: ${IMAGE_VERSION}"
+  IMAGE_VERSION=$(yq -er '.talos_version' "${TALOS_DIR}/version.yaml")
+  IMAGE_SCHEMA=$(just talos _schema "$1" iso)
   echo "Image Downloading: talos-{{mode}}-${IMAGE_VERSION}-metal-amd64.iso"
-  curl -x "${https_proxy}" --progress-bar -L "https://factory.talos.dev/image/${IMAGE_SCHEMA}/${IMAGE_VERSION}/metal-amd64.iso" \
+  curl --fail --progress-bar --location "https://factory.talos.dev/image/${IMAGE_SCHEMA}/${IMAGE_VERSION}/metal-amd64.iso" \
     -o "/tmp/talos-{{mode}}-${IMAGE_VERSION}-metal-amd64.iso"
   mv "/tmp/talos-{{mode}}-${IMAGE_VERSION}-metal-amd64.iso" "${OPS_DIR}"
 
-[doc('Get schema ID for specific environment')]
+[doc('Resolve the Talos schematic ID for an installer or maintenance ISO')]
 [script]
-_schema mode:
-  SCHEMATIC_ID=$(curl --silent --noproxy '*' -X POST --data-binary @"${TALOS_DIR}/{{mode}}/00-schematic.yaml" https://factory.talos.dev/schematics | jq --raw-output '.id')
-  yq --inplace '.schematic_id.{{mode}} = "'"${SCHEMATIC_ID}"'"' "${TALOS_DIR}/version.yaml"
-  echo "${SCHEMATIC_ID}"
+_schema mode artifact="installer":
+  mode=$1
+  case "$mode" in
+    prod|test) ;;
+    *) echo "Unknown Talos environment: $mode (expected prod or test)." >&2; exit 1 ;;
+  esac
+  schematic="${TALOS_DIR}/${mode}/00-schematic.yaml"
+  if [[ "$mode" == prod && "$2" == iso ]]; then
+    # The maintenance ISO needs a lease before the static BondConfig is applied.
+    payload=$(yq '.customization.extraKernelArgs += ["ip=:::::bond0:dhcp"]' "$schematic")
+  else
+    payload=$(<"$schematic")
+  fi
+  id=$(curl --fail --silent --show-error --noproxy '*' --data-binary @- https://factory.talos.dev/schematics <<< "$payload" \
+    | jq -er '.id | select(test("^[0-9a-f]{64}$"))')
+  if [[ "$2" == installer ]]; then
+    SCHEMATIC_ID="$id" yq --inplace ".schematic_id.${mode} = strenv(SCHEMATIC_ID)" "${TALOS_DIR}/version.yaml"
+  fi
+  printf '%s\n' "$id"
 
 [doc('Generate talos configuration')]
 [script]
@@ -40,7 +52,7 @@ generate mode:
   esac
   TALOS_VERSION=$(yq -r '.talos_version' "${TALOS_DIR}/version.yaml")
   K8S_VERSION=$(yq -r '.k8s_version' "${TALOS_DIR}/version.yaml")
-  SCHEMATIC_ID=$(just talos _schema {{mode}})
+  SCHEMATIC_ID=$(just talos _schema "$1")
   op inject -i "${TALOS_DIR}/secret.yaml" | talosctl gen config \
     "${CLUSTER_NAME}" "${CLUSTER_ENDPOINT}" \
     --with-docs=false --with-examples=false --force \
@@ -243,27 +255,29 @@ _bootstrap_k8s:
     sleep 5
   done
   echo "✅ Bootstrap successful (etcd is running)."
+
 [doc('Wait for apiservers to answer /readyz and nodes to register')]
 [script]
-_k8s_ready:
-  # Helm and kubectl calls after this gate are not retried, so every apiserver
-  # must answer first. Nodes come from talosconfig; fall back to an endpoint.
-  NODES=$(talosctl config info --output json 2>/dev/null | jq --raw-output '.nodes[]?' || true)
-  if [ -z "${NODES}" ]; then NODES="{{TALOS_ENDPOINT}}"; fi
-  for NODE in ${NODES}; do
-    until [ "$(curl -ks -o /dev/null -w '%{http_code}' --connect-timeout 2 "https://${NODE}:6443/readyz")" == "200" ]; do
-      echo "⏳ Waiting for kube-apiserver on ${NODE}..."
+_k8s_ready +targets:
+  deadline=$((SECONDS + 300))
+  nodes=()
+  for target in "$@"; do
+    node=${target%%=*}
+    nodes+=("node/$node")
+    address=$(yq -er 'select(.kind == "BondConfig") | .addresses[0].address' "${TALOS_DIR}/clusterconfig/main-${node}.yaml")
+    ip=${address%%/*}
+    until (( SECONDS >= deadline )) || [[ $(curl --silent --noproxy '*' --connect-timeout 2 --max-time 5 --insecure --output /dev/null --write-out '%{http_code}' "https://${ip}:6443/readyz") == 200 ]]; do
+      echo "⏳ Waiting for kube-apiserver on $node ($ip)..."
       sleep 5
     done
+    if (( SECONDS >= deadline )); then
+      echo "❌ Timed out waiting for kube-apiserver on $node ($ip)." >&2
+      exit 1
+    fi
   done
   echo "✅ All apiservers ready."
-  # Nodes register as Ready=False until the CNI is healthy — registration is enough here.
-  if ! kubectl wait nodes --for=condition=Ready=True --all --timeout=10s &>/dev/null; then
-    until kubectl wait nodes --for=condition=Ready=False --all --timeout=10s &>/dev/null; do
-      echo "⏳ Waiting for nodes to register..."
-      sleep 5
-    done
-  fi
+  # Registration is enough before the CNI is installed.
+  kubectl --request-timeout=5s wait --for=create --timeout="$((deadline - SECONDS))s" "${nodes[@]}"
   echo "✅ All nodes registered."
 
 [doc('Fetch kubeconfig')]

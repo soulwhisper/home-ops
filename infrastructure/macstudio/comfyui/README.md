@@ -20,14 +20,28 @@ tracked: `~/ComfyUI` (upstream checkout), runtime data, generated images, and
 model weights. The saved production workflow is imported from the prior
 Desktop install into `~/ComfyUI/default_workflow.json`.
 
+## Upstream release
+
+`~/ComfyUI` is a Git checkout of [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)
+at [`v0.46.0`](https://github.com/Comfy-Org/ComfyUI/releases/tag/v0.46.0)
+(`a277b5bf213e8a44fa34817b7770b54f86ef4cea`). The existing `origin` uses
+`comfyanonymous/ComfyUI`, which redirects to the same repository.
+
+Fetch the release tag and install its `requirements.txt` with
+`uv pip install --compile-bytecode` before starting the low-priority
+LaunchAgent. Keep the current workflow, runtime data, and model links.
+Switch the checkout and `.venv` with the ComfyUI queue empty. Roll back by
+restoring the previous tag, virtual environment, user data, and LaunchAgent.
+
 ## Lifecycle and memory
 
 - ComfyUI is an on-demand workload: the server stays light while idle; models
   load only on the first request.
 - The idle-offload agent POSTs `/free` with `unload_models=true` and
   `free_memory=true` after both queue lists are empty for five minutes.
-- ComfyUI starts with `--vram-headroom 8`, `--preview-method none`, and
-  `--disable-assets`; launchd runs it at `Nice=10` with low-priority I/O.
+- ComfyUI starts with previews and asset scanning disabled. launchd runs it
+  at `Nice=10` with low-priority I/O. DynamicVRAM is not active on MPS;
+  ComfyUI does not reserve a fixed share of unified memory for oMLX.
 - oMLX remains the production LLM service on port 8000 with a 50 GiB custom
   memory guard and `max_concurrent_requests=2` (see `../omlx/`).
 

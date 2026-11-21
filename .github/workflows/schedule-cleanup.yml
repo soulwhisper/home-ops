@@ -22,6 +22,7 @@ jobs:
         with:
           client-id: ${{ secrets.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-actions: write
       - name: Cleanup workflow stale runs
         uses: Mattraks/delete-workflow-runs@v2
         with:

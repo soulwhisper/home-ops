@@ -10,29 +10,34 @@ injection, configuration patching, node provisioning, and application delivery.
 
 | Tool | Purpose | Managed by |
 |------|---------|------------|
-| [`op`](https://1password.com/downloads/command-line/) | 1Password CLI — injects secrets into Talos and K8s configs | manual |
+| [`op`](https://1password.com/downloads/command-line/) | Injects secrets into Talos and Kubernetes configs | NixOS |
 | [`mise`](https://mise.jdx.dev/) | Runtime version manager — ensures correct tool versions | `.mise.toml` (repo root) |
 | [`talosctl`](https://www.talos.dev/docs/latest/talos-guides/install/talosctl/) | Talos node interaction | mise |
-| [`kubectl`](https://kubernetes.io/docs/tasks/tools/) | Kubernetes cluster interaction | mise |
-| [`just`](https://github.com/casey/just) | Task runner — orchestrates all bootstrap phases | mise |
+| [`helmfile`](https://helmfile.readthedocs.io/) | Installs the foundation charts before Flux takes over | mise |
+| [`helm`](https://helm.sh/) | Installs or upgrades releases for Helmfile | NixOS |
+| [`kubectl`](https://kubernetes.io/docs/tasks/tools/) | Kubernetes readiness and bootstrap resource creation | NixOS |
+| [`just`](https://github.com/casey/just), `yq`, `jq` | Recipe runner and credential decoding/validation | NixOS |
 
 All mise-managed tools auto-install on first use. `mise trust` (included in
 the justfile `env` recipe) signs off on the mise config.
+CI uses the same mise-pinned `talosctl` and reads both generation targets from
+`infrastructure/talos/version.yaml` when validating prod and test configs.
 
 ---
 
 ### Phase 1: Talos Image Build (bare metal)
 
 ```shell
-just talos image bootstrap
+just talos image prod
 ```
 
-Posts the environment's `00-schematic.yaml` to the [Talos Image
-Factory](https://factory.talos.dev) to resolve a unique schematic ID, fetches
-the latest stable Talos version, then downloads the matching
-`metal-amd64.iso`. The ISO is placed in the repo root.
+Build the maintenance ISO with the same environment you will pass to
+`just talos generate` and `just bootstrap`. The command reads that environment's
+`00-schematic.yaml` and downloads `metal-amd64.iso` from the [Talos Image
+Factory](https://factory.talos.dev) using `talos_version` from
+`infrastructure/talos/version.yaml`. The ISO is placed in the repo root.
 
-**Bare-metal bootstrap schematic** (`infrastructure/talos/bootstrap/00-schematic.yaml`):
+**Production schematic** (`infrastructure/talos/prod/00-schematic.yaml`):
 
 | Extension | Purpose |
 |-----------|---------|
@@ -44,15 +49,11 @@ the latest stable Talos version, then downloads the matching
 **Kernel arguments**: `pcie_aspm=off`, `nvme_core.default_ps_max_latency_us=0`,
 `i915.enable_guc=3`, `module_blacklist=igc`.
 
-**Bootstrap and production network roles**: the bare-metal `bootstrap` image
-is only for initial maintenance. It creates `bond0` and obtains a temporary
-lease from OpenWrt's predefined maintenance pool, which is enabled only for
-that work and disabled afterward. The temporary address is used only to apply
-configuration and can differ from the final static address, so no per-node
-reservation, custom MAC, or node-specific image is needed. `just talos
-generate prod` or `just talos generate test` selects the corresponding
-installed image; that image omits the bootstrap `ip=` argument, and the
-applied config takes its address and route from `BondConfig`.
+For the production ISO only, `just talos image prod` adds `ip=:::::bond0:dhcp`
+to obtain a lease on `bond0`. Enable the edge router's maintenance DHCP pool
+on VLAN 100 before booting. Use each lease only for `apply-config`; the
+installed system uses the static address and route from `BondConfig` and has
+no maintenance DHCP argument.
 
 Write the ISO to a USB drive and boot each node into Talos maintenance mode
 (pure RAM disk, no install yet).
@@ -108,7 +109,7 @@ just talos generate prod
 ### Phase 3: Node Provisioning
 
 ```shell
-# Replace these example addresses with the nodes' current OpenWrt leases.
+# Replace these example addresses with the nodes' current DHCP leases.
 # They are temporary dynamic addresses, not reservations.
 just bootstrap prod \
   exarch-01=10.10.0.101 \
@@ -193,22 +194,33 @@ This waits for the API server port (6443) to become reachable (20 retries, 5s
 each), then runs `talosctl kubeconfig` and copies the result to
 `~/.kube/config`.
 
+Before installing bootstrap charts, `just bootstrap` gives the API servers
+and node registration a shared five-minute window. It checks `/readyz` at
+each node's installed static address, then waits for each named Node object
+to exist. It does not wait for `Ready`: Helmfile installs Cilium in the next phase.
+
 ---
 
 ### Phase 5: Flux Bootstrap
 
 ```shell
-just _bootstrap_apps
+kubectl config current-context
+just bootstrap-apps
 ```
+
+Run this after Phase 4 against the intended cluster. If 1Password or Helmfile
+fails, fix the cause and run `just bootstrap-apps` again, not `just bootstrap`.
+This command does not provision Talos, bootstrap etcd, or fetch a kubeconfig.
 
 Two steps, run sequentially:
 
-1. **Bootstrap resources**: [`kubernetes/bootstrap/resources.yaml.j2`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/resources.yaml.j2) is
-   templated with [minijinja](https://github.com/mitsuhiko/minijinja), then
-   piped through `op inject` to resolve 1Password references
-   (`op://DevOps/1password-api/*`). The recipe decodes the stored credentials
-   field before applying the `security-system` Namespace and 1Password Connect
-   Secret with `kubectl apply --server-side`.
+1. **Bootstrap Secret**: If `security-system/onepassword-connect` is missing,
+   `op inject` resolves the vault references in
+   [`kubernetes/bootstrap/onepassword-connect.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/onepassword-connect.yaml).
+   Injection has a 60-second deadline. Bootstrap requires a resolved token and
+   non-empty credential JSON before creating the missing Namespace and Secret.
+   If the Secret already exists, bootstrap skips 1Password and leaves it
+   unchanged. Use a separate credential rotation if that Secret is invalid.
 
 2. **Helmfile sync**: [`kubernetes/bootstrap/helmfile.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/helmfile.yaml) installs
    11 foundation releases as a `needs` DAG. The recipe allows up to five sync
@@ -232,10 +244,10 @@ Two steps, run sequentially:
    which uses `wait: false` so Cilium can render Hubble Relay before CoreDNS
    is ready. The configured Helm timeout is 600s per release.
 
-The bootstrap templates read chart URLs and tags from
-`kubernetes/apps/<namespace>/<release>/app/ocirepository.yaml` and values from
-the corresponding `app/helmrelease.yaml`. These are the original Flux app
-sources, not separate bootstrap copies:
+The bootstrap release template reads `.spec.url` and `.spec.ref.tag` from
+`kubernetes/apps/<namespace>/<release>/app/ocirepository.yaml`. Change the
+app's tag once to update both Flux and Helmfile. Helmfile reads values from
+the corresponding `app/helmrelease.yaml`:
 [`release.yaml.gotmpl`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/templates/release.yaml.gotmpl),
 [`values.yaml.gotmpl`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/templates/values.yaml.gotmpl),
 and [`default.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/default.yaml).
@@ -282,9 +294,10 @@ operator creates the root.
 Root patches set child reconciliation defaults and HelmRelease policies.
 For the 37 children labelled `config.home-ops.io/deps=infra`, they intentionally
 replace local dependency lists with cert-manager, onepassword-connect,
-rook-ceph-cluster, and kopiur; the lists are not merged. The managed-annotation
-patch also makes all children effectively `prune: true`, including
-flux-operator, flux-instance, and coredns despite their local `prune: false`.
+rook-ceph-cluster, and kopiur; the lists are not merged. Flux operator, Flux
+instance, and CoreDNS set `prune: false` in their own Kustomizations to retain
+their managed resources.
+
 See [Cluster Architecture](../infrastructure/kubernetes.md) for effective
 patching and deletion boundaries, the [Application Catalog](../application/catalog.md)
 for selected definitions, and [Storage](../infrastructure/storage.md) for
@@ -297,7 +310,7 @@ just k8s render-ks media-apps moviepilot
 ```
 
 This runs `flate build ks` and does not apply resources. In contrast,
-`just k8s apply-ks <namespace> <name>`, `just _bootstrap_apps`, and
+`just k8s apply-ks <namespace> <name>`, `just bootstrap-apps`, and
 `just reconcile` mutate cluster state; they are not validation commands.
 
 ---
@@ -336,7 +349,7 @@ This runs `flate build ks` and does not apply resources. In contrast,
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| `op inject` fails with "not signed in" | 1Password session expired | `eval $(op signin)` then retry |
+| `op inject` fails in Phase 5 | Network error, timeout, or expired 1Password session | Restore 1Password access; sign in again if required, then run `just bootstrap-apps` |
 | `talosctl apply-config` hangs | Node not in maintenance mode | Reboot into Talos ISO, verify network reachability |
 | "connection refused" to `k8s.homelab.internal:6443` | DNS not resolving or control plane not ready | Wait for etcd bootstrap; verify DNS record points to node IPs |
 | Helmfile sync fails on `cilium` | kube-proxy not disabled, conflicting iptables rules | Verify `KubeProxyConfig` has `enabled: false` in `10-general.yaml` |
@@ -348,10 +361,9 @@ This runs `flate build ks` and does not apply resources. In contrast,
 
 ### Test Environment
 
-The test cluster runs on VMs inside a separate VLAN. The bare-metal
-`bootstrap` schematic is not valid for these VMs because its bond argument
-hardcodes the MS01 NIC names. Boot the test maintenance ISO instead, then use
-the same explicit DHCP-to-static handoff with `test` configs:
+The test cluster runs on VMs inside a separate VLAN. Use the `test` schematic;
+its maintenance ISO gets a temporary address via Talos's default DHCP on the
+VM NIC. Use that address for the handoff to the static test config:
 
 ```shell
 just talos image test

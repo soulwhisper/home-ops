@@ -1,7 +1,5 @@
 docs/** linguist-vendored
 infrastructure/** linguist-vendored
-**/_sources/** linguist-generated=true
-**/_sources/**/*.json -diff
 * text=auto eol=lf
 *.env -linguist-detectable
 *.json -linguist-detectable
@@ -12,7 +10,6 @@ infrastructure/** linguist-vendored
 *.toml -linguist-detectable
 *.yml linguist-detectable linguist-language=YAML
 *.yaml linguist-detectable linguist-language=YAML
-*.yaml.j2 linguist-detectable linguist-language=YAML
 justfile linguist-detectable linguist-language=JUST
 .justfile linguist-detectable linguist-language=JUST
 *.just linguist-detectable linguist-language=JUST

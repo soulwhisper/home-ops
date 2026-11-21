@@ -10,7 +10,7 @@ The network is built around an enterprise-grade Layer 3 core switch with eBGP + 
                   └──────┬──────┘
                          │ PPPoE
                   ┌──────▼──────┐
-                  │  OpenWrt    │
+                  │ Edge router │
                   │  (N305 IPC) │
                   │ NTP/DNS/VPN │
                   └──┬──────┬───┘
@@ -36,16 +36,16 @@ The network is built around an enterprise-grade Layer 3 core switch with eBGP + 
 
 | Device             | Role                                  | NIC                   | Uplink                  |
 | ------------------ | ------------------------------------- | --------------------- | ----------------------- |
-| H3C S6520-24S-SI   | L3 core switch, BGP router (AS 65000) | 24×10G SFP+           | 2×10G LACP to router    |
+| H3C S6520-24S-SI   | L3 core switch, BGP router (AS 65000) | 24×10G SFP+           | 2×10G static LAG to router |
 | Miniforum MS-01 ×3 | Talos K8s control-plane + worker      | Intel X710 2×10G SFP+ | 2×10G LACP per node     |
-| N305 IPC           | ESXi hypervisor                       | 2.5G RJ45             | OpenWrt VM + management |
+| N305 IPC           | ESXi host for the edge router       | 2.5G RJ45             | Edge router VM + management |
 | Synology DS1825+   | NAS (NFS, S3, Docker)                 | 2×10G SFP+ (ext card) | 2×10G LACP              |
 | SANTAK TG-Box 850  | UPS (NUT)                             | USB                   | —                       |
 
 ```mermaid
 graph TD
     INTERNET["Internet"]
-    ROUTER["OpenWrt Router<br/>N305 IPC / ESXi"]
+    ROUTER["Edge Router<br/>N305 IPC / ESXi"]
     SWITCH["H3C S6520-24S-SI<br/>Core Switch<br/>AS 65000 / BGP + BFD"]
     NODE1["exarch-01<br/>10.10.0.101"]
     NODE2["exarch-02<br/>10.10.0.102"]
@@ -56,7 +56,7 @@ graph TD
 
     INTERNET --- ROUTER
 
-    subgraph "VLAN 1000 — Transit 10.255.255.0/30"
+    subgraph "VLAN 1000 — Router .2/24, switch .1/30 (10.255.255.x)"
         ROUTER -->|"LAG 120 (2×10G, Static)"| SWITCH
     end
 
@@ -93,13 +93,13 @@ The core switch enforces strict L3 isolation between security domains. Inter-VLA
 | VLAN | Name       | Subnet          | Gateway      | Purpose                                         | DHCP             |
 | ---- | ---------- | --------------- | ------------ | ----------------------------------------------- | ---------------- |
 | 1    | Management | 10.0.0.0/24     | 10.0.0.1     | Switch mgmt, ESXi, UniFi, OOB access            | Yes (switch)     |
-| 10   | LAN        | 10.0.10.0/24    | 10.0.10.1    | Trusted wired LAN                               | Yes (OpenWrt)    |
-| 100  | K8S / NAS  | 10.10.0.0/24    | 10.10.0.1    | Kubernetes nodes, NAS, workstation, BGP peering | On demand / OpenWrt |
-| 200  | WiFi       | 10.20.0.0/24    | 10.20.0.1    | Trusted wireless clients                        | Yes (OpenWrt)    |
-| 210  | IoT        | 10.20.10.0/24   | 10.20.10.1   | Untrusted IoT devices (ACL-isolated)            | Yes (OpenWrt)    |
-| 1000 | Transit    | 10.255.255.0/30 | 10.255.255.1 | Switch↔Router point-to-point link               | Static           |
+| 10   | LAN        | 10.0.10.0/24    | 10.0.10.1    | Trusted wired LAN                               | Edge router          |
+| 100  | K8S / NAS  | 10.10.0.0/24    | 10.10.0.1    | Kubernetes nodes, NAS, workstation, BGP peering | Edge router on demand |
+| 200  | WiFi       | 10.20.0.0/24    | 10.20.0.1    | Trusted wireless clients                        | Edge router          |
+| 210  | IoT        | 10.20.10.0/24   | 10.20.10.1   | Untrusted IoT devices (ACL-isolated)            | Edge router          |
+| 1000 | Transit    | Switch `10.255.255.1/30`; router `10.255.255.2/24` | — | Switch default route via `10.255.255.2` | Static |
 
-**IoT isolation (VLAN 210):** An advanced ACL (3500) restricts IoT egress to DHCP, DNS (switch only), NTP, and ICMP toward the gateway. Internet access is permitted; all RFC 1918 private ranges are explicitly denied. Inbound from WiFi (VLAN 200, ACL 3510) permits full IP access to the Aqara hub (10.20.10.100), plus TCP 80/443 and ICMP to the entire IoT subnet. A QoS policy (10 Mbps CIR) caps all IoT traffic at the access switch uplink.
+**IoT filtering (IPv4):** On VLAN 210's L3 interface, inbound ACL 3500 permits DHCP broadcasts and DHCP, DNS, and ICMP to the gateway. It also permits UDP/123 to any destination and Aqara hub (`10.20.10.100`) traffic to WiFi before blocking other traffic to private ranges. Internet traffic is allowed except for direct TCP/UDP DNS on port 53. On VLAN 200's L3 interface, inbound ACL 3510 permits WiFi clients to reach the hub over IP and the rest of VLAN 210 over TCP 80/443 and ICMP. These ACLs do not filter IPv6 or traffic switched within the same VLAN. A 10 Mbps QoS policy caps IoT ingress on the access switch uplink.
 
 ### LACP Link Aggregation
 
@@ -120,9 +120,14 @@ Management connectivity uses a dedicated access port (Ten-GE 1/0/19, VLAN 1) wit
 
 ### Talos Bring-up Networking
 
-`bootstrap` images are reserved for initial ISO/PXE maintenance. They use `ip=:::::bond0:dhcp` only on `bond0` to obtain a temporary address from OpenWrt's predefined maintenance pool. That address is used only to apply configuration and need not match the final static address. No per-node reservation, custom MAC, or node-specific image is required. If no DHCP service is available, the two IP-Config timeout cycles are an accepted bring-up risk.
+`just talos image prod` builds the maintenance ISO from the production
+schematic, adding `ip=:::::bond0:dhcp` only to that ISO. Enable the edge
+router's maintenance DHCP pool on VLAN 100 before booting. The temporary lease
+is only for applying configuration; it need not match the final static address.
 
-`prod` images used for installation and upgrades omit `ip=`. Each node's `BondConfig` supplies its only IPv4 address and default route, and no custom `hardwareAddr` is required. No early DHCP runs during production boot, so a disabled DHCP service cannot delay startup. OpenWrt keeps `dhcp.lab.ignore=1` outside maintenance; its predefined maintenance range is enabled only for initial bootstrap and disabled again afterward.
+The production installer uses the same schematic without `ip=`. Each node's
+`BondConfig` supplies its IPv4 address and default route. Disable the
+maintenance DHCP pool after provisioning.
 
 ### BGP Design
 
@@ -134,9 +139,8 @@ The core switch and each Kubernetes node run eBGP to advertise the LoadBalancer 
 | FRR-K8s per node        | 65100 | (node IP) | 10.10.0.1               |
 
 - **Advertised prefixes (FRR→switch):** LoadBalancer pool `10.10.0.128/27` (only prefix advertised)
-- **Advertised prefixes (switch→FRR):** `import-route direct` (connected routes)
-- **Timers:** FRR side keepalive 60s, hold 180s; switch side keepalive 10s, hold 30s — negotiated hold is 30s
-- **Graceful restart:** disabled (BFD provides faster failover)
+- **Advertised prefixes (switch→FRR):** No connected routes are redistributed. The switch can re-advertise the selected LoadBalancer route to the other peers; FRR filters all inbound routes.
+- **Timers:** The switch recovery script and FRR-K8s explicitly configure 60s keepalive and 180s hold, matching the negotiated timers on all three live sessions. BFD handles faster failure detection.
 
 #### BFD Fast Failover
 
@@ -234,7 +238,10 @@ API key authentication is enforced via `AgentgatewayPolicy` in strict mode for a
 
 ### DNS Architecture
 
-Split-horizon DNS separates internal homelab resolution from public records.
+The LAN resolver forwards `homelab.internal` and the private view of
+`noirprime.com` to PowerDNS at `10.10.0.100`. Names that require public answers
+use public DNS. See the [AdGuard upstream rules](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/openwrt#adguard-home-upstreams).
+The edge router uses OpenClash TProxy with fake-IP disabled.
 
 #### Static DNS — DNSControl
 
@@ -256,8 +263,8 @@ publishes both zones, including these existing `homelab.internal` records:
 
 #### Dynamic DNS — external-dns
 
-The `externaldns-powerdns` HelmRelease replaces the AdGuard webhook and updates
-Kubernetes records in the internal `noirprime.com` zone:
+The `externaldns-powerdns` HelmRelease updates Kubernetes records in the
+private `noirprime.com` zone:
 
 - **Sources:** `gateway-httproute`, `service`
 - **Domain filter:** `noirprime.com`
@@ -279,9 +286,14 @@ While the infrastructure is predominantly self-hosted, a small set of cloud serv
 
 ### NTP
 
-The OpenWrt router is the primary NTP server for the network and also hosts AdGuardHome for DNS. The core switch synchronizes to it via `ntp-service unicast-server`; production Talos nodes synchronize to it directly, with no separate NTP hop.
+Production Talos nodes use the edge router at `10.10.0.254` for NTP; the core
+switch uses the same router at `10.255.255.2`. Chrony needs at least two
+selectable upstreams to update its clock (`minsources 2`) and has no local
+reference fallback.
 
-The router's chrony is scraped every 60 s (`ScrapeConfig/chrony` → `/cgi-bin/chrony`, source in [`infrastructure/openwrt`](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/openwrt)), so its own offset, per-upstream reach and the selected source sit next to `node_timex_offset_seconds` and ceph's `MON_CLOCK_SKEW`. `RouterClockOffsetHigh` fires above 50 ms — before the nodes follow and before ceph warns. The router runs `local stratum 10`, so an upstream outage leaves the LAN following a free-running clock rather than failing over.
+VictoriaMetrics scrapes the [chrony metrics exporter](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/openwrt) every 60 seconds.
+The router clock offset and source reachability help distinguish upstream NTP
+problems from clock drift on individual nodes.
 
 ### Key Design Decisions
 
@@ -289,4 +301,4 @@ The router's chrony is scraped every 60 s (`ScrapeConfig/chrony` → `/cgi-bin/c
 - **Static LAG for router:** The ESXi virtual switch does not support dynamic LACP negotiation, so the router uplink uses a static LAG with forced port membership.
 - **netkit over vxlan:** netkit provides better throughput and lower latency on 10G hardware compared to encapsulated overlay modes. Combined with native routing and autoDirectNodeRoutes, pod-to-pod traffic takes the shortest L3 path.
 - **Maglev LB hashing:** Provides consistent hashing for LoadBalancer services, minimizing connection disruption during backend changes.
-- **IoT air-gap via ACL:** Rather than relying on a separate physical switch or SSID-only isolation, the switch-level ACL ensures IoT devices cannot reach any private subnet even if VLAN isolation fails.
+- **IoT filtering at the core:** IPv4 ACLs enforce the listed exceptions between the IoT and WiFi VLANs without a separate physical switch.

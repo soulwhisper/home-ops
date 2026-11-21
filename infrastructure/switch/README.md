@@ -24,7 +24,7 @@ graph TD
 
 ### Components
 
-- Router / Firewall / DHCP / NTP / DNS / TProxy : `OpenWRT@ESXi`;
+- Edge router (ESXi VM): WAN gateway, DHCP, DNS and NTP.
 - NAS / Infrastructure Services : `Synology DS1825+`;
 - EBGP / BFD : `H3C S6520-24S-SI`;
 - Computing : `MS-01`;

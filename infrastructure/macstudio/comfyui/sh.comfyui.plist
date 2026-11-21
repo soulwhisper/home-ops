@@ -19,8 +19,6 @@
     <string>/Users/soulwhisper/ComfyUI/output</string>
     <string>--input-directory</string>
     <string>/Users/soulwhisper/ComfyUI/input</string>
-    <string>--vram-headroom</string>
-    <string>8</string>
     <string>--preview-method</string>
     <string>none</string>
     <string>--disable-assets</string>

@@ -17,7 +17,7 @@ area/github:
 area/forgejo:
   - changed-files:
       - any-glob-to-any-file:
-          - ".forgejo/**/*"
+          - "infrastructure/forgejo/**/*"
 area/kubernetes:
   - changed-files:
       - any-glob-to-any-file:

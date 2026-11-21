@@ -12,7 +12,7 @@ SPDX-License-Identifier = "Apache-2.0"
 
 # Modified copy of Holmes (HolmesGPT/holmesgpt): upstream + modifications.
 [[annotations]]
-path = "kubernetes/apps/monitoring-system/robusta/app/holmes-checks-0.42.0.py"
+path = "kubernetes/apps/monitoring-system/robusta/app/scripts/holmes-checks-*.py"
 precedence = "override"
 SPDX-FileCopyrightText = "HolmesGPT contributors; modifications 2026 soulwhisper"
 SPDX-License-Identifier = "Apache-2.0"

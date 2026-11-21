@@ -13,6 +13,8 @@ on:
     paths:
       - "infrastructure/**"
       - ".justfiles/**"
+      - ".mise.toml"
+      - ".github/workflows/infra-checks.yaml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
@@ -29,12 +31,10 @@ jobs:
           persist-credentials: false
 
       - name: Install dnscontrol
-        run: |
-          # renovate: datasource=github-releases depName=StackExchange/dnscontrol
-          DNSCONTROL_VERSION="v4.44.1"
-          curl -fsSL "https://github.com/StackExchange/dnscontrol/releases/download/${DNSCONTROL_VERSION}/dnscontrol_${DNSCONTROL_VERSION#v}_linux_amd64.tar.gz" \
-            | tar -xz -C /tmp dnscontrol
-          sudo install -m 0755 /tmp/dnscontrol /usr/local/bin/dnscontrol
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: "2026.10.17"
+          install_args: github:DNSControl/dnscontrol
 
       - name: Run dnscontrol check
         working-directory: infrastructure/dnscontrol
@@ -48,6 +48,11 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+
+      - name: Install Docker Compose
+        uses: docker/setup-compose-action@54042514f505b273907334ae2b9cdbb9a0213c1a # v2.4.0
+        with:
+          version: v5.6.1
 
       - name: Validate synology compose files
         run: |
@@ -90,15 +95,17 @@ jobs:
           persist-credentials: false
 
       - name: Install talosctl
-        run: |
-          # renovate: datasource=github-releases depName=siderolabs/talos
-          TALOS_VERSION="v1.14.0"
-          curl -fsSL -o /tmp/talosctl "https://github.com/siderolabs/talos/releases/download/${TALOS_VERSION}/talosctl-linux-amd64"
-          sudo install -m 0755 /tmp/talosctl /usr/local/bin/talosctl
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: "2026.10.17"
+          install_args: talosctl
 
       - name: Render and validate machineconfigs
         run: |
           WORK_DIR=$(mktemp -d)
+          trap 'rm -rf "$WORK_DIR"' EXIT
+          TALOS_VERSION=$(yq -er '.talos_version' infrastructure/talos/version.yaml)
+          K8S_VERSION=$(yq -er '.k8s_version' infrastructure/talos/version.yaml)
           talosctl gen secrets -o "${WORK_DIR}/secrets.yaml"
           for MODE in prod test; do
             case "${MODE}" in
@@ -106,6 +113,8 @@ jobs:
               test) CLUSTER_NAME="test"; CLUSTER_ENDPOINT="https://172.19.82.101:6443" ;;
             esac
             talosctl gen config "${CLUSTER_NAME}" "${CLUSTER_ENDPOINT}" \
+              --talos-version "${TALOS_VERSION}" \
+              --kubernetes-version "${K8S_VERSION}" \
               --with-docs=false --with-examples=false --force \
               --with-secrets "${WORK_DIR}/secrets.yaml" \
               --output "${WORK_DIR}/${MODE}"

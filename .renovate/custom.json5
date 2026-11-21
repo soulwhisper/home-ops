@@ -4,7 +4,7 @@
     {
       customType: "regex",
       description: "Process custom images and version fields",
-      fileMatch: ["(^|/).+\\.yaml$"],
+      managerFilePatterns: ["/(^|/).+\\.yaml$/"],
       matchStrings: [
         // image: <registry>/<path>:vX.Y.Z   (e.g. 10-general.yaml)
         "#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)(?:\\s+packageName=(?<packageName>[^\\s]+))?\\s+image:\\s*(?<depPart>.*?:)(?<currentValue>[v\\d\\.]+)",
@@ -17,12 +17,20 @@
     {
       customType: "regex",
       description: "Process Helmfile oci charts",
-      fileMatch: ["(^|/)helmfile\\.yaml$"],
+      managerFilePatterns: ["/(^|/)helmfile\\.yaml$/"],
       matchStrings: [
         "chart: oci://(?<depName>[^\\s]+?)\\s+version: (?<currentValue>[^\\s]+)",
       ],
       datasourceTemplate: "docker",
       versioningTemplate: "helm",
+    },
+    {
+      customType: "regex",
+      description: "Track annotated CI tool versions",
+      managerFilePatterns: ["/^\\.github/workflows/[^/]+\\.ya?ml$/"],
+      matchStrings: [
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)[ \\t]*\\r?\\n[ \\t]*[A-Z][A-Z0-9_]*=\"(?<currentValue>[^\"\\s]+)\"",
+      ],
     },
   ],
   packageRules: [

@@ -19,9 +19,9 @@ re-downloadable from Hugging Face — see model ids in `docs/application/ai.md`)
 ## Shared-memory policy
 
 The server shares unified memory with ComfyUI. Pin a 50 GiB custom memory
-guard on the 64 GiB host, and keep the prefill guard, chunked prefill, and
-decode fairness enabled. The concurrency setting is a per-engine batch limit,
-not a global lock between models.
+guard on the 64 GiB host. Keep the prefill guard and chunked prefill enabled.
+Use `scheduler.concurrent_priority: balanced` for decode fairness; the
+concurrency setting limits each engine's batch, not all models together.
 
 - Limit each engine to two concurrent requests. Serialize image generation
   (`batch_size=1`) and avoid overlapping it with long LLM prefills.
@@ -37,9 +37,8 @@ not a global lock between models.
 - Preserve the 64K model ceiling for chat, persona, and Ornith; use a 32K
   client window for ordinary requests. A smaller ceiling does not reduce
   weight residency.
-- ComfyUI keeps its five-minute idle unload, disabled previews, and 8 GiB
-  headroom. Keep infrequent image weights demand-loaded rather than pinning
-  every LLM and image model together.
+- ComfyUI keeps its five-minute idle unload and disabled previews.
+  DynamicVRAM is not active on MPS.
 
 ## Model plan
 
@@ -58,9 +57,7 @@ the studio id accepted by direct calls.
 | `image` | Image generation | `qwen-image-2.1` | 7B / int8 safetensors | 5m | no |
 
 `persona` is the renamed 4-bit Orion folder and is served through the
-agentgateway persona lane. oMLX 0.7 does not currently discover
-`qwen-image-2.1`, so its `image` alias is inert until that model type is
-served again.
+agentgateway persona lane. `qwen-image-2.1` is not discovered by oMLX 0.8.2.
 
 ## Initial restore
 

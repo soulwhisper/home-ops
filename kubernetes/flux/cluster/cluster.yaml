@@ -31,11 +31,7 @@ spec:
   dependsOn:
     - name: flux-repositories
   patches:
-    - # Add Kustomization defaults to all app ks.yaml.
-      # NOTE: strategic-merge patch scalars OVERRIDE values already set in
-      # ks.yaml — only list fields the ks.yaml files must never predefine.
-      # `wait` is deliberately absent: unset falls back to the CRD default
-      # (false), while explicit `wait: true` in a ks.yaml stays effective.
+    - # Set reconciliation defaults for annotated Kustomizations.
       patch: |-
         apiVersion: kustomize.toolkit.fluxcd.io/v1
         kind: Kustomization
@@ -92,8 +88,6 @@ spec:
                     crds: CreateReplace
                     strategy:
                       name: RetryOnFailure
-                    remediation:
-                      retries: -1
                   rollback:
                     cleanupOnFail: true
                   upgrade:

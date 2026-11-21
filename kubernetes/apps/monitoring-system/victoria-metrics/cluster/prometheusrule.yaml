@@ -110,10 +110,9 @@ spec:
           annotations:
             summary: "no chrony source is reachable on the router"
             description: >-
-              With local stratum 10 the router keeps answering NTP while its
-              clock free-runs, so the nodes follow a drifting source. Check WAN
-              and upstream reachability before trusting node or ceph clock
-              signals.
+              The router needs two selectable upstreams to update its clock
+              and has no local reference fallback. Check chronyc sources and
+              WAN reachability; verify NTP sync on the Talos nodes.
           expr: chrony_sources_reachable == 0
           for: 10m
           labels:

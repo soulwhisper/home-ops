@@ -1,7 +1,6 @@
 ---
 # forgejo + actions runner, one stack: the runner and its job containers share
-# the stack network, where forgejo carries the nas.homelab.internal alias —
-# the LAN name resolves to a fake-ip/hairpin that docker cannot use.
+# the stack network, where the nas.homelab.internal alias points directly to Forgejo.
 # nas.homelab.internal A 10.10.0.100
 # worker HTTP => http://nas.homelab.internal:9003
 # worker SSH => ssh://nas.homelab.internal:9004
