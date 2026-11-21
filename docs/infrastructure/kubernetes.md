@@ -485,7 +485,10 @@ These paths and namespace/name identities are part of the bootstrap contract. He
 
 ### Bootstrap Secret
 
-Before Helmfile runs, `just _bootstrap_apps` renders [`kubernetes/bootstrap/resources.yaml.j2`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/resources.yaml.j2), injects the 1Password values, decodes the credentials field, and applies the Namespace and Secret:
+Before applying the Namespace and Secret, `just _bootstrap_apps` injects the
+1Password values into [`kubernetes/bootstrap/resources.yaml.j2`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/resources.yaml.j2)
+and validates the token and decoded credentials. A failed injection or invalid
+value stops bootstrap before it applies resources or runs Helmfile:
 
 ```yaml
 apiVersion: v1

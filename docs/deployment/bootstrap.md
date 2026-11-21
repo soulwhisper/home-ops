@@ -13,6 +13,7 @@ injection, configuration patching, node provisioning, and application delivery.
 | [`op`](https://1password.com/downloads/command-line/) | 1Password CLI — injects secrets into Talos and K8s configs | manual |
 | [`mise`](https://mise.jdx.dev/) | Runtime version manager — ensures correct tool versions | `.mise.toml` (repo root) |
 | [`talosctl`](https://www.talos.dev/docs/latest/talos-guides/install/talosctl/) | Talos node interaction | mise |
+| [`helmfile`](https://helmfile.readthedocs.io/) | Installs the foundation charts before Flux takes over | mise |
 | [`kubectl`](https://kubernetes.io/docs/tasks/tools/) | Kubernetes cluster interaction | mise |
 | [`just`](https://github.com/casey/just) | Task runner — orchestrates all bootstrap phases | mise |
 
@@ -211,9 +212,10 @@ Two steps, run sequentially:
 1. **Bootstrap resources**: [`kubernetes/bootstrap/resources.yaml.j2`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/resources.yaml.j2) is
    templated with [minijinja](https://github.com/mitsuhiko/minijinja), then
    piped through `op inject` to resolve 1Password references
-   (`op://DevOps/1password-api/*`). The recipe decodes the vault's unpadded
-   base64url credentials to JSON before applying the `security-system`
-   Namespace and 1Password Connect Secret with `kubectl apply --server-side`.
+   (`op://DevOps/1password-api/*`). The recipe requires a resolved token
+   and decodes the vault's unpadded base64url credentials to a non-empty JSON
+   object. If injection or validation fails, it stops before applying the
+   Namespace and Secret or running Helmfile.
 
 2. **Helmfile sync**: [`kubernetes/bootstrap/helmfile.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/helmfile.yaml) installs
    11 foundation releases as a `needs` DAG. The recipe allows up to five sync
@@ -342,7 +344,7 @@ This runs `flate build ks` and does not apply resources. In contrast,
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| `op inject` fails with "not signed in" | 1Password session expired | `eval $(op signin)` then retry |
+| `op inject` fails | Network error, timeout, or expired 1Password session | Restore 1Password access; sign in again if required, then rerun bootstrap |
 | `talosctl apply-config` hangs | Node not in maintenance mode | Reboot into Talos ISO, verify network reachability |
 | "connection refused" to `k8s.homelab.internal:6443` | DNS not resolving or control plane not ready | Wait for etcd bootstrap; verify DNS record points to node IPs |
 | Helmfile sync fails on `cilium` | kube-proxy not disabled, conflicting iptables rules | Verify `KubeProxyConfig` has `enabled: false` in `10-general.yaml` |
