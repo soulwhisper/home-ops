@@ -27,6 +27,10 @@ spec:
               metadata:
                 name: storage-system.rbd.csi.ceph.com
               spec:
+                controllerPlugin:
+                  containerExtraArgs:
+                    csi-provisioner:
+                      - --feature-gates=CrossNamespaceVolumeDataSource=true
                 nodePlugin:
                   volumes:
                     - mount:

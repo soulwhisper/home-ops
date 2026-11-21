@@ -66,6 +66,16 @@ configuration:
     warn-version: latest
 ---
 apiVersion: v1alpha1
+kind: KubeAPIServerConfig
+extraArgs:
+  feature-gates: CrossNamespaceVolumeDataSource=true
+---
+apiVersion: v1alpha1
+kind: KubeControllerManagerConfig
+extraArgs:
+  feature-gates: CrossNamespaceVolumeDataSource=true
+---
+apiVersion: v1alpha1
 kind: KubeCoreDNSConfig
 enabled: false
 ---

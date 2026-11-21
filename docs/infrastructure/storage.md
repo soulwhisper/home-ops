@@ -171,6 +171,13 @@ A single cluster-scoped repository plus per-app resources generated from the `ba
 
 3. **`Restore`** (`${APP}-bootstrap`) + **`PVC`** (`${APP}`): the Restore is a passive volume populator, referenced by the working PVC's `dataSourceRef`. It selects the latest policy snapshot when available. The configured `onMissingSnapshot: Continue` also permits initial creation without a snapshot; a completed bootstrap is therefore not proof that old application data was restored. The resulting working PVC becomes the backup source.
 
+`nas` uses `execution.mode: Central`: backup and new-PVC restore movers read the
+repository credentials in `storage-system`. Application PVCs and their
+`SnapshotPolicy` and `Restore` objects stay in their application namespaces.
+For a backup, RBD provisions a temporary volume from the application's CSI
+snapshot through a per-snapshot `ReferenceGrant`. Kopiur hands a restored PV
+back to the application PVC without that cross-namespace data-source feature.
+
 ```
 ┌──────────────┐    periodic    ┌─────────────────┐   Kopia snapshot   ┌──────────────────┐
 │  Source PVC  │◄──────────────│ SnapshotSchedule │──────────────────►│ Synology VersityGW│
@@ -208,10 +215,10 @@ approved operation.
 kopiur backups target the Synology-hosted **VersityGW** S3 gateway at
 `http://nas.homelab.internal:9000`, in the dedicated `s3://kopiur` bucket.
 The bucket setup recipe is `just infra versity init` (with the endpoint set for
-the intended gateway). S3 credentials are sourced from 1Password through the
-`shared/` component: one `ExternalSecret` per consumer namespace materializes
-`kopiur-repository-secret` for its movers. The shared repository references the
-same Secret name in `storage-system`:
+the intended gateway). The `shared/` component reads credentials from
+1Password and materializes `kopiur-repository-secret` in each consumer
+namespace for cutover, rollback and restores into existing PVCs. Central movers
+use the repository's Secret in `storage-system`:
 
 ```
 ClusterRepository.spec.backend.s3:
@@ -221,6 +228,25 @@ encryption password: <1Password encryption-cipher.kopiur>
 AWS_ACCESS_KEY_ID:    <1Password app-user.admin_user>       (per-namespace ExternalSecret)
 AWS_SECRET_ACCESS_KEY:<1Password app-user.admin_pass>
 ```
+
+#### Central execution cutover
+
+- On an existing cluster, enable and verify `CrossNamespaceVolumeDataSource`
+  on every Talos API server and controller manager before Flux switches `nas`
+  to `Central`. RBD enables the same gate in `csi-provisioner`; Flux installs
+  the Gateway API CRDs and the provisioner's read-only `ReferenceGrant` RBAC
+  before updating the driver. Privileged movers require the Kopiur opt-in on
+  both the application and operator namespaces.
+- After the first backup cycle, check that all policies succeeded and their
+  `status.job.namespace` and `status.resolved.cache.claim.namespace` report
+  `storage-system`. Test a populator restore from an existing snapshot into a
+  new PVC and verify its data. A `NoSnapshotContinue` result is an empty volume,
+  not a data restore.
+- Keep application namespace Secret copies until pending in-namespace restores have
+  finished and the Central restore path is verified. In-place recovery into an
+  existing PVC still needs credentials in the application namespace.
+- Roll back by returning `nas` to `InNamespace` on the same Kopiur version.
+  Let in-flight Central work finish before removing the CSI or Talos gates.
 
 #### Monitoring
 

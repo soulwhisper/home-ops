@@ -8,3 +8,4 @@ resources:
   - ./ocirepository.yaml
   # utils
   - ./externalsecret.yaml
+  - ./rbac.yaml
