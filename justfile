@@ -12,9 +12,6 @@ export OPS_DIR := justfile_directory()
 export K8S_DIR := OPS_DIR / "kubernetes"
 export TALOS_DIR:= OPS_DIR / "infrastructure/talos"
 
-# KUBECONFIG := OPS_DIR / "infrastructure/talos/clusterconfig/kubeconfig"
-# TALOSCONFIG := OPS_DIR / "infrastructure/talos/clusterconfig/talosconfig"
-
 [private]
 default:
   just --list

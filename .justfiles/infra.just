@@ -64,16 +64,21 @@ versity mode:
   export AWS_SECRET_ACCESS_KEY
   for BUCKET in {{BUCKETS}}; do
     if [ "{{mode}}" = "init" ]; then
-      if aws --endpoint-url "{{AWS_ENDPOINT_URL}}" s3api head-bucket --bucket "${BUCKET}" 2>/dev/null; then
+      if result=$(aws --endpoint-url "{{AWS_ENDPOINT_URL}}" s3api head-bucket --bucket "${BUCKET}" 2>&1); then
         echo "ℹ️ Bucket ${BUCKET} already exists. Skipping."
       else
+        status=$?
+        if [[ "$result" != *"An error occurred (404) when calling the HeadBucket operation"* ]]; then
+          printf '%s\n' "$result" >&2
+          exit "$status"
+        fi
         echo "🚀 Creating bucket: ${BUCKET}"
         aws --endpoint-url "{{AWS_ENDPOINT_URL}}" s3api create-bucket --bucket "${BUCKET}"
         echo "✅ Created bucket: ${BUCKET}"
       fi
     elif [ "{{mode}}" = "reset" ]; then
       echo "🗑️ Deleting bucket: ${BUCKET}"
-      aws --endpoint-url "{{AWS_ENDPOINT_URL}}" s3api delete-bucket --bucket "${BUCKET}" || echo "⚠️ Failed to delete or not found"
+      aws --endpoint-url "{{AWS_ENDPOINT_URL}}" s3api delete-bucket --bucket "${BUCKET}"
     else
       echo "❌ Unknown mode: {{mode}}"
       exit 1

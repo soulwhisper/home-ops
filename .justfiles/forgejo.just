@@ -40,7 +40,11 @@ sync:
   if git ls-remote --exit-code --heads "$remote" main >/dev/null 2>&1; then
     git clone --quiet --depth 1 --branch main "$remote" "$work/repo"
   else
-    # Empty repo: start main from scratch.
+    status=$?
+    if [[ "$status" != 2 ]]; then
+      echo "Could not check the Forgejo main branch (git ls-remote exit $status)." >&2
+      exit "$status"
+    fi
     git init --quiet --initial-branch main "$work/repo"
     git -C "$work/repo" remote add origin "$remote"
   fi
