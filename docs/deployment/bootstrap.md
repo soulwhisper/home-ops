@@ -282,9 +282,10 @@ operator creates the root.
 Root patches set child reconciliation defaults and HelmRelease policies.
 For the 37 children labelled `config.home-ops.io/deps=infra`, they intentionally
 replace local dependency lists with cert-manager, onepassword-connect,
-rook-ceph-cluster, and kopiur; the lists are not merged. The managed-annotation
-patch also makes all children effectively `prune: true`, including
-flux-operator, flux-instance, and coredns despite their local `prune: false`.
+rook-ceph-cluster, and kopiur; the lists are not merged. Flux operator, Flux
+instance, and CoreDNS set `prune: false` in their own Kustomizations to retain
+their managed resources.
+
 See [Cluster Architecture](../infrastructure/kubernetes.md) for effective
 patching and deletion boundaries, the [Application Catalog](../application/catalog.md)
 for selected definitions, and [Storage](../infrastructure/storage.md) for
