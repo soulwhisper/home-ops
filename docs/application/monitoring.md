@@ -161,9 +161,12 @@ The exporter uses queued retry with 10 consumers, 5000 queue depth, and exponent
 
 ### AgentGateway metrics
 
-The `agentgateway.rules` recording group exposes
-`agentgateway:gen_ai_tokens:rate5m`, `agentgateway:requests:rate5m`,
-`agentgateway:mcp_requests:rate5m`, and `agentgateway:gen_ai_ttft:p95_5m`.
+The `agentgateway.rules` recording group exposes:
+
+- `agentgateway:gen_ai_tokens:rate5m` (`gen_ai_request_model`, `gen_ai_token_type`, `route`)
+- `agentgateway:requests:rate5m` and `agentgateway:mcp_requests:rate5m` (`route`, `status`)
+- `agentgateway:gen_ai_ttft:p95_5m` (`gen_ai_request_model`, `route`)
+
 TTFT is unavailable until a streamed response is shown to emit a usable
 timing sample. See the [TTFT recording-rule diagnosis](../diagnoses/agentgateway-ttft-recording-rule.md).
 

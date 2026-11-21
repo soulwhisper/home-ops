@@ -621,8 +621,11 @@ from automatic waves; it does not serialize merges or control Flux.
    `increase(kubelet_image_pull_duration_seconds_count[5m])`, Kopiur mover jobs,
    per-node `increase(etcd_server_proposals_failed_total[5m])` and WAL fsync
    P99, and `increase(apiserver_request_total{code=~"5.."}[5m])`.
-3. Wait for the affected Flux revision and Helm generations to converge and
-   for at least one clean 15-minute window before merging the next update.
+3. Record the merged PR's exact commit SHA. Require every affected Flux
+   Kustomization to have that SHA in `status.lastAppliedRevision` and
+   `Ready=True`, and every affected HelmRelease to have `Ready=True` with
+   `status.observedGeneration >= metadata.generation`. After those gates pass,
+   wait for a clean 15-minute window before merging the next update.
    Expected Pod replacement alone is not a stall. If etcd proposals fail, a
    controller loses its lease, or Ceph loses quorum or data redundancy, hold
    the next merge or drain. Capture the failed window before deciding whether
