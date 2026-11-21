@@ -37,9 +37,8 @@ concurrency setting limits each engine's batch, not all models together.
 - Preserve the 64K model ceiling for chat, persona, and Ornith; use a 32K
   client window for ordinary requests. A smaller ceiling does not reduce
   weight residency.
-- ComfyUI keeps its five-minute idle unload, disabled previews, and 8 GiB
-  headroom. Keep infrequent image weights demand-loaded rather than pinning
-  every LLM and image model together.
+- ComfyUI keeps its five-minute idle unload and disabled previews.
+  DynamicVRAM is not active on MPS.
 
 ## Model plan
 
