@@ -7,3 +7,10 @@ resources:
   - ./configmap.yaml
   - ./helmrelease.yaml
   - ./ocirepository.yaml
+configMapGenerator:
+  # The CSI operator watches the image-set reference, not the ConfigMap data.
+  - name: ceph-csi-image-set
+    literals:
+      - plugin=quay.io/cephcsi/cephcsi:v3.18.2
+configurations:
+  - ./name-reference.conf
