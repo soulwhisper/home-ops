@@ -15,17 +15,10 @@ content: |
   [plugins]
     [plugins."io.containerd.cri.v1.images"]
       discard_unpacked_layers = false
-      # Cap concurrent layer downloads at 1 (containerd default: 3) to bound
-      # image-pull I/O on the system NVMe. This bounds download parallelism
-      # only; unpack/decompress I/O remains. Local pull is preserved (layers
-      # are still kept: discard_unpacked_layers = false). kubelet
-      # maxParallelImagePulls is unchanged (still 2, KubeletConfig below).
+      # Limit per-image layer downloads to reduce peak I/O on the system NVMe.
       max_concurrent_downloads = 1
     [plugins."io.containerd.cri.v1.runtime"]
       device_ownership_from_security_context = true
-    [plugins."io.containerd.grpc.v1.cri"]
-      enable_unprivileged_ports = true
-      enable_unprivileged_icmp = true
 ---
 apiVersion: v1alpha1
 kind: ExtensionServiceConfig
@@ -197,18 +190,6 @@ kind: TimeSyncConfig
 ntp:
   servers:
     - 10.10.0.254
----
-apiVersion: v1alpha1
-kind: OOMConfig
-# v1.14 upstream defaults
-triggerExpression: |-
-  multiply_qos_vectors(d_qos_memory_full_total, {System: 8.0, Podruntime: 4.0}) > 3000.0 &&
-  multiply_qos_vectors(qos_memory_full_avg10, {System: 1.0, Podruntime: 1.0}) > 5.0 &&
-  time_since_trigger > duration("5s")
-cgroupRankingExpression: |-
-  memory_max.hasValue() ? 0.0 :
-  {Besteffort: 1.0, Burstable: 0.5, Guaranteed: 0.0, Podruntime: 0.0, System: 0.0}[class] *
-  double(memory_current.orValue(0u))
 ---
 apiVersion: v1alpha1
 kind: SecurityProfileConfig

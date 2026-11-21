@@ -237,10 +237,10 @@ Two steps, run sequentially:
    which uses `wait: false` so Cilium can render Hubble Relay before CoreDNS
    is ready. The configured Helm timeout is 600s per release.
 
-The bootstrap templates read chart URLs and tags from
-`kubernetes/apps/<namespace>/<release>/app/ocirepository.yaml` and values from
-the corresponding `app/helmrelease.yaml`. These are the original Flux app
-sources, not separate bootstrap copies:
+The bootstrap release template reads `.spec.url` and `.spec.ref.tag` from
+`kubernetes/apps/<namespace>/<release>/app/ocirepository.yaml`. Change the
+app's tag once to update both Flux and Helmfile. Helmfile reads values from
+the corresponding `app/helmrelease.yaml`:
 [`release.yaml.gotmpl`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/templates/release.yaml.gotmpl),
 [`values.yaml.gotmpl`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/templates/values.yaml.gotmpl),
 and [`default.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/default.yaml).
