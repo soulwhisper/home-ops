@@ -10,12 +10,13 @@ injection, configuration patching, node provisioning, and application delivery.
 
 | Tool | Purpose | Managed by |
 |------|---------|------------|
-| [`op`](https://1password.com/downloads/command-line/) | 1Password CLI — injects secrets into Talos and K8s configs | manual |
+| [`op`](https://1password.com/downloads/command-line/) | Injects secrets into Talos and Kubernetes configs | NixOS |
 | [`mise`](https://mise.jdx.dev/) | Runtime version manager — ensures correct tool versions | `.mise.toml` (repo root) |
 | [`talosctl`](https://www.talos.dev/docs/latest/talos-guides/install/talosctl/) | Talos node interaction | mise |
 | [`helmfile`](https://helmfile.readthedocs.io/) | Installs the foundation charts before Flux takes over | mise |
-| [`kubectl`](https://kubernetes.io/docs/tasks/tools/) | Kubernetes cluster interaction | mise |
-| [`just`](https://github.com/casey/just) | Task runner — orchestrates all bootstrap phases | mise |
+| [`helm`](https://helm.sh/) | Installs or upgrades releases for Helmfile | NixOS |
+| [`kubectl`](https://kubernetes.io/docs/tasks/tools/) | Kubernetes readiness and bootstrap resource creation | NixOS |
+| [`just`](https://github.com/casey/just), `yq`, `jq` | Recipe runner and credential decoding/validation | NixOS |
 
 All mise-managed tools auto-install on first use. `mise trust` (included in
 the justfile `env` recipe) signs off on the mise config.
@@ -204,18 +205,23 @@ to exist. It does not wait for `Ready`: Helmfile installs Cilium in the next pha
 ### Phase 5: Flux Bootstrap
 
 ```shell
-just _bootstrap_apps
+kubectl config current-context
+just bootstrap-apps
 ```
+
+Run this after Phase 4 against the intended cluster. If 1Password or Helmfile
+fails, fix the cause and run `just bootstrap-apps` again, not `just bootstrap`.
+This command does not provision Talos, bootstrap etcd, or fetch a kubeconfig.
 
 Two steps, run sequentially:
 
-1. **Bootstrap resources**: [`kubernetes/bootstrap/resources.yaml.j2`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/resources.yaml.j2) is
-   templated with [minijinja](https://github.com/mitsuhiko/minijinja), then
-   piped through `op inject` to resolve 1Password references
-   (`op://DevOps/1password-api/*`). The recipe requires a resolved token
-   and decodes the vault's unpadded base64url credentials to a non-empty JSON
-   object. If injection or validation fails, it stops before applying the
-   Namespace and Secret or running Helmfile.
+1. **Bootstrap Secret**: If `security-system/onepassword-connect` is missing,
+   `op inject` resolves the vault references in
+   [`kubernetes/bootstrap/onepassword-connect.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/onepassword-connect.yaml).
+   Injection has a 60-second deadline. Bootstrap requires a resolved token and
+   non-empty credential JSON before creating the missing Namespace and Secret.
+   If the Secret already exists, bootstrap skips 1Password and leaves it
+   unchanged. Use a separate credential rotation if that Secret is invalid.
 
 2. **Helmfile sync**: [`kubernetes/bootstrap/helmfile.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/helmfile.yaml) installs
    11 foundation releases as a `needs` DAG. The recipe allows up to five sync
@@ -305,7 +311,7 @@ just k8s render-ks media-apps moviepilot
 ```
 
 This runs `flate build ks` and does not apply resources. In contrast,
-`just k8s apply-ks <namespace> <name>`, `just _bootstrap_apps`, and
+`just k8s apply-ks <namespace> <name>`, `just bootstrap-apps`, and
 `just reconcile` mutate cluster state; they are not validation commands.
 
 ---
@@ -344,7 +350,7 @@ This runs `flate build ks` and does not apply resources. In contrast,
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| `op inject` fails | Network error, timeout, or expired 1Password session | Restore 1Password access; sign in again if required, then rerun bootstrap |
+| `op inject` fails in Phase 5 | Network error, timeout, or expired 1Password session | Restore 1Password access; sign in again if required, then run `just bootstrap-apps` |
 | `talosctl apply-config` hangs | Node not in maintenance mode | Reboot into Talos ISO, verify network reachability |
 | "connection refused" to `k8s.homelab.internal:6443` | DNS not resolving or control plane not ready | Wait for etcd bootstrap; verify DNS record points to node IPs |
 | Helmfile sync fails on `cilium` | kube-proxy not disabled, conflicting iptables rules | Verify `KubeProxyConfig` has `enabled: false` in `10-general.yaml` |

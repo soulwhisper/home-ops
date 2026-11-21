@@ -15,8 +15,6 @@ export TALOS_DIR:= OPS_DIR / "infrastructure/talos"
 # KUBECONFIG := OPS_DIR / "infrastructure/talos/clusterconfig/kubeconfig"
 # TALOSCONFIG := OPS_DIR / "infrastructure/talos/clusterconfig/talosconfig"
 
-minijinja_args := '--autoescape none --env --lstrip-blocks --trim-blocks'
-
 [private]
 default:
   just --list
@@ -54,30 +52,42 @@ bootstrap mode *targets:
   just talos _k8s_ready "${@:2}"
   echo "completed."
   echo "Bootstrapping Apps..."
-  just _bootstrap_apps
+  if ! just bootstrap-apps; then
+    echo "Retry the app phase with 'just bootstrap-apps'; do not rerun 'just bootstrap'." >&2
+    exit 1
+  fi
   echo "completed."
   echo "Cluster bootstrapped. Disable the temporary maintenance DHCP pool."
 
+[doc('Install or retry bootstrap apps on the current Kubernetes cluster')]
 [script]
-_template file:
-  minijinja-cli {{file}} {{minijinja_args}} | op inject
-
-[script]
-_bootstrap_apps:
-  rendered=$(just _template "{{K8S_DIR}}/bootstrap/resources.yaml.j2")
-  # The vault stores unpadded base64url; yq's @base64d reads the standard alphabet.
-  if ! resources=$(yq '(select(.kind == "Secret" and .metadata.namespace == "security-system" and .metadata.name == "onepassword-connect")).stringData."1password-credentials.json" |= (sub("-", "+") | sub("_", "/") | @base64d)' <<< "$rendered" 2>/dev/null) ||
-    ! yq -o=json 'select(.kind == "Secret" and .metadata.namespace == "security-system" and .metadata.name == "onepassword-connect").stringData' <<< "$resources" 2>/dev/null |
-      jq -es 'length == 1 and (.[0] |
-        (.token | type == "string" and test("^\\S+$") and . != "0" and (startswith("op://") | not)) and
-        (."1password-credentials.json" | fromjson | type == "object" and length > 0)
-      )' >/dev/null 2>&1; then
-    echo "1Password Connect requires a resolved token and a non-empty JSON credentials object; no resources applied." >&2
-    exit 1
+bootstrap-apps:
+  secret=$(kubectl --namespace security-system get secret onepassword-connect --ignore-not-found -o name)
+  if [[ -z "$secret" ]]; then
+    if ! rendered=$(timeout 60s op inject --in-file "{{K8S_DIR}}/bootstrap/onepassword-connect.yaml"); then
+      echo "1Password injection failed or timed out; no resources created." >&2
+      exit 1
+    fi
+    # The vault stores unpadded base64url; yq's @base64d reads the standard alphabet.
+    if ! resource=$(yq '.stringData."1password-credentials.json" |= (sub("-", "+") | sub("_", "/") | @base64d)' <<< "$rendered" 2>/dev/null) ||
+      ! yq -o=json '.' <<< "$resource" 2>/dev/null |
+        jq -es 'length == 1 and (.[0] |
+          .apiVersion == "v1" and .kind == "Secret" and
+          .metadata.namespace == "security-system" and .metadata.name == "onepassword-connect" and
+          (.stringData.token | type == "string" and test("^\\S+$") and . != "0" and (startswith("op://") | not)) and
+          (.stringData."1password-credentials.json" | fromjson | type == "object" and length > 0)
+        )' >/dev/null 2>&1; then
+      echo "1Password Connect requires a resolved token and a non-empty JSON credentials object; no resources created." >&2
+      exit 1
+    fi
+    namespace=$(kubectl get namespace security-system --ignore-not-found -o name)
+    if [[ -z "$namespace" ]]; then
+      kubectl create namespace security-system
+    fi
+    printf '%s\n' "$resource" | kubectl create -f -
   fi
   mise install helmfile
   helmfile_bin=$(mise which helmfile)
-  printf '%s\n' "$resources" | kubectl apply --server-side -f -
   echo "Syncing Helm Releases..."
   count=0; until "$helmfile_bin" --file "{{K8S_DIR}}/bootstrap/helmfile.yaml" sync --hide-notes; do
     count=$((count + 1))

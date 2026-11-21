@@ -485,10 +485,10 @@ These paths and namespace/name identities are part of the bootstrap contract. He
 
 ### Bootstrap Secret
 
-Before applying the Namespace and Secret, `just _bootstrap_apps` injects the
-1Password values into [`kubernetes/bootstrap/resources.yaml.j2`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/resources.yaml.j2)
-and validates the token and decoded credentials. A failed injection or invalid
-value stops bootstrap before it applies resources or runs Helmfile:
+`just bootstrap-apps` creates the Namespace and Secret only when missing.
+It validates the injected token and decoded credentials before creating either
+resource. If the Secret exists, the recipe skips 1Password and goes straight
+to Helmfile, without changing the Secret or repeating control-plane bootstrap:
 
 ```yaml
 apiVersion: v1
@@ -557,7 +557,7 @@ kubernetes/
 ├── bootstrap/                     # Pre-Flux cluster provisioning
 │   ├── helmfile.yaml              #   11-release bootstrap DAG
 │   ├── default.yaml               #   Release template inheritance
-│   ├── resources.yaml.j2          #   1Password Connect secret template
+│   ├── onepassword-connect.yaml   #   1Password Connect Secret source
 │   └── templates/                 #   Chart/tag and values bridges to app sources
 ├── components/                    # Reusable Kustomize Components
 │   ├── namespace/                 #   Namespace + alerts (10 consumers)
