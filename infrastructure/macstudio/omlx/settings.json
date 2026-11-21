@@ -12,6 +12,7 @@
     "opus_model": null,
     "sonnet_model": null,
     "haiku_model": null,
+    "desktop_enabled": false,
     "mode": "cloud"
   },
   "cache": {
@@ -30,6 +31,7 @@
   },
   "ui": {
     "dashboard_layout": null,
+    "custom_theme": null,
     "language": "zh"
   },
   "version": "1.0",
@@ -39,6 +41,7 @@
   },
   "scheduler": {
     "decode_fairness": true,
+    "concurrent_priority": "balanced",
     "prefill_priority": "context",
     "max_concurrent_requests": 2,
     "embedding_batch_size": 32,
@@ -70,6 +73,7 @@
     "opencode_model": null,
     "web_search_max_results": 3,
     "pi_model": null,
+    "vibe_model": null,
     "openclaw_tools_profile": "coding",
     "copilot_model": null,
     "dsh_model": null,
@@ -82,7 +86,13 @@
     "web_search_searxng_url": "",
     "markitdown_max_files_per_request": 5,
     "web_search_ddgs_backends": "",
-    "web_search_content_truncate": true
+    "web_search_content_truncate": true,
+    "splash_path": null,
+    "splash_kv_format": "int8",
+    "splash_activations": "bf16",
+    "splash_ane_prefill": true,
+    "splash_max_memory_gb": null,
+    "splash_ssd_cache_gb": null
   },
   "memory": {
     "prefill_safe_zone_ratio": 0.80000000000000004,
@@ -105,16 +115,17 @@
       "10.10.0.210"
     ],
     "gpu_keep_warm_interval": 0.5,
+    "gpu_keep_warm_idle_window": 300.0,
     "burst_decode_mode": "balanced",
     "distributed_inference_enabled": false,
     "max_image_upload_size": "50MB",
-    "qwen4_gdn_decode_wide_proj": false,
     "host": "0.0.0.0",
     "log_level": "info",
     "auto_start_on_launch": true,
     "preserve_mid_system_cache": true,
     "max_image_side_length": 2048,
     "max_audio_upload_size": "100MB",
+    "max_request_body_size": "512MB",
     "cors_origins": [
       "*"
     ],

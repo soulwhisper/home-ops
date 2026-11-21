@@ -475,10 +475,9 @@ Alignment table (keep in sync with the bootstrap downloads):
 | 6     | `reranker`  | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B          | `mlx-community/Qwen3-Reranker-0.6B-4bit`    | MLX, ~1.3G      | oMLX :8000 (`/v1/rerank`) |
 | 7     | `audio`     | `voxcpm2`                | VoxCPM2                      | `mlx-community/VoxCPM2-4bit`              | MLX 4bit        | oMLX :8000 (`/v1/audio/speech`) |
 
-oMLX aliases: `uncensored`, `persona`, `agent`, `omni`, `embedding`,
-`reranker`, `voice` (`voxcpm2`), and `image` (`qwen-image-2.1`, not
-discovered by oMLX 0.7). `persona` is the renamed 4-bit Orion conversion and
-is no longer consumed (dsh-tavern archived); it was consumed through `llm-persona-auth` / `llm_persona`.
+oMLX 0.8.2 serves `uncensored`, `persona`, `agent`, `omni`, `embedding`,
+`reranker`, and `voice` (`voxcpm2`). It does not discover `qwen-image-2.1`.
+`persona` is the renamed 4-bit Orion conversion and has no active consumer.
 
 oMLX reports context windows via `/v1/models`: `uncensored`/`persona`/`agent`
 65536, `omni`/`reranker` 40960, `embedding`/`voice` 32768. DSH provider
@@ -496,7 +495,7 @@ when a consumer appears; see Media lanes):
 
 | Studio dir (`~/models/`) | Model            | HF source                                 | Intended role |
 | ------------------------ | ---------------- | ----------------------------------------- | ------------- |
-| `qwen-image-2.1`         | Qwen-Image 2.1   | `abenzerps/Qwen-Image-2.1-Uncensored-GGUF` (ComfyUI int8 safetensors) | image gen (oMLX alias `image`; model type not discovered by oMLX 0.7, so inert) |
+| `qwen-image-2.1`         | Qwen-Image 2.1   | `abenzerps/Qwen-Image-2.1-Uncensored-GGUF` (ComfyUI int8 safetensors) | ComfyUI image generation |
 
 Host prerequisites (out of band): models present at `~/models/<folder>`
 with folder names exactly as the Studio id column (bootstrap
