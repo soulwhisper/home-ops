@@ -46,9 +46,8 @@ spec:
   values:
     operatorConfig:
       driverSpecDefaults:
-        # Use rook's image set
         imageSet:
-          name: rook-csi-operator-image-set-configmap
+          name: ceph-csi-image-set
         log:
           rotation:
             enabled: false
