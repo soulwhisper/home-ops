@@ -6,5 +6,7 @@ resources:
   # app
   - ./helmrelease.yaml
   - ./ocirepository.yaml
+  # Install the grant before the dependent driver enables cross-namespace provisioning.
+  - ./rbd-referencegrant-rbac.yaml
   # utils
   - ./externalsecret.yaml
