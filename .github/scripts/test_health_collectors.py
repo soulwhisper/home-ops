@@ -626,5 +626,75 @@ class CertificateTests(unittest.TestCase):
         self.assertEqual(run(self.fixture([]), collectors.CERT_EXPIRY)["status"], "error")
 
 
+class NodeDensityTests(unittest.TestCase):
+    query = "home-ops:node-density"
+    pod_query = ('sum by (node) (kube_pod_info{node=~"exarch.*"} unless on(namespace,pod) '
+                 '(kube_pod_status_phase{phase=~"Succeeded|Failed"} == 1))')
+    alloc_query = 'kube_node_status_allocatable{node=~"exarch.*",resource=~"pods|cpu|memory"}'
+    requests_query = ('sum by (node, resource) (kube_pod_container_resource_requests{node=~"exarch.*",'
+                      'resource=~"cpu|memory"} unless on(namespace,pod) '
+                      '(kube_pod_status_phase{phase=~"Succeeded|Failed"} == 1))')
+
+    def fixture(self):
+        nodes = ("exarch-01", "exarch-02", "exarch-03")
+        reader = FixtureReader({"/api/v1/nodes": [resource(node) for node in (*nodes, "other")]}, page_size=1)
+        reader.queries[self.pod_query] = [sample(69, node=node) for node in nodes]
+        reader.queries[self.alloc_query] = [
+            sample(value, node=node, resource=kind) for node in nodes
+            for kind, value in (("pods", 160), ("cpu", 19.95), ("memory", 100301099008))
+        ]
+        reader.queries[self.requests_query] = [
+            sample(value, node=node, resource=kind) for node in nodes
+            for kind, value in (("cpu", 6.107999999999991), ("memory", 31846338560))
+        ]
+        return reader
+
+    def test_valid_decimal_requests_and_exact_threshold_pass(self):
+        reader = self.fixture()
+        reader.queries[self.pod_query][-1] = sample(128, node="exarch-03")
+        outcome = run(reader, self.query)
+        self.assertEqual(outcome["status"], "pass")
+        rows = categories(outcome)["node_density"]["nodes"]
+        self.assertEqual({row["node"] for row in rows}, {"exarch-01", "exarch-02", "exarch-03"})
+        self.assertEqual(rows[-1]["requested"]["cpu"], 6.107999999999991)
+
+    def test_exceeding_each_dimension_is_a_finding(self):
+        for metric, index, value, dimension in (
+            (self.pod_query, -1, 129, "pods"),
+            (self.requests_query, -2, 16, "cpu"),
+            (self.requests_query, -1, 90_000_000_000, "memory"),
+        ):
+            with self.subTest(dimension=dimension):
+                reader = self.fixture()
+                row = reader.queries[metric][index]
+                reader.queries[metric][index] = sample(value, **row["metric"])
+                outcome = run(reader, self.query)
+                self.assertEqual(outcome["status"], "fail")
+                finding = categories(outcome)["node_density"]["representatives"][0]
+                self.assertEqual((finding["node"], finding["resource"]), ("exarch-03", dimension))
+
+    def test_incomplete_or_invalid_inputs_cannot_pass_or_report_saturation(self):
+        for case in ("missing_node", "missing_resource", "duplicate", "redacted", "zero_allocatable"):
+            with self.subTest(case=case):
+                reader = self.fixture()
+                requests = reader.queries[self.requests_query]
+                if case == "missing_node":
+                    for expression in (self.pod_query, self.alloc_query, self.requests_query):
+                        reader.queries[expression] = [
+                            row for row in reader.queries[expression] if row["metric"]["node"] != "exarch-03"]
+                elif case == "missing_resource":
+                    requests.pop()
+                elif case == "duplicate":
+                    requests.append(requests[-1])
+                elif case == "redacted":
+                    requests[-2] = sample("6.<CREDIT_CARD>", node="exarch-03", resource="cpu")
+                else:
+                    reader.queries[self.alloc_query][-1] = sample(0, node="exarch-03", resource="memory")
+                outcome = run(reader, self.query)
+                self.assertEqual(outcome["status"], "error")
+                self.assertFalse(categories(outcome)["node_density"]["coverage_complete"])
+                self.assertNotIn("<CREDIT_CARD>", outcome["rationale"])
+
+
 if __name__ == "__main__":
     unittest.main()

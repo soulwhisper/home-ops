@@ -605,3 +605,28 @@ major updates and infrastructure minor updates require manual merge, except
 for explicitly listed package exceptions. Merged application changes are
 picked up by Flux on its normal source and reconciliation intervals. These
 rules do not guarantee serialized rollouts or immediate convergence.
+
+### Gate disruptive rollout waves
+
+Merge Cilium, Tuppr, CNPG, Rook/Ceph, and Kopiur dependency updates one at a
+time. Do not overlap their rollout with a node upgrade, a bulk image pull, or
+a Kopiur mover wave. The manual Renovate merge gate excludes these updates
+from automatic waves; it does not serialize merges or control Flux.
+
+1. Before merging, check three Ready nodes, all etcd members reporting a
+   leader, all Ceph MONs in quorum, all OSDs up, and no degraded or undersized
+   PGs. Before a node drain, verify cachepool PGs have two host-separated
+   up/acting replicas. Do not proceed with missing telemetry.
+2. Record a 15-minute baseline. During the rollout correlate Pod starts,
+   `increase(kubelet_image_pull_duration_seconds_count[5m])`, Kopiur mover jobs,
+   per-node `increase(etcd_server_proposals_failed_total[5m])` and WAL fsync
+   P99, and `increase(apiserver_request_total{code=~"5.."}[5m])`.
+3. Record the merged PR's exact commit SHA. Require every affected Flux
+   Kustomization to have that SHA in `status.lastAppliedRevision` and
+   `Ready=True`, and every affected HelmRelease to have `Ready=True` with
+   `status.observedGeneration >= metadata.generation`. After those gates pass,
+   wait for a clean 15-minute window before merging the next update.
+   Expected Pod replacement alone is not a stall. If etcd proposals fail, a
+   controller loses its lease, or Ceph loses quorum or data redundancy, hold
+   the next merge or drain. Capture the failed window before deciding whether
+   reverting the PR is safer than waiting for the active wave to settle.
