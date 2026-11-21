@@ -2,6 +2,12 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   packageRules: [
     {
+      description: "Order SearXNG image tags by release date, not by commit hash",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/searxng/searxng"],
+      versioning: "regex:^(?<major>\\d{4})\\.(?<minor>\\d{1,2})\\.(?<patch>\\d{1,2})-[0-9a-f]{7,40}$",
+    },
+    {
       description: "Block intel-device-plugins-operator 0.37.x: invalid MutatingWebhookConfiguration (missing sideEffects/clientConfig/admissionReviewVersions) rejected by server-side apply; revisit on 0.38.x",
       matchDatasources: ["docker"],
       matchPackageNames: ["ghcr.io/intel/helm-charts/intel-device-plugins-operator"],
