@@ -4,15 +4,19 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &name flux-instance
-  annotations:
-    config.home-ops.io/managed: "true"
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *name
   targetNamespace: gitops-system
   path: ./kubernetes/apps/gitops-system/flux-instance/app
-  prune: false # Never delete this
+  interval: 1h
+  timeout: 5m
+  sourceRef:
+    kind: GitRepository
+    name: gitops-system
+    namespace: gitops-system
+  prune: false
   wait: true
   dependsOn:
     - name: flux-operator

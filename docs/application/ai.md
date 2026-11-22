@@ -409,7 +409,7 @@ Frigate is the 24/7 trigger layer AND the event describer: 0.18 native GenAI (`o
 ### Hindsight
 
 - AI memory / context store (agent long-term memory: retain / recall / reflect)
-- **Runs on the NAS**, not in the cluster: doco-cd stack `infrastructure/synology/hindsight` (postgres 18.6 + `ghcr.io/vectorize-io/hindsight:1.2.1-slim`). It holds the only dataset in the homelab that cannot be rebuilt from git, so it lives on the UPS-backed host that already receives the cluster's barman backups. Nothing in the cluster consumes its database any more; the CNPG role/database and the Flux app are gone.
+- **Runs on the NAS**, not in the cluster. The [doco-cd Compose file](../../infrastructure/synology/hindsight/docker-compose.yml) pins the app and PostgreSQL images. The UPS-backed NAS holds Hindsight's data and receives the cluster's Barman backups.
 - Consumers call `http://nas.homelab.internal:8888/mcp/<bank>` directly — hindsight speaks MCP natively, so the toolhive proxy tier that fronted it is archived with the app
 - **Auth**: Bearer on both REST and MCP, via the built-in tenant extension — `HINDSIGHT_API_TENANT_EXTENSION=hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension` plus `HINDSIGHT_API_TENANT_API_KEY` (sops env). Clients send `Authorization: Bearer <key>`; a missing or wrong key is `401`. One key covers both surfaces; there is no per-lane split, so it is shared out of band, not minted per consumer
 - **Defence in depth**: plain HTTP on a shared VLAN, no ingress route, no Authentik in front (the `memory.noirprime.com` forward-auth provider was removed with the app) — keep the NAS firewall rule allowing TCP/8888 only from the cluster node CIDRs (`10.10.0.101-103`)
@@ -475,10 +475,9 @@ Alignment table (keep in sync with the bootstrap downloads):
 | 6     | `reranker`  | `qwen3-reranker-0.6b`    | Qwen3-Reranker-0.6B          | `mlx-community/Qwen3-Reranker-0.6B-4bit`    | MLX, ~1.3G      | oMLX :8000 (`/v1/rerank`) |
 | 7     | `audio`     | `voxcpm2`                | VoxCPM2                      | `mlx-community/VoxCPM2-4bit`              | MLX 4bit        | oMLX :8000 (`/v1/audio/speech`) |
 
-oMLX aliases: `uncensored`, `persona`, `agent`, `omni`, `embedding`,
-`reranker`, `voice` (`voxcpm2`), and `image` (`qwen-image-2.1`, not
-discovered by oMLX 0.7). `persona` is the renamed 4-bit Orion conversion and
-is no longer consumed (dsh-tavern archived); it was consumed through `llm-persona-auth` / `llm_persona`.
+oMLX 0.8.2 serves `uncensored`, `persona`, `agent`, `omni`, `embedding`,
+`reranker`, and `voice` (`voxcpm2`). It does not discover `qwen-image-2.1`.
+`persona` is the renamed 4-bit Orion conversion and has no active consumer.
 
 oMLX reports context windows via `/v1/models`: `uncensored`/`persona`/`agent`
 65536, `omni`/`reranker` 40960, `embedding`/`voice` 32768. DSH provider
@@ -496,7 +495,7 @@ when a consumer appears; see Media lanes):
 
 | Studio dir (`~/models/`) | Model            | HF source                                 | Intended role |
 | ------------------------ | ---------------- | ----------------------------------------- | ------------- |
-| `qwen-image-2.1`         | Qwen-Image 2.1   | `abenzerps/Qwen-Image-2.1-Uncensored-GGUF` (ComfyUI int8 safetensors) | image gen (oMLX alias `image`; model type not discovered by oMLX 0.7, so inert) |
+| `qwen-image-2.1`         | Qwen-Image 2.1   | `abenzerps/Qwen-Image-2.1-Uncensored-GGUF` (ComfyUI int8 safetensors) | ComfyUI image generation |
 
 Host prerequisites (out of band): models present at `~/models/<folder>`
 with folder names exactly as the Studio id column (bootstrap
@@ -524,7 +523,7 @@ items:
 /v1/chat/completions  (strict API key)
             │  model:
             ├─ uncensored   (OPEN)    ─► qwen3.8-27b        ── open-webui
-            ├─ persona      (OPEN)    ─► orion-1.1-26b-a4b  ── dsh-tavern
+            ├─ persona      (OPEN)    ─► orion-1.1-26b-a4b
             ├─ agent        (guarded) ─► ornith-1.5-35b     ── holmes, automation
             ├─ omni         (guarded) ─► minicpm-o-4.5
 /v1/embeddings /v1/rerank /v1/audio/speech /v1/audio/transcriptions  (media: alias ─► override ─► folder id; audio: direct)

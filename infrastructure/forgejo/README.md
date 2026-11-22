@@ -5,7 +5,7 @@ Truth for the **static content** of the `homelab-tickets` repo on Forgejo
 
 | Dir | Syncs to | Content |
 |---|---|---|
-| `skills/` | `homelab-tickets/skills/` | Ticket conventions, acceptance criteria, lessons format |
+| `skills/` | `homelab-tickets/skills/` | Instructions for the lesson-writing agent invoked by Forgejo Actions on the runner, including shared ticket conventions and acceptance criteria |
 | `workflows/` | `homelab-tickets/.forgejo/workflows/` | Repo workflows (manual dispatch only — no cron, no auto-fixers) |
 
 **Not tracked here** (by design): the tickets themselves (Forgejo issues) and
@@ -83,11 +83,10 @@ recovery and recall.
 ## Runner
 
 The actions runner that executes these workflows is deployed on the NAS via
-doco-cd as part of the forgejo stack: `infrastructure/synology/forgejo/`
-(one compose project — the runner and its job containers share the stack
-network, where the forgejo service carries the `nas.homelab.internal` alias;
-same-host docker clients cannot use the LAN hairpin/fake-ip path). The live
-`register` flow never completed on the NAS, so the pre-registered runner
+doco-cd as part of `infrastructure/synology/forgejo/`. The Forgejo service owns
+the `nas.homelab.internal` Compose network alias so the runner and its job
+containers reach it directly without routing through the NAS LAN address.
+The live `register` flow never completed on the NAS, so the pre-registered runner
 identity (`FORGEJO_RUNNER_UUID`/`FORGEJO_RUNNER_TOKEN`) lives in
 `forgejo-runner.sops.env` (age key: doco-cd's NAS-side `sops_token`); the
 compose command writes `/data/.runner` from it on every start — git is the

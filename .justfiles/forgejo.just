@@ -37,10 +37,18 @@ sync:
   export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=http.extraHeader \
     GIT_CONFIG_VALUE_0="Authorization: token ${token}"
   remote="{{FORGEJO_URL}}/{{TICKETS_REPO}}.git"
-  if git ls-remote --exit-code --heads "$remote" main >/dev/null 2>&1; then
+  if diagnostic=$(git ls-remote --exit-code --heads "$remote" main 2>&1 >/dev/null); then
     git clone --quiet --depth 1 --branch main "$remote" "$work/repo"
   else
-    # Empty repo: start main from scratch.
+    status=$?
+    if [[ "$status" != 2 ]]; then
+      # A remote message or Git trace can include the header token.
+      if [[ -n "$diagnostic" ]]; then
+        printf '%s\n' "${diagnostic//"$token"/[redacted]}" >&2
+      fi
+      echo "Could not check the Forgejo main branch (git ls-remote exit $status)." >&2
+      exit "$status"
+    fi
     git init --quiet --initial-branch main "$work/repo"
     git -C "$work/repo" remote add origin "$remote"
   fi

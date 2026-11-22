@@ -135,13 +135,13 @@ The [FluxInstance configuration](https://github.com/soulwhisper/home-ops/blob/ma
 
 ## Strategic Patching System
 
-The `cluster-apps` Kustomization applies three strategic patches to its 98 child Flux Kustomizations. They are defined in [`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml); the effective configuration includes these patches, not just the local `ks.yaml`.
+The `cluster-apps` Kustomization applies three strategic patches to child Flux Kustomizations. They are defined in [`cluster.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/cluster/cluster.yaml); the effective configuration includes these patches, not just the local `ks.yaml`.
 
 ### Layer 1: Kustomization Defaults (managed annotation)
 
 **Target**: Any `Kustomization` with annotation `config.home-ops.io/managed=true`
 
-All 98 child Flux Kustomizations carry this annotation. The patch sets:
+The patch sets:
 
 ```yaml
 spec:
@@ -159,7 +159,7 @@ spec:
 `wait: true` in its own `ks.yaml` — an injected default would silently
 override it.
 
-These scalar values override local declarations. In particular, [`flux-operator`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-operator/ks.yaml), [`flux-instance`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/ks.yaml), and [`coredns`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/coredns/ks.yaml) declare `prune: false` locally, but all three have effective `prune: true`, as do all 98 children. The local value is not deletion protection; changes that remove a core Kustomization or alter its ownership must account for its effective prune behavior.
+[`flux-operator`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-operator/ks.yaml), [`flux-instance`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/gitops-system/flux-instance/ks.yaml), and [`coredns`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/kube-system/coredns/ks.yaml) omit the annotation and set `interval`, `timeout`, `sourceRef`, and `prune: false` in their own `ks.yaml`. Flux retains their managed resources when a manifest leaves the source or the child Kustomization is deleted.
 
 ### Layer 2: Baseline Infrastructure Dependencies (deps label)
 
@@ -213,8 +213,6 @@ spec:
     crds: CreateReplace
     strategy:
       name: RetryOnFailure
-    remediation:
-      retries: -1
   rollback:
     cleanupOnFail: true
   upgrade:
@@ -232,7 +230,7 @@ spec:
 Key behaviors this enforces cluster-wide:
 
 - **CRD lifecycle**: Helm creates/replaces CRDs included by the selected chart (`CreateReplace`).
-- **Install strategy**: `RetryOnFailure` retries failed installs; the patch also sets `install.remediation.retries: -1`.
+- **Install strategy**: `RetryOnFailure` retries a failed install with a Helm upgrade.
 - **Upgrade strategy**: `RemediateOnFailure` with 3 remediation retries and cleanup on failure.
 - **History hygiene**: `maxHistory: 1` and `keepHistory: false` prevent Helm release history accumulation.
 
@@ -485,7 +483,12 @@ These paths and namespace/name identities are part of the bootstrap contract. He
 
 ### Bootstrap Secret
 
-Before Helmfile runs, `just _bootstrap_apps` renders [`kubernetes/bootstrap/resources.yaml.j2`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/resources.yaml.j2), injects the 1Password values, decodes the credentials field, and applies the Namespace and Secret:
+If the Secret is missing, `just bootstrap-apps` runs `op inject` on
+[`kubernetes/bootstrap/onepassword-connect.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/onepassword-connect.yaml),
+decodes the credentials from base64url, and validates the token and JSON
+before creating the missing resources. If the Secret exists, the recipe skips
+1Password and runs Helmfile without changing the Secret or repeating
+control-plane bootstrap. The block below is the template, not the applied Secret:
 
 ```yaml
 apiVersion: v1
@@ -508,9 +511,7 @@ Two custom labels and an annotation drive the strategic patching and component i
 
 **Type**: Annotation
 **Purpose**: Opts a `Kustomization` into Layer 1 strategic patching (Kustomization defaults).
-**Scope**: All 98 child Flux Kustomizations in 73 `ks.yaml` files.
-
-Without this annotation, a Kustomization would not receive the automatic `sourceRef`, `prune`, `interval`, and `timeout` defaults. Infrastructure-only Kustomizations (like `flux-repositories`) omit it intentionally.
+**Scope**: Child Kustomizations that use the shared reconciliation defaults. Children without the annotation declare those fields in their own `ks.yaml`.
 
 ### `config.home-ops.io/deps: "infra"`
 
@@ -556,7 +557,7 @@ kubernetes/
 ├── bootstrap/                     # Pre-Flux cluster provisioning
 │   ├── helmfile.yaml              #   11-release bootstrap DAG
 │   ├── default.yaml               #   Release template inheritance
-│   ├── resources.yaml.j2          #   1Password Connect secret template
+│   ├── onepassword-connect.yaml   #   1Password Connect Secret source
 │   └── templates/                 #   Chart/tag and values bridges to app sources
 ├── components/                    # Reusable Kustomize Components
 │   ├── namespace/                 #   Namespace + alerts (10 consumers)

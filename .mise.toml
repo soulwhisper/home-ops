@@ -15,6 +15,8 @@ ROOK_CLUSTER_NAMESPACE = "storage-system"
 # talosctl must match the cluster's Talos major.minor (see infrastructure/talos/version.yaml)
 # renovate: datasource=github-releases depName=siderolabs/talos
 talosctl = "1.14.6"
+helmfile = "1.8.4"
 prek = "latest"
-"github:home-operations/flate" = "latest"
-"github:DNSControl/dnscontrol" = "latest"
+"github:home-operations/flate" = "0.8.0"
+"github:DNSControl/dnscontrol" = "5.10.1"
+kubeconform = "0.8.0"

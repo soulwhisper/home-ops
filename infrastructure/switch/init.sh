@@ -112,15 +112,15 @@ ip route-static 0.0.0.0 0 10.255.255.2
 bfd session init-mode active
 bgp 65000
  router-id 10.10.0.1
- timer keepalive 10 hold 30
+ timer keepalive 60 hold 180
  group k8s external
-  peer k8s bfd
-  peer k8s as-number 65100
-  peer k8s connect-interface vlan-interface 100
+ peer k8s as-number 65100
+ peer k8s connect-interface vlan-interface 100
+ peer k8s bfd
  peer 10.10.0.101 group k8s
  peer 10.10.0.102 group k8s
  peer 10.10.0.103 group k8s
- address-family ipv4
+ address-family ipv4 unicast
   peer k8s enable
 
 # LACP to K8S

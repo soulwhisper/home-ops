@@ -12,8 +12,6 @@ spec:
 
   values:
     fullnameOverride: *name
-    image:
-      registry: quay.io
     serviceMonitor:
       enabled: true
       relabelings:

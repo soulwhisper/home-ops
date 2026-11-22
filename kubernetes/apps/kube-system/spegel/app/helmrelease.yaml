@@ -38,8 +38,5 @@ spec:
       # registry-config apply regenerates the hosts dir and deletes spegel's
       # _default until the next spegel pod start (self-heals, DS restarts often).
       prependExisting: true
-    service:
-      registry:
-        hostPort: 29999
     serviceMonitor:
       enabled: true

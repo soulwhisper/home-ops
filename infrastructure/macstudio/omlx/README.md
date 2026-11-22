@@ -9,7 +9,7 @@ the source of truth for manual (re)deployment and drift reference.
 
 | File | Deploys to | Purpose |
 |---|---|---|
-| `settings.json` | `~/.omlx/settings.json` | Global server settings (secrets stripped) |
+| `settings.json` | `~/.omlx/settings.json` | Sanitized live export of global server settings (credentials replaced with placeholders) |
 | `model_settings.json` | `~/.omlx/model_settings.json` | Per-model aliases, TTLs, pinning, and sampling/context overrides |
 
 Intentionally **not** tracked: `stats.json`, `usage.sqlite3`, `logs/`,
@@ -19,15 +19,15 @@ re-downloadable from Hugging Face — see model ids in `docs/application/ai.md`)
 ## Shared-memory policy
 
 The server shares unified memory with ComfyUI. Pin a 50 GiB custom memory
-guard on the 64 GiB host, and keep the prefill guard, chunked prefill, and
-decode fairness enabled. The concurrency setting is a per-engine batch limit,
-not a global lock between models.
+guard on the 64 GiB host. Keep the prefill guard and chunked prefill enabled.
+Use `scheduler.concurrent_priority: balanced` for decode fairness; the
+concurrency setting limits each engine's batch, not all models together.
 
 - Limit each engine to two concurrent requests. Serialize image generation
   (`batch_size=1`) and avoid overlapping it with long LLM prefills.
 - Keep the SSD prefix cache enabled and the RAM hot cache disabled. GDN
-  sidecars retain FP32 precision; speculative decoding and ANE offload remain
-  disabled until separately measured.
+  sidecars retain FP32 precision; keep speculative decoding and native Qwen ANE
+  prefill disabled until measured separately.
 - Keep embeddings pinned. Reranking is on demand with a five-minute TTL.
   Persona unloads after thirty idle minutes, Ornith after twenty, MiniCPM-o
   after ten, and the chat model after five.
@@ -37,9 +37,16 @@ not a global lock between models.
 - Preserve the 64K model ceiling for chat, persona, and Ornith; use a 32K
   client window for ordinary requests. A smaller ceiling does not reduce
   weight residency.
-- ComfyUI keeps its five-minute idle unload, disabled previews, and 8 GiB
-  headroom. Keep infrequent image weights demand-loaded rather than pinning
-  every LLM and image model together.
+- ComfyUI keeps its five-minute idle unload and disabled previews.
+  DynamicVRAM is not active on MPS.
+
+In oMLX 0.8.2, `integrations.splash_ane_prefill: true` is the default prefill
+option for the external Splash engine, not a server-wide ANE toggle.
+`splash_path: null` allows launcher auto-discovery; it does not disable Splash.
+oMLX selects an external engine for an explicit per-model `external_engine`
+setting or a discovered GGUF model. Neither applies to the models served
+here, so the exported Splash prefill default is inactive. The separate
+`qwen35_ane_prefill_enabled` flag is `false` in every tracked model entry.
 
 ## Model plan
 
@@ -58,9 +65,7 @@ the studio id accepted by direct calls.
 | `image` | Image generation | `qwen-image-2.1` | 7B / int8 safetensors | 5m | no |
 
 `persona` is the renamed 4-bit Orion folder and is served through the
-agentgateway persona lane. oMLX 0.7 does not currently discover
-`qwen-image-2.1`, so its `image` alias is inert until that model type is
-served again.
+agentgateway persona lane. `qwen-image-2.1` is not discovered by oMLX 0.8.2.
 
 ## Initial restore
 
