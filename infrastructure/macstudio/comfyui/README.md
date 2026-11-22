@@ -37,10 +37,8 @@ any error.
    the idle helper uses the same `.venv`.
 
    ```bash
-   domain="gui/$(id -u)"
-   agents="$HOME/Library/LaunchAgents"
-   launchctl bootout "$domain/sh.comfyui.idle-offload" &&
-     launchctl bootout "$domain/sh.comfyui"
+   launchctl bootout "gui/$(id -u)/sh.comfyui.idle-offload" &&
+     launchctl bootout "gui/$(id -u)/sh.comfyui"
    ```
 
    Confirm both jobs are absent with `launchctl print` and port 8188 is no
@@ -49,7 +47,7 @@ any error.
 2. Keep the checkout at `~/ComfyUI`. Record the old commit and back up the
    working environment and user data. Do not reset or clean the checkout:
    leave `data/`, saved workflows, `input/`, `output/`, and model links in
-   place.
+   place. Save the backup path printed on success for rollback.
 
    ```bash
    cd "$HOME/ComfyUI" &&
@@ -57,7 +55,8 @@ any error.
      backup="$(mktemp -d "$HOME/Backups/comfyui-release.XXXXXX")" &&
      git rev-parse HEAD > "$backup/commit" &&
      ditto .venv "$backup/.venv" &&
-     ditto data/user "$backup/user"
+     ditto data/user "$backup/user" &&
+     printf '%s\n' "$backup"
    ```
 
 3. Switch to the recorded release and install from its requirements file
@@ -74,13 +73,13 @@ any error.
 4. Bootstrap the server first:
 
    ```bash
-   launchctl bootstrap "$domain" "$agents/sh.comfyui.plist"
+   launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/sh.comfyui.plist"
    ```
 
    Once `http://127.0.0.1:8188/queue` responds, bootstrap the helper:
 
    ```bash
-   launchctl bootstrap "$domain" "$agents/sh.comfyui.idle-offload.plist"
+   launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/sh.comfyui.idle-offload.plist"
    ```
 
    Check both jobs with `launchctl print` and run a saved workflow before
@@ -88,11 +87,13 @@ any error.
 
 **Rollback:** Keep submissions paused. Drain and boot out either agent still
 loaded, then verify neither job is loaded and port 8188 is no longer listening.
-In `~/ComfyUI`, switch back to the commit recorded in `$backup/commit`, move
-the failed `.venv` aside, and restore `$backup/.venv` to `.venv` with `ditto`.
-If the new version changed user data, move `data/user` aside and restore
-`$backup/user` to `data/user`. Bootstrap the same installed plists in the
-order above and verify the old release before resuming submissions.
+Use the exact backup directory printed in step 2; confirm it contains
+`commit`, `.venv`, and `user` before changing anything. In `~/ComfyUI`, switch
+back to the commit recorded there, move the failed `.venv` aside, and restore
+the backup's `.venv` with `ditto`. If the new version changed user data, move
+`data/user` aside and restore the backup's `user` to `data/user`. Bootstrap
+the same installed plists in the order above and verify the old release
+before resuming submissions.
 
 ## Lifecycle and memory
 
