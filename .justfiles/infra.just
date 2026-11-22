@@ -55,6 +55,15 @@ garage mode:
 [doc('Init/Reset Versity S3 Gateway'), no-exit-message]
 [script]
 versity mode:
+  aws_error_is() {
+    local diagnostic=$1 operation=$2 code=$3
+    local prefix='^[[:space:]]*(aws: \[ERROR\]: )?'
+    local summary="(An error occurred \(${code}\)|A client error \(${code}\) occurred)"
+    local suffix='( \(reached max retries: [0-9]+\))?:'
+    [[ "$diagnostic" =~ $prefix$summary" when calling the $operation operation"$suffix ]]
+  }
+
+  endpoint="{{AWS_ENDPOINT_URL}}"
   echo "🔐 Fetching Admin Credentials..."
   AWS_ACCESS_KEY_ID=$(just infra _op_get_secret "app-user" "admin_user")
   AWS_SECRET_ACCESS_KEY=$(just infra _op_get_secret "app-user" "admin_pass")
@@ -64,21 +73,30 @@ versity mode:
   export AWS_SECRET_ACCESS_KEY
   for BUCKET in {{BUCKETS}}; do
     if [ "{{mode}}" = "init" ]; then
-      if result=$(aws --endpoint-url "{{AWS_ENDPOINT_URL}}" s3api head-bucket --bucket "${BUCKET}" 2>&1); then
+      if result=$(aws --endpoint-url "$endpoint" s3api head-bucket --bucket "${BUCKET}" 2>&1 >/dev/null); then
         echo "ℹ️ Bucket ${BUCKET} already exists. Skipping."
       else
         status=$?
-        if [[ "$result" != *"An error occurred (404) when calling the HeadBucket operation"* ]]; then
+        if ! aws_error_is "$result" HeadBucket 404; then
           printf '%s\n' "$result" >&2
           exit "$status"
         fi
         echo "🚀 Creating bucket: ${BUCKET}"
-        aws --endpoint-url "{{AWS_ENDPOINT_URL}}" s3api create-bucket --bucket "${BUCKET}"
+        aws --endpoint-url "$endpoint" s3api create-bucket --bucket "${BUCKET}"
         echo "✅ Created bucket: ${BUCKET}"
       fi
     elif [ "{{mode}}" = "reset" ]; then
       echo "🗑️ Deleting bucket: ${BUCKET}"
-      aws --endpoint-url "{{AWS_ENDPOINT_URL}}" s3api delete-bucket --bucket "${BUCKET}"
+      if result=$(aws --endpoint-url "$endpoint" s3api delete-bucket --bucket "${BUCKET}" 2>&1 >/dev/null); then
+        continue
+      else
+        status=$?
+        if ! aws_error_is "$result" DeleteBucket NoSuchBucket; then
+          printf '%s\n' "$result" >&2
+          exit "$status"
+        fi
+        echo "ℹ️ Bucket ${BUCKET} already absent. Skipping."
+      fi
     else
       echo "❌ Unknown mode: {{mode}}"
       exit 1
