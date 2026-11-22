@@ -29,7 +29,7 @@ spec:
           app:
             image:
               repository: ghcr.io/searxng/searxng
-              tag: 2026.11.20-cd6d28091
+              tag: 2026.11.21-c6ee3e9fd
             env:
               SEARXNG_PORT: &port 8080
               SEARXNG_VALKEY_URL: "redis://:$(SEARXNG_VALKEY_PASSWORD)@searxng-dragonfly.selfhosted-apps.svc.cluster.local:6379"
