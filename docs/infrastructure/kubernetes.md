@@ -48,7 +48,7 @@ flowchart TB
     subgraph Components["Kustomize Components"]
         NS_COMP["namespace
         10 consumers"]
-        KOPIUR_MOVERS["kopiur
+        KOPIUR_MOVERS["kopiur/shared
         4 consumers"]
         KOPIUR_BACKUP["kopiur/backup
         8 consumers"]
@@ -322,9 +322,9 @@ metadata:
 
 The `name: _` is a Kustomize placeholder. The namespace index's `namespace:` transformer sets the actual Namespace name and namespaces the Alert and Provider; this is not Flux `postBuild` substitution.
 
-### Component: kopiur (4 consumers)
+### Component: kopiur/shared (4 consumers)
 
-**Path**: [`kubernetes/components/kopiur/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur)
+**Path**: [`kubernetes/components/kopiur/shared/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/shared)
 
 Adds `kopiur.home-operations.com/privileged-movers: "true"` to the application namespaces and `storage-system`. Kopiur checks both the workload namespace and the namespace running a Central mover when the mover needs root to preserve file ownership. The component creates no credentials. See [recovery and agent access](storage.md#recovery-and-agent-access) for the in-place restore exception.
 
@@ -561,7 +561,7 @@ kubernetes/
 │   └── templates/                 #   Chart/tag and values bridges to app sources
 ├── components/                    # Reusable Kustomize Components
 │   ├── namespace/                 #   Namespace + alerts (10 consumers)
-│   ├── kopiur/                    #   Privileged mover namespace opt-in (4 consumers)
+│   ├── kopiur/shared/             #   Privileged mover namespace opt-in (4 consumers)
 │   ├── kopiur/backup/             #   PVC backup pipeline (8 consumers)
 │   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (3 consumers)
 │   ├── authentik/                 #   SSO traffic policy (12 consumers)

@@ -5,7 +5,7 @@ kind: Kustomization
 namespace: selfhosted-apps
 components:
   - ../../components/namespace
-  - ../../components/kopiur
+  - ../../components/kopiur/shared
 resources:
   # storage
   - ./selfhosted-nfs/ks.yaml

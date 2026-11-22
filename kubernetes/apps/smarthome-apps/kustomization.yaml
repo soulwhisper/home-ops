@@ -5,7 +5,7 @@ kind: Kustomization
 namespace: smarthome-apps
 components:
   - ../../components/namespace
-  - ../../components/kopiur
+  - ../../components/kopiur/shared
 resources:
   # storage
   - ./smarthome-nfs/ks.yaml

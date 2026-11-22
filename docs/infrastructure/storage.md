@@ -155,9 +155,9 @@ are outside the Kubernetes PVC backup mechanism.
 [kopiur](https://github.com/home-operations/kopiur) (Kopia-native Rust operator)
 provides automated PVC backup and restore for **8 application definitions**; media, gaming and the archived self-hosted applications do not carry policies.
 The reusable components are
-[`backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
+[`kopiur/backup`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
 (referenced by each consumer's `ks.yaml`) and the namespace-level
-[`kopiur`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur)
+[`kopiur/shared`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/shared)
 component (used by the application namespaces and `storage-system` to allow
 privileged movers). All eight policies use the shared `ClusterRepository`
 `nas`; this count does not include every chart- or operator-created PVC.
