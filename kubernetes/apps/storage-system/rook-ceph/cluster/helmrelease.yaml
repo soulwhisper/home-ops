@@ -15,7 +15,8 @@ spec:
     csiDriverNamePrefix: *cluster_namespace
     operatorNamespace: *cluster_namespace
     cephImage:
-      tag: v20.2.5 # renovate: depName=quay.io/ceph/ceph datasource=docker
+      repository: quay.io/ceph/ceph
+      tag: v20.2.5
     monitoring:
       enabled: true
       createPrometheusRules: true

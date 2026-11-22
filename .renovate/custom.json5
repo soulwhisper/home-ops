@@ -3,6 +3,15 @@
   customManagers: [
     {
       customType: "regex",
+      description: ["Track the CSI plugin in the generated Ceph image set"],
+      managerFilePatterns: ["/^kubernetes\\/apps\\/storage-system\\/rook-ceph\\/drivers\\/kustomization\\.yaml$/"],
+      matchStrings: [
+        "(?:^|\\r?\\n)[ \\t]*-[ \\t]+plugin=(?<depName>quay\\.io/cephcsi/cephcsi):(?<currentValue>[^\\s#]+)",
+      ],
+      datasourceTemplate: "docker",
+    },
+    {
+      customType: "regex",
       description: "Process custom images and version fields",
       fileMatch: ["(^|/).+\\.yaml$"],
       matchStrings: [

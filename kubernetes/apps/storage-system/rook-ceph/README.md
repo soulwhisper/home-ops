@@ -18,9 +18,12 @@ the CSI data path works before Ceph rolls.
 
 After reconciliation, check MONs, OSDs and durable PGs, then test RBD and CephFS
 mounts and writes, RBD snapshot create/delete, and RGW reads and writes. Revert
-the pins before reconciliation if the window is cancelled. Once Ceph daemons
-have started upgrading, use the Ceph recovery procedure rather than assuming
-that reverting the image is a supported downgrade.
+the pins before reconciliation if the window is cancelled. If the rollout
+stalls after any Ceph daemon has upgraded, do not treat an image revert as a
+downgrade. Check the [cluster status and daemon pods](#troubleshooting-ceph-cli-access),
+then read `kubectl -n storage-system logs deploy/rook-ceph-operator --since=15m`.
+Use the [Rook Ceph troubleshooting guide](https://rook.io/docs/rook/v1.21/Troubleshooting/ceph-common-issues/#troubleshooting-techniques)
+to diagnose the reported symptom before changing any daemons or data.
 
 ## Troubleshooting: ceph CLI access
 
