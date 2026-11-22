@@ -240,8 +240,13 @@ AWS_SECRET_ACCESS_KEY:<1Password app-user.admin_pass>
 - Verify all eight policies succeed and their latest snapshots report
   `status.job.namespace` and `status.resolved.cache.claim.namespace` as
   `storage-system`.
-- Before removing the application credential copies, run the approved
-  [Central restore drill](#central-restore-drill).
+- Before removing the application credential copies, observe at least 24
+  hours of successful Central backups and confirm no in-namespace restores
+  are in flight, including pending restores and mover Jobs that can still
+  retry. Then run the approved [Central restore drill](#central-restore-drill).
+  Recheck that in-namespace restores have drained immediately before merging
+  the credential removal, and do not start new ones until Flux has pruned
+  the copies.
 - To roll back to `InNamespace`, restore the app namespace ExternalSecrets
   through Git and wait for `Ready=True` before switching `nas`. Let Central
   jobs finish before removing the CSI or Talos gates.
