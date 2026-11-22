@@ -66,3 +66,4 @@ nav:
       - Public Exposure: decisions/public-exposure.md
       - Workload Sandboxing: decisions/workload-sandboxing.md
       - Timezones: decisions/timezone.md
+      - Flux Sources: decisions/flux-source-strategy.md
