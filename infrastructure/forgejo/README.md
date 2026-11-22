@@ -83,10 +83,10 @@ recovery and recall.
 ## Runner
 
 The actions runner that executes these workflows is deployed on the NAS via
-doco-cd as part of the forgejo stack: `infrastructure/synology/forgejo/`
-(one Compose project — the runner and its job containers use the
-`nas.homelab.internal` network alias to reach Forgejo directly). The live
-`register` flow never completed on the NAS, so the pre-registered runner
+doco-cd as part of `infrastructure/synology/forgejo/`. The Forgejo service owns
+the `nas.homelab.internal` Compose network alias so the runner and its job
+containers reach it directly without routing through the NAS LAN address.
+The live `register` flow never completed on the NAS, so the pre-registered runner
 identity (`FORGEJO_RUNNER_UUID`/`FORGEJO_RUNNER_TOKEN`) lives in
 `forgejo-runner.sops.env` (age key: doco-cd's NAS-side `sops_token`); the
 compose command writes `/data/.runner` from it on every start — git is the

@@ -49,6 +49,7 @@ repos:
     hooks:
       - id: kubeconform
         name: kubeconform
+        # Use the host's Mike Farah yq, as the bootstrap recipes do.
         entry: >-
           bash -euo pipefail -c 'version=$(yq -er ".k8s_version" infrastructure/talos/version.yaml);
           exec mise exec kubeconform -- kubeconform -kubernetes-version "${version#v}" "$@"' --
@@ -66,5 +67,6 @@ repos:
         # Validate rendered component consumers, not their raw ${...} templates.
         # **/blueprints/ holds authentik blueprint entries — ConfigMap data with
         # no kind/apiVersion, never applied as k8s resources.
-        # Validate Flux Kustomizations after the root patches supply required fields.
+        # App ks.yaml can omit fields that cluster.yaml supplies. Check them in
+        # the CI Flux render instead of validating the incomplete source here.
         exclude: ^kubernetes/(bootstrap|components)/|/blueprints/|/ks\.yaml$

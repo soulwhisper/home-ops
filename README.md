@@ -22,7 +22,7 @@ The project strictly adheres to **Infrastructure as Code (IaC)** and **GitOps** 
 ### Key Characteristics
 
 - **Kubernetes on Metal:** Built on [Talos Linux](https://www.talos.dev) using M.2 NVMe storage, optimizing for performance and immutability.
-- **Networking:** A Layer 3 core switch uses BGP/BFD with [Cilium](https://github.com/cilium/cilium) on the Talos nodes.
+- **Networking:** The Layer 3 core switch peers with FRR-K8s over BGP/BFD. [Cilium](https://github.com/cilium/cilium) provides pod networking.
 - **Hybrid Storage:** Leveraging **Synology** for centralized NFS/S3 object storage alongside localized high-performance [Rook-Ceph](https://github.com/rook/rook) block storage.
 - **Automated Operations:** Powered by [Flux](https://github.com/fluxcd/flux2) for continuous delivery, [GitHub Actions](https://github.com/features/actions) for CI pipelines, and [Renovate](https://github.com/renovatebot/renovate) for dependency management.
 

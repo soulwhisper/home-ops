@@ -230,7 +230,7 @@ Two steps, run sequentially:
    |---------|-----------|-------|---------|
    | `prometheus-crds` | `monitoring-system` | — | Prometheus Operator CRDs |
    | `coredns` | `kube-system` | `prometheus-crds` | Cluster DNS (must exist before cilium renders hubble-relay) |
-   | `cilium` | `kube-system` | `coredns` | CNI, networking, BGP |
+   | `cilium` | `kube-system` | `coredns` | Pod networking (CNI) |
    | `spegel` | `kube-system` | `cilium` | P2P image distribution |
    | `gateway-api-crds` | `kube-system` | `spegel` | Gateway API CRDs |
    | `kgateway-crds` | `networking-system` | `gateway-api-crds` | kgateway CRDs |

@@ -523,7 +523,7 @@ items:
 /v1/chat/completions  (strict API key)
             │  model:
             ├─ uncensored   (OPEN)    ─► qwen3.8-27b        ── open-webui
-            ├─ persona      (OPEN)    ─► orion-1.1-26b-a4b  ── dsh-tavern
+            ├─ persona      (OPEN)    ─► orion-1.1-26b-a4b
             ├─ agent        (guarded) ─► ornith-1.5-35b     ── holmes, automation
             ├─ omni         (guarded) ─► minicpm-o-4.5
 /v1/embeddings /v1/rerank /v1/audio/speech /v1/audio/transcriptions  (media: alias ─► override ─► folder id; audio: direct)

@@ -9,7 +9,7 @@ the source of truth for manual (re)deployment and drift reference.
 
 | File | Deploys to | Purpose |
 |---|---|---|
-| `settings.json` | `~/.omlx/settings.json` | Global server settings (secrets stripped) |
+| `settings.json` | `~/.omlx/settings.json` | Sanitized live export of global server settings (credentials replaced with placeholders) |
 | `model_settings.json` | `~/.omlx/model_settings.json` | Per-model aliases, TTLs, pinning, and sampling/context overrides |
 
 Intentionally **not** tracked: `stats.json`, `usage.sqlite3`, `logs/`,
@@ -26,8 +26,8 @@ concurrency setting limits each engine's batch, not all models together.
 - Limit each engine to two concurrent requests. Serialize image generation
   (`batch_size=1`) and avoid overlapping it with long LLM prefills.
 - Keep the SSD prefix cache enabled and the RAM hot cache disabled. GDN
-  sidecars retain FP32 precision; speculative decoding and ANE offload remain
-  disabled until separately measured.
+  sidecars retain FP32 precision; keep speculative decoding and native Qwen ANE
+  prefill disabled until measured separately.
 - Keep embeddings pinned. Reranking is on demand with a five-minute TTL.
   Persona unloads after thirty idle minutes, Ornith after twenty, MiniCPM-o
   after ten, and the chat model after five.
@@ -39,6 +39,14 @@ concurrency setting limits each engine's batch, not all models together.
   weight residency.
 - ComfyUI keeps its five-minute idle unload and disabled previews.
   DynamicVRAM is not active on MPS.
+
+In oMLX 0.8.2, `integrations.splash_ane_prefill: true` is the default prefill
+option for the external Splash engine, not a server-wide ANE toggle.
+`splash_path: null` allows launcher auto-discovery; it does not disable Splash.
+oMLX selects an external engine for an explicit per-model `external_engine`
+setting or a discovered GGUF model. Neither applies to the models served
+here, so the exported Splash prefill default is inactive. The separate
+`qwen35_ane_prefill_enabled` flag is `false` in every tracked model entry.
 
 ## Model plan
 

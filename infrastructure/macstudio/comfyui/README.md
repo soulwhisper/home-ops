@@ -27,11 +27,72 @@ at [`v0.46.0`](https://github.com/Comfy-Org/ComfyUI/releases/tag/v0.46.0)
 (`a277b5bf213e8a44fa34817b7770b54f86ef4cea`). The existing `origin` uses
 `comfyanonymous/ComfyUI`, which redirects to the same repository.
 
-Fetch the release tag and install its `requirements.txt` with
-`uv pip install --compile-bytecode` before starting the low-priority
-LaunchAgent. Keep the current workflow, runtime data, and model links.
-Switch the checkout and `.venv` with the ComfyUI queue empty. Roll back by
-restoring the previous tag, virtual environment, user data, and LaunchAgent.
+Run this from the logged-in ComfyUI user's Mac Studio session, with the
+LaunchAgents installed at the paths above. Run the steps in order and stop on
+any error.
+
+1. Pause new WebUI and API submissions. Wait for both `queue_running` and
+   `queue_pending` to be empty in `http://127.0.0.1:8188/queue`. Then unload
+   both agents; the server's `KeepAlive` would otherwise restart it, and
+   the idle helper uses the same `.venv`.
+
+   ```bash
+   domain="gui/$(id -u)"
+   agents="$HOME/Library/LaunchAgents"
+   launchctl bootout "$domain/sh.comfyui.idle-offload" &&
+     launchctl bootout "$domain/sh.comfyui"
+   ```
+
+   Confirm both jobs are absent with `launchctl print` and port 8188 is no
+   longer listening before touching the checkout or `.venv`.
+
+2. Keep the checkout at `~/ComfyUI`. Record the old commit and back up the
+   working environment and user data. Do not reset or clean the checkout:
+   leave `data/`, saved workflows, `input/`, `output/`, and model links in
+   place.
+
+   ```bash
+   cd "$HOME/ComfyUI" &&
+     mkdir -p "$HOME/Backups" &&
+     backup="$(mktemp -d "$HOME/Backups/comfyui-release.XXXXXX")" &&
+     git rev-parse HEAD > "$backup/commit" &&
+     ditto .venv "$backup/.venv" &&
+     ditto data/user "$backup/user"
+   ```
+
+3. Switch to the recorded release and install from its requirements file
+   into the exact interpreter used by launchd.
+
+   ```bash
+   cd "$HOME/ComfyUI" &&
+     git fetch origin tag v0.46.0 &&
+     test "$(git rev-parse 'v0.46.0^{commit}')" = a277b5bf213e8a44fa34817b7770b54f86ef4cea &&
+     git switch --detach v0.46.0 &&
+     uv pip install --python "$HOME/ComfyUI/.venv/bin/python" --compile-bytecode -r requirements.txt
+   ```
+
+4. Bootstrap the server first:
+
+   ```bash
+   launchctl bootstrap "$domain" "$agents/sh.comfyui.plist"
+   ```
+
+   Once `http://127.0.0.1:8188/queue` responds, bootstrap the helper:
+
+   ```bash
+   launchctl bootstrap "$domain" "$agents/sh.comfyui.idle-offload.plist"
+   ```
+
+   Check both jobs with `launchctl print` and run a saved workflow before
+   resuming submissions.
+
+**Rollback:** Keep submissions paused. Drain and boot out either agent still
+loaded, then verify neither job is loaded and port 8188 is no longer listening.
+In `~/ComfyUI`, switch back to the commit recorded in `$backup/commit`, move
+the failed `.venv` aside, and restore `$backup/.venv` to `.venv` with `ditto`.
+If the new version changed user data, move `data/user` aside and restore
+`$backup/user` to `data/user`. Bootstrap the same installed plists in the
+order above and verify the old release before resuming submissions.
 
 ## Lifecycle and memory
 

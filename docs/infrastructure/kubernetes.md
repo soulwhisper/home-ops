@@ -483,10 +483,12 @@ These paths and namespace/name identities are part of the bootstrap contract. He
 
 ### Bootstrap Secret
 
-`just bootstrap-apps` creates the Namespace and Secret only when missing.
-It validates the injected token and decoded credentials before creating either
-resource. If the Secret exists, the recipe skips 1Password and goes straight
-to Helmfile, without changing the Secret or repeating control-plane bootstrap:
+If the Secret is missing, `just bootstrap-apps` runs `op inject` on
+[`kubernetes/bootstrap/onepassword-connect.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/bootstrap/onepassword-connect.yaml),
+decodes the credentials from base64url, and validates the token and JSON
+before creating the missing resources. If the Secret exists, the recipe skips
+1Password and runs Helmfile without changing the Secret or repeating
+control-plane bootstrap. The block below is the template, not the applied Secret:
 
 ```yaml
 apiVersion: v1
