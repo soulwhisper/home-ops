@@ -5,18 +5,9 @@ kind: Kustomization
 namespace: storage-system
 components:
   - ../../components/namespace
+  - ../../components/kopiur
 resources:
   - ./csi-driver-nfs/ks.yaml
   - ./rook-ceph/ks.yaml
   - ./snapshot-controller/ks.yaml
   - ./kopiur/ks.yaml
-patches:
-  - target:
-      kind: Namespace
-    patch: |-
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: storage-system
-        annotations:
-          kopiur.home-operations.com/privileged-movers: "true"

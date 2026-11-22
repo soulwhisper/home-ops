@@ -156,11 +156,11 @@ are outside the Kubernetes PVC backup mechanism.
 provides automated PVC backup and restore for **8 application definitions**; media, gaming and the archived self-hosted applications do not carry policies.
 The reusable components are
 [`backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
-(referenced by each consumer's `ks.yaml`) and
-[`mover-opt-in/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/mover-opt-in)
-(attached once per consumer namespace to allow privileged movers). They use
-one shared `ClusterRepository` named `nas`; this count does not include every
-chart- or operator-created PVC.
+(referenced by each consumer's `ks.yaml`) and the namespace-level
+[`kopiur`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur)
+component (used by the application namespaces and `storage-system` to allow
+privileged movers). All eight policies use the shared `ClusterRepository`
+`nas`; this count does not include every chart- or operator-created PVC.
 
 #### Architecture
 

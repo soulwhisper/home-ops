@@ -5,7 +5,7 @@ kind: Kustomization
 namespace: servitor-apps
 components:
   - ../../components/namespace
-  - ../../components/kopiur/mover-opt-in
+  - ../../components/kopiur
 resources:
   # storage
   - ./servitor-nfs/ks.yaml

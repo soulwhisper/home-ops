@@ -48,8 +48,8 @@ flowchart TB
     subgraph Components["Kustomize Components"]
         NS_COMP["namespace
         10 consumers"]
-        KOPIUR_MOVERS["kopiur/mover-opt-in
-        3 consumers"]
+        KOPIUR_MOVERS["kopiur
+        4 consumers"]
         KOPIUR_BACKUP["kopiur/backup
         8 consumers"]
         CACHE["cache
@@ -322,11 +322,11 @@ metadata:
 
 The `name: _` is a Kustomize placeholder. The namespace index's `namespace:` transformer sets the actual Namespace name and namespaces the Alert and Provider; this is not Flux `postBuild` substitution.
 
-### Component: kopiur/mover-opt-in (3 consumers)
+### Component: kopiur (4 consumers)
 
-**Path**: [`kubernetes/components/kopiur/mover-opt-in/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/mover-opt-in)
+**Path**: [`kubernetes/components/kopiur/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur)
 
-Adds `kopiur.home-operations.com/privileged-movers: "true"` for movers that need root to preserve arbitrary file ownership. It creates no credentials. The `nas` repository and its standing credentials are managed by `storage-system/kopiur-repository`; see [recovery and agent access](storage.md#recovery-and-agent-access) for the in-place exception.
+Adds `kopiur.home-operations.com/privileged-movers: "true"` to the application namespaces and `storage-system`. Kopiur checks both the workload namespace and the namespace running a Central mover when the mover needs root to preserve file ownership. The component creates no credentials. See [recovery and agent access](storage.md#recovery-and-agent-access) for the in-place restore exception.
 
 ### Component: kopiur/backup (8 consumers)
 
@@ -561,7 +561,7 @@ kubernetes/
 │   └── templates/                 #   Chart/tag and values bridges to app sources
 ├── components/                    # Reusable Kustomize Components
 │   ├── namespace/                 #   Namespace + alerts (10 consumers)
-│   ├── kopiur/mover-opt-in/       #   Privileged mover namespace opt-in (3 consumers)
+│   ├── kopiur/                    #   Privileged mover namespace opt-in (4 consumers)
 │   ├── kopiur/backup/             #   PVC backup pipeline (8 consumers)
 │   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (3 consumers)
 │   ├── authentik/                 #   SSO traffic policy (12 consumers)
