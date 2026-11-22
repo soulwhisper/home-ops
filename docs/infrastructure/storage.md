@@ -240,13 +240,74 @@ AWS_SECRET_ACCESS_KEY:<1Password app-user.admin_pass>
 - Verify all eight policies succeed and their latest snapshots report
   `status.job.namespace` and `status.resolved.cache.claim.namespace` as
   `storage-system`.
-- With approval, restore a known snapshot into a new disposable PVC in an
-  application namespace. Set `policy.onMissingSnapshot: Fail`, verify the
-  mover ran in `storage-system` and the claim bound, and read back a known
-  file. `NoSnapshotContinue` is an empty volume, not a data restore.
+- Before removing the application credential copies, run the approved
+  [Central restore drill](#central-restore-drill).
 - To roll back to `InNamespace`, restore the app namespace ExternalSecrets
   through Git and wait for `Ready=True` before switching `nas`. Let Central
   jobs finish before removing the CSI or Talos gates.
+
+#### Central restore drill
+
+Get operator approval for the exact source snapshot, destination namespace,
+and disposable resources, including cleanup. This example uses
+`smarthome-apps`. Replace `approved-snapshot-name` with a known successful
+Snapshot in that namespace and size the claim to fit. Confirm the drill
+`Restore` and PVC names are unused, then create them as new objects. Do not
+edit the Git-managed `${APP}-bootstrap` Restore or its PVC: the bootstrap
+allows `Continue` when no snapshot matches.
+
+```yaml
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Restore
+metadata:
+  name: kopiur-restore-drill
+  namespace: smarthome-apps
+spec:
+  source:
+    snapshotRef:
+      name: approved-snapshot-name
+  target:
+    populator: {}
+  policy:
+    onMissingSnapshot: Fail
+  options:
+    ignorePermissionErrors: false
+  mover:
+    privilegedMode: true
+    securityContext:
+      runAsUser: 0
+      runAsNonRoot: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kopiur-restore-drill
+  namespace: smarthome-apps
+spec:
+  storageClassName: ceph-block
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi
+  dataSourceRef:
+    apiGroup: kopiur.home-operations.com
+    kind: Restore
+    name: kopiur-restore-drill
+```
+
+Create a disposable reader pod mounting only the drill claim, read-only.
+`ceph-block` uses `WaitForFirstConsumer`, so create the reader before waiting
+for the claim to bind. Require `status.execution.namespace: storage-system`,
+`status.claims.kopiur-restore-drill.phase: Populated`, and a `Bound` PVC. Read
+back a known file and verify its expected contents without disclosing them.
+`NoSnapshotContinue` and `TargetAlreadyBound` are not restore evidence.
+
+Record the Restore UID and the drill PV name before cleanup. Delete the
+reader pod, then the drill `Restore` and PVC by exact name. Deleting the
+`Restore` cleans up its Central mover artifacts, not the bound drill claim.
+Verify that the reader, Restore, PVC, and its `Delete`-policy PV are gone,
+and that no Jobs or PVCs in `storage-system` remain with the drill's
+`kopiur.home-operations.com/restore-uid` label value.
 
 #### Recovery and agent access
 
