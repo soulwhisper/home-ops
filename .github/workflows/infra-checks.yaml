@@ -33,7 +33,7 @@ jobs:
       - name: Install dnscontrol
         uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
         with:
-          version: "2026.10.17"
+          version: "2026.11.12"
           install_args: github:DNSControl/dnscontrol
 
       - name: Run dnscontrol check
@@ -97,7 +97,7 @@ jobs:
       - name: Install talosctl
         uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
         with:
-          version: "2026.10.17"
+          version: "2026.11.12"
           install_args: talosctl
 
       - name: Render and validate machineconfigs
