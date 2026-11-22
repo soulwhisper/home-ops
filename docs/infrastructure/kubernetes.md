@@ -48,8 +48,8 @@ flowchart TB
     subgraph Components["Kustomize Components"]
         NS_COMP["namespace
         10 consumers"]
-        KOPIUR_SECRET["kopiur/shared
-        3 consumers"]
+        KOPIUR_MOVERS["kopiur/shared
+        4 consumers"]
         KOPIUR_BACKUP["kopiur/backup
         8 consumers"]
         CACHE["cache
@@ -322,11 +322,11 @@ metadata:
 
 The `name: _` is a Kustomize placeholder. The namespace index's `namespace:` transformer sets the actual Namespace name and namespaces the Alert and Provider; this is not Flux `postBuild` substitution.
 
-### Component: kopiur/shared (3 consumers)
+### Component: kopiur/shared (4 consumers)
 
 **Path**: [`kubernetes/components/kopiur/shared/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/shared)
 
-Combines the shared kopiur namespace resources. It patches the namespace with `kopiur.home-operations.com/privileged-movers: "true"` for uid-0/DAC_OVERRIDE backup movers, and injects a namespace-level `ExternalSecret` that pulls the kopia repository password and S3 access keys (NAS VersityGW) from 1Password into the `kopiur-repository-secret` Secret. The shared `ClusterRepository` itself lives with the kopiur app at `kubernetes/apps/storage-system/kopiur/repository/clusterrepository.yaml`.
+Adds `kopiur.home-operations.com/privileged-movers: "true"` to the application namespaces and `storage-system`. Kopiur checks both the workload namespace and the namespace running a Central mover when the mover needs root to preserve file ownership. The component creates no credentials. See [recovery and agent access](storage.md#recovery-and-agent-access) for the in-place restore exception.
 
 ### Component: kopiur/backup (8 consumers)
 
@@ -561,7 +561,7 @@ kubernetes/
 │   └── templates/                 #   Chart/tag and values bridges to app sources
 ├── components/                    # Reusable Kustomize Components
 │   ├── namespace/                 #   Namespace + alerts (10 consumers)
-│   ├── kopiur/shared/             #   Namespace-level kopia repo credentials (3 consumers)
+│   ├── kopiur/shared/             #   Privileged mover namespace opt-in (4 consumers)
 │   ├── kopiur/backup/             #   PVC backup pipeline (8 consumers)
 │   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (3 consumers)
 │   ├── authentik/                 #   SSO traffic policy (12 consumers)

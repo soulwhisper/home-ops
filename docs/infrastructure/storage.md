@@ -155,11 +155,12 @@ are outside the Kubernetes PVC backup mechanism.
 [kopiur](https://github.com/home-operations/kopiur) (Kopia-native Rust operator)
 provides automated PVC backup and restore for **8 application definitions**; media, gaming and the archived self-hosted applications do not carry policies.
 The reusable components are
-[`backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
-(referenced by each consumer's `ks.yaml`) and
-[`shared/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/shared)
-(attached once per consumer namespace). They use one shared `ClusterRepository`
-named `nas`; this count does not include every chart- or operator-created PVC.
+[`kopiur/backup`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
+(referenced by each consumer's `ks.yaml`) and the namespace-level
+[`kopiur/shared`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/shared)
+component (used by the application namespaces and `storage-system` to allow
+privileged movers). All eight policies use the shared `ClusterRepository`
+`nas`; this count does not include every chart- or operator-created PVC.
 
 #### Architecture
 
@@ -215,17 +216,16 @@ approved operation.
 kopiur backups target the Synology-hosted **VersityGW** S3 gateway at
 `http://nas.homelab.internal:9000`, in the dedicated `s3://kopiur` bucket.
 The bucket setup recipe is `just infra versity init` (with the endpoint set for
-the intended gateway). The `shared/` component reads credentials from
-1Password and materializes `kopiur-repository-secret` in each consumer
-namespace for cutover, rollback and restores into existing PVCs. Central movers
-use the repository's Secret in `storage-system`:
+the intended gateway). The repository's `ExternalSecret` reads credentials
+from 1Password and materializes `kopiur-repository-secret` in `storage-system`.
+Application namespaces do not have standing copies.
 
 ```
 ClusterRepository.spec.backend.s3:
   bucket:   kopiur             # repository at bucket root
   endpoint: nas.homelab.internal:9000   (TLS disabled, LAN)
 encryption password: <1Password encryption-cipher.kopiur>
-AWS_ACCESS_KEY_ID:    <1Password app-user.admin_user>       (per-namespace ExternalSecret)
+AWS_ACCESS_KEY_ID:    <1Password app-user.admin_user>
 AWS_SECRET_ACCESS_KEY:<1Password app-user.admin_pass>
 ```
 
@@ -237,16 +237,123 @@ AWS_SECRET_ACCESS_KEY:<1Password app-user.admin_pass>
   the Gateway API CRDs and the provisioner's read-only `ReferenceGrant` RBAC
   before updating the driver. Privileged movers require the Kopiur opt-in on
   both the application and operator namespaces.
-- After the first backup cycle, check that all policies succeeded and their
-  `status.job.namespace` and `status.resolved.cache.claim.namespace` report
-  `storage-system`. Test a populator restore from an existing snapshot into a
-  new PVC and verify its data. A `NoSnapshotContinue` result is an empty volume,
-  not a data restore.
-- Keep application namespace Secret copies until pending in-namespace restores have
-  finished and the Central restore path is verified. In-place recovery into an
-  existing PVC still needs credentials in the application namespace.
-- Roll back by returning `nas` to `InNamespace` on the same Kopiur version.
-  Let in-flight Central work finish before removing the CSI or Talos gates.
+- Verify all eight policies succeed and their latest snapshots report
+  `status.job.namespace` and `status.resolved.cache.claim.namespace` as
+  `storage-system`.
+- Before removing the application credential copies, observe at least 24
+  hours of successful Central backups and confirm no in-namespace restores
+  are in flight, including pending restores and mover Jobs that can still
+  retry. Then run the approved [Central restore drill](#central-restore-drill).
+  Recheck that in-namespace restores have drained immediately before merging
+  the credential removal, and do not start new ones until Flux has pruned
+  the copies.
+- To roll back to `InNamespace`, restore the app namespace ExternalSecrets
+  through Git and wait for `Ready=True` before switching `nas`. Let Central
+  jobs finish before removing the CSI or Talos gates.
+
+#### Central restore drill
+
+Get operator approval for the exact source snapshot, destination namespace,
+and disposable resources, including cleanup. This example uses
+`smarthome-apps`. Replace `approved-snapshot-name` with a known successful
+Snapshot in that namespace and size the claim to fit. Confirm the drill
+`Restore` and PVC names are unused, then create them as new objects. Do not
+edit the Git-managed `${APP}-bootstrap` Restore or its PVC: the bootstrap
+allows `Continue` when no snapshot matches.
+
+```yaml
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Restore
+metadata:
+  name: kopiur-restore-drill
+  namespace: smarthome-apps
+spec:
+  source:
+    snapshotRef:
+      name: approved-snapshot-name
+  target:
+    populator: {}
+  policy:
+    onMissingSnapshot: Fail
+  options:
+    ignorePermissionErrors: false
+  mover:
+    privilegedMode: true
+    securityContext:
+      runAsUser: 0
+      runAsNonRoot: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kopiur-restore-drill
+  namespace: smarthome-apps
+spec:
+  storageClassName: ceph-block
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi
+  dataSourceRef:
+    apiGroup: kopiur.home-operations.com
+    kind: Restore
+    name: kopiur-restore-drill
+```
+
+Create a disposable reader pod mounting only the drill claim, read-only.
+`ceph-block` uses `WaitForFirstConsumer`, so create the reader before waiting
+for the claim to bind. Require `status.execution.namespace: storage-system`,
+`status.claims.kopiur-restore-drill.phase: Populated`, and a `Bound` PVC. Read
+back a known file and verify its expected contents without disclosing them.
+`NoSnapshotContinue` and `TargetAlreadyBound` are not restore evidence.
+
+Record the Restore UID and the drill PV name before cleanup. Delete the
+reader pod, then the drill `Restore` and PVC by exact name. Deleting the
+`Restore` cleans up its Central mover artifacts, not the bound drill claim.
+Verify that the reader, Restore, PVC, and its `Delete`-policy PV are gone,
+and that no Jobs or PVCs in `storage-system` remain with the drill's
+`kopiur.home-operations.com/restore-uid` label value.
+
+#### Recovery and agent access
+
+Restore to a new PVC by default. Verify its contents before switching the
+application, keep the original for rollback, and update the backup policy
+to point at the replacement claim. Do not delete the original to reuse its
+name: `ceph-block` defaults to reclaim policy `Delete`.
+
+The ops agent's cluster access is read-only. Keep repository credentials and
+restore execution off that path. Any future automatic backup trigger must
+validate the namespace and policy against an allowlist at the executor. A
+restore requires approval of the source snapshot and destination namespace
+and claim, even for a disposable PVC: the destination can expose the data.
+Cutover, in-place writes, and temporary credentials require explicit operator
+approval. Central placement changes where movers run, not who can request
+a restore from `nas`.
+
+For an approved in-place restore (`target.pvcRef`), the mover runs beside the
+existing claim. Stage credentials only in that namespace, reusing the
+repository ExternalSecret manifest from the repository root. This example
+targets `smarthome-apps`; use only the application namespace named in the
+approval for both creation and cleanup.
+
+```sh
+kubectl -n smarthome-apps apply --server-side -f kubernetes/apps/storage-system/kopiur/repository/externalsecret.yaml
+kubectl -n smarthome-apps wait --for=condition=Ready externalsecret/kopiur-repository --timeout=2m
+```
+
+Stop writers and preserve a rollback copy before whole-volume recovery.
+In-place writes are not atomic across files; extra files remain unless
+`options.enableFileDeletion` is set. Once the mover has stopped, delete the
+temporary ExternalSecret and confirm its owned Secret is gone:
+
+```sh
+kubectl -n smarthome-apps delete externalsecret kopiur-repository --cascade=foreground --timeout=2m
+kubectl -n smarthome-apps get secret kopiur-repository-secret --ignore-not-found -o name
+```
+
+The final command should print nothing. Do not use `storage-system` as the
+target of these commands. Kopiur credential projection stays disabled; the
+operator does not need cluster-wide Secret write access for this procedure.
 
 #### Monitoring
 
