@@ -32,9 +32,8 @@ spec:
           app:
             image:
               repository: ghcr.io/soulwhisper/mcp-guardrails
-              # 1.4.0: LoopRule only matches the newest fingerprint, so an old
-              # retry triad cannot lock every later tool call in the trace.
-              tag: 1.4.0
+              # Pin the exact image so retagging cannot change what runs.
+              tag: 1.4.1@sha256:dfc2564c89370335f2da33c158da0fa62747fba5ef1e1175e9fb85d4ae584fa5
             env:
               # App is OTLP/gRPC-only (guardrails/otel.py proto.grpc exporters,
               # insecure derived from the http:// scheme). gRPC must go to :4317;
