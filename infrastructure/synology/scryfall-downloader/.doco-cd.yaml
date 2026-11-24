@@ -1,0 +1,3 @@
+---
+# An upstream Scryfall outage cannot be fixed by restarting the downloader.
+reconciliation: false

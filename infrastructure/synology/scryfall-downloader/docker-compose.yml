@@ -1,44 +1,64 @@
 ---
 name: scryfall-downloader
 
+x-downloader: &downloader
+  image: &image "ghcr.io/soulwhisper/scryfall-downloader:v0.2.0@sha256:fc925de38dcdabf7183b8a6cd8e58dc4c1ed84dad5bb1f1e6d8c33d671378a2f"
+  user: &owner "1026:101"
+  volumes:
+    - "state:/data"
+    - type: bind
+      source: /volume1/backup/mtg/forge_imgs/pics
+      target: /data/pics
+      bind:
+        create_host_path: false
+  configs:
+    - source: downloader-checks
+      target: /scryfall-checks.py
+  read_only: true
+  cap_drop: ["ALL"]
+  security_opt: ["no-new-privileges:true"]
+
 services:
+  state-init:
+    image: *image
+    user: "0:0"
+    restart: "no"
+    network_mode: "none"
+    # The image seeds /data as 10001:10001. Never mount the Forge library here.
+    volumes: ["state:/data"]
+    entrypoint: ["chown", "-hR", "-P", *owner, "/data"]
+    read_only: true
+    cap_drop: ["ALL"]
+    cap_add: ["CHOWN"]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: "64m"
+
+  preflight:
+    <<: *downloader
+    restart: "no"
+    network_mode: "none"
+    depends_on:
+      state-init:
+        condition: service_completed_successfully
+    entrypoint: ["python", "/scryfall-checks.py", "preflight"]
+    mem_limit: "64m"
+
   scryfall-downloader:
-    image: "ghcr.io/soulwhisper/scryfall-downloader:v0.1.0@sha256:dd060d07b66e124c9eb83fc041ab0fb60fe23714b4b410642fa3dd2cfd321bda"
+    <<: *downloader
     container_name: "scryfall-downloader"
     restart: "unless-stopped"
     stop_grace_period: 30s
-    user: "10001:10001"
+    depends_on:
+      preflight:
+        condition: service_completed_successfully
     ports:
       # The REST API is unauthenticated; publish only on the NAS LAN address.
       - "10.10.0.100:8765:8765/tcp"
-    volumes:
-      - "state:/data"
-      - type: bind
-        source: /volume1/backup/mtg/forge_imgs/pics
-        target: /data/pics
-        bind:
-          create_host_path: false
-    read_only: true
-    cap_drop:
-      - "ALL"
-    security_opt:
-      - "no-new-privileges:true"
     mem_limit: "512m"
     healthcheck:
-      test:
-        - "CMD"
-        - "python"
-        - "-c"
-        - >-
-          import os, urllib.request;
-          from pathlib import Path;
-          pics = Path('/data/pics');
-          assert pics.is_dir() and all(os.access(p, os.W_OK | os.X_OK)
-          for p in (pics, pics / 'cards', pics / 'tokens') if p.exists()),
-          'Forge image directories must be writable';
-          urllib.request.urlopen('http://127.0.0.1:8765/jobs', timeout=3).close()
-      interval: 30s
-      timeout: 5s
+      test: ["CMD", "python", "/scryfall-checks.py", "health"]
+      interval: 60s
+      timeout: 10s
       retries: 3
       start_period: 10s
     logging:
@@ -47,3 +67,7 @@ services:
 
 volumes:
   state: {}
+
+configs:
+  downloader-checks:
+    file: ./checks.py

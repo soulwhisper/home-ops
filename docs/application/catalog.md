@@ -151,10 +151,17 @@ Forge reads sibling `cards/` and `tokens/` folders under the NAS library
 `tmsh` for `tokens/MSH/`. SQLite job state and metadata use a separate Docker
 volume.
 
-The library must already exist, and container UID/GID `10001:10001` needs
-write and traverse access to the folders it updates. Downloader `v0.1.0`
-creates images with mode `0600`; verify that the Forge client can read new
-files through its NAS share permissions or UID mapping.
+The library and its `cards/` and `tokens/` folders must already exist and be
+readable and writable by UID `1026`, GID `101`. Startup prepares ownership of
+the separate state volume, then verifies create, chmod, rename, read, and cleanup
+on the mounted directories as the downloader identity. It does not chown the
+NAS image library. Downloader `v0.2.0` writes new images with mode `0644`.
+
+The container healthcheck probes the local `/jobs` endpoint and the Scryfall
+REST API once per minute. If unhealthy, check the Docker health output to
+distinguish local API failure from an upstream timeout or HTTP error. doco-cd
+health-triggered restarts are disabled for this stack; Docker still restarts
+the downloader if its process exits.
 
 External cron callers such as Hermes on `nix-ops` can use
 `http://nas.homelab.internal:8765/jobs` directly. The API has no authentication;
