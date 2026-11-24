@@ -144,6 +144,31 @@ Managed by [doco-cd](https://github.com/soulwhisper/home-ops/tree/main/infrastru
 | App | Purpose |
 | --- | --- |
 | [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/hindsight/docker-compose.yml) | AI memory service (moved out of the cluster; data lives on the NAS) |
+| [Scryfall Downloader](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/scryfall-downloader/docker-compose.yml) | Magic card and token images for Forge |
+
+Forge reads sibling `cards/` and `tokens/` folders under the NAS library
+`/volume1/backup/mtg/forge_imgs/pics`. Request `msh` for `cards/MSH/` and
+`tmsh` for `tokens/MSH/`. SQLite job state and metadata use a separate Docker
+volume.
+
+The library must already exist, and container UID/GID `10001:10001` needs
+write and traverse access to the folders it updates. Downloader `v0.1.0`
+creates images with mode `0600`; verify that the Forge client can read new
+files through its NAS share permissions or UID mapping.
+
+The REST API listens on NAS loopback only. Access it through an SSH tunnel:
+
+```sh
+ssh -N -L 8765:127.0.0.1:8765 nas.homelab.internal
+```
+
+In another terminal:
+
+```sh
+curl --fail-with-body http://127.0.0.1:8765/jobs \
+  -H 'Content-Type: application/json' \
+  -d '{"sets":["msh","tmsh"]}'
+```
 
 ## servitor-apps — AI Infrastructure (17)
 

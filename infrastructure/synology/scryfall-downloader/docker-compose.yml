@@ -1,0 +1,49 @@
+---
+name: scryfall-downloader
+
+services:
+  scryfall-downloader:
+    image: "ghcr.io/soulwhisper/scryfall-downloader:v0.1.0@sha256:dd060d07b66e124c9eb83fc041ab0fb60fe23714b4b410642fa3dd2cfd321bda"
+    container_name: "scryfall-downloader"
+    restart: "unless-stopped"
+    stop_grace_period: 30s
+    user: "10001:10001"
+    # Bind the unauthenticated API directly to loopback, not Docker's port publisher.
+    network_mode: "host"
+    command: ["--bind", "127.0.0.1"]
+    volumes:
+      - "state:/data"
+      - type: bind
+        source: /volume1/backup/mtg/forge_imgs/pics
+        target: /data/pics
+        bind:
+          create_host_path: false
+    read_only: true
+    cap_drop:
+      - "ALL"
+    security_opt:
+      - "no-new-privileges:true"
+    mem_limit: "512m"
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - >-
+          import os, urllib.request;
+          from pathlib import Path;
+          pics = Path('/data/pics');
+          assert pics.is_dir() and all(os.access(p, os.W_OK | os.X_OK)
+          for p in (pics, pics / 'cards', pics / 'tokens') if p.exists()),
+          'Forge image directories must be writable';
+          urllib.request.urlopen('http://127.0.0.1:8765/jobs', timeout=3).close()
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+
+volumes:
+  state: {}
