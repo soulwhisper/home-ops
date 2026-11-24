@@ -2,13 +2,19 @@
 name: scryfall-downloader
 
 x-downloader: &downloader
-  image: &image "ghcr.io/soulwhisper/scryfall-downloader:v0.2.0@sha256:fc925de38dcdabf7183b8a6cd8e58dc4c1ed84dad5bb1f1e6d8c33d671378a2f"
+  image: &image "ghcr.io/soulwhisper/scryfall-downloader:v0.3.0@sha256:ffdbd97d61e692dc489338dfa88af3d7cda2c84d14b10654cd62bb8d62b8b55e"
   user: &owner "1026:101"
   volumes:
-    - "state:/data"
+    - &state-volume
+      type: volume
+      source: state
+      target: /state
+      volume:
+        # Avoid inheriting the image's /data ownership on a fresh volume.
+        nocopy: true
     - type: bind
       source: /volume1/backup/mtg/forge_imgs/pics
-      target: /data/pics
+      target: /state/pics
       bind:
         create_host_path: false
   configs:
@@ -24,9 +30,10 @@ services:
     user: "0:0"
     restart: "no"
     network_mode: "none"
-    # The image seeds /data as 10001:10001. Never mount the Forge library here.
-    volumes: ["state:/data"]
-    entrypoint: ["chown", "-hR", "-P", *owner, "/data"]
+    healthcheck: {disable: true}
+    # Never mount the Forge library in the ownership init container.
+    volumes: [*state-volume]
+    entrypoint: ["chown", "-hR", "-P", *owner, "/state"]
     read_only: true
     cap_drop: ["ALL"]
     cap_add: ["CHOWN"]
@@ -37,6 +44,7 @@ services:
     <<: *downloader
     restart: "no"
     network_mode: "none"
+    healthcheck: {disable: true}
     depends_on:
       state-init:
         condition: service_completed_successfully
@@ -45,6 +53,7 @@ services:
 
   scryfall-downloader:
     <<: *downloader
+    command: ["--data", "/state"]
     container_name: "scryfall-downloader"
     restart: "unless-stopped"
     stop_grace_period: 30s
@@ -52,7 +61,7 @@ services:
       preflight:
         condition: service_completed_successfully
     ports:
-      # The REST API is unauthenticated; publish only on the NAS LAN address.
+      # The Web UI and REST API are unauthenticated; publish only on the NAS LAN address.
       - "10.10.0.100:8765:8765/tcp"
     mem_limit: "512m"
     healthcheck:

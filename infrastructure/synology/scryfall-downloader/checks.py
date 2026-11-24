@@ -3,13 +3,14 @@
 from http.client import HTTPException
 import os
 from pathlib import Path
+import subprocess
 import sys
 from tempfile import TemporaryDirectory
-from urllib.request import ProxyHandler, Request, build_opener, urlopen
+from urllib.request import Request, urlopen
 
 
 def preflight():
-    data = Path("/data")
+    data = Path("/state")
     pics = data / "pics"
     for path in (data, pics, pics / "cards", pics / "tokens"):
         try:
@@ -25,23 +26,20 @@ def preflight():
             raise SystemExit(f"{path} ({os.geteuid()}:{os.getegid()}): {exc}") from None
 
 
-def check_http(name, open_url, request, timeout):
+def health():
+    probe = subprocess.run([sys.executable, "-m", "scryfall_downloader.healthcheck"], check=False)
+    if probe.returncode:
+        raise SystemExit("Downloader API: local worker probe failed")
+    request = Request("https://api.scryfall.com/sets/lea", headers={
+        "Accept": "application/json", "User-Agent": "ForgeScryfallHealthcheck/1.0",
+    })
     try:
-        with open_url(request, timeout=timeout) as reply:
+        with urlopen(request, timeout=5) as reply:
             if reply.status != 200:
                 raise OSError(f"HTTP {reply.status}")
             reply.read()
     except (HTTPException, OSError) as exc:
-        raise SystemExit(f"{name}: {exc}") from None
-
-
-def health():
-    local = build_opener(ProxyHandler({}))
-    check_http("Downloader API", local.open, "http://127.0.0.1:8765/jobs", 3)
-    request = Request("https://api.scryfall.com/sets/lea", headers={
-        "Accept": "application/json", "User-Agent": "ForgeScryfallHealthcheck/1.0",
-    })
-    check_http("Scryfall API", urlopen, request, 5)
+        raise SystemExit(f"Scryfall API: {exc}") from None
 
 
 if __name__ == "__main__":

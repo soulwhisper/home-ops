@@ -152,26 +152,33 @@ Forge reads sibling `cards/` and `tokens/` folders under the NAS library
 volume.
 
 The library and its `cards/` and `tokens/` folders must already exist and be
-readable and writable by UID `1026`, GID `101`. Startup prepares ownership of
-the separate state volume, then verifies create, chmod, rename, read, and cleanup
-on the mounted directories as the downloader identity. It does not chown the
-NAS image library. Downloader `v0.2.0` writes new images with mode `0644`.
+readable and writable by UID `1026`, GID `101`. The separate state volume
+mounts at `/state` instead of inheriting the image's `/data` ownership.
+Startup sets the state volume's owner, then verifies create, chmod, rename,
+read, and cleanup as the downloader identity. It does not chown the NAS
+image library. New images are written with mode `0644`.
 
-The container healthcheck probes the local `/jobs` endpoint and the Scryfall
-REST API once per minute. If unhealthy, check the Docker health output to
-distinguish local API failure from an upstream timeout or HTTP error. doco-cd
-health-triggered restarts are disabled for this stack; Docker still restarts
-the downloader if its process exits.
+Once per minute, Docker runs the image's `/api/v1/health` worker probe and an
+independent Scryfall API request. Docker health output identifies which check
+failed. The two one-shot startup containers do not run the image's HTTP
+probe. doco-cd health-triggered restarts remain disabled; Docker still
+restarts the downloader if its process exits.
 
-External cron callers such as Hermes on `nix-ops` can use
-`http://nas.homelab.internal:8765/jobs` directly. The API has no authentication;
-do not expose or forward this port outside the trusted LAN.
+Open `http://nas.homelab.internal:8765/` for the Web UI. External cron callers
+such as Hermes on `nix-ops` must use `/api/v1/jobs`; the old `/jobs` route is
+gone. The Web UI and API are unauthenticated; keep the port on the trusted LAN.
 
 ```sh
-curl --fail-with-body http://nas.homelab.internal:8765/jobs \
+curl --fail-with-body -i http://nas.homelab.internal:8765/api/v1/jobs \
   -H 'Content-Type: application/json' \
   -d '{"sets":["msh","tmsh"]}'
 ```
+
+Poll the versioned `Location` returned with the job. Use either the saved
+sync list's built-in schedule or external cron for the same sets, not both.
+If replacing an existing installation, stop writes and back up the state
+volume and Forge pictures before upgrading. Restore matching pre-upgrade
+state and pictures before rolling back.
 
 ## servitor-apps — AI Infrastructure (17)
 
