@@ -1,3 +1,8 @@
 ---
-# An upstream Scryfall outage cannot be fixed by restarting the downloader.
-reconciliation: false
+env_files:
+  - downloader.sops.env
+
+# Restore missing or stopped containers, not ones with an upstream health failure.
+reconciliation:
+  enabled: true
+  events: [destroy, stop]

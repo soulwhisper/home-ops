@@ -3,11 +3,13 @@ name: scryfall-downloader
 
 services:
   scryfall-downloader:
-    image: "ghcr.io/soulwhisper/scryfall-downloader:preview-2dd1a7bcfc07@sha256:5f03f689fc5d810861c1048a3e0817b7ba1d0dd69f8e49137e4941a845a1332d"
+    image: "ghcr.io/soulwhisper/scryfall-downloader:v0.4.0@sha256:b18e77028deed7415e5a6e0079d4320335e4e5f98208082e28aab080606bce22"
     # The launcher only initializes the state volume before serving as 1026:101.
     user: "0:0"
     command: ["--data", "/state", "--uid", "1026", "--gid", "101", "--init-state-owner", "--archive-all"]
     environment:
+      SCRYFALL_API_TOKEN: "${SCRYFALL_API_TOKEN:?doco-cd must decrypt downloader.sops.env}"
+      # The write/readback test runs only at startup, not on each HTTP probe.
       SCRYFALL_HEALTH_UPSTREAM: "1"
     volumes:
       - type: volume
@@ -16,6 +18,7 @@ services:
         volume:
           nocopy: true
       - type: bind
+        # The host directory must exist and allow read, write and traverse for UID 1026, GID 101.
         source: /volume1/backup/mtg/forge_imgs/downloading
         target: /state/pics
         bind:
@@ -28,7 +31,7 @@ services:
     restart: "unless-stopped"
     stop_grace_period: 30s
     ports:
-      # The Web UI and REST API are unauthenticated; publish only on the NAS LAN address.
+      # LAN backend for authenticated clients. Use HTTPS or an SSH tunnel to protect the token in transit.
       - "10.10.0.100:8765:8765/tcp"
     mem_limit: "512m"
     logging:
