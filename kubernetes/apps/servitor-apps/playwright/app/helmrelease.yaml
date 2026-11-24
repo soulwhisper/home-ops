@@ -96,7 +96,7 @@ spec:
           cdp-proxy:
             image:
               repository: docker.io/library/nginx
-              tag: 1.31.9-alpine
+              tag: 1.31.10-alpine
             command: ["nginx"]
             args: ["-g", "daemon off;"]
             resources:
