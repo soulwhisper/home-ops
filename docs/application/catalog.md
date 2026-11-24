@@ -146,23 +146,35 @@ Managed by [doco-cd](https://github.com/soulwhisper/home-ops/tree/main/infrastru
 | [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/hindsight/docker-compose.yml) | AI memory service (moved out of the cluster; data lives on the NAS) |
 | [Scryfall Downloader](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/scryfall-downloader/docker-compose.yml) | Magic card and token images for Forge |
 
-Forge reads sibling `cards/` and `tokens/` folders under the NAS library
-`/volume1/backup/mtg/forge_imgs/pics`. Request `msh` for `cards/MSH/` and
-`tmsh` for `tokens/MSH/`. SQLite job state and metadata use a separate Docker
-volume.
+The downloader stages new Forge `cards/` and `tokens/` under
+`/volume1/backup/mtg/forge_imgs/downloading`. The original `forge_imgs/pics`
+library is **not mounted**. For example, `msh` and `tmsh` write to
+`downloading/cards/MSH/` and `downloading/tokens/MSH/`.
 
-The library and its `cards/` and `tokens/` folders must already exist and be
-readable and writable by UID `1026`, GID `101`. The separate state volume
-mounts at `/state` instead of inheriting the image's `/data` ownership.
-Startup sets the state volume's owner, then verifies create, chmod, rename,
-read, and cleanup as the downloader identity. It does not chown the NAS
-image library. New images are written with mode `0644`.
+The staging root must already exist and be writable by UID `1026`, GID `101`.
+The separate `staging-state` volume holds SQLite, caches and any filename
+collisions saved under `/state/extras` (not loaded directly by Forge).
+Startup sets ownership only on the state volume. Preflight creates `cards/`
+and `tokens/` if missing and tests file operations as `1026:101`. It does not
+chown the NAS staging directory or original library.
+
+On first healthy start, the [initial sync policy](../../infrastructure/synology/scryfall-downloader/backfill.json)
+queues one saved-list job: Star Trek (`TRK`, 2026-11-13) first, back to
+Dominaria United (`DMU`, 2022-09-09), the
+[first paper set after Traditional Chinese support ended](https://magic.wizards.com/en/news/announcements/changes-to-magic-product-languages).
+The 50 card sets cover released paper core, expansions, Masters, draft sets
+and bonus sheets, plus 47 linked token sets. Standalone Commander, promo
+and digital sets are excluded. Within the window, sets run newest first,
+with card sets before tokens on the same date. The initial
+language order is `zhs`, `en`, then `ja`, `ph`, `qya`, `dw`, `tlh` for
+prints with no earlier source. The initial job is not a recurring schedule;
+subsequent starts leave saved edits and accepted jobs alone.
 
 Once per minute, Docker runs the image's `/api/v1/health` worker probe and an
 independent Scryfall API request. Docker health output identifies which check
-failed. The two one-shot startup containers do not run the image's HTTP
-probe. doco-cd health-triggered restarts remain disabled; Docker still
-restarts the downloader if its process exits.
+failed. One-shot containers do not run the image's HTTP probe. doco-cd
+health-triggered restarts remain disabled; Docker still restarts the
+downloader if its process exits.
 
 Open `http://nas.homelab.internal:8765/` for the Web UI. External cron callers
 such as Hermes on `nix-ops` must use `/api/v1/jobs`; the old `/jobs` route is
@@ -176,9 +188,8 @@ curl --fail-with-body -i http://nas.homelab.internal:8765/api/v1/jobs \
 
 Poll the versioned `Location` returned with the job. Use either the saved
 sync list's built-in schedule or external cron for the same sets, not both.
-If replacing an existing installation, stop writes and back up the state
-volume and Forge pictures before upgrading. Restore matching pre-upgrade
-state and pictures before rolling back.
+Keep the staging directory and its state volume together when backing up or
+rolling back. Do not repoint a pending staging job at the original library.
 
 ## servitor-apps — AI Infrastructure (17)
 

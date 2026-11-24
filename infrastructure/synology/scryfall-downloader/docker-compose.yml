@@ -7,13 +7,13 @@ x-downloader: &downloader
   volumes:
     - &state-volume
       type: volume
-      source: state
+      source: staging-state
       target: /state
       volume:
         # Avoid inheriting the image's /data ownership on a fresh volume.
         nocopy: true
     - type: bind
-      source: /volume1/backup/mtg/forge_imgs/pics
+      source: /volume1/backup/mtg/forge_imgs/downloading
       target: /state/pics
       bind:
         create_host_path: false
@@ -74,9 +74,30 @@ services:
       driver: json-file
       options: {max-size: "10m", max-file: "3"}
 
+  backfill:
+    image: *image
+    user: *owner
+    restart: "no"
+    depends_on:
+      scryfall-downloader:
+        condition: service_healthy
+    entrypoint: ["python", "/scryfall-checks.py", "backfill"]
+    configs:
+      - source: downloader-checks
+        target: /scryfall-checks.py
+      - source: backfill-policy
+        target: /scryfall-backfill.json
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck: {disable: true}
+    mem_limit: "64m"
+
 volumes:
-  state: {}
+  staging-state: {}
 
 configs:
   downloader-checks:
     file: ./checks.py
+  backfill-policy:
+    file: ./backfill.json

@@ -1,6 +1,8 @@
-"""Compose preflight and healthcheck for the Synology downloader."""
+"""Synology preflight, health, and first-start backfill."""
 
-from http.client import HTTPException
+from contextlib import closing
+from http.client import HTTPConnection, HTTPException
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -14,6 +16,8 @@ def preflight():
     pics = data / "pics"
     for path in (data, pics, pics / "cards", pics / "tokens"):
         try:
+            if path.parent == pics:
+                path.mkdir(exist_ok=True)
             if path.is_symlink() or not path.is_dir() or not os.access(path, os.R_OK | os.W_OK | os.X_OK):
                 raise PermissionError("expected a readable, writable directory")
             with TemporaryDirectory(prefix=".scryfall-check-", dir=path) as scratch:
@@ -42,5 +46,40 @@ def health():
         raise SystemExit(f"Scryfall API: {exc}") from None
 
 
+def backfill():
+    policy = json.loads(Path("/scryfall-backfill.json").read_text(encoding="utf-8"))
+    blank = {**policy, "sets": [], "languages": ["zhs", "en"]}
+    key = "home-ops:backfill:dmu-trk"
+    with closing(HTTPConnection("scryfall-downloader", 8765, timeout=10)) as api:
+        def request(method, suffix="", data=None, expected=200):
+            path = "/api/v1/sync-list" + suffix
+            headers = {}
+            if data is not None:
+                headers["Content-Type"] = "application/json"
+            if method == "POST":
+                headers["Idempotency-Key"] = key
+            try:
+                api.request(method, path, None if data is None else json.dumps(data), headers)
+                with api.getresponse() as reply:
+                    body = json.load(reply)
+                    if reply.status != expected:
+                        raise ValueError(f"HTTP {reply.status}: {body.get('error', 'unexpected response')}")
+            except (OSError, HTTPException, ValueError) as exc:
+                raise SystemExit(f"Backfill {method} {path}: {exc}") from None
+            return body
+
+        current = request("GET")
+        saved = {field: current[field] for field in policy}
+        log = {"entry_point": "compose_backfill", "request_id": key}
+        if current["last_run_at"] is not None or saved not in (blank, policy):
+            print(json.dumps({**log, "event": "backfill_skipped", "job_id": current["last_job_id"]}))
+            return
+        if saved == blank:
+            request("PUT", data=policy)
+        job = request("POST", "/run", {}, expected=202)
+        print(json.dumps({**log, "event": "backfill_queued", "job_id": job["id"],
+                          "sets": len(job["sets"]), "first_set": next(iter(job["sets"]))}))
+
+
 if __name__ == "__main__":
-    {"preflight": preflight, "health": health}[sys.argv[1]]()
+    {"preflight": preflight, "health": health, "backfill": backfill}[sys.argv[1]]()
