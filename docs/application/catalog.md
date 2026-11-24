@@ -143,7 +143,15 @@ Managed by [doco-cd](https://github.com/soulwhisper/home-ops/tree/main/infrastru
 
 | App | Purpose |
 | --- | --- |
+| [Bambuddy](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/bambuddy/docker-compose.yml) | Bambu Lab 3D printer monitor |
 | [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/hindsight/docker-compose.yml) | AI memory service (moved out of the cluster; data lives on the NAS) |
+
+Bambuddy bind-mounts `/volume3/docker/bambuddy` at `/app/data`. Keep that
+directory private and owned by `1000:1000`. The NAS UI listens on loopback
+because the Kubernetes Authentik policy does not protect the NAS instance.
+Use `ssh -N -L 8000:127.0.0.1:8000 sysadmin@nas.homelab.internal` and open
+`http://127.0.0.1:8000`. An external MQTT broker is optional for integrations;
+Bambuddy connects directly to its printers.
 
 ## servitor-apps — AI Infrastructure (17)
 
