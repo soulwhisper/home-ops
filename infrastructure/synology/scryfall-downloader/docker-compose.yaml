@@ -3,7 +3,7 @@ name: scryfall-downloader
 
 services:
   scryfall-downloader:
-    image: "ghcr.io/soulwhisper/scryfall-downloader:v0.4.0@sha256:b18e77028deed7415e5a6e0079d4320335e4e5f98208082e28aab080606bce22"
+    image: "ghcr.io/soulwhisper/scryfall-downloader:v0.5.0@sha256:e7befe44976406e403adbb21008b7624a92aa1e851d2c99a8207745e507b9db3"
     # The launcher only initializes the state volume before serving as 1026:101.
     user: "0:0"
     env_file:
@@ -11,7 +11,7 @@ services:
     entrypoint: ["/bin/sh", "-ec"]
     command:
       - |
-        : "$${SCRYFALL_API_TOKEN:?downloader.sops.env must supply SCRYFALL_API_TOKEN}"
+        : "$${DOWNLOADER_API_TOKEN:?downloader.sops.env must supply DOWNLOADER_API_TOKEN}"
         exec python -m scryfall_downloader --bind 0.0.0.0 --data /state \
           --uid 1026 --gid 101 --init-state-owner --archive-all
     volumes:
