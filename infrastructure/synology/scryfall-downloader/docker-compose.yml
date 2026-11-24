@@ -3,7 +3,7 @@ name: scryfall-downloader
 
 services:
   scryfall-downloader:
-    image: "ghcr.io/soulwhisper/scryfall-downloader:preview-b69d63237621@sha256:d093f1ac51e53f00f0ffbcb10def74d9d810d03b693a25af59fef422290c6269"
+    image: "ghcr.io/soulwhisper/scryfall-downloader:preview-2dd1a7bcfc07@sha256:5f03f689fc5d810861c1048a3e0817b7ba1d0dd69f8e49137e4941a845a1332d"
     # The launcher only initializes the state volume before serving as 1026:101.
     user: "0:0"
     command: ["--data", "/state", "--uid", "1026", "--gid", "101", "--init-state-owner", "--archive-all"]
