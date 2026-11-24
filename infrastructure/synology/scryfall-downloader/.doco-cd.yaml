@@ -1,8 +1,0 @@
----
-env_files:
-  - downloader.sops.env
-
-# Restore missing or stopped containers, not ones with an upstream health failure.
-reconciliation:
-  enabled: true
-  events: [destroy, stop]

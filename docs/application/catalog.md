@@ -144,7 +144,7 @@ Managed by [doco-cd](https://github.com/soulwhisper/home-ops/tree/main/infrastru
 | App | Purpose |
 | --- | --- |
 | [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/hindsight/docker-compose.yml) | AI memory service (moved out of the cluster; data lives on the NAS) |
-| [Scryfall Downloader](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/scryfall-downloader/docker-compose.yml) | Magic card and token images for Forge |
+| [Scryfall Downloader](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/scryfall-downloader/docker-compose.yaml) | Magic card and token images for Forge |
 
 ## servitor-apps — AI Infrastructure (17)
 
