@@ -156,16 +156,12 @@ write and traverse access to the folders it updates. Downloader `v0.1.0`
 creates images with mode `0600`; verify that the Forge client can read new
 files through its NAS share permissions or UID mapping.
 
-The REST API listens on NAS loopback only. Access it through an SSH tunnel:
+External cron callers such as Hermes on `nix-ops` can use
+`http://nas.homelab.internal:8765/jobs` directly. The API has no authentication;
+do not expose or forward this port outside the trusted LAN.
 
 ```sh
-ssh -N -L 8765:127.0.0.1:8765 nas.homelab.internal
-```
-
-In another terminal:
-
-```sh
-curl --fail-with-body http://127.0.0.1:8765/jobs \
+curl --fail-with-body http://nas.homelab.internal:8765/jobs \
   -H 'Content-Type: application/json' \
   -d '{"sets":["msh","tmsh"]}'
 ```

@@ -8,9 +8,9 @@ services:
     restart: "unless-stopped"
     stop_grace_period: 30s
     user: "10001:10001"
-    # Bind the unauthenticated API directly to loopback, not Docker's port publisher.
-    network_mode: "host"
-    command: ["--bind", "127.0.0.1"]
+    ports:
+      # The REST API is unauthenticated; publish only on the NAS LAN address.
+      - "10.10.0.100:8765:8765/tcp"
     volumes:
       - "state:/data"
       - type: bind
