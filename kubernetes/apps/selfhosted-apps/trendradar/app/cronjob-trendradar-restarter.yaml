@@ -63,7 +63,7 @@ spec:
           kubectl:
             image:
               repository: registry.k8s.io/kubectl
-              tag: v1.37.2
+              tag: v1.37.3
             resources:
               requests:
                 cpu: 5m
