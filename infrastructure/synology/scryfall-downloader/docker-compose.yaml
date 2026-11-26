@@ -1,29 +1,17 @@
 ---
 name: scryfall-downloader
-
 services:
   scryfall-downloader:
     image: "ghcr.io/soulwhisper/scryfall-downloader:v0.6.0@sha256:33b76a3d82b686c58017e5996cc6bf68e096ffc2d1390f96661ae0031a323059"
     container_name: "scryfall-downloader"
     restart: "unless-stopped"
-    # The launcher only initializes the state volume before serving as 1026:101.
-    user: "0:0"
+    user: "1026:100"
     ports:
-      - "8765:8765/tcp"
+      - "10.10.0.100:8765:8765/tcp"
     env_file:
       - downloader.sops.env
-    environment:
-      DOWNLOADER_BIND: "0.0.0.0"
-      DOWNLOADER_PORT: "8765"
-      DOWNLOADER_DATA: "/state"
-      DOWNLOADER_UID: "1026"
-      DOWNLOADER_GID: "101"
-      DOWNLOADER_IMAGE_LANGUAGE: "zhs,en"
-    entrypoint: ["/bin/sh", "-ec"]
     command:
-      - |
-        : "$${DOWNLOADER_API_TOKEN:?downloader.sops.env must supply DOWNLOADER_API_TOKEN}"
-        exec python -m scryfall_downloader --init-state-owner --archive-all
+      - "--archive-all"
     volumes:
-      - "/volume3/docker/scryfall-downloader:/state"
-      - "/volume1/backup/mtg/forge_imgs/downloading:/state/pics"
+      - "/volume3/docker/scryfall-downloader:/data"
+      - "/volume1/backup/mtg/forge_imgs/downloading:/data/pics"

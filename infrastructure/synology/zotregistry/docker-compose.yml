@@ -1,37 +1,23 @@
 ---
-# Zot: single-instance pull-through OCI cache (second LAN hop behind spegel P2P)
-# Chain per node: containerd -> spegel (P2P) -> zot -> upstream
-# with patch: infrastructure/talos/prod/30-private-mirrors.yaml
-# S3 backend: versitygw (nas.homelab.internal:9000), bucket "zot" (just infra s3-buckets)
-# S3 creds via env (zotregistry.sops.env) — never inline in config.json
-# docker.io syncs from Hub directly; mirror.gcr.io is not configured.
-# syncTimeout bounds a whole image sync; disableHTTP2 isolates stalls to one
-# TCP conn instead of one shared h2 stream set; reqConcurrent/maxIdleConnsPerHost
-# keep parallel pulls unblocked (regclient default: 3).
-
+# Pull-through OCI cache: containerd -> spegel -> zot -> upstream.
+# S3 uses versitygw; credentials come from zotregistry.sops.env.
+# Sync tuning bounds requests and avoids shared HTTP/2 stalls.
 name: zotregistry
-
 services:
   zot:
     image: "ghcr.io/project-zot/zot-linux-amd64:v2.1.23"
     container_name: "zot"
     restart: "unless-stopped"
     ports:
-      - "9002:9002" # registry API + UI; mirrors use path endpoints http://nas:9002/v2/<upstream>/<repo>
+      - "9002:9002/tcp"
     env_file:
       - zotregistry.sops.env
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
     configs:
       - source: "config.json"
         target: "/etc/zot/config.json"
     extra_hosts:
-      # hairpin-safe path to versitygw (:9000) on the docker host
       - "nas.homelab.internal:host-gateway"
-    # no volume: /tmp/zot is only regclient staging for the S3 backend (ephemeral);
-    # no healthcheck: minimal image has no shell/wget — probe /readyz externally (ScrapeConfig up{})
+    # /tmp/zot is ephemeral S3 staging; the minimal image has no healthcheck tools.
 
 configs:
   config.json:

@@ -1,39 +1,10 @@
 ---
 name: hindsight
-
 services:
-  # Refuses to let a major-version image bump boot an empty cluster beside the
-  # real one. With /var/lib/postgresql mounted, postgres:19 would initdb into
-  # 19/docker, look healthy, and leave the 18/docker data untouched — a silent
-  # "where did my memory go". After a pg_upgrade both directories exist and the
-  # newest major matches the image, so this passes.
-  preflight:
-    image: "ghcr.io/soulwhisper/postgresql:18.7@sha256:a6857e9937546ea96e523585b7b3ca6188d2edf5a596ca8563dc0792d207708f"
-    container_name: "hindsight-preflight"
-    restart: "no"
-    entrypoint: ["/bin/bash", "-eu", "-c"]
-    command:
-      - |
-        want="$${PG_MAJOR:-$$(ls -1 /usr/lib/postgresql | sort -V | tail -1)}"
-        found=$$(ls -1d /var/lib/postgresql/[0-9]*/docker/PG_VERSION 2>/dev/null \
-          | sed -E 's|.*/([0-9]+)/docker/PG_VERSION$$|\1|' | sort -V | tail -1)
-        if [ -n "$$found" ] && [ "$$found" != "$$want" ]; then
-          echo "FATAL: /var/lib/postgresql holds an initialised cluster [$$found/docker] but this image is major $$want." >&2
-          echo "postgres would initdb an EMPTY cluster beside it and report healthy." >&2
-          echo "Run pg_upgrade (or restore a dump) first, or keep the previous image tag." >&2
-          exit 1
-        fi
-        echo "preflight ok: image major $$want, cluster $${found:-none}"
-    volumes:
-      - "/volume3/docker/hindsight/data:/var/lib/postgresql:ro"
-
   postgres:
     image: "ghcr.io/soulwhisper/postgresql:18.7@sha256:a6857e9937546ea96e523585b7b3ca6188d2edf5a596ca8563dc0792d207708f"
     container_name: "hindsight-postgres"
     restart: "unless-stopped"
-    depends_on:
-      preflight:
-        condition: service_completed_successfully
     command:
       - "postgres"
       - "-c"
@@ -58,11 +29,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 40s
-    security_opt:
-      - "no-new-privileges:true"
-    logging:
-      driver: json-file
-      options: { max-size: "10m", max-file: "3" }
     networks:
       - internal
 
@@ -107,12 +73,6 @@ services:
       start_period: 5m
     volumes:
       - "/volume3/docker/hindsight/backups:/backups"
-    mem_limit: "256m"
-    security_opt:
-      - "no-new-privileges:true"
-    logging:
-      driver: json-file
-      options: { max-size: "10m", max-file: "3" }
     networks:
       - internal
 
@@ -134,14 +94,6 @@ services:
     ports:
       - "8888:8888/tcp"
       - "9999:9999/tcp"
-    mem_limit: "2g"
-    read_only: true
-    tmpfs:
-      - "/tmp"
-    cap_drop:
-      - "ALL"
-    security_opt:
-      - "no-new-privileges:true"
     healthcheck:
       test:
         - "CMD"
@@ -152,9 +104,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    logging:
-      driver: json-file
-      options: { max-size: "10m", max-file: "3" }
     networks:
       - internal
 

@@ -1,8 +1,5 @@
 ---
 name: talos
-
-# meshcentral listens on port 4433 (AMT) and 444 (https)
-
 services:
   talos-api:
     image: "ghcr.io/siderolabs/discovery-service:v1.1.3"
