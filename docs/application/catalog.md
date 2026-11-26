@@ -145,8 +145,10 @@ Bambuddy connects directly to its printers.
 
 Homepage is available at <http://nas.homelab.internal:8300/> or
 <http://10.10.0.100:8300/> on the trusted LAN/VPN. It has no app login; do not
-forward the port to untrusted networks. Its `/volume3/docker/homepage/config`
-bind must be writable by `1026:101`.
+forward the port to untrusted networks. Git-managed config and icons are
+mounted read-only. Generated config and file logs are written to the
+container's writable layer and are lost when the container is replaced.
+No separate NAS config directory is needed.
 
 ## servitor-apps — AI Infrastructure (17)
 
