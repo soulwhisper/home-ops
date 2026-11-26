@@ -101,17 +101,15 @@ the shared PAT's repository-write scope for the manual lessons workflow.
 
 ## Access paths
 
-- **Canonical: `https://git.noirprime.com`** — TLS terminates at the internal
-  gateway (`networking-system/forgejo-proxy`: selectorless Service + static
-  EndpointSlice to `10.10.0.100:9003`); the gateway→NAS hop stays plain HTTP
-  on wired VLAN 100. Cluster consumers (webhook-relay, mcp-forgejo) and the
-  homepage widget use this name; DNS comes from external-dns on the route.
-- **Fallback/direct: `http://nas.homelab.internal:9003`** — always served by
-  the NAS itself; use when the gateway/cluster is down. NAS-side flows
-  (runner via compose network alias, doco-cd, lessons) stay on it regardless.
-- SSH clones: `SSH_DOMAIN=nas.homelab.internal` (gateway has no :9004).
-- **OIDC**: authentik provider/application are GitOps
-  (`authentik/app/blueprints/oidc/forgejo.yaml`); the Forgejo-side auth
-  source is created once by `oidc-auth-source.sh` (no REST API exists for
-  auth sources). Requires ROOT_URL canonical first. Local admin account stays
-  as break-glass.
+- **Canonical/direct: `http://10.10.0.100:9003`** — always served by the NAS.
+  Cluster consumers (webhook-relay, KRR, mcp-forgejo) and both Homepage
+  instances use this endpoint; no cluster gateway is required.
+- **NAS alias: `http://nas.homelab.internal:9003`** — used by the runner and
+  other NAS-side flows through the Compose network. Doco-cd and lesson
+  workflows stay on the NAS regardless of cluster state.
+- SSH clones: `SSH_DOMAIN=nas.homelab.internal` on port 9004.
+- **Login**: local Forgejo accounts only. The `git.noirprime.com` gateway and
+  Authentik OIDC blueprint are archived. Local admin remains the break-glass
+  account. [Gateway and OIDC recovery steps](../../.archived/kubernetes/networking/forgejo-proxy/README.md)
+  cover the manifests, DNS, Authentik mounts, and authentication-source
+  restoration.

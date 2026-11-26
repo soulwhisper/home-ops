@@ -12,8 +12,6 @@ resources:
   - ./referencegrant.yaml
   # core blueprints
   - ./blueprints/core/basic-users.yaml
-  # oidc blueprints
-  - ./blueprints/oidc/forgejo.yaml
 generatorOptions:
   annotations:
     kustomize.toolkit.fluxcd.io/substitute: "disabled"

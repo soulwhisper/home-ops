@@ -48,7 +48,7 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Cert-Manager](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/security-system/cert-manager/ks.yaml) | TLS certificate automation |
 | [Native Policies](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/security-system/native-policies/ks.yaml) | ValidatingAdmissionPolicies for critical namespace deletes and image-registry audit |
 
-## networking-system — Network Services (5)
+## networking-system — Network Services (4)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/kustomization.yaml)
 
@@ -58,7 +58,6 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Agent Gateway](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/agentgateway/ks.yaml) | LLM routing and MCP gateway |
 | [External DNS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/externaldns/ks.yaml) | PowerDNS automation for internal Kubernetes names |
 | [Kgateway CRDs](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/kgateway-crds/ks.yaml) | Kgateway control-plane resource definitions |
-| [Forgejo Proxy](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/networking-system/forgejo-proxy/ks.yaml) | Internal HTTPS gateway for NAS-hosted Forgejo |
 
 ## storage-system — Storage (4)
 

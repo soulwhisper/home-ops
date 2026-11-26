@@ -25,8 +25,8 @@ spec:
     - --transport
     - http
     - --url
-    # TLS via the internal gateway; direct nas.homelab.internal:9003 = fallback
-    - https://git.noirprime.com
+    # Direct NAS HTTP endpoint
+    - http://10.10.0.100:9003
     - --host
     - 0.0.0.0
     # v3 refuses to bind 0.0.0.0 without declared hosts; the toolhive runner
