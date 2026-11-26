@@ -41,21 +41,21 @@ flowchart TB
         FR --> CA
         CA --> NS["10 namespace
         Kustomize indexes"]
-        NS --> APPS["73 ks.yaml files
-        98 child Flux Kustomizations"]
+        NS --> APPS["69 ks.yaml files
+        95 child Flux Kustomizations"]
     end
 
     subgraph Components["Kustomize Components"]
         NS_COMP["namespace
         10 consumers"]
         KOPIUR_MOVERS["kopiur/shared
-        4 consumers"]
+        3 consumers"]
         KOPIUR_BACKUP["kopiur/backup
-        8 consumers"]
+        6 consumers"]
         CACHE["cache
         3 consumers"]
         AUTHENTIK["authentik
-        12 consumers"]
+        9 consumers"]
         CNPG["cnpg
         3 consumers"]
         DRAGONFLY["dragonfly
@@ -108,11 +108,11 @@ The two cluster-level `Kustomization` resources live in [`kubernetes/flux/cluste
 
 Neither [`kubernetes/apps/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) nor [`kubernetes/flux/cluster/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/flux/cluster) has a root `kustomization.yaml`. Flux autogenerates these build entrypoints by discovering manifests and explicit Kustomize indexes. Adding resources under an auto-discovered root can therefore affect deployment; `apps/` is not an inactive definition library.
 
-The 10 namespace directories each have an explicit **Kustomize index**, not a separate namespace-level Flux Kustomization. For example, the [`monitoring-system` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/monitoring-system/kustomization.yaml) selects application `ks.yaml` files and shared namespace components. Its `namespace: monitoring-system` injects `metadata.namespace` into the selected namespaced objects. All **98 child Flux Kustomizations** omit `metadata.namespace` in their source and rely on this index; `spec.targetNamespace` controls their rendered resources, not the namespace of the Flux Kustomization itself.
+The 10 namespace directories each have an explicit **Kustomize index**, not a separate namespace-level Flux Kustomization. For example, the [`monitoring-system` index](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps/monitoring-system/kustomization.yaml) selects application `ks.yaml` files and shared namespace components. Its `namespace: monitoring-system` injects `metadata.namespace` into the selected namespaced objects. All **95 child Flux Kustomizations** omit `metadata.namespace` in their source and rely on this index; `spec.targetNamespace` controls their rendered resources, not the namespace of the Flux Kustomization itself.
 
-There are **73 `ks.yaml` definition units**, containing one or more Flux Kustomizations each, and **72 HelmReleases**. A `ks.yaml` selects resource build paths such as `app/`, `cluster/`, `drivers/`, or `config/`; it is not interchangeable with an `app/kustomization.yaml`, which builds workload resources. For example, [`rook-ceph/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/rook-ceph/ks.yaml) defines three child Kustomizations. The [`servitor-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml) also includes a nested `mcp/` index.
+There are **69 `ks.yaml` definition units**, containing one or more Flux Kustomizations each, and **69 HelmReleases**. A `ks.yaml` selects resource build paths such as `app/`, `cluster/`, `drivers/`, or `config/`; it is not interchangeable with an `app/kustomization.yaml`, which builds workload resources. For example, [`rook-ceph/ks.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/storage-system/rook-ceph/ks.yaml) defines three child Kustomizations. The [`servitor-apps` index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/servitor-apps/kustomization.yaml) also includes a nested `mcp/` index.
 
-The source/static count is **100 Flux Kustomizations** (98 children plus the two in `cluster.yaml`). The operator-created root adds one, giving **101 in the deployed topology**. See the [Application Catalog](../application/catalog.md) for definition paths and counts, and [Storage](storage.md) for data ownership and lifecycle boundaries.
+The source/static count is **97 Flux Kustomizations** (95 children plus the two in `cluster.yaml`). The operator-created root adds one, giving **98 in the deployed topology**. See the [Application Catalog](../application/catalog.md) for definition paths and counts, and [Storage](storage.md) for data ownership and lifecycle boundaries.
 
 To inspect an application's composed output from the repository root:
 
@@ -255,7 +255,7 @@ The application tree declares 47 local `OCIRepository` resources alongside their
 
 The `OCIRepository` fetches only the chart layer via `layerSelector` with `operation: copy`, which extracts the Helm chart tarball from the OCI manifest without pulling unrelated layers.
 
-### App-Template Pattern (25 Cross-Namespace References)
+### App-Template Pattern (22 Cross-Namespace References)
 
 For applications that don't need a custom Helm chart, the **app-template** pattern is used. A single `OCIRepository` is defined in [`kubernetes/flux/repositories/app-template.yaml`](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/flux/repositories/app-template.yaml):
 
@@ -285,13 +285,13 @@ spec:
     namespace: gitops-system
 ```
 
-This cross-namespace reference is used by 21 application-facing HelmReleases across 5 namespaces (four further utility releases — restarters and database helpers — consume the same shared chart and are not listed):
+This cross-namespace reference is used by 18 application-facing HelmReleases across 5 namespaces (four further utility releases — restarters and database helpers — consume the same shared chart and are not listed):
 
 | Namespace         | Count | Apps |
 | ----------------- | ----- | ---- |
 | monitoring-system | 2     | vmware-exporter, webhook-relay |
 | networking-system | 1     | mcp-guardrails |
-| selfhosted-apps   | 8     | bambuddy, firecrawl (+database), homepage, manyfold, obico-ml, searxng, trendradar |
+| selfhosted-apps   | 5     | firecrawl (+database), homepage, searxng, trendradar |
 | servitor-apps     | 5     | covel, diceframe, open-webui, open-webui-oikb, playwright |
 | smarthome-apps    | 5     | frigate, home-assistant (app + sgcc), mosquitto, scrypted |
 
@@ -322,13 +322,13 @@ metadata:
 
 The `name: _` is a Kustomize placeholder. The namespace index's `namespace:` transformer sets the actual Namespace name and namespaces the Alert and Provider; this is not Flux `postBuild` substitution.
 
-### Component: kopiur/shared (4 consumers)
+### Component: kopiur/shared (3 consumers)
 
 **Path**: [`kubernetes/components/kopiur/shared/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/shared)
 
 Adds `kopiur.home-operations.com/privileged-movers: "true"` to the application namespaces and `storage-system`. Kopiur checks both the workload namespace and the namespace running a Central mover when the mover needs root to preserve file ownership. The component creates no credentials. See [recovery and agent access](storage.md#recovery-and-agent-access) for the in-place restore exception.
 
-### Component: kopiur/backup (8 consumers)
+### Component: kopiur/backup (6 consumers)
 
 **Path**: [`kubernetes/components/kopiur/backup/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
 
@@ -349,7 +349,7 @@ Applications using this component store snapshots in the NAS VersityGW repositor
 
 Injects a rewarmable cache/scratch `PersistentVolumeClaim` on a two-replica `ceph-cache` NVMe pool. Replicas are placed on separate hosts so an OSD drain cannot make every copy unavailable during RBD teardown and the node reboot. Data loss on OSD failure is acceptable. Consumers mount it via `existingClaim`. Never use for durable data.
 
-### Component: authentik (12 consumers)
+### Component: authentik (9 consumers)
 
 **Path**: [`kubernetes/components/authentik/`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/authentik)
 
@@ -425,7 +425,7 @@ Application definitions are grouped into 10 namespace directories. The numbering
 | 6   | `monitoring-system` | Observability                        | Victoria Metrics (operator + cluster), Victoria Logs, Victoria Traces, Prometheus CRDs, kube-state-metrics, node-exporter, blackbox-exporter, Smartctl exporter, OTel Collector, Silence Operator, Robusta, webhook-relay, KRR, VMware exporter |
 | 7   | `servitor-apps`     | AI and development tooling           | Covel, DiceFrame, Open WebUI, Playwright, Toolhive, MCP definitions (11 units) |
 | 8   | `smarthome-apps`    | Home automation                      | Home Assistant (app + SGCC), Frigate NVR, Mosquitto MQTT, Scrypted, smarthome-nfs |
-| 9   | `selfhosted-apps`   | Self-hosted web services             | SearXNG, Homepage, BambuBuddy, Manyfold, Obico ML, trendradar, Firecrawl, selfhosted-nfs |
+| 9   | `selfhosted-apps`   | Self-hosted web services             | SearXNG, Homepage, TrendRadar, Firecrawl |
 | 10  | `gitops-system`     | Flux itself                          | Flux Operator, Flux Instance, System Upgrade Controller                                                                                                                                                                                    |
 
 ### Dependency Order
@@ -561,10 +561,10 @@ kubernetes/
 │   └── templates/                 #   Chart/tag and values bridges to app sources
 ├── components/                    # Reusable Kustomize Components
 │   ├── namespace/                 #   Namespace + alerts (10 consumers)
-│   ├── kopiur/shared/             #   Privileged mover namespace opt-in (4 consumers)
-│   ├── kopiur/backup/             #   PVC backup pipeline (8 consumers)
+│   ├── kopiur/shared/             #   Privileged mover namespace opt-in (3 consumers)
+│   ├── kopiur/backup/             #   PVC backup pipeline (6 consumers)
 │   ├── cache/                     #   Rewarmable cache PVC on ceph-cache (3 consumers)
-│   ├── authentik/                 #   SSO traffic policy (12 consumers)
+│   ├── authentik/                 #   SSO traffic policy (9 consumers)
 │   ├── cnpg/                      #   PostgreSQL secret (4 consumers)
 │   ├── dragonfly/                 #   Redis-compatible cache (3 consumers)
 │   └── ceph-bucket/               #   S3 object bucket (1 consumer)

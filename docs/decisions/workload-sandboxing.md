@@ -78,10 +78,10 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
   since kernel 6.2; cluster runs 6.18) or wait for kernel NFS idmap support.
 - **userns × hostNetwork/hostPID/hostIPC** — invalid combination; no
   workload in scope uses these.
-- **restricted PSA × current fixes** — `stirling-pdf`, `bambuddy`,
-  `frigate`, `scrypted` require `allowPrivilegeEscalation: true` and/or root
-  entrypoints (s6-overlay / file-capability binaries). Moving to
-  `restricted` enforcement would require per-namespace exemptions for these.
+- **restricted PSA × current fixes** — `frigate` and `scrypted` require
+  `allowPrivilegeEscalation: true` and/or root entrypoints (s6-overlay /
+  file-capability binaries). Moving to `restricted` enforcement would require
+  per-namespace exemptions for these.
 
 ## Open items
 
@@ -89,7 +89,7 @@ Talos sysext). Move the sandbox boundary to Kubernetes **user namespaces**
    `enforce: privileged` (i.e. PSA is a no-op; no namespace enforce labels
    exist). Decision pending: adopt `baseline` as the cluster default with
    `restricted` per-namespace where compatible, plus explicit exemptions for
-   the four apps above. Check: `infrastructure/talos/prod/10-general.yaml`
+   these apps. Check: `infrastructure/talos/prod/10-general.yaml`
    (`KubeAdmissionControlConfig`).
 2. **seccomp drift pin** — done: `KubeletConfig` doc with
    `defaultRuntimeSeccompProfileEnabled: true` pinned in prod + test

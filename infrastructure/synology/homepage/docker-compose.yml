@@ -1,0 +1,46 @@
+---
+name: homepage
+
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:v2.8.0
+    container_name: homepage
+    restart: unless-stopped
+    # Bind in the host namespace to keep the dashboard and Bambuddy on NAS loopback.
+    network_mode: host
+    user: "1000:1000"
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      HOSTNAME: "127.0.0.1"
+      PORT: "8300"
+      HOMEPAGE_ALLOWED_HOSTS: "127.0.0.1:8300,localhost:8300"
+      HOMEPAGE_FILE_SYNOLOGY_USERNAME: /run/secrets/homepage/synology_username
+      HOMEPAGE_FILE_SYNOLOGY_PASSWORD: /run/secrets/homepage/synology_password
+      HOMEPAGE_FILE_OPENWRT_USERNAME: /run/secrets/homepage/openwrt_username
+      HOMEPAGE_FILE_OPENWRT_PASSWORD: /run/secrets/homepage/openwrt_password
+      HOMEPAGE_FILE_UNIFI_USERNAME: /run/secrets/homepage/unifi_username
+      HOMEPAGE_FILE_UNIFI_PASSWORD: /run/secrets/homepage/unifi_password
+      HOMEPAGE_FILE_FORGEJO_PAT: /run/secrets/homepage/forgejo_pat
+    volumes:
+      - type: bind
+        source: /volume3/docker/homepage/config
+        target: /app/config
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /volume3/docker/homepage/secrets
+        target: /run/secrets/homepage
+        read_only: true
+        bind:
+          create_host_path: false
+      - ./config/bookmarks.yaml:/app/config/bookmarks.yaml:ro
+      - ./config/services.yaml:/app/config/services.yaml:ro
+      - ./config/settings.yaml:/app/config/settings.yaml:ro
+      - ./config/widgets.yaml:/app/config/widgets.yaml:ro
+      - ./config/custom.css:/app/config/custom.css:ro
+      - ./icons:/app/public/icons:ro
+    mem_limit: "512m"
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}

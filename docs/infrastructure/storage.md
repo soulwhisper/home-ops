@@ -130,8 +130,9 @@ applications; see the [catalog](../application/catalog.md) for definition links.
 | Data | Definition owner | Lifecycle expectation |
 |------|------------------|-----------------------|
 | Photos, video, music, documents and downloads | `media-apps/media-nfs` KS; NAS `/volume1/{photo,video,music,document}` and `/volume2/downloads` | Keep the shared claims and NAS files independent of an individual media application's deployment selection |
-| Manyfold configuration and database | `selfhosted-apps/manyfold` KS; 10 Gi `ceph-block` PVC with kopiur | Application state is snapshotted independently of the model library |
-| Manyfold model library | `selfhosted-apps/selfhosted-nfs` KS; mounted at `/libraries/main` | NAS-hosted models are outside the kopiur PVC backup boundary |
+| Bambuddy application data | NAS Compose bind at `/volume3/docker/bambuddy` | The Kubernetes definition is archived; verify the migrated data before discarding the old Ceph volume |
+| Manyfold configuration and database | Archived Manyfold definition; formerly a 10 Gi `ceph-block` PVC | Preserve a recoverable copy separately from the model library before pruning the PVC |
+| Manyfold model library | NAS `/volume1/3d-assets/library`; the NFS claim is archived | NFS CSI retains the directory when the Kubernetes binding is removed; the models are outside kopiur's PVC backup boundary |
 | Open WebUI Markdown knowledge sources | `servitor-apps/open-webui/oikb` KS (parked: `replicas: 0`, `sources: []`); NAS `/volume1/open-webui-oikb-sources` | The NAS directory is the source of truth; OIKB mounts it read-only and mirrors additions, changes and deletions into the Knowledge Base on sync. Synced KB files and vectors remain in the app's Ceph bucket and CNPG |
 | Media application configuration and indexes | Application KS or HelmRelease; usually Ceph PVCs | Git/ESO-managed settings and rebuildable indexes may be recreated. Other application state in the same PVC needs a backup if it must survive; explicitly accepting its loss does not require preserving every old Kopiur snapshot |
 | Transcode, machine-learning and mover caches | Application or kopiur controller; `ceph-cache` | Rewarmable, not a durable-data retention boundary |
@@ -153,13 +154,13 @@ are outside the Kubernetes PVC backup mechanism.
 ### kopiur — PVC Backup
 
 [kopiur](https://github.com/home-operations/kopiur) (Kopia-native Rust operator)
-provides automated PVC backup and restore for **8 application definitions**; media, gaming and the archived self-hosted applications do not carry policies.
+provides automated PVC backup and restore for **6 application definitions**; media, gaming and the archived self-hosted applications do not carry policies.
 The reusable components are
 [`kopiur/backup`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/backup)
 (referenced by each consumer's `ks.yaml`) and the namespace-level
 [`kopiur/shared`](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/components/kopiur/shared)
 component (used by the application namespaces and `storage-system` to allow
-privileged movers). All eight policies use the shared `ClusterRepository`
+privileged movers). All six policies use the shared `ClusterRepository`
 `nas`; this count does not include every chart- or operator-created PVC.
 
 #### Architecture
@@ -237,7 +238,7 @@ AWS_SECRET_ACCESS_KEY:<1Password app-user.admin_pass>
   the Gateway API CRDs and the provisioner's read-only `ReferenceGrant` RBAC
   before updating the driver. Privileged movers require the Kopiur opt-in on
   both the application and operator namespaces.
-- Verify all eight policies succeed and their latest snapshots report
+- Verify all active policies succeed and their latest snapshots report
   `status.job.namespace` and `status.resolved.cache.claim.namespace` as
   `storage-system`.
 - Before removing the application credential copies, observe at least 24
