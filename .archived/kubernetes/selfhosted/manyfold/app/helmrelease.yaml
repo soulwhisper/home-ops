@@ -80,6 +80,7 @@ spec:
         hostnames: ["manyfold.noirprime.com"]
         annotations:
           gethomepage.dev/enabled: "true"
+          gethomepage.dev/icon: /icons/manyfold.svg
           gethomepage.dev/name: Manyfold
           gethomepage.dev/group: Service
         parentRefs:
