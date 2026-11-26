@@ -17,9 +17,3 @@ layout:
   Service:
     style: row
     columns: 2
-  Observability:
-    style: row
-    columns: 2
-  Infrastructure:
-    style: row
-    columns: 2

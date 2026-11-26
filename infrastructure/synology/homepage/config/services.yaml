@@ -46,38 +46,28 @@
 - Service:
     - Bambuddy:
         href: http://127.0.0.1:8000/
+        icon: /icons/si-bambulab.svg
         description: Bambu Lab printer monitor · SSH tunnel
         siteMonitor: http://127.0.0.1:8000/health
     - Hindsight:
         href: http://nas.homelab.internal:9999/
+        icon: /icons/metabrainz.svg
         description: AI memory service
         siteMonitor: http://127.0.0.1:9999/
     - Scryfall Downloader:
         href: http://nas.homelab.internal:8765/
+        icon: /icons/scryfall-downloader.svg
         description: Magic card and token images
         siteMonitor: http://nas.homelab.internal:8765/
-- Observability:
     - Scrutiny:
         href: http://nas.homelab.internal:9204/
+        icon: /icons/scrutiny.svg
         description: SMART drive monitoring
         widget:
           type: scrutiny
           url: http://127.0.0.1:9204
-- Infrastructure:
-    - VersityGW:
-        href: http://nas.homelab.internal:9001/
-        description: S3 gateway console
-        siteMonitor: http://127.0.0.1:9000/healthz
-    - Zot:
-        description: LAN OCI registry mirror · port 9002
-        siteMonitor: http://127.0.0.1:9002/readyz
-    - PowerDNS:
-        description: Authoritative DNS · port 53
-    - Talos Discovery:
-        description: Talos discovery service · port 9300
     - MeshCentral:
         href: https://nas.homelab.internal:444/
+        icon: /icons/meshcentral.svg
         description: Out-of-band management
         siteMonitor: https://nas.homelab.internal:444/
-    - Doco CD:
-        description: Synology Compose deployment automation

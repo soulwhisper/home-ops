@@ -1,14 +1,20 @@
 # Synology Homepage
 
 Standalone replacement or fallback for the [Kubernetes Homepage](../../../kubernetes/apps/selfhosted-apps/homepage).
-It keeps the cluster dashboard's Status sidebar and responsive grid, with NAS
-service cards instead of Kubernetes-discovered applications. The cluster page
-and its route are unchanged. This page needs neither Flux nor Authentik.
+It keeps the cluster dashboard's Status sidebar alongside one Service group
+for NAS apps. The cluster page and its route are unchanged. This page needs
+neither Flux nor Authentik.
 
 - NAS, OpenWrt, UniFi, and Forgejo retain their status widgets. Forgejo's
   widget uses the NAS loopback API, not the cluster's Forgejo proxy.
 - ESXi shows direct HTTPS reachability. ESXi metrics and the Talos utilization
   widget are not available without the in-cluster monitoring stack.
+
+Service icons are served locally. Bambuddy and Hindsight reuse the Bambu Lab
+and MetaBrainz icons from the former cluster cards. The other icons use
+[Material Design Icons](https://pictogrammers.com/library/mdi/icon/cards-outline/),
+[Dashboard Icons](https://github.com/homarr-labs/dashboard-icons/blob/main/svg/scrutiny-light.svg),
+and the [MeshCentral favicon](https://github.com/Ylianst/MeshCentral/blob/master/public/favicon-32x32.png).
 
 ## NAS setup
 
