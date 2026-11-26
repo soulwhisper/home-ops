@@ -10,8 +10,11 @@ services:
       - "10.10.0.100:8765:8765/tcp"
     env_file:
       - downloader.sops.env
+    entrypoint: ["/bin/sh", "-ec"]
     command:
-      - "--archive-all"
+      - |
+        : "$${DOWNLOADER_API_TOKEN:?downloader.sops.env must supply DOWNLOADER_API_TOKEN}"
+        exec python -m scryfall_downloader --bind 0.0.0.0 --data /data --archive-all
     volumes:
       - "/volume3/docker/scryfall-downloader:/data"
       - "/volume1/backup/mtg/forge_imgs/downloading:/data/pics"
