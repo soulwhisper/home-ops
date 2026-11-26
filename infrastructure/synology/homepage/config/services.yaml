@@ -43,6 +43,26 @@
         icon: /icons/vmware-esxi.svg
         description: Management UI reachability
         siteMonitor: https://10.0.0.10/
+    - TL-SE2109P:
+        href: http://10.0.0.2
+        icon: /icons/tp-link.svg
+        description: 10 GbE PoE switch
+        siteMonitor: http://10.0.0.2
+    - AdGuard:
+        href: http://10.10.0.254:9200
+        icon: /icons/adguard-home.svg
+        description: DNS filtering
+        siteMonitor: http://10.10.0.254:9200
+    - JetKVM:
+        href: http://10.0.0.210/
+        icon: /icons/jetkvm.svg
+        description: Remote KVM
+        siteMonitor: http://10.0.0.210/
+    - TProxy:
+        href: http://10.10.0.254:9090/ui/zashboard
+        icon: /icons/openwrt.svg
+        description: Transparent proxy
+        siteMonitor: http://10.10.0.254:9090/ui/zashboard
 - Service:
     - Bambuddy:
         href: http://10.10.0.100:8000
@@ -71,3 +91,15 @@
         icon: /icons/meshcentral.svg
         description: Out-of-band management
         siteMonitor: https://10.10.0.100:444
+    - Hermes:
+        href: http://10.10.0.200:9119
+        icon: /icons/hermes.svg
+        description: Native AI agent
+        widget:
+          type: customapi
+          url: http://10.10.0.200:9119/api/status
+          refreshInterval: 30000
+          mappings:
+            - {field: version, label: Version}
+            - {field: gateway_state, label: Gateway}
+            - {field: active_sessions, label: Active, format: number}
