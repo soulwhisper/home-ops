@@ -73,6 +73,7 @@ spec:
         annotations:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: Bambuddy
+          gethomepage.dev/icon: /icons/si-bambulab.svg
           gethomepage.dev/group: Service
         parentRefs:
           - name: kgateway-internal
