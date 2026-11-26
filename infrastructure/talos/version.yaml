@@ -5,7 +5,7 @@
 # renovate: datasource=github-releases depName=siderolabs/talos
 talos_version: v1.14.7
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
-k8s_version: v1.37.2
+k8s_version: v1.37.3
 # `just talos generate` refreshes the installer schematic IDs for the selected
 # environment. `just talos image` resolves its ISO schematic without changing them.
 schematic_id:
