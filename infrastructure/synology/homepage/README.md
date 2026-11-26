@@ -18,24 +18,24 @@ and the [MeshCentral favicon](https://github.com/Ylianst/MeshCentral/blob/master
 
 ## NAS setup
 
-Before merging the Compose stack into `main`, provision these bind sources on
-Synology so Doco CD can start the container:
+Create `/volume3/docker/homepage/config` on Synology before deployment. It must
+be writable by `1000:1000` for logs and generated config. The dashboard YAML,
+CSS, and icons are read-only binds from the Doco CD checkout.
 
-- `/volume3/docker/homepage/config`: writable by `1000:1000` for logs and
-  generated config. The dashboard YAML, CSS, and icons are read-only binds
-  from the Doco CD checkout.
-- `/volume3/docker/homepage/secrets`: owned by `1000:1000`, mode `0700`. Put
-  the read-only widget credentials in the following files, each owned by
-  `1000:1000` with mode `0600`. Use one line without a trailing newline; double
-  any apostrophe inside a value for Homepage's single-quoted YAML substitution.
-  Do not commit these files.
+**Before merging, replace all seven encrypted example values** in
+[`homepage.sops.env`](homepage.sops.env) using `sops edit` with the Doco CD age
+identity. Doco CD decrypts the file before Compose starts Homepage. No separate
+NAS secret directory is needed.
 
-| Files | Purpose |
+Use unquoted, single-line values. Compose reads them as raw dotenv; double any
+apostrophes for Homepage's single-quoted YAML substitution.
+
+| Variables | Purpose |
 | --- | --- |
-| `synology_username`, `synology_password` | DSM DiskStation widget |
-| `openwrt_username`, `openwrt_password` | OpenWrt `pppoe-wan` widget |
-| `unifi_username`, `unifi_password` | UniFi Controller widget |
-| `forgejo_pat` | Read-only PAT for the Forgejo ticket repository, without the `token ` prefix |
+| `HOMEPAGE_VAR_SYNOLOGY_USERNAME`, `HOMEPAGE_VAR_SYNOLOGY_PASSWORD` | DSM DiskStation widget |
+| `HOMEPAGE_VAR_OPENWRT_USERNAME`, `HOMEPAGE_VAR_OPENWRT_PASSWORD` | OpenWrt `pppoe-wan` widget |
+| `HOMEPAGE_VAR_UNIFI_USERNAME`, `HOMEPAGE_VAR_UNIFI_PASSWORD` | UniFi Controller widget |
+| `HOMEPAGE_VAR_FORGEJO_PAT` | Read-only PAT for the Forgejo ticket repository, without the `token ` prefix |
 
 Homepage and Bambuddy listen on NAS loopback. Forward both ports via SSH and
 open <http://127.0.0.1:8300/>. The Bambuddy card uses the second forward.

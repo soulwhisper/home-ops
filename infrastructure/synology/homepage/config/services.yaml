@@ -6,8 +6,8 @@
         widget:
           type: diskstation
           url: https://10.10.0.100:5001
-          username: '{{HOMEPAGE_FILE_SYNOLOGY_USERNAME}}'
-          password: '{{HOMEPAGE_FILE_SYNOLOGY_PASSWORD}}'
+          username: '{{HOMEPAGE_VAR_SYNOLOGY_USERNAME}}'
+          password: '{{HOMEPAGE_VAR_SYNOLOGY_PASSWORD}}'
           volume: volume_2
     - OpenWRT:
         href: http://10.10.0.254
@@ -15,8 +15,8 @@
         widget:
           type: openwrt
           url: http://10.10.0.254
-          username: '{{HOMEPAGE_FILE_OPENWRT_USERNAME}}'
-          password: '{{HOMEPAGE_FILE_OPENWRT_PASSWORD}}'
+          username: '{{HOMEPAGE_VAR_OPENWRT_USERNAME}}'
+          password: '{{HOMEPAGE_VAR_OPENWRT_PASSWORD}}'
           interfaceName: pppoe-wan
     - Unifi:
         href: https://10.10.0.200:9801
@@ -24,8 +24,8 @@
         widget:
           type: unifi
           url: https://10.10.0.200:9801
-          username: '{{HOMEPAGE_FILE_UNIFI_USERNAME}}'
-          password: '{{HOMEPAGE_FILE_UNIFI_PASSWORD}}'
+          username: '{{HOMEPAGE_VAR_UNIFI_USERNAME}}'
+          password: '{{HOMEPAGE_VAR_UNIFI_PASSWORD}}'
     - Forgejo:
         href: http://nas.homelab.internal:9003/
         icon: /icons/forgejo.svg
@@ -33,7 +33,7 @@
           type: customapi
           url: http://127.0.0.1:9003/api/v1/repos/soulwhisper/homelab-tickets
           headers:
-            Authorization: 'token {{HOMEPAGE_FILE_FORGEJO_PAT}}'
+            Authorization: 'token {{HOMEPAGE_VAR_FORGEJO_PAT}}'
           refreshInterval: 60000
           mappings:
             - {field: open_issues_count, label: Open Issues, format: number}
