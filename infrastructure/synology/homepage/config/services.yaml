@@ -79,6 +79,11 @@
         icon: /icons/scryfall-downloader.svg
         description: Magic card and token images
         siteMonitor: http://10.10.0.100:8765
+    - MeshCentral:
+        href: https://10.10.0.100:444
+        icon: /icons/meshcentral.svg
+        description: Out-of-band management
+        siteMonitor: https://10.10.0.100:444
     - Scrutiny:
         href: http://10.10.0.100:9204
         icon: /icons/scrutiny.svg
@@ -86,11 +91,6 @@
         widget:
           type: scrutiny
           url: http://10.10.0.100:9204
-    - MeshCentral:
-        href: https://10.10.0.100:444
-        icon: /icons/meshcentral.svg
-        description: Out-of-band management
-        siteMonitor: https://10.10.0.100:444
     - Hermes:
         href: http://10.10.0.200:9119
         icon: /icons/hermes.svg
