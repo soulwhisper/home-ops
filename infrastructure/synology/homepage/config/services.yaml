@@ -27,11 +27,11 @@
           username: '{{HOMEPAGE_VAR_UNIFI_USERNAME}}'
           password: '{{HOMEPAGE_VAR_UNIFI_PASSWORD}}'
     - Forgejo:
-        href: http://nas.homelab.internal:9003/
+        href: http://10.10.0.100:9003
         icon: /icons/forgejo.svg
         widget:
           type: customapi
-          url: http://127.0.0.1:9003/api/v1/repos/soulwhisper/homelab-tickets
+          url: http://10.10.0.100:9003/api/v1/repos/soulwhisper/homelab-tickets
           headers:
             Authorization: 'token {{HOMEPAGE_VAR_FORGEJO_PAT}}'
           refreshInterval: 60000
@@ -45,29 +45,29 @@
         siteMonitor: https://10.0.0.10/
 - Service:
     - Bambuddy:
-        href: http://127.0.0.1:8000/
+        href: http://10.10.0.100:8000
         icon: /icons/si-bambulab.svg
-        description: Bambu Lab printer monitor · SSH tunnel
-        siteMonitor: http://127.0.0.1:8000/health
+        description: Bambu Lab printer monitor
+        siteMonitor: http://10.10.0.100:8000/health
     - Hindsight:
-        href: http://nas.homelab.internal:9999/
+        href: http://10.10.0.100:9999
         icon: /icons/metabrainz.svg
         description: AI memory service
-        siteMonitor: http://127.0.0.1:9999/
+        siteMonitor: http://10.10.0.100:9999
     - Scryfall Downloader:
-        href: http://nas.homelab.internal:8765/
+        href: http://10.10.0.100:8765
         icon: /icons/scryfall-downloader.svg
         description: Magic card and token images
-        siteMonitor: http://nas.homelab.internal:8765/
+        siteMonitor: http://10.10.0.100:8765
     - Scrutiny:
-        href: http://nas.homelab.internal:9204/
+        href: http://10.10.0.100:9204
         icon: /icons/scrutiny.svg
         description: SMART drive monitoring
         widget:
           type: scrutiny
-          url: http://127.0.0.1:9204
+          url: http://10.10.0.100:9204
     - MeshCentral:
-        href: https://nas.homelab.internal:444/
+        href: https://10.10.0.100:444
         icon: /icons/meshcentral.svg
         description: Out-of-band management
-        siteMonitor: https://nas.homelab.internal:444/
+        siteMonitor: https://10.10.0.100:444

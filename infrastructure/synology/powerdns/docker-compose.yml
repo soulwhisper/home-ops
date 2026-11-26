@@ -1,6 +1,5 @@
 ---
 name: powerdns
-
 services:
   powerdns:
     image: "docker.io/powerdns/pdns-auth-51:5.1.5"
@@ -8,18 +7,6 @@ services:
     restart: "unless-stopped"
     # DSM's published-port proxy hides the client IP needed by the API ACL.
     network_mode: "host"
-    # Drop to the image user before startup, retaining only the port 53 capability.
-    user: "0:0"
-    entrypoint:
-      - "/usr/bin/setpriv"
-      - "--reuid=pdns"
-      - "--regid=pdns"
-      - "--clear-groups"
-      - "--inh-caps=+net_bind_service"
-      - "--ambient-caps=+net_bind_service"
-      - "/usr/bin/tini"
-      - "--"
-      - "/usr/local/sbin/pdns_server-startup"
     command:
       - "--local-address=10.10.0.100"
       - "--local-port=53"
@@ -28,22 +15,12 @@ services:
       - "--webserver-port=9200"
       - "--webserver-allow-from=10.10.0.0/24"
     secrets:
-      - source: pdns_api_key
-        target: /etc/powerdns/pdns.d/api-key.conf
+      - source: "pdns_api_key"
+        target: "/etc/powerdns/pdns.d/api-key.conf"
     volumes:
-      # Docker seeds the empty named volume with the image's SQLite database.
-      - "pdns_data:/var/lib/powerdns"
-    cap_drop:
-      - "ALL"
-    cap_add:
-      - "NET_BIND_SERVICE"
-      - "SETUID"
-      - "SETGID"
-    security_opt:
-      - "no-new-privileges:true"
-    mem_limit: "256m"
+      - "/volume3/docker/powerdns:/var/lib/powerdns"
     healthcheck:
-      test: ["CMD", "setpriv", "--reuid=pdns", "--regid=pdns", "--clear-groups", "pdns_control", "rping"]
+      test: ["CMD", "pdns_control", "rping"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -52,7 +29,4 @@ services:
 secrets:
   pdns_api_key:
     # api-key={key}
-    file: ./powerdns.sops.conf
-
-volumes:
-  pdns_data: {}
+    file: "./powerdns.sops.conf"
