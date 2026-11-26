@@ -29,7 +29,6 @@ configMapGenerator:
       - icons/frigate.svg
       - icons/heimdall.svg
       - icons/home-assistant.svg
-      - icons/manyfold.svg
       - icons/metabrainz.svg
       - icons/microsoft-outlook.svg
       - icons/open-webui.svg
@@ -37,7 +36,6 @@ configMapGenerator:
       - icons/rook.svg
       - icons/scrypted.svg
       - icons/si-anthropic.svg
-      - icons/si-bambulab.svg
       - icons/si-jpeg.svg
       - icons/si-langflow.svg
       - icons/si-materialdesign.svg

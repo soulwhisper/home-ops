@@ -1,0 +1,19 @@
+---
+title: Dashboard · Synology
+description: NAS fallback for the Kubernetes Homepage
+favicon: /icons/heimdall.svg
+theme: dark
+headerStyle: boxed
+hideVersion: true
+useEqualHeights: true
+hideErrors: true
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: true
+layout:
+  Status:
+    style: row
+    columns: 2
+  Service:
+    style: row
+    columns: 2

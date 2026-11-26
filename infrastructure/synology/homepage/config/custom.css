@@ -1,0 +1,12 @@
+/* Keep Status as the left sidebar on wide screens. */
+@media (min-width: 1280px) {
+  #layout-groups {
+    display: grid !important;
+    grid-template-columns: minmax(440px, 560px) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+@media (min-width: 1900px) {
+  #layout-groups { grid-template-columns: minmax(560px, 640px) minmax(0, 1fr); }
+}

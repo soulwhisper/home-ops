@@ -1,0 +1,73 @@
+---
+- Status:
+    - NAS:
+        href: https://10.10.0.100:5001
+        icon: /icons/synology.svg
+        widget:
+          type: diskstation
+          url: https://10.10.0.100:5001
+          username: '{{HOMEPAGE_VAR_SYNOLOGY_USERNAME}}'
+          password: '{{HOMEPAGE_VAR_SYNOLOGY_PASSWORD}}'
+          volume: volume_2
+    - OpenWRT:
+        href: http://10.10.0.254
+        icon: /icons/openwrt.svg
+        widget:
+          type: openwrt
+          url: http://10.10.0.254
+          username: '{{HOMEPAGE_VAR_OPENWRT_USERNAME}}'
+          password: '{{HOMEPAGE_VAR_OPENWRT_PASSWORD}}'
+          interfaceName: pppoe-wan
+    - Unifi:
+        href: https://10.10.0.200:9801
+        icon: /icons/unifi.svg
+        widget:
+          type: unifi
+          url: https://10.10.0.200:9801
+          username: '{{HOMEPAGE_VAR_UNIFI_USERNAME}}'
+          password: '{{HOMEPAGE_VAR_UNIFI_PASSWORD}}'
+    - Forgejo:
+        href: http://nas.homelab.internal:9003/
+        icon: /icons/forgejo.svg
+        widget:
+          type: customapi
+          url: http://127.0.0.1:9003/api/v1/repos/soulwhisper/homelab-tickets
+          headers:
+            Authorization: 'token {{HOMEPAGE_VAR_FORGEJO_PAT}}'
+          refreshInterval: 60000
+          mappings:
+            - {field: open_issues_count, label: Open Issues, format: number}
+            - {field: open_pr_counter, label: Open PRs, format: number}
+    - ESXi:
+        href: https://10.0.0.10/
+        icon: /icons/vmware-esxi.svg
+        description: Management UI reachability
+        siteMonitor: https://10.0.0.10/
+- Service:
+    - Bambuddy:
+        href: http://127.0.0.1:8000/
+        icon: /icons/si-bambulab.svg
+        description: Bambu Lab printer monitor · SSH tunnel
+        siteMonitor: http://127.0.0.1:8000/health
+    - Hindsight:
+        href: http://nas.homelab.internal:9999/
+        icon: /icons/metabrainz.svg
+        description: AI memory service
+        siteMonitor: http://127.0.0.1:9999/
+    - Scryfall Downloader:
+        href: http://nas.homelab.internal:8765/
+        icon: /icons/scryfall-downloader.svg
+        description: Magic card and token images
+        siteMonitor: http://nas.homelab.internal:8765/
+    - Scrutiny:
+        href: http://nas.homelab.internal:9204/
+        icon: /icons/scrutiny.svg
+        description: SMART drive monitoring
+        widget:
+          type: scrutiny
+          url: http://127.0.0.1:9204
+    - MeshCentral:
+        href: https://nas.homelab.internal:444/
+        icon: /icons/meshcentral.svg
+        description: Out-of-band management
+        siteMonitor: https://nas.homelab.internal:444/

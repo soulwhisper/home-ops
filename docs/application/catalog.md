@@ -1,8 +1,8 @@
 # Application Catalog
 
-73 application definition units across 10 namespaces, managed via Flux GitOps. Each Flux table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload. The NAS table at the end is outside Flux and links to compose stacks instead.
+69 application definition units across 10 namespaces, managed via Flux GitOps. Each Flux table entry links to one `ks.yaml` definition file; a unit may declare several Flux Kustomizations or include operators, shared storage, and configuration rather than a single workload. The NAS table at the end is outside Flux and links to compose stacks instead.
 
-The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 10 first-level namespace directories. Together, those namespaces have 62 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 73 definition files declare 98 child Flux Kustomizations and lead to 72 HelmReleases. There are 48 OCIRepositories across the source tree: 47 application-local and one shared app-template source. These are source counts, not counts of running applications.
+The [application source tree](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps) has 10 first-level namespace directories. Together, those namespaces have 59 immediate child directories, including the `servitor-apps/mcp` grouping directory. Their 69 definition files declare 95 child Flux Kustomizations and lead to 69 HelmReleases. There are 48 OCIRepositories across the source tree: 47 application-local and one shared app-template source. These are source counts, not counts of running applications.
 
 Definitions that are intentionally not deployed live under [`.archived/kubernetes`](https://github.com/soulwhisper/home-ops/tree/main/.archived/kubernetes); see the [archive index](https://github.com/soulwhisper/home-ops/blob/main/.archived/README.md) for why each definition is kept.
 
@@ -114,7 +114,7 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | [Scrypted](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/scrypted/ks.yaml) | Video streaming with iGPU acceleration |
 | [Smarthome-NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/smarthome-apps/smarthome-nfs/ks.yaml) | Shared smart-home NFS storage |
 
-## selfhosted-apps — Self-Hosted Services (8)
+## selfhosted-apps — Self-Hosted Services (4)
 
 [Namespace index](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/kustomization.yaml)
 
@@ -122,20 +122,8 @@ This catalog is documentation, not a deployment selector. Each namespace's linke
 | --- | --- |
 | [TrendRadar](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/trendradar/ks.yaml) | Scheduled AI news digest |
 | [SearXNG](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/searxng/ks.yaml) | Internal metasearch backend for Firecrawl |
-| [Homepage](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/homepage/ks.yaml) | Application dashboard |
+| [Homepage](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/homepage/ks.yaml) | Cluster application dashboard; [Synology fallback](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/synology/homepage) |
 | [Firecrawl](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/firecrawl/ks.yaml) | Web scraping pipeline |
-| [Bambuddy](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/bambuddy/ks.yaml) | Bambu Lab 3D printer monitor |
-| [Manyfold](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/manyfold/ks.yaml) | 3D model library and digital asset manager |
-| [Obico ML](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/obico-ml/ks.yaml) | Internal CPU inference API for Obico |
-| [Selfhosted-NFS](https://github.com/soulwhisper/home-ops/blob/main/kubernetes/apps/selfhosted-apps/selfhosted-nfs/ks.yaml) | Shared self-hosted NFS claims |
-
-Manyfold mounts its NFS share at `/libraries/main`, but mounting the share does not register a library. After the pod is ready, run this bootstrap once using the [supported Manyfold CLI](https://manyfold.app/sysadmin/advanced_tasks.html):
-
-```sh
-kubectl -n selfhosted-apps exec deploy/manyfold -- \
-  bundle exec /usr/src/app/bin/manyfold libraries create \
-    --name=main --path=/libraries/main
-```
 
 ## NAS — Compose services
 
@@ -145,6 +133,7 @@ Managed by [doco-cd](https://github.com/soulwhisper/home-ops/tree/main/infrastru
 | --- | --- |
 | [Bambuddy](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/bambuddy/docker-compose.yml) | Bambu Lab 3D printer monitor |
 | [Hindsight](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/hindsight/docker-compose.yml) | AI memory service (moved out of the cluster; data lives on the NAS) |
+| [Homepage](https://github.com/soulwhisper/home-ops/tree/main/infrastructure/synology/homepage) | Standalone replacement or fallback for the cluster dashboard: same status sidebar and layout, with NAS services |
 | [Scryfall Downloader](https://github.com/soulwhisper/home-ops/blob/main/infrastructure/synology/scryfall-downloader/docker-compose.yaml) | Magic card and token images for Forge |
 
 Bambuddy bind-mounts `/volume3/docker/bambuddy` at `/app/data`. Keep that
@@ -153,6 +142,13 @@ because the Kubernetes Authentik policy does not protect the NAS instance.
 Use `ssh -N -L 8000:127.0.0.1:8000 sysadmin@nas.homelab.internal` and open
 `http://127.0.0.1:8000`. An external MQTT broker is optional for integrations;
 Bambuddy connects directly to its printers.
+
+Homepage is available at <http://nas.homelab.internal:8300/> or
+<http://10.10.0.100:8300/> on the trusted LAN/VPN. It has no app login; do not
+forward the port to untrusted networks. Git-managed config and icons are
+mounted read-only. Generated config and file logs are written to the
+container's writable layer and are lost when the container is replaced.
+No separate NAS config directory is needed.
 
 ## servitor-apps — AI Infrastructure (17)
 

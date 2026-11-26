@@ -7,13 +7,7 @@ components:
   - ../../components/namespace
   - ../../components/kopiur/shared
 resources:
-  # storage
-  - ./selfhosted-nfs/ks.yaml
-  # app
-  - ./bambuddy/ks.yaml
   - ./firecrawl/ks.yaml
   - ./homepage/ks.yaml
-  - ./manyfold/ks.yaml
-  - ./obico-ml/ks.yaml
   - ./searxng/ks.yaml
   - ./trendradar/ks.yaml
