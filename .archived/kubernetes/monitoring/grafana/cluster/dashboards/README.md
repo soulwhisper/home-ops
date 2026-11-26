@@ -61,15 +61,12 @@ post-sync — `configMapGenerator` paths reference the renamed files.
 | Aspect                    | External URL (Old)                                                                               | Vendir + Local (New)                                                                                 |
 | ------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
 | **Initial Setup**         | **Low** (Just copy-paste URL)                                                                    | **Medium** (Config `vendir.yml` & `kustomization.yaml`)                                              |
-| **Long-term Maintenance** | **High Risk**. Upstream changes are invisible until they break the system. Debugging is hard.    | **Low**. Upstream updates are visible via Renovate PRs. Diffs show exactly what changed in the JSON. |
+| **Long-term Maintenance** | **High Risk**. Upstream changes are invisible until they break the system. Debugging is hard.    | **Low**. PR diffs show what changed in the dashboard JSON before deployment. |
 | **Disaster Recovery**     | **Fragile**. Rebuilding the cluster requires external internet access and upstream availability. | **Robust**. The repo is self-contained. Recovery works even in air-gapped environments.              |
 | **Breaking Changes**      | "Surprise" breakages on Pod restart.                                                             | Caught during PR review before merging.                                                              |
 
-### How to Update
+### Former update workflow
 
-**Renovate** is configured to watch `vendir.yml`.
-
-1. Renovate detects a new version (e.g., `v1.14.0` -> `v1.15.0`).
-2. It creates a PR updating the tag in `vendir.yml`.
-3. GitHub Actions triggers `vendir sync` and commits the updated JSON files to the PR.
-4. Review the JSON diff and merge.
+Before these dashboards were archived, Renovate watched `vendir.yml` and opened
+PRs for new source tags. The vendir CI workflow synced the updated JSON into
+the same PR for review. Neither automation runs for the archived dashboards.

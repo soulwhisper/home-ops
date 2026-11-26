@@ -8,9 +8,8 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
   `-apps`/`-system` suffix, so restore to the path named by `spec.path`
   (for example `.archived/kubernetes/media/foo` →
   `kubernetes/apps/media-apps/foo`) and re-add it to that namespace index.
-- Renovate ignores `.archived/`. Per-app rules removed before the cluster-wide
-  pin are listed in the archived app's own `README.md` (`media/immich`,
-  `servitor/hermes-agent`).
+- Renovate ignores `.archived/`. The archived app's own `README.md` records
+  former per-app rules where applicable (`media/immich`, `servitor/hermes-agent`).
 - Archived definitions are not a backup. Restoring one starts from its
   manifests only; PVC data, CNPG roles/databases and kopiur snapshots may need
   manual recovery.
@@ -80,7 +79,7 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 
 | Path | What | Why archived |
 | --- | --- | --- |
-| `renovate/` | Kubernetes dependency managers, package rules, groups and merge policy | Kubernetes is LTS-pinned in place; only CI and Synology dependencies still use Renovate |
+| `renovate/` | Kubernetes dependency managers, package rules, groups and merge policy | Kubernetes dependency upgrades are managed manually; Renovate still covers CI and Synology dependencies |
 
 ### pangolin
 
