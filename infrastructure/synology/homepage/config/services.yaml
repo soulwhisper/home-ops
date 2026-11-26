@@ -46,7 +46,6 @@
 - Service:
     - Bambuddy:
         href: http://127.0.0.1:8000/
-        icon: /icons/si-bambulab.svg
         description: Bambu Lab printer monitor · SSH tunnel
         siteMonitor: http://127.0.0.1:8000/health
     - Hindsight:

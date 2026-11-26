@@ -12,10 +12,11 @@ Ceph StorageClass deletes the backing volume. A copy of the model library is
 not a backup of this state.
 
 To restore on Kubernetes, reselect both definitions and `kopiur/shared` in the
-`selfhosted-apps` index. Restore the forward-auth blueprint and its outpost
-provider binding, plus the icon and its entry in the cluster Homepage
-generator. Recover `/config` separately. If the database is new, [register the
-library](https://manyfold.app/sysadmin/advanced_tasks.html) after the pod starts:
+`selfhosted-apps` index. Copy the [forward-auth blueprint](../../security/authentik/blueprints/forward/manyfold.yaml)
+back, re-add it to `authentik-blueprints-forward`, and re-add its provider in
+`outpost-proxy.yaml`. Recover `/config` separately. If the database is new,
+[register the library](https://manyfold.app/sysadmin/advanced_tasks.html) after
+the pod starts:
 
 ```sh
 kubectl -n selfhosted-apps exec deploy/manyfold -- \
