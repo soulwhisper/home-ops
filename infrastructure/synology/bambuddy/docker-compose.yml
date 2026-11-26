@@ -13,3 +13,5 @@ services:
     volumes:
       - "/volume3/docker/bambuddy:/app/data"
       - "/volume3/docker/bambuddy/logs:/app/logs"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://10.10.0.100:8000/health')"]
