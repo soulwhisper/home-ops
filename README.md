@@ -24,7 +24,8 @@ The project strictly adheres to **Infrastructure as Code (IaC)** and **GitOps** 
 - **Kubernetes on Metal:** Built on [Talos Linux](https://www.talos.dev) using M.2 NVMe storage, optimizing for performance and immutability.
 - **Networking:** The Layer 3 core switch peers with FRR-K8s over BGP/BFD. [Cilium](https://github.com/cilium/cilium) provides pod networking.
 - **Hybrid Storage:** Leveraging **Synology** for centralized NFS/S3 object storage alongside localized high-performance [Rook-Ceph](https://github.com/rook/rook) block storage.
-- **Automated Operations:** Powered by [Flux](https://github.com/fluxcd/flux2) for continuous delivery, [GitHub Actions](https://github.com/features/actions) for CI pipelines, and [Renovate](https://github.com/renovatebot/renovate) for dependency management.
+- **Automated Operations:** [Flux](https://github.com/fluxcd/flux2) for GitOps, [GitHub Actions](https://github.com/features/actions) for CI, and [Renovate](https://github.com/renovatebot/renovate) for Synology and CI dependency updates.
+- **Kubernetes Lifecycle:** **LTS-pinned**. Flux remains active; cluster version changes require manual review.
 
 All configurations are declared as code, promoting reproducibility and enabling seamless updates, scaling, and disaster recovery of the home-ops environment.
 

@@ -1,0 +1,49 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  flux: {
+    managerFilePatterns: ["/^kubernetes/.+\\.ya?ml$/"],
+  },
+  "helm-values": {
+    managerFilePatterns: ["/^kubernetes/.+\\.ya?ml$/"],
+  },
+  helmfile: {
+    managerFilePatterns: ["/(^|/)helmfile\\.ya?ml$/"],
+  },
+  kubernetes: {
+    managerFilePatterns: ["/^kubernetes/.+\\.ya?ml$/"],
+  },
+  customManagers: [
+    {
+      customType: "regex",
+      description: ["Track the CSI plugin in the generated Ceph image set"],
+      managerFilePatterns: ["/^kubernetes\\/apps\\/storage-system\\/rook-ceph\\/drivers\\/kustomization\\.yaml$/"],
+      matchStrings: [
+        "(?:^|\\r?\\n)[ \\t]*-[ \\t]+plugin=(?<depName>quay\\.io/cephcsi/cephcsi):(?<currentValue>[^\\s#]+)",
+      ],
+      datasourceTemplate: "docker",
+    },
+    {
+      customType: "regex",
+      description: "Process custom images and version fields",
+      managerFilePatterns: ["/(^|/).+\\.yaml$/"],
+      matchStrings: [
+        // image: <registry>/<path>:vX.Y.Z   (e.g. 10-general.yaml)
+        "#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)(?:\\s+packageName=(?<packageName>[^\\s]+))?\\s+image:\\s*(?<depPart>.*?:)(?<currentValue>[v\\d\\.]+)",
+        // version: vX.Y.Z                   (e.g. system-upgrade-controller plans)
+        "#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)(?:\\s+packageName=(?<packageName>[^\\s]+))?\\s+[a-z0-9_]*version:\\s*(?<currentValue>[v\\d\\.]+)",
+      ],
+      datasourceTemplate: "{{{datasource}}}",
+      depNameTemplate: "{{{depName}}}",
+    },
+    {
+      customType: "regex",
+      description: "Process Helmfile oci charts",
+      managerFilePatterns: ["/(^|/)helmfile\\.yaml$/"],
+      matchStrings: [
+        "chart: oci://(?<depName>[^\\s]+?)\\s+version: (?<currentValue>[^\\s]+)",
+      ],
+      datasourceTemplate: "docker",
+      versioningTemplate: "helm",
+    },
+  ],
+}
