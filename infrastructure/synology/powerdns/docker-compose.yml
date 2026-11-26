@@ -7,6 +7,18 @@ services:
     restart: "unless-stopped"
     # DSM's published-port proxy hides the client IP needed by the API ACL.
     network_mode: "host"
+    # The NAS Docker daemon does not allow unprivileged port 53; keep it while dropping to pdns.
+    user: "0:0"
+    entrypoint:
+      - "/usr/bin/setpriv"
+      - "--reuid=pdns"
+      - "--regid=pdns"
+      - "--clear-groups"
+      - "--inh-caps=+net_bind_service"
+      - "--ambient-caps=+net_bind_service"
+      - "/usr/bin/tini"
+      - "--"
+      - "/usr/local/sbin/pdns_server-startup"
     command:
       - "--local-address=10.10.0.100"
       - "--local-port=53"

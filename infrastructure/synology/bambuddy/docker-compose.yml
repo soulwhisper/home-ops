@@ -12,3 +12,4 @@ services:
       - "PORT=8000"
     volumes:
       - "/volume3/docker/bambuddy:/app/data"
+      - "/volume3/docker/bambuddy/logs:/app/logs"
