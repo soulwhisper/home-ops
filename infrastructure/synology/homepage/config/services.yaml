@@ -64,33 +64,6 @@
         description: Transparent proxy
         siteMonitor: http://10.10.0.254:9090/ui/zashboard
 - Service:
-    - Bambuddy:
-        href: http://10.10.0.100:8000
-        icon: /icons/si-bambulab.svg
-        description: Bambu Lab printer monitor
-        siteMonitor: http://10.10.0.100:8000/health
-    - Hindsight:
-        href: http://10.10.0.100:9999
-        icon: /icons/metabrainz.svg
-        description: AI memory service
-        siteMonitor: http://10.10.0.100:9999
-    - Scryfall Downloader:
-        href: http://10.10.0.100:8765
-        icon: /icons/scryfall-downloader.svg
-        description: Magic card and token images
-        siteMonitor: http://10.10.0.100:8765
-    - MeshCentral:
-        href: https://10.10.0.100:444
-        icon: /icons/meshcentral.svg
-        description: Out-of-band management
-        siteMonitor: https://10.10.0.100:444
-    - Scrutiny:
-        href: http://10.10.0.100:9204
-        icon: /icons/scrutiny.svg
-        description: SMART drive monitoring
-        widget:
-          type: scrutiny
-          url: http://10.10.0.100:9204
     - Hermes:
         href: http://10.10.0.200:9119
         icon: /icons/hermes.svg
@@ -103,3 +76,30 @@
             - {field: version, label: Version}
             - {field: gateway_state, label: Gateway}
             - {field: active_sessions, label: Active, format: number}
+    - Scrutiny:
+        href: http://10.10.0.100:9204
+        icon: /icons/scrutiny.svg
+        description: SMART drive monitoring
+        widget:
+          type: scrutiny
+          url: http://10.10.0.100:9204
+    - Hindsight:
+        href: http://10.10.0.100:9999
+        icon: /icons/metabrainz.svg
+        description: AI memory service
+        siteMonitor: http://10.10.0.100:9999
+    - MeshCentral:
+        href: https://10.10.0.100:444
+        icon: /icons/meshcentral.svg
+        description: Out-of-band management
+        siteMonitor: https://10.10.0.100:444
+    - Bambuddy:
+        href: http://10.10.0.100:8000
+        icon: /icons/si-bambulab.svg
+        description: Bambu Lab printer monitor
+        siteMonitor: http://10.10.0.100:8000/health
+    - Scryfall Downloader:
+        href: http://10.10.0.100:8765
+        icon: /icons/scryfall-downloader.svg
+        description: Magic card and token images
+        siteMonitor: http://10.10.0.100:8765
