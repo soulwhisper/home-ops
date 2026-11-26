@@ -29,15 +29,7 @@
     - Forgejo:
         href: http://10.10.0.100:9003
         icon: /icons/forgejo.svg
-        widget:
-          type: customapi
-          url: http://10.10.0.100:9003/api/v1/repos/soulwhisper/homelab-tickets
-          headers:
-            Authorization: 'token {{HOMEPAGE_VAR_FORGEJO_PAT}}'
-          refreshInterval: 60000
-          mappings:
-            - {field: open_issues_count, label: Open Issues, format: number}
-            - {field: open_pr_counter, label: Open PRs, format: number}
+        siteMonitor: http://10.10.0.100:9003/
     - ESXi:
         href: https://10.0.0.10/
         icon: /icons/vmware-esxi.svg
