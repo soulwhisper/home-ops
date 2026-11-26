@@ -5,6 +5,7 @@ kind: Kustomization
 namespace: selfhosted-apps
 components:
   - ../../components/namespace
+  - ../../components/kopiur/shared
 resources:
   - ./firecrawl/ks.yaml
   - ./homepage/ks.yaml
