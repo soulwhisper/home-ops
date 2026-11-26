@@ -10,4 +10,3 @@ resources:
   - ./kgateway-crds/ks.yaml
   - ./kgateway/ks.yaml
   - ./externaldns/ks.yaml
-  - ./forgejo-proxy/ks.yaml

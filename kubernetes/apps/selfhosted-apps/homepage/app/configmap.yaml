@@ -112,13 +112,13 @@ data:
               username: {{HOMEPAGE_VAR_UNIFI_USERNAME}}
               password: {{HOMEPAGE_VAR_UNIFI_PASSWORD}}
         - Forgejo:
-            href: https://git.noirprime.com
+            href: http://10.10.0.100:9003
             icon: /icons/forgejo.svg
             weight: 75
             widget:
               type: customapi
-              # TLS via the internal gateway (forgejo-proxy); PAT from 1Password
-              url: https://git.noirprime.com/api/v1/repos/soulwhisper/homelab-tickets
+              # Direct NAS HTTP endpoint; PAT from 1Password
+              url: http://10.10.0.100:9003/api/v1/repos/soulwhisper/homelab-tickets
               headers:
                 Authorization: "token {{HOMEPAGE_VAR_FORGEJO_PAT}}"
               refreshInterval: 60000

@@ -112,7 +112,7 @@ spec:
             command: ["python", "/scripts/krr_report.py"]
             env:
               - name: FORGEJO_REPO_URL
-                value: "https://git.noirprime.com/api/v1/repos/soulwhisper/homelab-tickets"
+                value: "http://10.10.0.100:9003/api/v1/repos/soulwhisper/homelab-tickets"
               - name: PROMETHEUS_URL
                 value: "http://vmsingle-victoria-metrics-cluster.monitoring-system.svc.cluster.local:8428"
               - name: KRR_NAMESPACES

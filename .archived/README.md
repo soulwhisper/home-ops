@@ -25,6 +25,7 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 | --- | --- | --- |
 | `kubernetes/networking/cloudflare-tunnel` | Cloudflare Tunnel ingress for public HTTPRoutes | Retired by the public-exposure decision; access is VPN-first |
 | `kubernetes/networking/externaldns-cloudflare` | external-dns for Cloudflare public records | Retired with the same public-exposure decision |
+| `kubernetes/networking/forgejo-proxy` | NAS Forgejo HTTPRoute, selectorless Service and EndpointSlice, plus the Authentik OIDC blueprint; [restore steps](kubernetes/networking/forgejo-proxy/README.md) | Forgejo uses direct NAS HTTP and local login; the gateway and OIDC integration are retired |
 | `kubernetes/servitor/dsh-tavern` | DSH Tavern roleplay portal | DSH appliances were retired |
 | `kubernetes/servitor/dsh-web` | DSH Web agent workbench (NAS deployment) | DSH appliances were retired |
 | `kubernetes/servitor/sillytavern` | SillyTavern chat UI | Replaced by dsh-tavern |
