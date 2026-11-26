@@ -2,7 +2,7 @@
 name: powerdns
 services:
   powerdns:
-    image: "docker.io/powerdns/pdns-auth-51:5.1.5"
+    image: "docker.io/powerdns/pdns-auth-51:5.1.7"
     container_name: "powerdns"
     restart: "unless-stopped"
     # DSM's published-port proxy hides the client IP needed by the API ACL.
