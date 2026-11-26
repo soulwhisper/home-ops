@@ -8,8 +8,7 @@ services:
     network_mode: "host"
     user: "1026:100"
     env_file:
-      - path: homepage.sops.env
-        format: raw
+      - homepage.sops.env
     environment:
       - "HOSTNAME=10.10.0.100"
       - "PORT=8300"
