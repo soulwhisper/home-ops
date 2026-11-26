@@ -590,12 +590,16 @@ Talos provides:
 
 The cluster uses Cilium as the CNI in native routing mode (no overlay), leveraging Talos's default network configuration and BGP peering via FRR-K8s for LoadBalancer service IP advertisement.
 
-## LTS-pinned maintenance
+## Manual dependency upgrades
 
-Kubernetes remains managed by Flux. Chart and image versions, bootstrap inputs,
-and Talos/Kubernetes version targets stay at their checked-in pins unless changed
-in a manually reviewed PR. Tuppr still applies committed targets in its configured
-maintenance windows. This is a dependency policy, not a cluster shutdown.
+Select and review Kubernetes dependency upgrades in pull requests rather than
+using Renovate. This covers Helm charts, workload images, bootstrap inputs,
+and Talos and Kubernetes version targets. Stage disruptive upgrades separately
+and verify each rollout before starting the next to avoid upgrade storms and
+catch regressions early.
+
+Flux still reconciles merged changes. Tuppr applies committed version targets
+during its configured maintenance windows.
 
 [Renovate](https://github.com/renovatebot/renovate) scans only `.github/` for CI
 and `infrastructure/synology/` for NAS services. The former cluster rules are

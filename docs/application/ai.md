@@ -179,7 +179,7 @@ prefix-allowed victoria-traces); github,
 forgejo, kubernetes, fluxcd are bounded by their upstream tokens/SAs and
 full-allowed by prefix. Allowlists are version-tracked: each filtered
 server's `mcpserver.yaml` names the image tag the tool names were
-enumerated from (live, 2026-10-20) — re-verify on every renovate bump.
+enumerated from (live, 2026-10-20) — re-verify whenever that image tag changes.
 This requires the vmcp **optimizer to stay off**: it masks real tool names
 behind `find_tool`/`call_tool` meta-tools that gateway authorization cannot
 see through (removed 2026-10; also dropped the vmcp embeddings dependency).
