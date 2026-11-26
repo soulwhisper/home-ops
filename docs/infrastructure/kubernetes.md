@@ -271,7 +271,7 @@ spec:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
   ref:
-    tag: x.y.z # pinned here; renovate-managed
+    tag: x.y.z # pinned here; update by reviewed PR
   url: oci://ghcr.io/bjw-s-labs/helm/app-template
 ```
 
@@ -584,35 +584,30 @@ Talos provides:
 
 - **Immutable root filesystem** — no package manager, no SSH, no shell access on nodes
 - **API-driven management** — all configuration changes flow through the Talos API
-- **Automatic upgrades** — tuppr runs under the `system-upgrade-controller` release in `gitops-system`, using [`TalosUpgrade` and `KubernetesUpgrade` resources](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps/gitops-system/system-upgrade-controller/plans)
+- **Scheduled upgrades** — tuppr runs under the `system-upgrade-controller` release in `gitops-system`, using [`TalosUpgrade` and `KubernetesUpgrade` resources](https://github.com/soulwhisper/home-ops/tree/main/kubernetes/apps/gitops-system/system-upgrade-controller/plans)
 - **NVMe storage** — M.2 NVMe SSDs across all nodes provide high-performance local storage for Rook-Ceph
 - **Image pulls capped** — kubelet `maxParallelImagePulls: 2`; EPHEMERAL and etcd share the system NVMe, and unbounded pull waves stalled etcd fsync into leader-election restarts. Containerd layer downloads are additionally capped at `max_concurrent_downloads = 1` (`CRICustomizationConfig/base` in `infrastructure/talos/prod/`) as a canary mitigation: the 2026-10-18T22:39Z controller exits coincided with a single ~592 MB Firecrawl pull and nvme1n1 latency. The cap bounds download parallelism only, not unpack I/O. Real-rollout verification: applying the config regenerates the CRI config and restarts CRI without a node reboot — confirm `talosctl -n <node> read /etc/cri/containerd.toml` shows `max_concurrent_downloads = 1`, then watch the next large image pull for serialized layer downloads and absence of nvme1n1 latency spikes
 
 The cluster uses Cilium as the CNI in native routing mode (no overlay), leveraging Talos's default network configuration and BGP peering via FRR-K8s for LoadBalancer service IP advertisement.
 
-## Renovate Integration
+## LTS-pinned maintenance
 
-[Renovate](https://github.com/renovatebot/renovate) monitors the repository for dependency updates across all layers:
+Kubernetes remains managed by Flux. Chart and image versions, bootstrap inputs,
+and Talos/Kubernetes version targets stay at their checked-in pins unless changed
+in a manually reviewed PR. Tuppr still applies committed targets in its configured
+maintenance windows. This is a dependency policy, not a cluster shutdown.
 
-- **OCIRepository tags** in `ocirepository.yaml` files
-- **Container image tags** in HelmRelease values
-- **Bootstrap chart versions and values** reuse the application sources through Helmfile templates; there are no separate chart pins in `helmfile.yaml`
-- **Talos and Kubernetes versions** in tuppr upgrade resources
-
-Renovate opens pull requests when updates are detected. The local
-[`autoMerge.json5` rules](https://github.com/soulwhisper/home-ops/blob/main/.renovate/autoMerge.json5)
-use `platformAutomerge: true` and `ignoreTests: false` for eligible updates;
-major updates and infrastructure minor updates require manual merge, except
-for explicitly listed package exceptions. Merged application changes are
-picked up by Flux on its normal source and reconciliation intervals. These
-rules do not guarantee serialized rollouts or immediate convergence.
+[Renovate](https://github.com/renovatebot/renovate) scans only `.github/` for CI
+and `infrastructure/synology/` for NAS services. The former cluster rules are
+[archived for reference](https://github.com/soulwhisper/home-ops/tree/main/.archived/renovate)
+and are not loaded.
 
 ### Gate disruptive rollout waves
 
 Merge Cilium, Tuppr, CNPG, Rook/Ceph, and Kopiur dependency updates one at a
 time. Do not overlap their rollout with a node upgrade, a bulk image pull, or
-a Kopiur mover wave. The manual Renovate merge gate excludes these updates
-from automatic waves; it does not serialize merges or control Flux.
+a Kopiur mover wave. Review and merge each disruptive update separately; Flux
+reconciles merged changes on its normal intervals.
 
 1. Before merging, check three Ready nodes, all etcd members reporting a
    leader, all Ceph MONs in quorum, all OSDs up, and no degraded or undersized

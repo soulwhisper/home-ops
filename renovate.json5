@@ -4,20 +4,7 @@
     "github>soulwhisper/renovate-config",
     "github>soulwhisper/home-ops//.renovate/autoMerge.json5",
     "github>soulwhisper/home-ops//.renovate/custom.json5",
-    "github>soulwhisper/home-ops//.renovate/groups.json5",
-    "github>soulwhisper/home-ops//.renovate/packageRules.json5",
   ],
   ignorePaths: [".archived/**"],
-  flux: {
-    managerFilePatterns: ["/^kubernetes/.+\\.ya?ml$/"],
-  },
-  "helm-values": {
-    managerFilePatterns: ["/^kubernetes/.+\\.ya?ml$/"],
-  },
-  helmfile: {
-    managerFilePatterns: ["/(^|/)helmfile\\.ya?ml$/"],
-  },
-  kubernetes: {
-    managerFilePatterns: ["/^kubernetes/.+\\.ya?ml$/"],
-  },
+  includePaths: [".github/**", "infrastructure/synology/**"],
 }

@@ -8,12 +8,9 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
   `-apps`/`-system` suffix, so restore to the path named by `spec.path`
   (for example `.archived/kubernetes/media/foo` →
   `kubernetes/apps/media-apps/foo`) and re-add it to that namespace index.
-- Renovate path globs for the retired namespaces (`kubernetes/apps/{gaming,media}-apps/**`)
-  were dropped from `.renovate/autoMerge.json5`, and the repository-root
-  `renovate.json5` ignores this tree via `ignorePaths: [".archived/**"]`. Restoring an app from one of those namespaces also
-  means putting its glob back, otherwise its minor updates stop auto-merging.
-  Per-app Renovate entries that were removed are listed in that app's own
-  `README.md` (`media/immich`, `servitor/hermes-agent`).
+- Renovate ignores `.archived/`. Per-app rules removed before the cluster-wide
+  pin are listed in the archived app's own `README.md` (`media/immich`,
+  `servitor/hermes-agent`).
 - Archived definitions are not a backup. Restoring one starts from its
   manifests only; PVC data, CNPG roles/databases and kopiur snapshots may need
   manual recovery.
@@ -74,6 +71,12 @@ Flux only reads `kubernetes/`, and no Kustomization applies an archived path.
 | Path | What | Why archived |
 | --- | --- | --- |
 | `.github/workflows/vendir.yaml` | Vendir dashboard sync workflow | Grafana dashboards were retired; kept as reference if vendir sync returns |
+
+### renovate
+
+| Path | What | Why archived |
+| --- | --- | --- |
+| `renovate/` | Kubernetes dependency managers, package rules, groups and merge policy | Kubernetes is LTS-pinned in place; only CI and Synology dependencies still use Renovate |
 
 ### pangolin
 
